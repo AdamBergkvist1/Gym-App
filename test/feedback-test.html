@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gym-App — Återkopplingstest</title>
+
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fb-test">
+<meta name="theme-color" content="#0a0a0a">
+
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #171717;
+    --line: #2e2e2e;
+    --fg: #ededed;
+    --dim: #8a8a8a;
+    --ok: #4ade80;
+    --no: #f87171;
+    --accent: #3b82f6;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+    transition: background-color .12s;
+  }
+  body.blink { background: #fafafa; }
+  main { max-width: 34rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+  h1 { font-size: 1.25rem; margin: 0 0 .25rem; }
+  .sub { color: var(--dim); font-size: .875rem; margin: 0 0 1.25rem; }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: .75rem; padding: .875rem; margin-bottom: 1rem;
+  }
+  .panel h2 { font-size: .8125rem; text-transform: uppercase; letter-spacing: .06em;
+              color: var(--dim); margin: 0 0 .625rem; font-weight: 600; }
+  .kv { display: flex; justify-content: space-between; gap: 1rem;
+        font-size: .8125rem; padding: .25rem 0; border-bottom: 1px solid #232323; }
+  .kv:last-child { border-bottom: 0; }
+  .kv span:first-child { color: var(--dim); }
+  .kv span:last-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                        text-align: right; word-break: break-word; }
+
+  .delay { display: flex; gap: .5rem; }
+  .delay button {
+    flex: 1; min-height: 48px; border-radius: .5rem; border: 1px solid var(--line);
+    background: #111; color: var(--fg); font-size: .9375rem;
+  }
+  .delay button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .test { background: var(--card); border: 1px solid var(--line);
+          border-radius: .75rem; padding: .875rem; margin-bottom: .75rem; }
+  .test > button.run {
+    width: 100%; min-height: 56px; font-size: 1.0625rem; font-weight: 600;
+    border-radius: .5rem; border: 0; background: var(--fg); color: #0a0a0a;
+  }
+  .test > button.run:active { opacity: .8; }
+  .out { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+         font-size: .75rem; color: var(--dim); margin: .625rem 0 0;
+         white-space: pre-wrap; word-break: break-word; min-height: 1.5em; }
+  .obs { display: flex; align-items: center; gap: .5rem; margin-top: .75rem;
+         padding-top: .75rem; border-top: 1px solid #232323; }
+  .obs span { font-size: .8125rem; color: var(--dim); flex: 1; }
+  .obs button { min-width: 56px; min-height: 48px; border-radius: .5rem;
+                border: 1px solid var(--line); background: #111; color: var(--fg); font-size: .9375rem; }
+  .obs button[aria-pressed="true"][data-v="ja"] { background: var(--ok); border-color: var(--ok); color: #052e16; }
+  .obs button[aria-pressed="true"][data-v="nej"] { background: var(--no); border-color: var(--no); color: #450a0a; }
+
+  #summary { width: 100%; min-height: 11rem; background: #111; color: var(--fg);
+             border: 1px solid var(--line); border-radius: .5rem; padding: .625rem;
+             font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .75rem; }
+  #copy { width: 100%; min-height: 52px; margin-top: .5rem; border-radius: .5rem;
+          border: 0; background: var(--accent); color: #fff; font-size: 1rem; font-weight: 600; }
+  .note { font-size: .8125rem; color: var(--dim); margin-top: .5rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Återkopplingstest</h1>
+  <p class="sub">Mäter vilka larmkanaler som når fram på den här telefonen. Uppgift 0.1–0.6 i TASKS.md.</p>
+
+  <section class="panel">
+    <h2>Sammanhang</h2>
+    <div class="kv"><span>Läge</span><span id="c-mode">–</span></div>
+    <div class="kv"><span>Protokoll</span><span id="c-proto">–</span></div>
+    <div class="kv"><span>Servicearbetare</span><span id="c-sw">–</span></div>
+    <div class="kv"><span>Notisbehörighet</span><span id="c-perm">–</span></div>
+    <div class="kv"><span>'vibrate' in navigator</span><span id="c-vib">–</span></div>
+    <div class="kv"><span>AudioContext</span><span id="c-audio">–</span></div>
+    <div class="kv"><span>User agent</span><span id="c-ua">–</span></div>
+  </section>
+
+  <section class="panel">
+    <h2>Fördröjning innan larm</h2>
+    <div class="delay" id="delay">
+      <button type="button" data-ms="0" aria-pressed="true">Direkt</button>
+      <button type="button" data-ms="5000" aria-pressed="false">5 s</button>
+      <button type="button" data-ms="10000" aria-pressed="false">10 s</button>
+    </div>
+    <p class="note">Välj 5 eller 10 s, tryck en testknapp och <strong>lägg ner telefonen eller
+      byt app</strong>. Det är det scenariot vilotimern faktiskt körs i — ett larm som bara
+      fungerar när man tittar på skärmen är värdelöst.</p>
+  </section>
+
+  <section class="test" id="t-visual">
+    <button type="button" class="run">1 — Visuell blink</button>
+    <p class="out">–</p>
+    <div class="obs"><span>Såg du det?</span>
+      <button type="button" data-v="ja" aria-pressed="false">Ja</button>
+      <button type="button" data-v="nej" aria-pressed="false">Nej</button></div>
+  </section>
+
+  <section class="test" id="t-notif">
+    <button type="button" class="run">2 — Notis</button>
+    <p class="out">–</p>
+    <div class="obs"><span>Kom notisen fram?</span>
+      <button type="button" data-v="ja" aria-pressed="false">Ja</button>
+      <button type="button" data-v="nej" aria-pressed="false">Nej</button></div>
+  </section>
+
+  <section class="test" id="t-vibrate">
+    <button type="button" class="run">3 — Vibration</button>
+    <p class="out">–</p>
+    <div class="obs"><span>Kände du något?</span>
+      <button type="button" data-v="ja" aria-pressed="false">Ja</button>
+      <button type="button" data-v="nej" aria-pressed="false">Nej</button></div>
+  </section>
+
+  <section class="test" id="t-audio">
+    <button type="button" class="run">4 — Ljud</button>
+    <p class="out">–</p>
+    <div class="obs"><span>Hörde du det?</span>
+      <button type="button" data-v="ja" aria-pressed="false">Ja</button>
+      <button type="button" data-v="nej" aria-pressed="false">Nej</button></div>
+  </section>
+
+  <section class="panel">
+    <h2>Resultat</h2>
+    <textarea id="summary" readonly></textarea>
+    <button type="button" id="copy">Kopiera resultat</button>
+    <p class="note">Kopiera och klistra in i chatten. Kör en gång per läge:
+      flik med ljud på, flik med ljud av, installerad app med ljud av.</p>
+  </section>
+</main>
+
+<script>
+'use strict';
+
+// ---------------------------------------------------------------- sammanhang
+
+var swReg = null;
+var audioCtx = null;
+var delayMs = 0;
+var results = {};   // { visual: {api, obs}, notif: {...}, ... }
+
+function isStandalone() {
+  // navigator.standalone är iOS-specifik och äldre; display-mode är standarden.
+  return window.navigator.standalone === true ||
+         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+}
+
+function refreshContext() {
+  document.getElementById('c-mode').textContent =
+    isStandalone() ? 'standalone (installerad)' : 'webbläsarflik';
+  document.getElementById('c-proto').textContent = location.protocol;
+  document.getElementById('c-sw').textContent =
+    !('serviceWorker' in navigator) ? 'stöds ej' : (swReg ? 'registrerad' : 'väntar…');
+  document.getElementById('c-perm').textContent =
+    ('Notification' in window) ? Notification.permission : 'Notification saknas';
+  document.getElementById('c-vib').textContent = String('vibrate' in navigator);
+  document.getElementById('c-audio').textContent =
+    audioCtx ? audioCtx.state : (window.AudioContext || window.webkitAudioContext ? 'ej skapad' : 'stöds ej');
+  document.getElementById('c-ua').textContent = navigator.userAgent;
+  buildSummary();
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(function (reg) { swReg = reg; return navigator.serviceWorker.ready; })
+    .then(function (reg) { swReg = reg; refreshContext(); })
+    .catch(function (err) {
+      document.getElementById('c-sw').textContent = 'fel: ' + err.message;
+      buildSummary();
+    });
+}
+
+// ---------------------------------------------------------------- hjälpare
+
+function out(id, text) {
+  document.querySelector('#' + id + ' .out').textContent = text;
+  var key = id.replace('t-', '');
+  results[key] = results[key] || {};
+  results[key].api = text;
+  buildSummary();
+}
+
+/** Kör fn efter vald fördröjning. Räknar ner i knappens utdatarad. */
+function schedule(id, fn) {
+  if (delayMs === 0) { fn(); return; }
+  var left = Math.round(delayMs / 1000);
+  document.querySelector('#' + id + ' .out').textContent = 'utlöses om ' + left + ' s…';
+  var tick = setInterval(function () {
+    left--;
+    if (left > 0) {
+      document.querySelector('#' + id + ' .out').textContent = 'utlöses om ' + left + ' s…';
+    } else {
+      clearInterval(tick);
+      fn();
+    }
+  }, 1000);
+}
+
+// ---------------------------------------------------------------- 1: visuellt
+
+document.querySelector('#t-visual .run').addEventListener('click', function () {
+  schedule('t-visual', function () {
+    document.body.classList.add('blink');
+    setTimeout(function () { document.body.classList.remove('blink'); }, 400);
+    setTimeout(function () { document.body.classList.add('blink'); }, 550);
+    setTimeout(function () { document.body.classList.remove('blink'); }, 950);
+    out('t-visual', 'blinkade 2 ggr — kräver ingen behörighet, inget API');
+  });
+});
+
+// ---------------------------------------------------------------- 2: notis
+
+function showNotification() {
+  if (!swReg) { out('t-notif', 'FEL: ingen servicearbetare registrerad'); return; }
+  // På iOS finns inte Notification-konstruktorn. Enda vägen är registreringens
+  // showNotification(). Testar man den andra vägen mäter man fel sak.
+  swReg.showNotification('Vila klar', {
+    body: 'Nästa set. (Testnotis från Gym-App)',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    tag: 'feedback-test',
+    renotify: true
+  }).then(function () {
+    out('t-notif', 'showNotification() löste ut utan fel\npermission=' + Notification.permission);
+  }).catch(function (err) {
+    out('t-notif', 'showNotification() kastade: ' + err.name + ' — ' + err.message);
+  });
+}
+
+document.querySelector('#t-notif .run').addEventListener('click', function () {
+  if (!('Notification' in window)) {
+    out('t-notif', 'Notification-API saknas helt i denna kontext.\n' +
+        (isStandalone() ? '' : 'OBS: du kör i en flik. På iOS krävs installerad PWA.'));
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    out('t-notif', 'permission=denied — måste återställas i Inställningar > Notiser');
+    return;
+  }
+  if (Notification.permission === 'default') {
+    // Behörigheten MÅSTE begäras direkt i en användargest på iOS.
+    Notification.requestPermission().then(function (p) {
+      refreshContext();
+      if (p === 'granted') {
+        out('t-notif', 'behörighet beviljad — tryck igen för att skicka notisen');
+      } else {
+        out('t-notif', 'behörighet svarade: ' + p);
+      }
+    }).catch(function (err) {
+      out('t-notif', 'requestPermission kastade: ' + err.message);
+    });
+    return;
+  }
+  schedule('t-notif', showNotification);
+});
+
+// ---------------------------------------------------------------- 3: vibration
+
+document.querySelector('#t-vibrate .run').addEventListener('click', function () {
+  if (!('vibrate' in navigator)) {
+    out('t-vibrate', "'vibrate' in navigator === false — API:et finns inte");
+    return;
+  }
+  schedule('t-vibrate', function () {
+    var r = navigator.vibrate([200, 100, 200, 100, 400]);
+    // Ett true här betyder bara att anropet accepterades, inte att telefonen skakade.
+    // Därför är Ja/Nej-frågan nedanför den enda riktiga mätpunkten.
+    out('t-vibrate', 'navigator.vibrate(...) returnerade: ' + r +
+        '\n(true betyder accepterat, inte att den faktiskt vibrerade)');
+  });
+});
+
+// ---------------------------------------------------------------- 4: ljud
+
+document.querySelector('#t-audio .run').addEventListener('click', function () {
+  var Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) { out('t-audio', 'AudioContext stöds inte'); return; }
+
+  // Kontexten måste skapas och återupptas inuti en användargest.
+  if (!audioCtx) audioCtx = new Ctx();
+  var before = audioCtx.state;
+
+  audioCtx.resume().then(function () {
+    refreshContext();
+    schedule('t-audio', function () {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      var t = audioCtx.currentTime;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t);
+      // Mjuk in- och utfasning, annars knäpper det.
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.5, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.65);
+      out('t-audio', 'state före: ' + before + ' → efter resume: ' + audioCtx.state +
+          '\nspelade 880 Hz i 0,6 s');
+    });
+  }).catch(function (err) {
+    out('t-audio', 'resume() kastade: ' + err.message);
+  });
+});
+
+// ---------------------------------------------------------------- observation
+
+document.querySelectorAll('.obs button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var row = btn.closest('.obs');
+    row.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+    btn.setAttribute('aria-pressed', 'true');
+    var key = btn.closest('.test').id.replace('t-', '');
+    results[key] = results[key] || {};
+    results[key].obs = btn.dataset.v;
+    buildSummary();
+  });
+});
+
+// ---------------------------------------------------------------- fördröjning
+
+document.querySelectorAll('#delay button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('#delay button').forEach(function (b) {
+      b.setAttribute('aria-pressed', 'false');
+    });
+    btn.setAttribute('aria-pressed', 'true');
+    delayMs = Number(btn.dataset.ms);
+    buildSummary();
+  });
+});
+
+// ---------------------------------------------------------------- sammanfattning
+
+var LABELS = { visual: 'Visuell blink', notif: 'Notis', vibrate: 'Vibration', audio: 'Ljud' };
+
+function buildSummary() {
+  var lines = [];
+  lines.push('GYM-APP ÅTERKOPPLINGSTEST');
+  lines.push('tid:        ' + new Date().toISOString());
+  lines.push('läge:       ' + (isStandalone() ? 'STANDALONE (installerad)' : 'webbläsarflik'));
+  lines.push('fördröjning:' + (delayMs === 0 ? ' direkt' : ' ' + delayMs / 1000 + ' s'));
+  lines.push('protokoll:  ' + location.protocol);
+  lines.push('sw:         ' + (swReg ? 'registrerad' : 'nej'));
+  lines.push('permission: ' + (('Notification' in window) ? Notification.permission : 'API saknas'));
+  lines.push("'vibrate':  " + ('vibrate' in navigator));
+  lines.push('audio:      ' + (audioCtx ? audioCtx.state : 'ej skapad'));
+  lines.push('ua:         ' + navigator.userAgent);
+  lines.push('');
+  lines.push('--- ljudomkopplare: fyll i själv (PÅ / AV) ---');
+  lines.push('');
+  ['visual', 'notif', 'vibrate', 'audio'].forEach(function (k) {
+    var r = results[k] || {};
+    lines.push(LABELS[k] + ':');
+    lines.push('  observerat: ' + (r.obs ? r.obs.toUpperCase() : '(ej besvarat)'));
+    lines.push('  api:        ' + (r.api ? r.api.replace(/\n/g, '\n              ') : '(ej kört)'));
+  });
+  document.getElementById('summary').value = lines.join('\n');
+}
+
+document.getElementById('copy').addEventListener('click', function () {
+  var ta = document.getElementById('summary');
+  var btn = document.getElementById('copy');
+  function done(ok) {
+    btn.textContent = ok ? 'Kopierat ✓' : 'Markera texten och kopiera manuellt';
+    setTimeout(function () { btn.textContent = 'Kopiera resultat'; }, 2000);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(function () { done(true); },
+                                                 function () { done(false); });
+  } else {
+    ta.removeAttribute('readonly');
+    ta.select();
+    ta.setSelectionRange(0, 99999);
+    done(document.execCommand && document.execCommand('copy'));
+    ta.setAttribute('readonly', '');
+  }
+});
+
+// Läget kan ändras (t.ex. om sidan öppnas installerad) — uppdatera vid fokus.
+document.addEventListener('visibilitychange', function () {
+  if (!document.hidden) refreshContext();
+});
+
+refreshContext();
+</script>
+</body>
+</html>

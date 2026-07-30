@@ -17,16 +17,19 @@ Nedbrytning av `docs/PLAN.md`. Ordningen är inte godtycklig — se §6 i planen
 
 Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
 
-- [ ] **0.1 Skapa testsidan för återkoppling.** En fristående `test/feedback-test.html`, ingen
-      byggkedja, inga beroenden. Fyra knappar: *Visuell blink*, *Notis*, *Vibrera*, *Ljud*.
-      Under varje knapp en rad som skriver ut vad API:et returnerade (t.ex. `'vibrate' in
-      navigator`, `Notification.permission`, `audioContext.state`).
-      **Klart när:** filen öppnas lokalt och alla fyra knapparna går att trycka på.
-- [ ] **0.2 Lägg till minimal `manifest.json` för testsidan.** Behövs för att kunna installera
-      testsidan på hemskärmen — notiser på iOS kräver installerad PWA.
-      **Klart när:** "Lägg till på hemskärmen" i Safari ger en app utan adressfält.
+- [x] **0.1 Skapa testsidan för återkoppling.** `test/feedback-test.html` — ingen byggkedja,
+      inga beroenden, vanlig HTML/JS. Fyra knappar med API-utfall under varje, plus en
+      Ja/Nej-fråga per kanal (API:ets returvärde säger inte om telefonen faktiskt skakade)
+      och en fördröjningsväljare (direkt / 5 s / 10 s) så att larmet kan testas med appen i
+      bakgrunden — vilket är det scenario vilotimern körs i.
+      Två filer utöver den planerade: `test/sw.js`, eftersom iOS saknar `new Notification()`
+      och bara stöder `registration.showNotification()`, samt `test/make-icons.mjs` som
+      genererar ikonerna så att PNG-filerna har en spårbar källa.
+- [x] **0.2 Lägg till minimal `manifest.json` för testsidan.** Klar, med
+      `apple-touch-icon.png` (180×180) och manifestikoner i 192/512 px, `display: standalone`
+      och `viewport-fit=cover`. `test/vercel.json` gör att `/` serverar testsidan direkt.
 - [ ] **0.3 Publicera testsidan på en HTTPS-adress.** Notis-API och installerbarhet kräver
-      HTTPS. Vercel/Netlify drag-and-drop räcker.
+      HTTPS. `npx vercel --prod` från `test/`-mappen, som eget throwaway-projekt.
       **Klart när:** sidan nås via `https://` från telefonen.
 - [ ] **0.4 Mät i Safari-flik, ljudet PÅ.** Kör alla fyra knapparna. Anteckna utfall per knapp.
       **Klart när:** resultatet står nedskrivet i 0.7.
@@ -299,8 +302,8 @@ fungerar — men nivå 1 byggs alltid, oavsett utfall.
 
 ## Fas 10 — Deploy
 
-- [ ] **10.1 Välj Vercel eller Netlify och koppla repot.**
-      **Klart när:** push till `main` bygger automatiskt.
+- [ ] **10.1 Koppla repot till Vercel.** Ramverksförval: Vite. Byggkommando `npm run build`,
+      utdatakatalog `dist`. **Klart när:** push till `main` bygger automatiskt.
 - [ ] **10.2 Sätt miljövariabler i hostingen.**
       **Klart när:** produktionsbygget når Supabase.
 - [ ] **10.3 Installera appen på Adams telefon från produktions-URL:en.**

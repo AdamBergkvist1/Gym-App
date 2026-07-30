@@ -23,7 +23,7 @@ underlagen står det uttryckligen varför.
 | Synk | **Egen utkorg (outbox) i Dexie**, inte PowerSync/ElectricSQL | En användare, nästan bara tillägg av rader, sällsynta konflikter. Färdig synkmotor kostar mer i komplexitet, leverantörsberoende **och pengar** än den ger. |
 | Idempotens | **Klientgenererad UUIDv4 som primärnyckel** + kvitterande `sync_mutations`-tabell | Uppfyller `CLAUDE.md` regel 4 utan extra rundtur i normalfallet. |
 | Backend | **Supabase Free Tier** (Postgres + Auth + Edge Functions) | Enligt SPEC. Edge Functions gör att vi slipper en andra leverantör för AI-anropet. |
-| Hosting | **Vercel Hobby** (statiskt bygge). Netlify likvärdigt. | Ett statiskt SPA kostar ingenting att hosta. Inget serverside-körande behövs. |
+| Hosting | **Vercel** (statiskt bygge) — beslutat 2026-07-30, inga alternativ övervägs | Ett statiskt SPA kostar ingenting att hosta. Adam har redan konto. |
 | Fritextparsning | **Lokal grammatik, testdriven, skriven först.** LLM enbart som reserv. | Gymkällare har inget nät. En AI-only-inmatning är trasig exakt när appen behövs. |
 | LLM-leverantör | **Groq primärt, Gemini som reserv** — båda gratisnivå, bakom ett leverantörsoberoende gränssnitt | Krav från beställaren. Groq för latens, Gemini för schemastyrd utdata. |
 | MCP | **Separat spår, inte i inmatningsvägen** — samma verktygsimplementation exponerad två gånger | MCP:s värde är att *externa* klienter (Claude Desktop) når träningsloggen. Inne i vår egen backend anropar vi våra egna funktioner direkt. Dessutom saknar Supabase MCP-stöd autentisering i dag. |
@@ -596,7 +596,7 @@ LLM (§4.3), gratis-stack (§7), notis före ljud (§2.6).
 | 1 | Fungerar vibration och notis på Adams telefon, i tyst läge, som installerad PWA? | **Fas 0 i `TASKS.md` — mätning, blockerar timerarbetet** |
 | 2 | Ska `effort` vara ett fält (`type` + `value`) eller två kolumner? (§3.1) | Före migrationen |
 | 3 | Vem fyller den globala övningskatalogen, och hur stor ska den vara i v1? | Före migrationen |
-| 4 | Vercel eller Netlify? (Båda fungerar; valet är smak) | Före deploy |
+| ~~4~~ | ~~Vercel eller Netlify?~~ **Avgjort 2026-07-30: Vercel.** | — |
 
 Risker utan åtgärd, men som ska vara sagda:
 
@@ -631,10 +631,13 @@ ska därför stå skrivet var gränserna går.
 
 ### 7.1 Hosting
 
-**Vercel Hobby** för det statiska bygget. Netlify är likvärdigt; valet är smak. Eftersom
-frontenden är ett statiskt bygge utan serverside-körning finns här ingen praktisk gräns att
-slå i — ingen funktionskörning, inga kallstarter, inga byggminuter av betydelse för ett
-projekt med en utvecklare.
+**Vercel Hobby.** Beslutat 2026-07-30 — Adam har redan konto, och andra leverantörer övervägs
+inte. Eftersom frontenden är ett statiskt bygge utan serverside-körning finns här ingen
+praktisk gräns att slå i: ingen funktionskörning, inga kallstarter, inga byggminuter av
+betydelse för ett projekt med en utvecklare.
+
+Notera att Hobby-planen är för icke-kommersiell användning. Ett personligt träningsprojekt
+ligger tryggt inom det; skulle appen någon gång ta betalt byter förutsättningarna.
 
 ### 7.2 Supabase Free Tier — verifierade gränser
 
