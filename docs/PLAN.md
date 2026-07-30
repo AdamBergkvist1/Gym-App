@@ -166,22 +166,52 @@ vi byta till en riktig synkmotor i stället för att lappa ihop egen konfliktlö
 noterat som en gräns, inte som ett planerat steg — och det skulle kosta pengar, vilket §7
 utesluter.
 
-### 2.6 Vilotimern: visuellt först, ljud sist
+### 2.6 Vilotimern — mätt, inte antaget
 
-Beställarens besked: telefonen ligger normalt på ljudlöst, så ljud är inte kravet — en notis
-räcker, och vibration om det går. Det förenklar designen och gör den mer robust. Ordningen är
-därför omvänd mot vad underlaget föreslår:
+**Mätning utförd 2026-07-30** på iPhone, iOS 18.7, Safari 26.5.2, installerad PWA på
+hemskärmen, fysiska ljudomkopplaren i **tyst läge**, larm utlöst efter 5 sekunder med appen
+lagd i bakgrunden. Detta är observerat utfall, inte en bedömning:
 
-| Nivå | Kanal | Tillförlitlighet |
-| :---- | :---- | :---- |
-| 1 | **Visuellt i appen** — helskärmsbyte av bakgrundsfärg, stor siffra som slår om | Alltid. Kräver ingen behörighet. Skärmen är redan tänd via Wake Lock. |
-| 2 | **Lokal notis** via `registration.showNotification()` | Kräver installerad PWA på hemskärmen + beviljad behörighet. |
-| 3 | **Vibration** via `navigator.vibrate()` | Fungerar på Android. **På iOS: oklart — ska mätas, se nedan.** |
-| 4 | **Ljud** via Web Audio API | Bonus. Byggs bara om mätningen visar att det hörs i tyst läge. |
+| Kanal | API-utfall | Observerat | Slutsats |
+| :---- | :---- | :---- | :---- |
+| **Notis** (`registration.showNotification()`) | `permission=granted`, inget fel | ✅ **Kom fram i bakgrunden** — med iOS eget systemljud *och* vibration, trots tyst läge | **Bärande kanal.** |
+| **Visuell blink** | inget API inblandat | ❌ Bara när appen låg i förgrunden | Kompletterande, endast i förgrunden. |
+| **Vibration** (`navigator.vibrate()`) | `'vibrate' in navigator === false` | ❌ Ingen effekt | **Struken.** API:et finns inte i iOS. |
+| **Ljud** (Web Audio) | `state: running` → **`interrupted`** i bakgrunden | ❌ Bara i förgrunden | **Struken som larmkanal.** |
 
-Nivå 1 är den som bär funktionen. Den kräver inga behörigheter, inga API:er som kan
-försvinna mellan iOS-versioner, och den fungerar redan i dag. Nivå 2–4 är förbättringar
-ovanpå en fungerande grund — inte förutsättningar.
+Tre saker att lyfta ur mätningen:
+
+1. **Vibrationsfrågan är avgjord.** `'vibrate' in navigator` returnerar `false` på iOS 18.7.
+   De motstridiga källorna hade fel; caniuse hade rätt. Allt arbete med `navigator.vibrate`
+   är struket. Notisen ger ändå en vibration — via systemet, inte via oss.
+2. **`AudioContext` gick till `interrupted`** när appen bakgrundades. Det är iOS som stänger
+   ljudsessionen. Web Audio kan därför aldrig bära ett larm som ska höras när appen inte är
+   framme, oavsett tyst läge. Ljudlarm är struket.
+3. **Notisen bar både ljud och vibration gratis.** Genom att lämna över återkopplingen till
+   operativsystemet får vi kanaler vi själva inte kan nå. Det är den enskilt viktigaste
+   insikten i hela mätningen.
+
+**Beslutad arkitektur:**
+
+| Läge | Kanal |
+| :---- | :---- |
+| Appen i bakgrunden eller skärmen släckt | **Lokal notis** från servicearbetaren |
+| Appen i förgrunden | **Visuell helskärmsförändring** (ingen notis — den vore störande när man redan tittar) |
+
+> ⚠️ **Terminologi som spelar roll: detta är en *lokal notis*, inte Web Push.**
+>
+> Skillnaden är inte semantisk utan avgör om appen fungerar i ett gym.
+>
+> - **Lokal notis** — sidans egen JavaScript anropar `registration.showNotification()`.
+>   Ingen server, inga VAPID-nycklar, ingen prenumeration, **inget nätverk**. Det är detta
+>   som mättes och fungerade.
+> - **Web Push** — en server skickar ett meddelande via Apples pushtjänst, servicearbetaren
+>   tar emot ett `push`-event och visar notisen. Kräver **nätverk i det ögonblick larmet ska
+>   gå**, plus en pushserver och nyckelhantering.
+>
+> Web Push vore fel val här: premissen för hela appen är att gymmet saknar nät. En vilotimer
+> som kräver uppkoppling för att ringa är trasig precis där den behövs. Den lokala notisen
+> har inget sådant beroende. Vi bygger aldrig Web Push i den här appen.
 
 **Timern lagras som sluttidpunkt**, inte som en nedräknande räknare. Bakgrundade
 `setInterval` strypes hårt av mobilwebbläsare; en räknare som tickar ner blir fel så snart
@@ -191,24 +221,23 @@ Timern överlever både omladdning och bakgrundsläge.
 **Wake Lock** begärs när timern startar och **återbegärs på `visibilitychange`** — låset
 släpps av webbläsaren så fort appen tappar fokus, så ett enda anrop räcker inte.
 
-> ⚠️ **Två påståenden ska mätas, inte antas — se `TASKS.md` fas 0.**
+> ⚠️ **En kvarvarande mätning innan fas 6 byggs: håller timern i tre minuter?**
 >
-> 1. **Vibration på iOS.** Källorna är i dag *motstridiga*. En rapport i MDN:s
->    kompatibilitetsdatabas från mars 2026 hävdar att `navigator.vibrate` numera fungerar i
->    iOS Safari; caniuse och flera senare sammanställningar anger fortfarande att den inte
->    stöds. Vi ska inte välja sida på ett skrivbord. Feature detection (`'vibrate' in
->    navigator`) räcker inte heller — den kan returnera sant och ändå inte göra något.
->    Enda giltiga svaret är ett test på Adams telefon.
-> 2. **Ljud genom tyst läge.** Underlaget hävdar att Web Audio API tar sig förbi iOS tysta
->    läge. Beteendet har ändrats mellan iOS-versioner. Eftersom ljud nu är nivå 4 och inte
->    bär funktionen, är detta en trevlig-att-veta-mätning snarare än en blockerare — men
->    den görs i samma test eftersom marginalkostnaden är noll.
+> Mätningen ovan använde **5 sekunders** fördröjning. En vilotid är 2–5 minuter. Det som
+> utlöste notisen var en `setTimeout` i sidans egen JavaScript — och iOS fryser bakgrundade
+> webbsidors JavaScript efter en kort stund. Fem sekunder hann sannolikt inom nådatiden.
+> Tre minuter kanske inte gör det.
 >
-> **Notera att notiser på iOS kräver att appen är installerad på hemskärmen.** Det är
-> verifierat mot Apples och flera leverantörers dokumentation: notiser är bara tillgängliga
-> för PWA:er installerade från Safari, med `manifest.json`, och behörighetsdialogen kräver
-> en explicit användargest. Testet i fas 0 ska därför köras **både** som Safari-flik och som
-> installerad app — annars mäter vi fel sak.
+> Misslyckas det ser man det inte som tystnad utan som att **notisen kommer i samma sekund
+> som man öppnar appen igen** — vilket är värre än inget larm, eftersom det ser ut att
+> fungera.
+>
+> `TimestampTrigger` / Notification Triggers API, som skulle lösa det genom att låta
+> operativsystemet hålla i schemaläggningen, finns bara i Chromium och har aldrig
+> implementerats i Safari. Vi har alltså ingen given reservplan, och det är just därför
+> mätningen måste göras före bygget: **uppgift 0.8 i `TASKS.md`, med 3 minuters fördröjning.**
+> Faller den ut negativt är svaret sannolikt att låta Wake Lock hålla skärmen tänd och
+> acceptera att appen ska ligga framme under vilan — inte att bygga Web Push.
 
 ---
 
@@ -351,12 +380,29 @@ Fem beslut utöver det:
    `owner_id = (select auth.uid())` — vilket gör den globala katalogen skrivskyddad för alla
    appanvändare utan att vi behöver en separat tabell. Katalogen underhålls via migrationer.
 
-5. **`service_role`-nyckeln finns bara i migrationer, aldrig i en funktion som svarar på
+5. **Hemliga nyckeln finns bara i migrationer, aldrig i en funktion som svarar på
    användartrafik.** Edge Function `/ai/parse` skapar sin Supabase-klient med **anroparens
-   JWT**, vidarebefordrad från `Authorization`-headern. Det betyder att RLS gäller även inuti
-   serverfunktionen: en bugg i funktionen kan i värsta fall röra den inloggade användarens
-   egna rader, aldrig någon annans. En funktion som kör som `service_role` har ingen sådan
-   spärr, och det är precis den genvägen som gör serverlösa backends osäkra.
+   JWT**. Det betyder att RLS gäller även inuti serverfunktionen: en bugg i funktionen kan i
+   värsta fall röra den inloggade användarens egna rader, aldrig någon annans. En funktion som
+   kör med den hemliga nyckeln har ingen sådan spärr, och det är precis den genvägen som gör
+   serverlösa backends osäkra.
+
+**Nycklar: nya modellen från dag ett.** Supabase har ersatt `anon` och `service_role` med
+**publishable** (`sb_publishable_…`) och **secret** (`sb_secret_…`). De gamla fungerar till
+utgången av 2026, men eftersom vi startar från noll finns ingen anledning att bygga på något
+som ska bytas ut inom ett år. Kartläggningen:
+
+| Gammalt | Nytt | Var den får finnas |
+| :---- | :---- | :---- |
+| `anon` | **publishable** | Frontend, publik källkod. Låg behörighet, RLS gäller. |
+| `service_role` | **secret** | Enbart migrationer och skript vi kör själva. **Kringgår RLS helt.** |
+
+Två praktiska följder att känna till innan Edge Functions byggs: de nya nycklarna är inte
+JWT:er, så de ska skickas i `apikey`-headern (inte `Authorization: Bearer`), och plattformens
+inbyggda `verify_jwt` förstår dem inte — funktionen sätter `verify_jwt = false` och auktoriserar
+i egen kod. Supabase rekommenderar `@supabase/server`-SDK:n med `withSupabase({ auth: 'user' })`
+för nya funktioner, vilket ger exakt det vi vill ha i punkt 5: en färdig klient som är scopead
+till anroparens RLS. Det är förstahandsvalet i uppgift 8.4.
 
 **Radering.** UI:t raderar aldrig hårt; det sätter `is_deleted`. `DELETE`-policyerna finns ändå
 definierade (annars vore hård radering omöjlig även för legitima fall), men används inte i
@@ -525,7 +571,7 @@ flera lika bra träffar.
 Kraven:
 
 - Verifierar JWT. Anonyma anrop avvisas.
-- Bygger Supabase-klienten med **anroparens** token (§3.3), inte `service_role`.
+- Bygger Supabase-klienten med **anroparens** token (§3.3), aldrig med den hemliga nyckeln.
 - **`user_id` kommer alltid från JWT:n, aldrig från modellens utdata.** Modellen får inte ens
   ett fält att fylla i. Det är den enda spärren som håller om en prompt någon gång blir
   manipulerad.
@@ -593,7 +639,7 @@ LLM (§4.3), gratis-stack (§7), notis före ljud (§2.6).
 
 | # | Kvarvarande fråga | Behöver avgöras |
 | :---- | :---- | :---- |
-| 1 | Fungerar vibration och notis på Adams telefon, i tyst läge, som installerad PWA? | **Fas 0 i `TASKS.md` — mätning, blockerar timerarbetet** |
+| 1 | ~~Fungerar vibration och notis på Adams telefon?~~ **Mätt 2026-07-30, se §2.6.** Kvar: håller en lokal notis i **tre minuter** med appen i bakgrunden? | **Uppgift 0.8 — före fas 6** |
 | 2 | Ska `effort` vara ett fält (`type` + `value`) eller två kolumner? (§3.1) | Före migrationen |
 | 3 | Vem fyller den globala övningskatalogen, och hur stor ska den vara i v1? | Före migrationen |
 | ~~4~~ | ~~Vercel eller Netlify?~~ **Avgjort 2026-07-30: Vercel.** | — |
@@ -647,7 +693,10 @@ Hämtat från Supabase egen dokumentation:
 | :---- | :---- | :---- |
 | Databasstorlek | **500 MB** | Projektet går i **read-only** — inserts och deletes vägras |
 | Diskutrymme | 1 GB | (read-only utlöses av 500 MB-gränsen, inte disken) |
-| Bandbredd | **10 GB/mån** (5 cachad + 5 ocachad) | |
+| Egress (bandbredd) | **5 GB/mån** enligt kvottabellen | Storage-guiden anger 5 GB cachad + 5 GB ocachad. Oavsett vilken siffra som gäller är det inte den bindande gränsen här. |
+| Edge Function-anrop | **500 000/mån** | Vi anropar bara vid fritextmissar — se §4.3 |
+| Aktiva användare | 50 000 MAU | Irrelevant för en användare |
+| Antal gratisprojekt | **2 totalt**, räknat över alla organisationer där du är ägare eller admin | Pausade projekt räknas inte. Se §7.4 |
 | Inaktivitet | **7 dagar med för låg databasaktivitet → projektet pausas** | Varningsmejl ~1 vecka innan. Återstartas med ett klick i dashboarden inom 90 dagar. |
 | Förbrukat från start | ~40–60 MB av 500 MB | Nytt projekt innehåller redan tillägg och systemscheman |
 

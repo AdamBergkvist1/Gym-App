@@ -28,22 +28,29 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
 - [x] **0.2 Lägg till minimal `manifest.json` för testsidan.** Klar, med
       `apple-touch-icon.png` (180×180) och manifestikoner i 192/512 px, `display: standalone`
       och `viewport-fit=cover`. `test/vercel.json` gör att `/` serverar testsidan direkt.
-- [ ] **0.3 Publicera testsidan på en HTTPS-adress.** Notis-API och installerbarhet kräver
-      HTTPS. `npx vercel --prod` från `test/`-mappen, som eget throwaway-projekt.
-      **Klart när:** sidan nås via `https://` från telefonen.
-- [ ] **0.4 Mät i Safari-flik, ljudet PÅ.** Kör alla fyra knapparna. Anteckna utfall per knapp.
-      **Klart när:** resultatet står nedskrivet i 0.7.
-- [ ] **0.5 Mät i Safari-flik, ljudet AV (fysiska omkopplaren i tyst läge).** Samma fyra.
-      **Klart när:** resultatet står nedskrivet i 0.7.
-- [ ] **0.6 Mät som installerad PWA på hemskärmen, ljudet AV.** Samma fyra, plus att
-      notisbehörighet faktiskt går att bevilja. **Detta är det scenario appen kommer köras i.**
-      **Klart när:** resultatet står nedskrivet i 0.7.
-- [ ] **0.7 Skriv in mätresultatet i `docs/PLAN.md` §2.6.** Ersätt varningsrutan med en tabell
-      över vad som faktiskt fungerade i vilket läge. Inga "borde" — bara observerat utfall.
-      **Klart när:** planen innehåller mätdata i stället för öppna frågor, och `docs/HANDOFF.md`
-      är uppdaterad.
+- [x] **0.3 Publicera testsidan på en HTTPS-adress.** Publicerad på Vercel:
+      `https://gym-app-gold-psi-81.vercel.app/`
+- [x] **0.4–0.6 Mätningen utförd 2026-07-30.** iPhone, iOS 18.7, Safari 26.5.2, installerad
+      PWA, tyst läge, 5 s fördröjning med appen i bakgrunden. Utfall: **notis ✅** (kom fram
+      med systemets eget ljud och vibration), **visuell blink ❌** (endast förgrund),
+      **vibration ❌** (`'vibrate' in navigator === false`), **ljud ❌** (`AudioContext`
+      gick till `interrupted` i bakgrunden).
+- [x] **0.7 Mätresultatet inskrivet i `docs/PLAN.md` §2.6** som tabell med observerat utfall.
 
-🚧 **GRIND 1:** Fas 6 (vilotimern) får inte påbörjas innan 0.7 är klar.
+🚧 **GRIND 1 — ÖPPNAD 2026-07-30.** Fas 6 får byggas.
+
+- [ ] **0.8 Mät om en lokal notis håller i TRE MINUTER.** Den enda kvarvarande obesvarade
+      frågan, och den är inte kosmetisk: mätningen ovan använde 5 sekunder, men en vilotid är
+      2–5 minuter. Notisen utlöstes av en `setTimeout` i sidans egen JavaScript, och iOS fryser
+      bakgrundade webbsidors JavaScript efter en kort stund. Fem sekunder hann sannolikt inom
+      nådatiden; tre minuter kanske inte gör det.
+      **Så här:** lägg till `180000` som ett fjärde alternativ i fördröjningsväljaren i
+      `test/feedback-test.html` (raden med `data-ms="10000"`), deploya om, tryck Notis, lås
+      telefonen och lägg undan den i tre minuter.
+      **Klart när:** det står i `PLAN.md` §2.6 om notisen kom **vid rätt tidpunkt** eller
+      **först när appen öppnades igen**. Det senare räknas som ett misslyckande — ett larm
+      som kommer när man redan tittar är värre än inget larm, eftersom det ser ut att fungera.
+      **Blockerar uppgift 6.6.** Inget annat.
 
 ---
 
@@ -57,7 +64,8 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
       **Klart när:** `npm run typecheck` finns som script och går igenom.
 - [ ] **1.4 Lägg till Vitest.** **Klart när:** `npm test` kör och rapporterar 0 tester.
 - [ ] **1.5 Lägg till ESLint + Prettier.** **Klart när:** `npm run lint` går igenom.
-- [ ] **1.6 Skapa `.env.example`** med `VITE_SUPABASE_URL` och `VITE_SUPABASE_ANON_KEY`.
+- [ ] **1.6 Skapa `.env.example`** med `VITE_SUPABASE_URL` och
+      `VITE_SUPABASE_PUBLISHABLE_KEY` (den nya `sb_publishable_…`, inte legacy-`anon`).
       **Innehåller inga värden.** **Klart när:** filen finns och `.env` är i `.gitignore`.
 - [ ] **1.7 Definiera mappstrukturen** (`src/db/`, `src/parser/`, `src/sync/`, `src/ui/`,
       `src/timer/`, `src/lib/`) med en tom `index.ts` i varje.
@@ -68,7 +76,11 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
 ## Fas 2 — Supabase: schema och RLS
 
 - [ ] **2.1 Skapa Supabase-projekt på Free Tier.** Egen organisation, **inte** delad med
-      `news-signal-engine`. **Klart när:** projekt-URL och anon-nyckel finns i lokal `.env`.
+      `news-signal-engine`. Notera att gratisnivån ger **två aktiva projekt totalt**, räknat
+      över alla organisationer där du är ägare eller admin. Skapa i **Settings > API Keys**
+      de nya `sb_publishable_…` / `sb_secret_…`-nycklarna direkt.
+      **Klart när:** projekt-URL och publishable-nyckel finns i lokal `.env`, och den hemliga
+      nyckeln finns **enbart** i lösenordshanteraren — inte i repot.
 - [ ] **2.2 Installera Supabase CLI och `supabase init`.**
       **Klart när:** `supabase/config.toml` finns i repot.
 - [ ] **2.3 Migration: `profiles`.** Tabell enligt planen §3.1 + trigger som skapar rad vid ny
@@ -210,20 +222,21 @@ fungerar — men nivå 1 byggs alltid, oavsett utfall.
       **Klart när:** timern startar utan extra tryck.
 - [ ] **6.3 Rendera nedräkningen.** **Klart när:** siffran stämmer efter att appen varit i
       bakgrunden i två minuter.
-- [ ] **6.4 Nivå 1 — visuellt larm.** Helskärmsbyte av bakgrundsfärg vid noll.
+- [ ] **6.4 Visuellt larm — endast förgrund.** Helskärmsbyte av bakgrundsfärg vid noll.
       **Klart när:** det syns tydligt utan ljud och utan behörigheter.
 - [ ] **6.5 Wake Lock.** Begär vid timerstart, **återbegär vid `visibilitychange`**.
       **Klart när:** skärmen är tänd efter tre minuters vila utan att någon rört telefonen.
-- [ ] **6.6 Nivå 2 — lokal notis**, om fas 0 visade att den fungerar. Behörighet begärs vid en
-      explicit användargest, inte vid appstart.
-      **Klart när:** notisen syns med appen i bakgrunden — eller uppgiften är struken med
-      hänvisning till mätresultatet.
-- [ ] **6.7 Nivå 3 — vibration**, om fas 0 visade att den fungerar.
-      **Klart när:** telefonen vibrerar — eller uppgiften är struken med hänvisning till
-      mätresultatet.
-- [ ] **6.8 Nivå 4 — ljud**, om fas 0 visade att det hörs i tyst läge. `AudioContext` låses upp
-      vid "Starta pass"; `suspend()`/`resume()` vid `visibilitychange`.
-      **Klart när:** larmet hörs — eller uppgiften är struken med hänvisning till mätresultatet.
+- [ ] **6.6 Lokal notis — bärande kanal i bakgrunden.** `registration.showNotification()`,
+      **inte Web Push** (se `PLAN.md` §2.6 — Web Push kräver nät och är därför fel i ett gym).
+      Behörighet begärs vid en explicit användargest, inte vid appstart. Notis visas **bara**
+      när `document.hidden` är sant; ligger appen framme räcker det visuella larmet.
+      **Kräver att uppgift 0.8 är utförd.**
+      **Klart när:** notisen kommer efter en riktig vilotid med telefonen låst och undanlagd.
+- [x] ~~**6.7 Vibration.**~~ **Struken 2026-07-30.** `'vibrate' in navigator === false` på
+      iOS 18.7. Notisen ger ändå vibration — via systemet, inte via oss.
+- [x] ~~**6.8 Ljudlarm via Web Audio.**~~ **Struken 2026-07-30.** `AudioContext` går till
+      `interrupted` när appen bakgrundas; ljud kan aldrig bära larmet. Notisen ger systemets
+      eget ljud.
 - [ ] **6.9 Justerbar vilotid.** Per övning, sparad i `meta`.
       **Klart när:** vald tid används vid nästa set av samma övning.
 
@@ -231,7 +244,7 @@ fungerar — men nivå 1 byggs alltid, oavsett utfall.
 
 ## Fas 7 — Synk
 
-- [ ] **7.1 Bygg Supabase-klienten.** Anon-nyckel från env. **Klart när:** klienten
+- [ ] **7.1 Bygg Supabase-klienten.** Publishable-nyckel från env. **Klart när:** klienten
       instansieras utan att blockera appstart om nätet saknas.
 - [ ] **7.2 Bygg inloggning (e-post + lösenord).**
       **Klart när:** inloggning fungerar och `user_id` cachas lokalt.
@@ -264,8 +277,11 @@ fungerar — men nivå 1 byggs alltid, oavsett utfall.
       **Klart när:** nyckeln är satt som secret i Supabase.
 - [ ] **8.3 Definiera JSON-schemat för parsersvaret.** Delas mellan klient och funktion.
       **Klart när:** schemat validerar de förväntade utdata från fas 4:s testkorpus.
-- [ ] **8.4 Skapa Edge Function `ai-parse`.** JWT-verifiering, Supabase-klient byggd med
-      **anroparens** token. **Klart när:** anrop utan token avvisas med 401.
+- [ ] **8.4 Skapa Edge Function `ai-parse`.** Förstahandsval: `@supabase/server`-SDK:n med
+      `withSupabase({ auth: 'user' })`, som ger en färdig klient scopead till anroparens RLS.
+      Kräver `verify_jwt = false` i `config.toml` — auktoriseringen sker i SDK:n i stället.
+      **Klart när:** anrop utan giltig session avvisas, och ett anrop med session bara ser
+      egna rader.
 - [ ] **8.5 Bygg leverantörsgränssnittet `parseWithLLM`.** En implementation per leverantör,
       vald via miljövariabel. **Klart när:** byte av leverantör är en env-ändring.
 - [ ] **8.6 Implementera Groq-vägen.** **Klart när:** en fritextrad som fas 4:s parser missar
