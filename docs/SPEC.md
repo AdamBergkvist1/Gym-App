@@ -17,7 +17,8 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 - **Notering / Vibe:** (String, Optional) T.ex. "Ont i axeln".
 - **Timestamp:** (Tz) Exakt tid för setet.
 
-## 4. UI / Designspråk
-- **Minimalistiskt och mörkt:** Tänk Jeff Nippard / Macrostax. Inget onödigt fluff.
-- **Tysta framgångar:** Inga stora pop-ups när ett set sparas. En diskret färgförändring eller ikon räcker för att bekräfta ("Success State").
-- **Offline-First:** Användargränssnittet måste uppdateras omedelbart (Optimistic UI) via IndexedDB, oavsett nätverkets status. Nätverksanrop sker i bakgrunden.
+## 4. UI / Designspråk och Inspiration
+- **Vetenskapligt Datafokus (RP Hypertrophy / Dr. Mike Israetel):** Appen ska ta inspiration från RP Hypertrophy-appen gällande vetenskaplig loggning (fokus på RIR, ansträngning och progression). AI-chatten ska användas för att göra inmatningen av denna data snabbare och mindre tungrodd än i RP-appen.
+- **Visuell stil (Jeff Nippard / Boostcamp):** Minimalistiskt, mörkt tema ("dark mode") med rena kontraster. Siffrorna och historiken står i centrum. Absolut inget onödigt fluff eller sociala flöden.
+- **Tysta framgångar:** Inga blockernade pop-ups när ett set sparas. En diskret färgförändring eller en liten ikon räcker för att bekräfta att datan sparats ("Success State").
+- **Offline-First:** Användargränssnittet måste uppdateras omedelbart (Optimistic UI) via lokal IndexedDB, oavsett nätverkets status. Skrivningar till databasen sker tyst i bakgrunden.
