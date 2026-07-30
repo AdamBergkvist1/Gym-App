@@ -635,13 +635,21 @@ samma `user_id`-från-token-regel som i §4.4.
 ## 5. Risker och kvarvarande frågor
 
 Beslutade 2026-07-30: Vite-SPA (§2.1), MCP utanför inmatningsvägen (§4.2), lokal parser före
-LLM (§4.3), gratis-stack (§7), notis före ljud (§2.6).
+LLM (§4.3), gratis-stack (§7), Vercel som enda hosting (§7.1), och — efter mätning — **lokal
+notis som bärande larmkanal** (§2.6).
+
+Två frågor som stod öppna avgjordes 2026-07-30 och är inte längre öppna:
+
+- **`effort` blir ett fält**, `effort_type` (`'rir'` / `'rpe'`) + `effort_value`, inte två
+  separata kolumner. En siffra ska aldrig kunna vara tvetydig om vilken skala den tillhör.
+- **Övningskatalogen genereras som del av uppgift 2.16**: 30–50 grundövningar med svenska och
+  engelska alias, `owner_id = null`.
 
 | # | Kvarvarande fråga | Behöver avgöras |
 | :---- | :---- | :---- |
-| 1 | ~~Fungerar vibration och notis på Adams telefon?~~ **Mätt 2026-07-30, se §2.6.** Kvar: håller en lokal notis i **tre minuter** med appen i bakgrunden? | **Uppgift 0.8 — före fas 6** |
-| 2 | Ska `effort` vara ett fält (`type` + `value`) eller två kolumner? (§3.1) | Före migrationen |
-| 3 | Vem fyller den globala övningskatalogen, och hur stor ska den vara i v1? | Före migrationen |
+| 1 | Håller en lokal notis i **tre minuter** med appen i bakgrunden? (§2.6) | **Uppgift 0.8 — blockerar endast uppgift 6.6** |
+
+Det är den enda öppna frågan i hela planen.
 | ~~4~~ | ~~Vercel eller Netlify?~~ **Avgjort 2026-07-30: Vercel.** | — |
 
 Risker utan åtgärd, men som ska vara sagda:

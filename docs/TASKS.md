@@ -89,7 +89,9 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
       **Klart när:** migrationen kör rent.
 - [ ] **2.5 Migration: `workouts`.** **Klart när:** migrationen kör rent.
 - [ ] **2.6 Migration: `logged_sets`.** Inklusive `user_id` denormaliserad och
-      främmandenycklar. **Klart när:** migrationen kör rent.
+      främmandenycklar. `effort` som **ett fält**: `effort_type` (`'rir'` / `'rpe'`) +
+      `effort_value` — beslutat 2026-07-30, inte två separata kolumner.
+      **Klart när:** migrationen kör rent.
 - [ ] **2.7 Migration: `sync_mutations` och `ai_parse_log`.**
       **Klart när:** migrationen kör rent.
 - [ ] **2.8 Migration: `updated_at`-trigger** på alla tabeller med det fältet.
@@ -112,8 +114,11 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
       över `mutation_id` som redan finns i `sync_mutations`. Allt i en transaktion.
       **Klart när:** samma batch körd två gånger ger samma radantal som en gång.
 - [ ] **2.16 Seed: global övningskatalog.** 30–50 vanliga övningar med `aliases` ifyllda
-      (svenska + engelska + kortformer). `owner_id = null`.
-      **Klart när:** `select count(*) from exercises where owner_id is null` ≥ 30.
+      (svenska + engelska + kortformer). `owner_id = null`. Genereras av Claude — beslutat
+      2026-07-30. Aliasen är inte dekoration: de är det parsern i fas 4 matchar mot, så
+      varje övning behöver både fullt namn, vardagligt kortnamn och engelsk motsvarighet.
+      **Klart när:** `select count(*) from exercises where owner_id is null` ≥ 30, och varje
+      rad har minst två alias.
 - [ ] **2.17 Negativt åtkomsttest.** Skapa två testanvändare. Användare B försöker läsa A:s
       `logged_sets` via PostgREST. **Klart när:** B får **noll rader, inte ett felmeddelande** —
       och testet är sparat som ett körbart skript i `scripts/`.
