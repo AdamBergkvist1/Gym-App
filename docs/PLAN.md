@@ -1,30 +1,33 @@
 # Teknisk Plan
 
-**Status:** Förslag. Ingen kod är skriven. Ingen migration är körd. Inget Supabase-projekt
-är skapat. Detta dokument ska granskas och godkännas av människa innan `TASKS.md` fylls
-i och kodning påbörjas (`CLAUDE.md`, regel 1).
+**Status:** Godkänd 2026-07-30 vad gäller de tre arkitekturbesluten (Vite-SPA, MCP utanför
+inmatningsvägen, lokal parser före LLM). Tre odiskutabla krav tillagda samma dag: gratis-stack
+(§7), testdriven parser (§4.3) och notis-före-ljud för vilotimern (§2.6).
 
-Skrivet utifrån `docs/SPEC.md` och de två underlagen i `docs/research/`. Där jag avviker
-från underlagen står det uttryckligen varför.
+Ingen kod är skriven. Inget Supabase-projekt är skapat. Nedbrytningen till uppgifter finns i
+`docs/TASKS.md`.
+
+Skrivet utifrån `docs/SPEC.md` och de två underlagen i `docs/research/`. Där jag avviker från
+underlagen står det uttryckligen varför.
 
 ---
 
 ## 0. Sammanfattning av besluten
 
-| Område | Förslag | Huvudskäl |
+| Område | Beslut | Huvudskäl |
 | :---- | :---- | :---- |
 | Byggverktyg / ramverk | **Vite + React + TypeScript som ren SPA** — inte Next.js | All data är lokal och privat. Next.js serverdel ger inget här men gör offline-cachen betydligt svårare. |
-| Lokal databas | **Dexie.js** ovanpå IndexedDB, `useLiveQuery` som enda "state manager" för data | Enligt underlaget. Reaktiva queries ger Optimistic UI utan extra bibliotek. |
+| Lokal databas | **Dexie.js** ovanpå IndexedDB, `useLiveQuery` som enda "state manager" för data | Reaktiva queries ger Optimistic UI utan extra bibliotek. |
 | Servicearbetare | **vite-plugin-pwa** (Workbox), precache av app-skalet | Ett statiskt bygge går att cacha fullständigt. Appen startar utan nät. |
 | Styling | **Tailwind CSS**, endast mörkt tema | Snabbt att hålla konsekvent, inga runtime-kostnader. |
-| Synk | **Egen utkorg (outbox) i Dexie**, inte PowerSync/ElectricSQL | En användare, nästan bara tillägg av rader, sällsynta konflikter. Färdig synkmotor kostar mer i komplexitet och leverantörsberoende än den ger. |
+| Synk | **Egen utkorg (outbox) i Dexie**, inte PowerSync/ElectricSQL | En användare, nästan bara tillägg av rader, sällsynta konflikter. Färdig synkmotor kostar mer i komplexitet, leverantörsberoende **och pengar** än den ger. |
 | Idempotens | **Klientgenererad UUIDv4 som primärnyckel** + kvitterande `sync_mutations`-tabell | Uppfyller `CLAUDE.md` regel 4 utan extra rundtur i normalfallet. |
-| Backend | **Supabase (Postgres + Auth + Edge Functions)** | Enligt SPEC. Edge Functions gör att vi slipper en andra leverantör för AI-anropet. |
-| AI-parsning (drift) | **Lokal grammatikparser först, LLM som reserv** via autentiserad Edge Function | Gymkällare har inget nät. En AI-only-inmatning är trasig exakt när appen behövs. |
-| MCP | **Separat spår, inte i inmatningsvägen** — samma verktygsimplementation exponerad två gånger | MCP:s värde är att *externa* klienter (Claude Desktop) når träningsloggen. Inne i vår egen backend anropar vi våra egna funktioner direkt. |
-
-Två av dessa avviker från vad man kan läsa in i SPEC och underlagen. De är motiverade i
-avsnitt 2.1 respektive 4.2 och är de två punkter jag främst vill ha ett ja eller nej på.
+| Backend | **Supabase Free Tier** (Postgres + Auth + Edge Functions) | Enligt SPEC. Edge Functions gör att vi slipper en andra leverantör för AI-anropet. |
+| Hosting | **Vercel Hobby** (statiskt bygge). Netlify likvärdigt. | Ett statiskt SPA kostar ingenting att hosta. Inget serverside-körande behövs. |
+| Fritextparsning | **Lokal grammatik, testdriven, skriven först.** LLM enbart som reserv. | Gymkällare har inget nät. En AI-only-inmatning är trasig exakt när appen behövs. |
+| LLM-leverantör | **Groq primärt, Gemini som reserv** — båda gratisnivå, bakom ett leverantörsoberoende gränssnitt | Krav från beställaren. Groq för latens, Gemini för schemastyrd utdata. |
+| MCP | **Separat spår, inte i inmatningsvägen** — samma verktygsimplementation exponerad två gånger | MCP:s värde är att *externa* klienter (Claude Desktop) når träningsloggen. Inne i vår egen backend anropar vi våra egna funktioner direkt. Dessutom saknar Supabase MCP-stöd autentisering i dag. |
+| Vilotimerns larm | **Visuellt först, notis näst, vibration och ljud som bonus** | Telefonen ligger normalt på ljudlöst. Skärmen är ändå tänd via Wake Lock. |
 
 ---
 
@@ -46,12 +49,12 @@ avsnitt 2.1 respektive 4.2 och är de två punkter jag främst vill ha ett ja el
                                     │ │
                      (bara när nät finns)
                                     │ │
-   Supabase ────────────────────────┼─┼───────────
+   Supabase Free Tier ──────────────┼─┼───────────
    ┌────────────────────────────────▼─▼──────────┐
    │  Edge Function /ai/parse   │  PostgREST     │
    │   - verifierar JWT         │   - RLS på     │
    │   - äger LLM-nyckeln       │     varje rad  │
-   │   - anropar gym-tools ──┐  │                │
+   │   - Groq → Gemini fallback │                │
    │                         ▼  ▼                │
    │              Postgres (workouts, sets, ...) │
    └─────────────────────────────────────────────┘
@@ -63,8 +66,8 @@ avsnitt 2.1 respektive 4.2 och är de två punkter jag främst vill ha ett ja el
    └─────────────────────────────────────────────┘
 ```
 
-Poängen med bilden: **inmatningsvägen (UI → Dexie) korsar aldrig nätverket.** Allt till
-höger om den streckade gränsen är valfritt och asynkront.
+**Inmatningsvägen (UI → Dexie) korsar aldrig nätverket.** Allt till höger om den streckade
+gränsen är valfritt och asynkront.
 
 ---
 
@@ -72,25 +75,22 @@ höger om den streckade gränsen är valfritt och asynkront.
 
 ### 2.1 Vite + React som SPA, inte Next.js
 
-Prompten nämnde Next.js som exempel. Jag föreslår att vi väljer bort det, och skälet är
-inte smak:
-
 - **Det finns ingen serverrendering att vinna.** Varje byte data i appen är privat
-  träningsdata som bara finns hos den inloggade användaren. Det finns inget att
-  SEO-indexera och inget att förrendera. Next.js främsta värde är därmed borta.
+  träningsdata som bara finns hos den inloggade användaren. Inget att SEO-indexera, inget
+  att förrendera.
 - **App Router och offline-first drar åt olika håll.** Med RSC hämtar navigering en
-  serverpayload. För att det ska fungera i en gymkällare måste varje sådan payload
-  precachas och hållas i synk med rutterna. Ett statiskt SPA-bygge har i stället *ett*
-  app-skal som Workbox precachar en gång; all navigering sker i klienten och kan aldrig
-  misslyckas på grund av nät.
+  serverpayload som måste precachas och hållas i synk med rutterna. Ett statiskt
+  SPA-bygge har i stället *ett* app-skal som Workbox precachar en gång; all navigering
+  sker i klienten och kan aldrig misslyckas på grund av nät.
 - **Vi behöver ändå en serverfunktion** — LLM-nyckeln får inte ligga i frontend
-  (`CLAUDE.md`, regel 4). Den funktionen lägger vi i Supabase Edge Functions, som vi
-  redan har. Att dra in Next.js enbart som värd för en enda API-rutt är fel storlek på
-  verktyg.
+  (`CLAUDE.md`, regel 4). Den lägger vi i Supabase Edge Functions. Att dra in Next.js
+  enbart som värd för en enda API-rutt är fel storlek på verktyg.
+- **Gratis-stacken blir enklare.** Ett statiskt bygge har inga serverless-anrop, inga
+  kallstarter och inga funktionsminuter att hålla reda på. Det ryms i vilken gratisnivå
+  som helst, för alltid.
 
-Kostnaden för valet: om projektet senare vill ha publika sidor (delade rutiner, landningssida,
-SEO) får de byggas separat. Med tanke på SPEC:s "absolut inget onödigt fluff eller sociala
-flöden" bedömer jag den risken som låg. **Detta är beslutspunkt 1.**
+Kostnad för valet: publika sidor (delade rutiner, landningssida, SEO) får byggas separat
+om de någonsin blir aktuella. Med SPEC:s "absolut inget onödigt fluff" är risken låg.
 
 ### 2.2 Övriga frontendval
 
@@ -103,35 +103,32 @@ flöden" bedömer jag den risken som låg. **Detta är beslutspunkt 1.**
 | Styling | Tailwind CSS, `dark`-först, CSS-variabler för färgskala | |
 | Grafer | **Inget grafbibliotek i v1.** Handritad SVG-sparkline | Recharts/uPlot är hundratals kB för två vyer. Läggs till om mätning visar att det behövs. |
 | Ikoner | Inline SVG | Undviker ett paket för sex ikoner. |
-| Tester | Vitest för parser och synklogik; Playwright för ett offline-scenario | Parsern och synken är de två delar där tyst fel gör verklig skada. |
+| Tester | **Vitest.** Parsern testdrivet (§4.3), synklogiken enhetstestad, ett Playwright-scenario för offline | Parsern och synken är de två delar där tyst fel gör verklig skada. |
 
 ### 2.3 PWA-lagret och de iOS-specifika fällorna
-
-Från underlaget, plus tre punkter underlaget inte tar upp:
 
 - `display: "standalone"` i `manifest.json`, `viewport-fit=cover`, och
   `env(safe-area-inset-*)` som padding på nav och flytande knappar.
 - `100dvh` i stället för `100vh` på ytterbehållaren.
 - Alla tryckytor minst 48×48 px.
-- **Background Sync API finns inte i iOS Safari.** Underlaget nämner det som en möjlig
+- **Background Sync API finns inte i iOS Safari.** Underlaget nämner det som möjlig
   synkmekanism. Vi kan inte bygga på det. Synk sker i förgrunden: vid appstart, vid
-  `online`-event, vid `visibilitychange` till synlig, och efter varje mutation. Om
-  användaren stänger appen med osynkade rader ligger de kvar i IndexedDB tills nästa gång.
-  Det är acceptabelt just för att IndexedDB — inte molnet — är sanningen.
+  `online`-event, vid `visibilitychange` till synlig, och efter varje mutation. Stänger
+  användaren appen med osynkade rader ligger de kvar i IndexedDB tills nästa gång. Det är
+  acceptabelt just för att IndexedDB — inte molnet — är sanningen.
 - **iOS rensar lagring för webbplatser som inte använts på sju dagar.** En PWA som lagts
-  till på hemskärmen är undantagen, men en flik i Safari är det inte. Vi anropar
+  till på hemskärmen är undantagen; en flik i Safari är det inte. Vi anropar
   `navigator.storage.persist()` vid start och visar en engångsuppmaning om att lägga till
-  appen på hemskärmen. Osynkad data ska dessutom aldrig få ligga kvar länge — utkorgen
-  töms vid varje tillfälle appen är i förgrunden med nät.
+  appen på hemskärmen. **Att appen installeras på hemskärmen är dessutom en förutsättning
+  för notiser på iOS** (§2.6) — de två skälen pekar åt samma håll.
 - **Uppdateringar.** Ny servicearbetare får inte byta ut appen mitt i ett pass. Vi använder
-  `prompt`-läge: ny version aktiveras först när inget pass är aktivt, eller när användaren
-  själv trycker på en diskret notis.
+  `prompt`-läge: ny version aktiveras när inget pass är aktivt, eller när användaren själv
+  trycker på en diskret notis.
 
 ### 2.4 Lokal datamodell (Dexie)
 
-Samma fält som Postgres-tabellerna i avsnitt 3, plus två klientlokala tabeller.
-Klientgenererade UUID:n gör att raden har samma id lokalt som i molnet — det är
-grunden för hela idempotensen.
+Samma fält som Postgres-tabellerna i §3, plus två klientlokala tabeller. Klientgenererade
+UUID:n gör att raden har samma id lokalt som i molnet — grunden för hela idempotensen.
 
 | Store | Nycklar / index | Syfte |
 | :---- | :---- | :---- |
@@ -141,9 +138,9 @@ grunden för hela idempotensen.
 | `outbox` | `++seq`, `status`, `mutation_id` | Kö av osända mutationer. `seq` ger FIFO. |
 | `meta` | `key` | Synkmarkörer (`last_pulled_at` per tabell), aktivt pass, timerns sluttid. |
 
-`personal_records` lagras inte. e1RM enligt Epley räknas i klienten vid behov — det är en
-multiplikation per set, och att materialisera det innan vi mätt att det är långsamt vore
-att bygga före mätning.
+`personal_records` lagras inte. e1RM enligt Epley räknas i klienten vid behov — en
+multiplikation per set. Att materialisera det innan vi mätt att det är långsamt vore att
+bygga före mätning.
 
 ### 2.5 Synkmotorn
 
@@ -153,42 +150,65 @@ det. En utkorgspost innehåller `mutation_id` (UUIDv4), operation, tabell, raden
 payload, `created_at`, `attempts`, `last_error`.
 
 En synkarbetare tömmer kön i ordning. Vid nätfel: exponentiell backoff, posten ligger kvar.
-Vid permanent fel (4xx som inte är 401/409): posten markeras `failed` och **syns i UI som
-en varning** — den får aldrig försvinna tyst. Det följer principen om att luckor ska vara
-synliga.
+Vid permanent fel (4xx som inte är 401/409): posten markeras `failed` och **syns i UI som en
+varning** — den får aldrig försvinna tyst.
 
-**Läsning (moln → klient).** Vid appstart och när appen får fokus: hämta rader per tabell
-där `updated_at > last_pulled_at`. RLS ser till att bara egna rader kommer med. En hämtad
-rad som har en väntande utkorgspost skrivs *inte* över — lokalt vinner tills kön är tom.
+**Läsning (moln → klient).** Vid appstart och när appen får fokus: hämta rader per tabell där
+`updated_at > last_pulled_at`. RLS ser till att bara egna rader kommer med. En hämtad rad som
+har en väntande utkorgspost skrivs *inte* över — lokalt vinner tills kön är tom.
 
-**Konflikter.** Last-write-wins på `updated_at`. Det räcker eftersom en människa inte
-loggar samma set från två enheter samtidigt. Raderingar är mjuka (`is_deleted = true`) så
-att de kan propagera; hård radering sker bara när kontot tas bort.
+**Konflikter.** Last-write-wins på `updated_at`. Det räcker eftersom en människa inte loggar
+samma set från två enheter samtidigt. Raderingar är mjuka (`is_deleted = true`) så att de kan
+propagera; hård radering sker bara när kontot tas bort.
 
-**När räcker inte detta?** Om appen någon gång får delade rutiner eller flera samtidiga
-skribenter per konto ska vi byta till PowerSync i stället för att lappa ihop egen
-konfliktlösning. Det är noterat som en gräns, inte som ett planerat steg.
+**Gräns.** Får appen någon gång delade rutiner eller flera samtidiga skribenter per konto ska
+vi byta till en riktig synkmotor i stället för att lappa ihop egen konfliktlösning. Det är
+noterat som en gräns, inte som ett planerat steg — och det skulle kosta pengar, vilket §7
+utesluter.
 
-### 2.6 Vilotimer, Wake Lock och ljud
+### 2.6 Vilotimern: visuellt först, ljud sist
 
-- **Timern lagras som sluttidpunkt**, inte som en nedräknande räknare. Bakgrundade
-  `setInterval` strypes hårt av mobilwebbläsare; en räknare som tickar ner blir fel så
-  snart skärmen släcks. Vi lagrar `timer_ends_at` i `meta` och renderar
-  `ends_at - Date.now()`. Timern överlever både omladdning och bakgrundsläge.
-- **Wake Lock** begärs när timern startar och **återbegärs på `visibilitychange`** —
-  låset släpps av webbläsaren så fort appen tappar fokus, så ett enda anrop räcker inte.
-- **Ljud via Web Audio API**, med `AudioContext` upplåst av användarens första
-  interaktion (tryck på "Starta pass") och explicit `suspend()` / `resume()` vid
-  `visibilitychange`.
+Beställarens besked: telefonen ligger normalt på ljudlöst, så ljud är inte kravet — en notis
+räcker, och vibration om det går. Det förenklar designen och gör den mer robust. Ordningen är
+därför omvänd mot vad underlaget föreslår:
 
-> ⚠️ **Underlaget hävdar att Web Audio tar sig förbi iOS tysta läge. Det påståendet ska
-> mätas, inte antas.** Beteendet har ändrats mellan iOS-versioner och är inte något vi
-> ska bygga en kärnfunktion på baserat på en beskrivning. Innan timern byggs: en tio
-> raders testsida på Adams egen telefon, med fysiska ljudknappen i tyst läge, både i
-> Safari-flik och i standalone-läge. Om ljudet inte hörs behöver vi en synlig reserv
-> (helskärmsblink + `navigator.vibrate`) och ska säga det rakt ut i UI:t i stället för
-> att låta larmet tyst utebli. **Detta är beslutspunkt 3** — den är billig att avgöra
-> och bör göras före allt annat timerarbete.
+| Nivå | Kanal | Tillförlitlighet |
+| :---- | :---- | :---- |
+| 1 | **Visuellt i appen** — helskärmsbyte av bakgrundsfärg, stor siffra som slår om | Alltid. Kräver ingen behörighet. Skärmen är redan tänd via Wake Lock. |
+| 2 | **Lokal notis** via `registration.showNotification()` | Kräver installerad PWA på hemskärmen + beviljad behörighet. |
+| 3 | **Vibration** via `navigator.vibrate()` | Fungerar på Android. **På iOS: oklart — ska mätas, se nedan.** |
+| 4 | **Ljud** via Web Audio API | Bonus. Byggs bara om mätningen visar att det hörs i tyst läge. |
+
+Nivå 1 är den som bär funktionen. Den kräver inga behörigheter, inga API:er som kan
+försvinna mellan iOS-versioner, och den fungerar redan i dag. Nivå 2–4 är förbättringar
+ovanpå en fungerande grund — inte förutsättningar.
+
+**Timern lagras som sluttidpunkt**, inte som en nedräknande räknare. Bakgrundade
+`setInterval` strypes hårt av mobilwebbläsare; en räknare som tickar ner blir fel så snart
+skärmen släcks. Vi lagrar `timer_ends_at` i `meta` och renderar `ends_at - Date.now()`.
+Timern överlever både omladdning och bakgrundsläge.
+
+**Wake Lock** begärs när timern startar och **återbegärs på `visibilitychange`** — låset
+släpps av webbläsaren så fort appen tappar fokus, så ett enda anrop räcker inte.
+
+> ⚠️ **Två påståenden ska mätas, inte antas — se `TASKS.md` fas 0.**
+>
+> 1. **Vibration på iOS.** Källorna är i dag *motstridiga*. En rapport i MDN:s
+>    kompatibilitetsdatabas från mars 2026 hävdar att `navigator.vibrate` numera fungerar i
+>    iOS Safari; caniuse och flera senare sammanställningar anger fortfarande att den inte
+>    stöds. Vi ska inte välja sida på ett skrivbord. Feature detection (`'vibrate' in
+>    navigator`) räcker inte heller — den kan returnera sant och ändå inte göra något.
+>    Enda giltiga svaret är ett test på Adams telefon.
+> 2. **Ljud genom tyst läge.** Underlaget hävdar att Web Audio API tar sig förbi iOS tysta
+>    läge. Beteendet har ändrats mellan iOS-versioner. Eftersom ljud nu är nivå 4 och inte
+>    bär funktionen, är detta en trevlig-att-veta-mätning snarare än en blockerare — men
+>    den görs i samma test eftersom marginalkostnaden är noll.
+>
+> **Notera att notiser på iOS kräver att appen är installerad på hemskärmen.** Det är
+> verifierat mot Apples och flera leverantörers dokumentation: notiser är bara tillgängliga
+> för PWA:er installerade från Safari, med `manifest.json`, och behörighetsdialogen kräver
+> en explicit användargest. Testet i fas 0 ska därför köras **både** som Safari-flik och som
+> installerad app — annars mäter vi fel sak.
 
 ---
 
@@ -196,9 +216,9 @@ konfliktlösning. Det är noterat som en gräns, inte som ett planerat steg.
 
 ### 3.1 Tabeller
 
-Alla tabeller i `public`. Alla primärnycklar är `uuid` som **genereras av klienten**.
-Alla tabeller med användardata har `user_id uuid not null references auth.users(id)`,
-`created_at`, `updated_at` (satt av trigger) och `is_deleted boolean not null default false`.
+Alla tabeller i `public`. Alla primärnycklar är `uuid` som **genereras av klienten**. Alla
+tabeller med användardata har `user_id uuid not null references auth.users(id)`, `created_at`,
+`updated_at` (satt av trigger) och `is_deleted boolean not null default false`.
 
 **`profiles`**
 
@@ -239,7 +259,7 @@ Alla tabeller med användardata har `user_id uuid not null references auth.users
 | Kolumn | Typ | Not |
 | :---- | :---- | :---- |
 | `id` | uuid PK | klientgenererad |
-| `user_id` | uuid not null | denormaliserad hit så RLS slipper join (se 3.3) |
+| `user_id` | uuid not null | denormaliserad hit så RLS slipper join (se §3.3) |
 | `workout_id` | uuid not null → `workouts(id)` | |
 | `exercise_id` | uuid not null → `exercises(id)` | |
 | `set_index` | smallint not null | ordning inom övningen i passet |
@@ -253,14 +273,14 @@ Alla tabeller med användardata har `user_id uuid not null references auth.users
 | `performed_at` | timestamptz not null | exakt tid för setet |
 | `source` | text not null default `'manual'` | `'manual'`, `'local_parse'`, `'ai_parse'` |
 
-Två saker att notera i granskningen:
+Att notera i granskningen:
 
 - SPEC beskriver **ett** valfritt ansträngningsfält (`RIR/RPE`). Jag har delat det i
-  `effort_type` + `effort_value` i stället för två separata kolumner, så att en siffra
-  aldrig blir tvetydig. UI:t visar bara den skala användaren valt i profilen.
+  `effort_type` + `effort_value` så att en siffra aldrig blir tvetydig. UI:t visar bara den
+  skala användaren valt i profilen.
 - `weight_kg` är kanonisk. Ingen kolumn får någonsin innehålla en vikt utan känd enhet.
-- `source` finns för att vi ska kunna *mäta* om AI-parsade set skiljer sig från
-  manuellt inmatade (till exempel oftare rättas i efterhand).
+- `source` finns för att vi ska kunna *mäta* om parsade set skiljer sig från manuellt
+  inmatade — till exempel oftare rättas i efterhand.
 
 **`sync_mutations`** — kvittensbok för idempotens.
 
@@ -279,21 +299,21 @@ Två saker att notera i granskningen:
 | `user_id` | uuid not null | |
 | `raw_text` | text not null | vad användaren skrev |
 | `parser` | text not null | `'local'` eller `'llm'` |
-| `model` | text null | modellsträng när `parser = 'llm'` |
+| `provider` | text null | `'groq'` / `'gemini'` när `parser = 'llm'` |
+| `model` | text null | modellsträng |
 | `parsed` | jsonb not null | vad parsern föreslog |
 | `outcome` | text not null | `'accepted'`, `'edited'`, `'rejected'` |
 | `corrected` | jsonb null | vad det blev efter rättning |
 | `latency_ms` | integer null | |
 | `created_at` | timestamptz not null | |
 
-Utan den här tabellen kan vi aldrig svara på "hur ofta har AI:n rätt?", och då kan vi
-heller inte avgöra om LLM-anropet är värt sin latens och kostnad. Den kostar en rad per
-fritextinmatning.
+Utan den här tabellen kan vi aldrig svara på "hur ofta har parsern rätt?", och då kan vi
+heller inte avgöra om LLM-anropet är värt sin latens. Den kostar en rad per fritextinmatning.
 
 ### 3.2 Index
 
-Index är inte en optimering här utan en förutsättning — RLS-uttrycket utvärderas per rad,
-och utan index på `user_id` blir varje query en sekventiell genomsökning.
+Index är inte en optimering här utan en förutsättning — RLS-uttrycket utvärderas per rad, och
+utan index på `user_id` blir varje query en sekventiell genomsökning.
 
 | Index | Tabell | Varför |
 | :---- | :---- | :---- |
@@ -305,57 +325,56 @@ och utan index på `user_id` blir varje query en sekventiell genomsökning.
 
 ### 3.3 RLS-strategi
 
-Grundregeln är enkel och absolut: **varje tabell i `public` har RLS aktiverat, utan
-undantag.** En ny tabell utan policy är inte "öppen tills vidare" — den är otillgänglig,
-vilket är rätt förvalt läge.
+Grundregeln är enkel och absolut: **varje tabell i `public` har RLS aktiverat, utan undantag.**
+En ny tabell utan policy är inte "öppen tills vidare" — den är otillgänglig, vilket är rätt
+förvalt läge.
 
 Fem beslut utöver det:
 
 1. **En policy per operation, inte `FOR ALL`.** Separata policyer för `SELECT`, `INSERT`,
-   `UPDATE`, `DELETE` gör att `WITH CHECK` blir explicit på skrivningarna. `USING` avgör
-   vilka rader som får läsas eller ändras; `WITH CHECK` hindrar att en inloggad användare
-   skriver en rad märkt med någon annans `user_id`.
+   `UPDATE`, `DELETE` gör att `WITH CHECK` blir explicit på skrivningarna. `USING` avgör vilka
+   rader som får läsas eller ändras; `WITH CHECK` hindrar att en inloggad användare skriver en
+   rad märkt med någon annans `user_id`.
 
-2. **Uttrycket är `(select auth.uid()) = user_id`, inte `auth.uid() = user_id`.**
-   Skillnaden är inte kosmetisk: med `select`-omslutningen utvärderar Postgres funktionen
-   *en gång* per query i stället för en gång per rad. Det är Supabase egen rekommendation
-   och den enskilt största RLS-prestandaposten vid sidan av indexet.
+2. **Uttrycket är `(select auth.uid()) = user_id`, inte `auth.uid() = user_id`.** Skillnaden
+   är inte kosmetisk: med `select`-omslutningen utvärderar Postgres funktionen *en gång* per
+   query i stället för en gång per rad. Det är Supabase egen rekommendation och den enskilt
+   största RLS-prestandaposten vid sidan av indexet.
 
-3. **Ingen policy får innehålla en join.** Därför bär `logged_sets` en egen `user_id` trots
-   att den kunde härledas via `workout_id`. En policy som slår upp ägaren via passtabellen
-   skulle köras per rad. Denormaliseringen är avsiktlig, och `WITH CHECK` på insert ska
-   dessutom verifiera att passet med det `workout_id` tillhör samma användare.
+3. **Ingen policy får innehålla en join.** Därför bär `logged_sets` en egen `user_id` trots att
+   den kunde härledas via `workout_id`. En policy som slår upp ägaren via passtabellen skulle
+   köras per rad. Denormaliseringen är avsiktlig, och `WITH CHECK` på insert ska dessutom
+   verifiera att passet med det `workout_id` tillhör samma användare.
 
-4. **`exercises` är specialfallet.** `SELECT` tillåts när `owner_id is null` (den globala
-   katalogen) eller `owner_id = (select auth.uid())`. `INSERT`, `UPDATE` och `DELETE`
-   kräver `owner_id = (select auth.uid())` — vilket gör den globala katalogen skrivskyddad
-   för alla appanvändare utan att vi behöver en separat tabell. Katalogen underhålls via
-   migrationer.
+4. **`exercises` är specialfallet.** `SELECT` tillåts när `owner_id is null` (globala
+   katalogen) eller `owner_id = (select auth.uid())`. `INSERT`, `UPDATE` och `DELETE` kräver
+   `owner_id = (select auth.uid())` — vilket gör den globala katalogen skrivskyddad för alla
+   appanvändare utan att vi behöver en separat tabell. Katalogen underhålls via migrationer.
 
 5. **`service_role`-nyckeln finns bara i migrationer, aldrig i en funktion som svarar på
    användartrafik.** Edge Function `/ai/parse` skapar sin Supabase-klient med **anroparens
-   JWT**, vidarebefordrad från `Authorization`-headern. Det betyder att RLS gäller även
-   inuti serverfunktionen: en bugg i funktionen kan i värsta fall röra den inloggade
-   användarens egna rader, aldrig någon annans. En funktion som kör som `service_role` har
-   ingen sådan spärr, och det är precis den genvägen som gör serverlösa backends osäkra.
+   JWT**, vidarebefordrad från `Authorization`-headern. Det betyder att RLS gäller även inuti
+   serverfunktionen: en bugg i funktionen kan i värsta fall röra den inloggade användarens
+   egna rader, aldrig någon annans. En funktion som kör som `service_role` har ingen sådan
+   spärr, och det är precis den genvägen som gör serverlösa backends osäkra.
 
-**Radering.** UI:t raderar aldrig hårt; det sätter `is_deleted`. `DELETE`-policyerna finns
-ändå definierade (annars vore hård radering omöjlig även för legitima fall), men används
-inte i normalflödet. Kontoradering hanteras med `on delete cascade` från `auth.users`.
+**Radering.** UI:t raderar aldrig hårt; det sätter `is_deleted`. `DELETE`-policyerna finns ändå
+definierade (annars vore hård radering omöjlig även för legitima fall), men används inte i
+normalflödet. Kontoradering hanteras med `on delete cascade` från `auth.users`.
 
-**Verifiering.** Innan lansering körs Supabase `get_advisors` (security-läget) och ska
-komma tillbaka utan RLS-varningar. Dessutom ett negativt test: en andra användare försöker
-läsa den förstas set via PostgREST och ska få noll rader, inte ett fel — vi ska se att
-filtret biter, inte bara att API:t klagar.
+**Verifiering.** Innan lansering körs Supabase `get_advisors` (security-läget) och ska komma
+tillbaka utan RLS-varningar. Dessutom ett negativt test: en andra användare försöker läsa den
+förstas set via PostgREST och ska få **noll rader, inte ett fel** — vi ska se att filtret
+biter, inte bara att API:t klagar.
 
 ### 3.4 Autentisering — och vad som händer offline
 
-Supabase Auth med e-post + lösenord. Magiclink väljs bort: den kräver nät och en
-mejlklient exakt när användaren står vid en skivstång.
+Supabase Auth med e-post + lösenord. Magiclink väljs bort: den kräver nät och en mejlklient
+exakt när användaren står vid en skivstång.
 
-Den viktiga designregeln: **inloggnings-UI får aldrig blockera loggnings-UI.** JWT:n går
-ut efter en timme och kan bara förnyas med nät. En app som visar inloggningsskärm när
-token gått ut är obrukbar i en källare. Därför:
+Den viktiga designregeln: **inloggnings-UI får aldrig blockera loggnings-UI.** JWT:n går ut
+efter en timme och kan bara förnyas med nät. En app som visar inloggningsskärm när token gått
+ut är obrukbar i en källare. Därför:
 
 - `user_id` cachas lokalt vid första lyckade inloggningen.
 - Appen startar och fungerar fullt ut mot Dexie oavsett tokenstatus.
@@ -364,20 +383,19 @@ token gått ut är obrukbar i en källare. Därför:
 
 ### 3.5 Idempotens från klient till databas
 
-`CLAUDE.md` regel 4 kräver idempotensnycklar på alla mutationer. Så här uppfylls det i
-två lager:
+`CLAUDE.md` regel 4 kräver idempotensnycklar på alla mutationer. Två lager:
 
-**Lager 1 — strukturell idempotens.** Eftersom primärnycklarna är klientgenererade
-UUID:n blir varje insert en upsert med konflikt på `id`. Skickas samma set två gånger
-för att svaret tappades bort blir den andra skrivningen en no-op i stället för en dublett.
-Detta täcker normalfallet helt.
+**Lager 1 — strukturell idempotens.** Eftersom primärnycklarna är klientgenererade UUID:n blir
+varje insert en upsert med konflikt på `id`. Skickas samma set två gånger för att svaret
+tappades bort blir den andra skrivningen en no-op i stället för en dublett. Detta täcker
+normalfallet helt.
 
 **Lager 2 — kvittensbok.** En Postgres-funktion `apply_mutations(batch jsonb)`, deklarerad
-`SECURITY INVOKER` så att RLS fortsätter gälla, tar emot en batch mutationer i *en*
-transaktion. Varje mutation bär sitt `mutation_id`; funktionen hoppar över de som redan
-finns i `sync_mutations` och lägger in resten. Det ger tre saker på en gång: uttrycklig
-idempotensnyckel enligt regeln, atomär batch (ett pass hamnar aldrig halvt i molnet), och
-färre rundturer.
+`SECURITY INVOKER` så att RLS fortsätter gälla, tar emot en batch mutationer i *en* transaktion.
+Varje mutation bär sitt `mutation_id`; funktionen hoppar över de som redan finns i
+`sync_mutations` och lägger in resten. Det ger tre saker på en gång: uttrycklig idempotensnyckel
+enligt regeln, atomär batch (ett pass hamnar aldrig halvt i molnet), och färre rundturer — vilket
+också sparar på gratisnivåns anropskvot.
 
 ### 3.6 Medvetet utelämnat i v1
 
@@ -389,78 +407,115 @@ Skrivs ut för att det ska vara ett beslut och inte en glömska:
 - **Superset, dropset, AMRAP.** `set_index` + `is_warmup` räcker för v1.
 - **Volymdiagram per muskelgrupp.** Datan finns (`primary_muscle`), vyn byggs senare.
 - **Apple Watch.** Utanför vad en PWA kan.
-- **Export (JSON/CSV).** Bör med i v1.1 — underlaget har rätt i att datafrihet spelar roll
-  för målgruppen, men det blockerar inte första versionen.
+- **Export (JSON/CSV).** Bör med i v1.1 — underlaget har rätt i att datafrihet spelar roll för
+  målgruppen, men det blockerar inte första versionen.
 
 ---
 
-## 4. AI-chatten och MCP
+## 4. Fritextinmatning: parser och AI
 
 ### 4.1 Tre lager
 
 | Lager | Kör var | Ser LLM-nyckeln? | Ansvar |
 | :---- | :---- | :---- | :---- |
-| **Klient** | PWA | Nej, aldrig | Lokal parsning; skickar fritext + kontext; renderar förslag som redigerbara fält |
-| **Värd** | Supabase Edge Function `/ai/parse` | Ja (miljövariabel) | Verifierar JWT, kör LLM-anropet, exekverar verktyg, returnerar strukturerad JSON |
+| **Klient** | PWA | Nej, aldrig | Lokal grammatik; skickar fritext + kontext vid miss; renderar förslag som redigerbara fält |
+| **Värd** | Supabase Edge Function `/ai/parse` | Ja (miljövariabel) | Verifierar JWT, kör LLM-anropet, returnerar strukturerad JSON |
 | **Verktyg** | Delad modul `gym-tools` | — | `find_exercise`, `get_last_performance`, `create_exercise`, `get_history` |
 
-Nyckelbeslutet är att **verktygen implementeras en gång och monteras två gånger** — som
-verktygsdefinitioner i parsningsfunktionen, och som MCP-verktyg i MCP-servern (4.5). Det
-är vad som gör MCP-spåret billigt i stället för att vara ett parallellt system.
+Verktygen **implementeras en gång och monteras två gånger** — som verktygsdefinitioner i
+parsningsfunktionen, och som MCP-verktyg i MCP-servern (§4.6). Det är vad som gör MCP-spåret
+billigt i stället för att vara ett parallellt system.
 
 ### 4.2 Varför MCP inte ligger i inmatningsvägen
 
-MCP är ett protokoll för att låta *en modell eller agent* nå verktyg över en
-standardiserad transport. Dess värde är interoperabilitet: att Claude Desktop, Claude Code
-eller en annan klient kan prata med din data utan att du bygger en integration per klient.
+MCP är ett protokoll för att låta *en modell eller agent* nå verktyg över en standardiserad
+transport. Dess värde är interoperabilitet: att Claude Desktop, Claude Code eller en annan
+klient kan prata med din data utan att du bygger en integration per klient.
 
-Inne i vår egen Edge Function finns ingen sådan gräns att överbrygga. Att låta funktionen
-tala MCP med sig själv innebär en JSON-RPC-rundtur, en transport och en sessionshantering
-extra i den absolut mest latenskänsliga vägen i hela appen — mellan att användaren skrivit
-"bänk 90x5" och att raden syns.
+Inne i vår egen Edge Function finns ingen sådan gräns att överbrygga. Att låta funktionen tala
+MCP med sig själv innebär en JSON-RPC-rundtur, en transport och en sessionshantering extra i
+den mest latenskänsliga vägen i hela appen.
 
-Det finns dessutom ett hårt hinder just nu, som jag verifierat mot Supabase egen
-dokumentation: **MCP-servrar på Edge Functions stöder ännu inte autentisering.** Den
-officiella guiden deployar med `--no-verify-jwt` och noterar uttryckligen att auth-stöd är
-på väg. En MCP-server som bär användarens träningsdata får inte vara oautentiserad. Det
-avgör frågan för v1.
+Det finns dessutom ett hårt hinder, verifierat mot Supabase egen dokumentation: **MCP-servrar
+på Edge Functions stöder ännu inte autentisering.** Den officiella guiden deployar med
+`--no-verify-jwt` och noterar uttryckligen att auth-stöd är på väg. En MCP-server som bär
+användarens träningsdata får inte vara oautentiserad.
 
-Rekommendationen är därför tvåspårig:
+- **Spår 1 (v1, drift):** `/ai/parse` anropar modellen direkt. Ingen MCP i hot path.
+- **Spår 2 (senare):** fristående MCP-server som exponerar *samma* `gym-tools`, för användning
+  från Claude Desktop. Byggs när Supabase stöder autentiserad MCP.
 
-- **Spår 1 (v1, drift):** `/ai/parse` anropar modellen direkt med verktygsdefinitioner.
-  Ingen MCP i hot path.
-- **Spår 2 (v1.5, integration):** en fristående MCP-server som exponerar *samma*
-  `gym-tools`, för Adams egen användning från Claude Desktop ("visa min bänkpresstrend
-  senaste halvåret"). Byggs när Supabase stöder autentiserad MCP, eller mot en egen
-  OAuth-lösning om vi vill tidigare.
+### 4.3 Den lokala parsern — testdriven, skriven först
 
-**Detta är beslutspunkt 2.** Om du hellre vill ha MCP i inmatningsvägen från dag ett går
-det att göra — men det ska då vara ett medvetet val av arkitektonisk enhetlighet framför
-latens, och auth-hindret måste lösas först.
+**Detta är projektets mest kritiska enskilda komponent.** Den körs på varje inmatning, den
+körs offline, och den skriver till databasen. En tyst feltolkning här förstör insamlad
+träningsdata på ett sätt som inte går att upptäcka i efterhand.
 
-### 4.3 Lokal grammatik före LLM
+Därför gäller: **testerna skrivs före implementationen.** Ingen parserkod committas utan att
+en motsvarande testfil finns och är röd innan den blir grön. Uppgifterna i `TASKS.md` är
+ordnade så att detta är mekaniskt omöjligt att hoppa över.
 
-Detta är den enskilt viktigaste ändringen jag föreslår mot SPEC.
+**Grammatikens form:**
 
-SPEC beskriver fritextloggning via AI som en kärnfunktion. Men ett AI-anrop kräver nät, och
-premissen för hela appen är att gym saknar nät. Bygger vi fritextfältet som "skicka till
-LLM" är den mest framhävda funktionen trasig exakt i den miljö appen är gjord för.
+```
+<övning> <vikt>[enhet] [x|*|×] <reps>[r|reps] [@ <tal>[rir|rpe]] [, <fritext>]
+```
 
-Föreslagen ordning i klienten:
+**Testkorpus — måste tolkas felfritt.** Alla ska ge `Bänkpress, 90 kg, 5 reps` om inget annat
+anges:
 
-1. **Lokal grammatik** (deterministisk, ~0 ms, fungerar offline). Täcker den form nästan
-   all faktisk inmatning har:
-   `<övning> <vikt>[kg|k] x|* <reps>[r|reps] [@ <tal>[rir|rpe]] [, <fritext som blir note>]`
-   Övningsnamnet matchas mot `exercises.aliases` + `normalized_name` med fuzzy-matchning.
-   Vikt utan enhet tolkas enligt profilens `unit_preference` — aldrig gissat.
-2. **Träffar grammatiken inte**, och nät finns: anropa `/ai/parse`.
-3. **Träffar grammatiken inte, och nät saknas:** spara råtexten som ett utkast kopplat till
-   passet, markerat i UI som otolkat, och erbjud tolkning när nät finns igen. Texten går
-   aldrig förlorad och blir aldrig tyst fel-tolkad.
+| Indata | Förväntat |
+| :---- | :---- |
+| `Bänkpress 90x5` | grundfallet |
+| `Bänk 90 kg 5 reps` | alias + utskrivna enheter |
+| `bänk 90kg x 5` | gemener, hopskriven enhet |
+| `BÄNKPRESS 90 X 5` | versaler |
+| `Bänkpress 90*5` | asterisk som separator |
+| `Bänkpress 90×5` | unicode-multiplikationstecken |
+| `Bänk 92,5x5` | **svenskt decimalkomma** → 92.5 kg |
+| `Bänk 92.5x5` | punkt → 92.5 kg |
+| `Bänk 90x5 @8` | + effort 8 (skala från profilen) |
+| `Bänk 90x5 rir 2` | + effort_type `rir`, värde 2 |
+| `Bänk 90x5 @8 rpe` | + effort_type `rpe`, värde 8 |
+| `Bänk 90x5, kändes lätt` | + note "kändes lätt" |
+| `Bänk 90x5, ont i axeln` | + note "ont i axeln" |
+| `bench 90x5` | engelskt alias |
+| `Bänkpress 90 5` | två bara tal, ingen separator |
+| `  Bänk   90x5  ` | extra blanksteg |
 
-Effekten är att LLM:en får hantera det den är bra på — "bänk kändes tungt idag, körde 90
-fem gånger och sen två set till på 85" — medan normalfallet är omedelbart, gratis och
-offline. Det gör också modellvalet i 4.4 till en kvalitetsfråga snarare än en kostnadsfråga.
+**Måste avvisas (returnera `unresolved`, aldrig gissa):**
+
+| Indata | Varför |
+| :---- | :---- |
+| `Bänkpress` | ingen vikt, inga reps |
+| `90x5` | ingen övning |
+| `Bänk 90` | reps saknas |
+| `Blaha 90x5` | okänd övning → erbjud att skapa, skriv inget |
+| `Bänk 90x5x3` | tvetydigt (tre set? tre reps?) |
+| `` (tom sträng) | |
+
+**Två regler som är viktigare än de ser ut:**
+
+1. **Enhet gissas aldrig.** Ett tal utan enhetssuffix tolkas enligt profilens
+   `unit_preference`. Det är ett *beslut*, inte en gissning, och det ska framgå i UI:t vilken
+   enhet som användes.
+2. **Vikt/reps-ordningen valideras.** Konventionen är vikt först. Men `20x30` (lätt hantel,
+   många reps) och `100x10` ser likadana ut för en parser. Regeln: när ingen enhet anges och
+   andra talet är större än 30, eller första talet mindre än 20, sätts låg konfidens och
+   fältet markeras för bekräftelse i UI. Bättre att fråga en gång än att logga ett omvänt set.
+
+**Övningsmatchning** sker mot `exercises.aliases` + `normalized_name` med normalisering
+(gemener, å/ä/ö bevarade men diakriter i övrigt strippade) och fuzzy-matchning med tröskel.
+Under tröskeln → `unresolved` + erbjudande att skapa ny övning. Aldrig automatiskt val bland
+flera lika bra träffar.
+
+**Ordning i klienten:**
+
+1. Lokal grammatik (deterministisk, ~0 ms, offline).
+2. Träffar den inte, och nät finns: anropa `/ai/parse`.
+3. Träffar den inte, och nät saknas: spara råtexten som ett **synligt otolkat utkast** kopplat
+   till passet, och erbjud tolkning när nät finns igen. Texten går aldrig förlorad och blir
+   aldrig tyst fel-tolkad.
 
 ### 4.4 Edge Function `/ai/parse`
 
@@ -470,98 +525,177 @@ offline. Det gör också modellvalet i 4.4 till en kvalitetsfråga snarare än e
 Kraven:
 
 - Verifierar JWT. Anonyma anrop avvisas.
-- Bygger Supabase-klienten med **anroparens** token (se 3.3), inte `service_role`.
-- **`user_id` kommer alltid från JWT:n, aldrig från modellens verktygsargument.** Modellen
-  får inte ens ett fält att fylla i. Det är den enda spärren som håller om en prompt någon
-  gång blir manipulerad.
-- Strukturerat utdata mot ett schema — inga fritextsvar att regex-parsa.
-- Timeout ~4 s. Vid timeout eller fel: svara med `unresolved` och låt klienten falla
-  tillbaka på manuell inmatning. Aldrig ett tomt lyckat svar.
+- Bygger Supabase-klienten med **anroparens** token (§3.3), inte `service_role`.
+- **`user_id` kommer alltid från JWT:n, aldrig från modellens utdata.** Modellen får inte ens
+  ett fält att fylla i. Det är den enda spärren som håller om en prompt någon gång blir
+  manipulerad.
+- Strukturerat utdata mot ett JSON-schema — inga fritextsvar att regex-parsa.
+- Timeout ~4 s. Vid timeout eller fel: svara med `unresolved` och låt klienten falla tillbaka
+  på manuell inmatning. **Aldrig ett tomt lyckat svar.**
 - Skriver en rad i `ai_parse_log`.
-- **Ringer aldrig ett LLM-anrop utan att en användare bett om det** — inga bakgrundsjobb,
-  inga uppvärmningar.
+- **Ringer aldrig ett LLM-anrop utan att en användare bett om det** — inga bakgrundsjobb, inga
+  uppvärmningar, ingen förhandsparsning medan användaren skriver.
 
-**Modellval.** Förslag: `claude-opus-5` med `output_config: { effort: "low" }` och
-`thinking: { type: "disabled" }`. Uppgiften är extraktion mot ett fast schema — låg effort
-räcker och håller latensen nere. Systemprompt + verktygsdefinitioner läggs i en cachad
-prefix; det lönar sig här eftersom modellens lägsta cachebara prefix är 512 tokens, vilket
-en systemprompt med övningskatalogutdrag passerar.
+### 4.5 LLM-leverantör: Groq primärt, Gemini som reserv
 
-Räkneexempel, **att verifiera genom mätning, inte att lita på**: vid ~1 000 tokens in och
-~150 ut landar ett parsningsanrop kring 5–9 öre. Med grammatiken enligt 4.3 som fångar
-merparten går bara en bråkdel av inmatningarna till modellen, vilket sannolikt betyder
-tiotals kronor per år snarare än per månad. `claude-haiku-4-5` är ungefär en femtedel så
-dyrt och skulle sänka latensen ytterligare — **det är ditt val, inte mitt, och bör tas
-efter att `ai_parse_log` visat hur ofta modellen faktiskt anropas och hur ofta den har
-rätt.** Bygg med opus-5, mät, byt om siffrorna säger det.
+Krav från beställaren: gratisnivå. Båda uppfyller det.
 
-### 4.5 MCP-servern (spår 2)
+| | Groq | Gemini |
+| :---- | :---- | :---- |
+| Roll | Primär | Reserv när Groq svarar med kvotfel eller timeout |
+| Motiv | Latens — svarstiden är den avgörande egenskapen mitt i ett pass | Schemastyrd utdata (`responseSchema`) och en separat kvot att falla tillbaka på |
+| Kostnad | Gratisnivå | Gratisnivå |
 
-När den byggs: en Edge Function `/mcp` med Streamable HTTP-transport, samma
-`gym-tools`-modul, autentisering via OAuth/JWT när Supabase stöder det. Verktygsytan blir
-läsdominerad — `get_history`, `get_personal_records`, `get_volume_by_muscle`,
-`find_exercise` — eftersom värdet ligger i analys från skrivbordet, inte i loggning.
-Eventuella skrivverktyg ska kräva samma `user_id`-från-token-regel som i 4.4.
+Funktionen skrivs mot ett **leverantörsoberoende gränssnitt** (`parseWithLLM(text, ctx)`) med
+en implementation per leverantör, valda via miljövariabel. Att byta leverantör ska vara en
+konfigurationsändring, inte en omskrivning. `ai_parse_log.provider` gör att vi i efterhand kan
+jämföra träffsäkerhet mellan dem på exakt samma indata.
 
-### 4.6 Säkerhetsgränser i AI-vägen
+> ⚠️ **Kvotkollision med `news-signal-engine` — läs detta innan någon nyckel skapas.**
+>
+> Signalmotorprojektet använder redan både Groq och Gemini, och där finns en dokumenterad
+> incident: ett testanrop tömde dygnskvoten och slog ut 22 % av en handelsdags signaler.
+> Delar Gym-App organisation eller nyckel med det projektet kan en fritextinmatning på gymmet
+> tysta produktionssignaler — eller tvärtom, en handelsdag kan göra fritextfältet obrukbart.
+>
+> **Gym-App ska ha egna API-nycklar i en egen organisation/projekt hos båda leverantörerna.**
+> Det är gratis att skapa och eliminerar hela klassen av fel. Nycklarna finns bara som
+> miljövariabler i Supabase Edge Functions — aldrig i klienten, aldrig i git, aldrig i
+> `.env.example`.
 
-- LLM-nyckeln finns bara som miljövariabel i Edge Function. Aldrig i klienten, aldrig i
-  git, aldrig i `.env.example`.
+Exakta modellnamn och aktuella kvotgränser fastställs vid implementationen, inte här — de
+ändras oftare än det här dokumentet uppdateras. Adam har redan mätvärden från
+`news-signal-engine` för både Groq och Gemini (och Mistral) att utgå från.
+
+### 4.6 MCP-servern (spår 2)
+
+När den byggs: en Edge Function `/mcp` med Streamable HTTP-transport, samma `gym-tools`-modul,
+autentisering via OAuth/JWT när Supabase stöder det. Verktygsytan blir läsdominerad —
+`get_history`, `get_personal_records`, `get_volume_by_muscle`, `find_exercise` — eftersom
+värdet ligger i analys från skrivbordet, inte i loggning. Eventuella skrivverktyg ska kräva
+samma `user_id`-från-token-regel som i §4.4.
+
+### 4.7 Säkerhetsgränser i AI-vägen
+
+- LLM-nyckeln finns bara som miljövariabel i Edge Function.
 - Modellen är aldrig auktoritet över vem datan tillhör.
 - Modellens utdata valideras mot schema *innan* det når Dexie. Ett svar som inte validerar
   behandlas som `unresolved`.
-- Fritexten är användarens egen, så promptinjektionsrisken är låg — men verktygen ska ändå
-  vara skrivna som om den vore fientlig, eftersom MCP-spåret senare öppnar samma verktyg
-  för externa klienter.
-
-### 4.7 Att mäta att parsningen faktiskt fungerar
-
-`ai_parse_log` med `outcome` gör tre frågor besvarbara efter några veckors användning:
-hur ofta grammatiken räcker, hur ofta LLM:en behövs, och hur ofta någondera har fel. Utan
-det blir "AI:n parsar det automatiskt" en känsla i stället för ett mätvärde — och då kan
-vi varken försvara latensen eller motivera modellvalet.
+- Fritexten är användarens egen, så promptinjektionsrisken är låg — men verktygen skrivs som
+  om den vore fientlig, eftersom MCP-spåret senare öppnar samma verktyg för externa klienter.
 
 ---
 
-## 5. Risker och öppna frågor
+## 5. Risker och kvarvarande frågor
 
-| # | Fråga | Behöver avgöras |
+Beslutade 2026-07-30: Vite-SPA (§2.1), MCP utanför inmatningsvägen (§4.2), lokal parser före
+LLM (§4.3), gratis-stack (§7), notis före ljud (§2.6).
+
+| # | Kvarvarande fråga | Behöver avgöras |
 | :---- | :---- | :---- |
-| 1 | **Vite-SPA i stället för Next.js** (2.1) | Före första kodraden |
-| 2 | **MCP utanför inmatningsvägen i v1** (4.2) | Före AI-arbetet påbörjas |
-| 3 | **Hörs Web Audio genom iOS tysta läge på din telefon?** (2.6) | Före timerarbetet — mätning, inte diskussion |
-| 4 | Ska `effort` vara ett fält (`type` + `value`) eller två kolumner? (3.1) | Före migrationen |
-| 5 | Vem fyller den globala övningskatalogen, och hur stor ska den vara i v1? | Före migrationen |
-| 6 | Vilken domän/hosting? Statiskt bygge kan ligga på Cloudflare Pages, Netlify eller Vercel — påverkar inget i planen | Före deploy |
+| 1 | Fungerar vibration och notis på Adams telefon, i tyst läge, som installerad PWA? | **Fas 0 i `TASKS.md` — mätning, blockerar timerarbetet** |
+| 2 | Ska `effort` vara ett fält (`type` + `value`) eller två kolumner? (§3.1) | Före migrationen |
+| 3 | Vem fyller den globala övningskatalogen, och hur stor ska den vara i v1? | Före migrationen |
+| 4 | Vercel eller Netlify? (Båda fungerar; valet är smak) | Före deploy |
 
-Risker jag inte har någon åtgärd för, men som ska vara sagda:
+Risker utan åtgärd, men som ska vara sagda:
 
-- **iOS är plattformens svagaste punkt.** Wake Lock, ljud i tyst läge, lagringsrensning och
-  standalone-lägets egenheter är alla saker som har ändrats mellan iOS-versioner och kan
-  ändras igen. Vi kan mildra, inte eliminera.
+- **iOS är plattformens svagaste punkt.** Wake Lock, ljud i tyst läge, vibration,
+  lagringsrensning och standalone-lägets egenheter har alla ändrats mellan iOS-versioner och
+  kan ändras igen. Vi kan mildra, inte eliminera. Design­valet i §2.6 — att lägga funktionen
+  på det visuella lagret som inte kan tas ifrån oss — är just den mildringen.
 - **Underlaget i `docs/research/` är skrivet utan tillgång till kod eller körande system.**
-  Koncepten håller; enskilda tekniska påståenden (som ljudet i tyst läge) ska verifieras
-  innan de blir arkitektur.
+  Koncepten håller; enskilda tekniska påståenden ska verifieras innan de blir arkitektur.
+  Två har redan visat sig behöva det (Background Sync på iOS, ljud i tyst läge).
 
 ---
 
-## 6. Föreslagen ordning (underlag till `TASKS.md`)
+## 6. Ordning
 
-Fylls i efter godkännande. Skissad ordning, med mätningarna först:
+Detaljerad nedbrytning finns i `docs/TASKS.md`. Principerna bakom ordningen:
 
-1. Mät ljud i tyst läge på iOS (fråga 3). Ren HTML-fil, inget ramverk.
-2. Supabase-projekt + första migrationen: tabeller, index, RLS-policyer. Verifiera med
-   `get_advisors` och ett negativt åtkomsttest.
-3. Skelett-PWA: Vite + React + Tailwind + Dexie + manifest + servicearbetare. Installerbar,
-   startar offline, ingen funktion ännu.
-4. Loggningsvägen manuellt: pass, set, spökdata. Enbart Dexie, ingen synk.
-5. Vilotimer med Wake Lock och ljud enligt utfallet av steg 1.
-6. Utkorg + synkarbetare + `apply_mutations`. Först nu rör appen nätet.
-7. Lokal grammatikparser + `ai_parse_log`.
-8. Edge Function `/ai/parse` som reserv.
-9. Historik, PB och e1RM-graf.
-10. Export (JSON/CSV).
-11. MCP-server, spår 2.
+1. **Mätningar först.** Fas 0 avgör hur vilotimern får byggas.
+2. **Parsern testdrivet, före allt som skriver data.**
+3. **Appen ska vara användbar på gymmet innan någon synk eller AI finns.** Efter fas 6 kan
+   Adam logga ett helt pass offline. Allt därefter är förbättringar.
+4. **Nätet rörs sist.** Synk (fas 7) och LLM (fas 8) läggs ovanpå något som redan fungerar
+   utan dem.
 
-Ordningen är vald så att appen är användbar på gymmet efter steg 5 — före all synk och all
-AI.
+---
+
+## 7. Gratis-stack: ramar och vad som händer när de nås
+
+**Hårt krav: hela lösningen ska rymmas inom gratisnivåer.** Det är inte bara en budgetfråga —
+det utesluter en hel klass av lösningar (PowerSync, hostade synkmotorer, Pro-planen) och det
+ska därför stå skrivet var gränserna går.
+
+### 7.1 Hosting
+
+**Vercel Hobby** för det statiska bygget. Netlify är likvärdigt; valet är smak. Eftersom
+frontenden är ett statiskt bygge utan serverside-körning finns här ingen praktisk gräns att
+slå i — ingen funktionskörning, inga kallstarter, inga byggminuter av betydelse för ett
+projekt med en utvecklare.
+
+### 7.2 Supabase Free Tier — verifierade gränser
+
+Hämtat från Supabase egen dokumentation:
+
+| Gräns | Värde | Vad som händer när den nås |
+| :---- | :---- | :---- |
+| Databasstorlek | **500 MB** | Projektet går i **read-only** — inserts och deletes vägras |
+| Diskutrymme | 1 GB | (read-only utlöses av 500 MB-gränsen, inte disken) |
+| Bandbredd | **10 GB/mån** (5 cachad + 5 ocachad) | |
+| Inaktivitet | **7 dagar med för låg databasaktivitet → projektet pausas** | Varningsmejl ~1 vecka innan. Återstartas med ett klick i dashboarden inom 90 dagar. |
+| Förbrukat från start | ~40–60 MB av 500 MB | Nytt projekt innehåller redan tillägg och systemscheman |
+
+### 7.3 Ryms appen? Räkning, inte känsla
+
+Ett `logged_sets`-rad är i storleksordningen 200 byte data plus radhuvud, och med de fem
+indexen i §3.2 kan man räkna med ~400–500 byte per set totalt.
+
+Vid 4 pass i veckan och 25 set per pass: ~5 200 set per år ≈ **2,5 MB per år**.
+`ai_parse_log` är den enda tabell som växer snabbare per rad (råtext + jsonb, ~1 kB), men bara
+vid fritextinmatning — i storleksordningen någon MB per år.
+
+**Slutsats: 500 MB räcker i årtionden.** Databasstorleken är inte den bindande gränsen för det
+här projektet. Det behöver sägas rakt ut, så att ingen designar bort funktionalitet av rädsla
+för en gräns som ligger tre tiopotenser bort.
+
+### 7.4 Den enda gratisnivå-risken som är verklig: pausningen
+
+Sju dagars låg aktivitet pausar projektet. Två saker gör detta hanterbart, och ett gör det
+nästan ointressant:
+
+- **Appen fortsätter fungera helt normalt medan projektet är pausat.** IndexedDB är sanningen;
+  utkorgen köar och töms när projektet är uppe igen. Detta är den direkta utdelningen av
+  offline-first-arkitekturen, och det är värt att notera att designvalet råkar lösa ett
+  affärsmodellsproblem.
+- **Normal användning håller projektet vaket.** Varje appstart med nät gör en synkhämtning.
+  Supabase anger att "några få användarförfrågningar per dag" räcker.
+- **Semester och skador är det som utlöser det.** Åtgärd: ingen. Ett klick på "Resume project"
+  när man är tillbaka, och osynkade pass går upp automatiskt. Vi bygger ingen keep-alive-cron
+  för det här — det vore att lägga till rörliga delar för att lösa ett engångsklick.
+
+Det som *ska* finnas är att appen **visar tydligt** när synken inte gått fram, i stället för
+att låtsas vara i synk. Det är samma princip som i §2.5: fel ska synas.
+
+### 7.5 LLM-anrop
+
+Se §4.5. Både Groq och Gemini har gratisnivåer som med god marginal rymmer en enskild
+användares fritextinmatningar — särskilt eftersom den lokala grammatiken (§4.3) fångar
+merparten och LLM:en bara ser det den inte klarar. **Egna nycklar, egen organisation, skilda
+från `news-signal-engine`.**
+
+### 7.6 Vad som är uteslutet av kravet
+
+Skrivs ut så att det inte behöver diskuteras igen:
+
+- PowerSync, ElectricSQL och andra hostade synkmotorer.
+- Supabase Pro (och därmed: garanterat ingen pausning, dagliga backuper, punkt-i-tid-återställning).
+- Betald LLM-inferens.
+- Push-notiser via en betald leverantör. Lokala notiser från servicearbetaren räcker (§2.6).
+
+**Konsekvens att vara medveten om:** på gratisnivån finns inga automatiska dagliga backuper.
+Datan finns dock i två kopior — IndexedDB på telefonen och Postgres i molnet — och
+export-funktionen (§3.6, v1.1) är den tredje. Det är rimligt för ett personligt projekt, men
+det är ett medvetet risktagande och inte en försummelse.

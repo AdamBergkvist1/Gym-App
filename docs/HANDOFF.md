@@ -3,54 +3,69 @@
 **Datum:** 2026-07-30
 
 **Aktuellt mål:**
-Fas 2 i SDD — läsa `docs/SPEC.md` och producera ett tekniskt förslag i `docs/PLAN.md`.
-Klart. Planen väntar nu på mänskligt godkännande innan `TASKS.md` fylls i och kodning
-påbörjas (`CLAUDE.md`, regel 1).
+Fas 2 (teknisk plan) och fas 3 (algoritmisk nedbrytning) i SDD är klara. Planen är godkänd.
+Nästa handling är **fas 0 i `docs/TASKS.md`** — mätningen av återkopplingskanaler på iOS.
+Ingen produktionskod får skrivas före den, eftersom den avgör hur vilotimern byggs.
 
 **Vad som faktiskt har ändrats:**
-- `docs/PLAN.md` — skriven från grunden. Innehåller frontend-stack, Supabase-schema med
-  RLS-strategi, AI/MCP-arkitektur, risklista och föreslagen arbetsordning.
+- `docs/PLAN.md` — skriven, därefter omskriven med tre tillagda krav: gratis-stack (nytt §7),
+  testdriven parser med explicit testkorpus (§4.3), och omvänd larmordning för vilotimern
+  där visuellt går före ljud (§2.6). LLM-avsnittet (§4.5) bytt från Claude till Groq primärt
+  med Gemini som reserv.
+- `docs/TASKS.md` — skriven från grunden. 12 faser, 101 uppgifter, tre grindar. Varje uppgift
+  har ett "Klart när"-villkor.
 - `docs/HANDOFF.md` — denna fil.
-- Inget annat. Ingen kod, ingen migration, inget Supabase-projekt, inga beroenden
-  installerade. `docs/SPEC.md`, `docs/TASKS.md` och `CLAUDE.md` är orörda.
-- Repot är klonat lokalt till `C:\Users\adamb\Gym-App` (Windows). Ändringarna är
-  **inte** committade och **inte** pushade.
+- Fortfarande **ingen kod**, inget Supabase-projekt, inga beroenden installerade.
+  `docs/SPEC.md` och `CLAUDE.md` är orörda.
 
 **Vad som faktiskt har verifierats (Bevis):**
-- *MCP på Supabase Edge Functions saknar autentiseringsstöd i dag.* Verifierat mot
-  Supabase officiella dokumentation via deras dokumentations-API. Guiden "Deploy MCP
-  servers" inleds med noteringen att den bara täcker MCP-servrar som inte kräver
-  autentisering och att auth-stöd är på väg; både lokal körning och deploy sker med
-  `--no-verify-jwt`. Detta är grunden för att planen lägger MCP i ett separat spår
-  utanför inmatningsvägen.
-- *RLS-detaljerna i planen.* Verifierat mot Supabase RLS-dokumentation: rekommendationen
-  att omsluta anropet som `(select auth.uid())` för att uttrycket ska utvärderas en gång
-  per query i stället för en gång per rad, samt att index på filterkolumnen och undvikande
-  av joins i policyn är de avgörande prestandaposterna.
-- *Modell-ID:n och prisnivåer i avsnitt 4.4.* Hämtade från Anthropics aktuella
-  modellreferens, inte ur minnet: `claude-opus-5` 5 USD in / 25 USD ut per miljon tokens
-  och lägsta cachebara prefix 512 tokens; `claude-haiku-4-5` 1 USD / 5 USD.
+- *MCP på Supabase Edge Functions saknar autentiseringsstöd i dag.* Verifierat mot Supabase
+  dokumentation via deras dokumentations-API. Guiden "Deploy MCP servers" inleds med
+  noteringen att den bara täcker MCP-servrar utan autentisering och att auth-stöd är på väg;
+  både lokal körning och deploy sker med `--no-verify-jwt`. Grunden för att MCP ligger i ett
+  separat spår.
+- *RLS-detaljerna.* Verifierat mot Supabase RLS-dokumentation: `(select auth.uid())` gör att
+  uttrycket utvärderas en gång per query i stället för en gång per rad; index på
+  filterkolumnen och undvikande av joins i policyn är de avgörande posterna.
+- *Supabase Free Tier-gränser (§7.2).* Verifierat mot Supabase dokumentation: read-only vid
+  **500 MB databasstorlek** (inte disk — disken är 1 GB), **10 GB bandbredd/mån** (5 cachad +
+  5 ocachad), **pausning efter 7 dagars låg databasaktivitet** med varningsmejl ~1 vecka innan
+  och 90 dagars fönster att återstarta, samt att ett nytt projekt förbrukar ~40–60 MB från
+  start.
+- *Notiser på iOS kräver installerad PWA.* Verifierat mot flera oberoende leverantörskällor
+  och Apples utvecklarforum: notiser är bara tillgängliga för PWA:er installerade från Safari
+  till hemskärmen, kräver `manifest.json`, och behörighetsdialogen kräver en explicit
+  användargest. Därför mäter fas 0 både i Safari-flik och som installerad app.
 
 **Kända fel / Misslyckade försök:**
-- `gh` finns inte i PATH i den här miljön. Klonade med `git clone` över HTTPS i stället.
-  Repot är publikt så det fungerade utan autentisering.
+- `gh` finns inte i PATH i den här miljön. Klonade med `git clone` över HTTPS. Repot är
+  publikt så det fungerade utan autentisering.
+- Två stavfel ("Klart når") i `TASKS.md` rättade före commit.
 - Inga fel i övrigt, eftersom ingenting har byggts eller körts.
 
 **Vad som INTE är verifierat (och inte får antas):**
-- Räkneexemplet för kostnad per parsningsanrop i avsnitt 4.4 är en uppskattning från
-  antagna tokenmängder. Det är inte mätt.
-- Påståendet i `docs/research/` om att Web Audio API tar sig förbi iOS tysta läge är
-  **inte** verifierat. Planen behandlar det som en öppen fråga som ska mätas på riktig
-  hårdvara innan vilotimern byggs.
-- Ingenting i planen är kompilerat, kört eller testat. Den är ett förslag.
+- **Vibration på iOS är en öppen fråga, och källorna är motstridiga.** En rapport i MDN:s
+  kompatibilitetsdatabas från mars 2026 hävdar att `navigator.vibrate` numera fungerar i iOS
+  Safari; caniuse och senare sammanställningar anger att den inte stöds. Jag har inte valt
+  sida. Fas 0 avgör.
+- Ljud genom iOS tysta läge är oprövat. Underlagets påstående är inte verifierat.
+- Storleksräkningen i §7.3 (~2,5 MB/år) bygger på uppskattade radstorlekar, inte på mätning.
+  Slutsatsen — att 500 MB inte är den bindande gränsen — tål stor felmarginal, men siffran är
+  en uppskattning.
+- Exakta kvotgränser hos Groq och Gemini är inte kontrollerade. De ändras ofta och fastställs
+  vid implementationen (uppgift 8.1–8.2).
+- Ingenting är kompilerat, kört eller testat.
+
+**Öppna beslut som väntar på Adam:**
+1. Ska `effort` vara ett fält (`type` + `value`) eller två kolumner? (`PLAN.md` §3.1) —
+   före uppgift 2.6.
+2. Vem fyller den globala övningskatalogen och hur stor ska den vara? — före uppgift 2.16.
+3. Vercel eller Netlify? — före fas 10.
 
 **Nästa steg:**
-1. Läs `docs/PLAN.md` och ta ställning till de tre beslutspunkterna:
-   - **1:** Vite-SPA i stället för Next.js (avsnitt 2.1)
-   - **2:** MCP utanför inmatningsvägen i v1 (avsnitt 4.2)
-   - **3:** Mät om Web Audio hörs genom iOS tysta läge på din telefon (avsnitt 2.6)
-   Fråga 3 kräver ingen åsikt, bara ett test — och den bör göras först, eftersom svaret
-   avgör hur vilotimern kan byggas.
-2. Ta även ställning till de mindre frågorna 4–6 i avsnitt 5.
-3. Först efter godkännande: fyll `docs/TASKS.md` utifrån ordningen i avsnitt 6.
-4. Committa och pusha `docs/PLAN.md` och `docs/HANDOFF.md`.
+1. **Kör fas 0 i `docs/TASKS.md`** (uppgift 0.1–0.7). Testsidan är fristående HTML utan
+   byggkedja; den kan skrivas direkt. Resultatet skrivs in i `PLAN.md` §2.6.
+2. Därefter fas 1 (projektuppsättning) och fas 2 (databas). Grind 2 måste passeras — negativt
+   åtkomsttest och `get_advisors` utan RLS-varningar — innan någon kod skriver till Supabase.
+3. Fas 4 (parsern) är testdriven. Testfilen committas före implementationsfilen, aldrig i
+   samma commit.
