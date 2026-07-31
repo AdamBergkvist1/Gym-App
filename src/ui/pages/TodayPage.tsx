@@ -15,6 +15,8 @@ import type { ParsedSet } from '../../parser/types';
 import { QuickLog } from '../QuickLog';
 import { ManualEntry } from '../ManualEntry';
 import { SetList } from '../SetList';
+import { RestTimer } from '../RestTimer';
+import { DEFAULT_REST_SECONDS, startRestTimer } from '../../timer/restTimer';
 
 /**
  * Vyn för aktivt pass. Uppgift 5.5, 5.7.
@@ -75,6 +77,9 @@ export function TodayPage() {
       db
     );
     flash(row.id);
+    // 6.2 — timern startar utan extra tryck. Ett loggat set betyder att man
+    // just börjat vila, så det är rätt ögonblick och kräver ingen handling.
+    void startRestTimer(DEFAULT_REST_SECONDS, row.id);
     return row;
   }
 
@@ -112,6 +117,8 @@ export function TodayPage() {
         </span>
       </header>
 
+      <RestTimer />
+
       <QuickLog
         exercises={exerciseRefs}
         unitPreference="kg"
@@ -145,6 +152,7 @@ export function TodayPage() {
               onLog={async (input) => {
                 const row = await logSet({ workoutId: workout.id, ...input }, db);
                 flash(row.id);
+                void startRestTimer(DEFAULT_REST_SECONDS, row.id);
               }}
             />
           </div>

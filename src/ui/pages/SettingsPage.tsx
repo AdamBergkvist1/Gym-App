@@ -6,6 +6,7 @@ import {
 } from '../../lib/persistStorage';
 import { SyncStatus } from '../SyncStatus';
 import { SignIn } from '../SignIn';
+import { TimerDiagnostics } from '../TimerDiagnostics';
 
 /**
  * Inställningar — och tills vidare appens diagnosvy (uppgift 3.5).
@@ -57,6 +58,11 @@ export function SettingsPage() {
       <p className="mt-2 text-sm text-[var(--color-dim)]">
         Enhet, viloti­der och konto byggs senare. Här nedan syns appens tillstånd.
       </p>
+
+      <h2 className="mt-6 mb-1 text-xs font-semibold tracking-wider text-[var(--color-dim)] uppercase">
+        Vilotimerns larm
+      </h2>
+      <TimerDiagnostics />
 
       <h2 className="mt-6 mb-1 text-xs font-semibold tracking-wider text-[var(--color-dim)] uppercase">
         Synk

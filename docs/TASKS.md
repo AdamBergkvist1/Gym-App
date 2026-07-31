@@ -39,18 +39,22 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
 
 🚧 **GRIND 1 — ÖPPNAD 2026-07-30.** Fas 6 får byggas.
 
-- [ ] **0.8 Mät om en lokal notis håller i TRE MINUTER.** Den enda kvarvarande obesvarade
-      frågan, och den är inte kosmetisk: mätningen ovan använde 5 sekunder, men en vilotid är
-      2–5 minuter. Notisen utlöstes av en `setTimeout` i sidans egen JavaScript, och iOS fryser
-      bakgrundade webbsidors JavaScript efter en kort stund. Fem sekunder hann sannolikt inom
-      nådatiden; tre minuter kanske inte gör det.
-      **Så här:** lägg till `180000` som ett fjärde alternativ i fördröjningsväljaren i
-      `test/feedback-test.html` (raden med `data-ms="10000"`), deploya om, tryck Notis, lås
-      telefonen och lägg undan den i tre minuter.
-      **Klart när:** det står i `PLAN.md` §2.6 om notisen kom **vid rätt tidpunkt** eller
-      **först när appen öppnades igen**. Det senare räknas som ett misslyckande — ett larm
-      som kommer när man redan tittar är värre än inget larm, eftersom det ser ut att fungera.
-      **Blockerar uppgift 6.6.** Inget annat.
+- [x] ~~**0.8 Separat treminuterstest.**~~ **Ersatt 2026-07-31 på Adams begäran.**
+      Han valde att inte bygga om testsidan utan att låta den riktiga vilotimern besvara
+      frågan under användning: *"Vi tar den smällen om den kommer."*
+
+      **Rimligt — men bara om smällen går att se.** Frågan (fryser iOS sidans JavaScript så
+      att en tre minuter lång timer aldrig larmar i tid?) blir värdelös om svaret bara blir
+      "jag tror den kom sent ibland". Därför är mätningen inbyggd i stället för borttagen:
+      `src/timer/diagnostics.ts` loggar varje larm med hur många sekunder fel det gick, om
+      appen var dold, och — viktigast — **om larmet utlöstes först när appen kom tillbaka i
+      förgrunden**. Resultatet sammanfattas under Inställningar → Vilotimerns larm.
+
+      Det farliga felläget är inte tystnad utan **försening**: kommer notisen i samma sekund
+      som appen öppnas ser det ut att fungera. Kolumnen "på återkomst" finns för att fånga
+      exakt det.
+      **Klart när:** diagnostiken visar utfall från minst några riktiga pass, och slutsatsen
+      skrivs in i `PLAN.md` §2.6.
 
 ---
 
@@ -329,22 +333,31 @@ typecheck och lint rena.
 Kräver att **grind 1** är passerad. Bygg kanalerna i den ordning mätningen i fas 0 visade
 fungerar — men nivå 1 byggs alltid, oavsett utfall.
 
-- [ ] **6.1 Lagra timern som sluttidpunkt.** `timer_ends_at` i `meta`.
-      **Klart när:** enhetstest visar att kvarvarande tid räknas som `ends_at - now`.
-- [ ] **6.2 Starta timern automatiskt när ett set loggas.**
-      **Klart när:** timern startar utan extra tryck.
-- [ ] **6.3 Rendera nedräkningen.** **Klart när:** siffran stämmer efter att appen varit i
-      bakgrunden i två minuter.
-- [ ] **6.4 Visuellt larm — endast förgrund.** Helskärmsbyte av bakgrundsfärg vid noll.
-      **Klart när:** det syns tydligt utan ljud och utan behörigheter.
-- [ ] **6.5 Wake Lock.** Begär vid timerstart, **återbegär vid `visibilitychange`**.
-      **Klart när:** skärmen är tänd efter tre minuters vila utan att någon rört telefonen.
-- [ ] **6.6 Lokal notis — bärande kanal i bakgrunden.** `registration.showNotification()`,
-      **inte Web Push** (se `PLAN.md` §2.6 — Web Push kräver nät och är därför fel i ett gym).
-      Behörighet begärs vid en explicit användargest, inte vid appstart. Notis visas **bara**
+- [x] **6.1 Timern lagras som sluttidpunkt.** `restTimer` i `meta` med `endsAt` som enda
+      sanning; allt annat härleds. Testat att kvarvarande tid blir rätt även om alla
+      intervall strypts i två minuter — med en nedräknande räknare hade siffran varit fel,
+      och felet hade växt med tiden.
+- [x] **6.2 Timern startar automatiskt när ett set loggas**, både via fritext och manuellt.
+      Ett loggat set betyder att man just börjat vila, så det kräver ingen handling.
+- [x] **6.3 Nedräkningen renderas.** Intervallet finns bara för att trigga omritning —
+      värdet läses alltid från klockan. Plus en förloppsindikator, +30/−30 s och hoppa över.
+- [x] **6.4 Visuellt larm.** Hela panelen byter till grön yta vid noll. Kräver inga
+      behörigheter och kan inte tas ifrån oss av en iOS-uppdatering — därför är det grunden
+      och inte tillägget.
+- [x] **6.5 Wake Lock.** Begärs vid timerstart och **återbegärs vid `visibilitychange`** —
+      låset släpps av webbläsaren så fort appen tappar fokus, så ett enda anrop räcker inte.
+      Nekas det (t.ex. vid lågt batteri) loggas det i konsolen i stället för att sväljas.
+- [x] **6.6 Lokal notis i bakgrunden.** `registration.showNotification()` via
+      servicearbetaren — **inte Web Push**, som kräver nät i det ögonblick larmet ska gå.
+      Behörighet begärs vid en explicit användargest under Inställningar. Notis visas **bara**
       när `document.hidden` är sant; ligger appen framme räcker det visuella larmet.
-      **Kräver att uppgift 0.8 är utförd.**
-      **Klart när:** notisen kommer efter en riktig vilotid med telefonen låst och undanlagd.
+
+      **Byggd trots att 0.8 inte var utförd.** Adam vaskade prerekvisitet 2026-07-31 med
+      motiveringen att den riktiga timern får bli testet — och utan notisen finns ingenting
+      att testa. Mätningen är därför inbyggd, se 0.8.
+
+**Fas 6 verifierad:** 13 nya tester (116 totalt), typecheck och lint gröna. Beteendet i
+bakgrunden på riktig hårdvara är **inte** verifierat — det är själva mätningen som pågår.
 - [x] ~~**6.7 Vibration.**~~ **Struken 2026-07-30.** `'vibrate' in navigator === false` på
       iOS 18.7. Notisen ger ändå vibration — via systemet, inte via oss.
 - [x] ~~**6.8 Ljudlarm via Web Audio.**~~ **Struken 2026-07-30.** `AudioContext` går till
@@ -396,11 +409,13 @@ fungerar — men nivå 1 byggs alltid, oavsett utfall.
 **Fas 7 verifierad:** 16 nya synktester mot fejkade klienter, 103 totalt. Typecheck, lint
 och bygge gröna.
 
-- [ ] **7.12 Verifiera synken mot riktig Supabase.** Allt ovan är testat mot fejkade klienter,
-      vilket bevisar logiken men **inte** kontraktet mot den riktiga `apply_mutations`.
-      Adam behöver fylla i `.env` och logga in.
-      **Klart när:** ett offline-loggat pass syns i Supabase Table Editor efter återansluten
-      nät, och en ändring gjord i Table Editor dyker upp i appen.
+- [x] **7.12 Synken VERIFIERAD mot riktig Supabase 2026-07-31.** Adam la in miljövariablerna,
+      loggade set i flygplansläge och såg raderna dyka upp när nätet kom tillbaka.
+
+      **Bekräftat direkt mot databasen:** 2 pass, 6 set, 9 kvitton i `sync_mutations`, en
+      användare, inga dubbletter. Alla 6 set har `source = 'local_parse'` — parsern skrev
+      dem hela vägen från fritext till Postgres. Kontraktet mot `apply_mutations` håller,
+      inte bara logiken mot fejkade klienter.
 - [ ] **7.13 Överväg att lata-ladda `@supabase/supabase-js`.** **Mätt 2026-07-31:**
       huvudbundlen växte från **237 kB till 575 kB** när klienten lades till — mer än en
       fördubbling. Biblioteket behövs bara för synk, aldrig i loggningsvägen, så det borde
