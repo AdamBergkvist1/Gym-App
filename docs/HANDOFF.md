@@ -3,96 +3,106 @@
 **Datum:** 2026-07-31
 
 **Aktuellt läge:**
-**Appen går att logga pass i.** Fas 0–5 är klara så när som på två punkter (5.9 och 5.10).
-Alla tre grindar är passerade. Nästa steg är Adams test på riktigt gym, och därefter fas 6
-(vilotimern) eller fas 7 (synken).
+Synkmotorn är byggd och testad — men **inte kopplad till din riktiga databas än**, eftersom
+miljövariablerna saknas. Det är det enda som står mellan dig och att träningsdatan hamnar i
+säkert förvar. Instruktionen finns i avsnitt 5.
+
+Fas 0–5 och 7 är klara. Fas 6 (vilotimern) och 8 (LLM-reserven) återstår.
 
 ---
 
-## 1. Vad som finns nu
+## 1. Vad som byggdes detta pass
 
-Ett pass kan startas, set kan loggas med fritext (`Bänk 90x5`) eller manuellt med spökdata,
-raderas, och passet avslutas — allt mot IndexedDB, utan nät, utan konto. Varje mutation
-lägger samtidigt en post i utkorgen, redo för synken i fas 7.
+**5.9 — skapa övning från en parsermiss.** Skriver du `Nackpress 60x8` och övningen inte
+finns, erbjuder appen nu att skapa den. Parsern lämnar tillbaka `attemptedName` som eget
+fält; att plocka namnet ur prosahinten hade fungerat tills någon skrev om formuleringen.
 
-**81 tester gröna**, varav 22 nya mot en riktig IndexedDB via `fake-indexeddb`.
+**Fas 7 — synkmotorn.** Utkorgssändare mot `apply_mutations`, markörbaserad hämtning,
+inloggning och synkindikator. 16 nya tester, 103 totalt.
 
----
-
-## 2. Två fel som bygget avslöjade
-
-**`PLAN.md` §2.4 var fel om indexen.** Planen listade `isDeleted` som index på `workouts`.
-IndexedDB accepterar bara number, string, Date, binärdata och arrayer som nycklar —
-**booleaner är inte giltiga nycklar**. Hade det byggts som planerat hade indexet blivit tyst
-trasigt. Raderade rader filtreras nu i minnet, vilket är gratis i den här storleksordningen.
-
-**Katalogen måste ha databasens id:n, inte egna.** Klienten behöver övningarna lokalt redan
-vid första start, i en källare, utan konto. Hade den seedat med nygenererade UUID:n hade
-synken i fas 7 sett 45 nya rader och dubblerat hela katalogen — en tyst korruption som ingen
-upptäcker förrän katalogen är full av dubbletter. `src/db/catalog.ts` innehåller därför de
-riktiga id:na, hämtade ur Supabase, transkriberade för hand och **verifierade av
-`catalog.test.ts` mot md5-kontrollsummor tagna ur databasen**. Ändras katalogen i en framtida
-migration ska summorna uppdateras i samma commit — annars går testet sönder, vilket är exakt
-vad det ska göra.
+**`PLAN.md` §8 + `TASKS.md` fas 11 — designpolering.** På din begäran. Fasen ligger efter
+fas 9 med flit: poleras det innan historikvyn och timern finns sätts designspråket av den vy
+som råkade byggas först i stället för av helheten. Nio konkreta punkter, plus en lista över
+vad fasen INTE ska omfatta — designfaser är notoriskt lätta att låta svälla.
 
 ---
 
-## 3. Designval värda att känna till
+## 2. Tre beslut i synken som är värda att förstå
 
-- **Spökdata är platshållartext, inte förifyllda värden.** Ett förifyllt fält som användaren
-  aldrig rör blir loggat som om det vore inmatat. En platshållare måste bekräftas men räcker
-  som minnesstöd, vilket är hela poängen.
-- **Hög konfidens loggas direkt, låg konfidens frågar.** `Bänk 90x5` sparas tyst med en
-  diskret grön ton på raden. `Bänk 5x5` visar ett redigerbart utkast med förklaringen varför.
-- **Otolkad text försvinner aldrig.** Vid en miss står skälet på svenska och texten ligger
-  kvar i fältet.
-- **`setIndex` räknas per övning inom passet**, inte per pass — så att "set 2 av bänkpress"
-  stämmer även när övningarna varvas.
-- **`user_id` skickas aldrig i utkorgens payload.** Servern tar alltid ägaren ur JWT:n.
-  Att skicka den skulle antyda att klienten bestämmer vem datan tillhör.
+**En misslyckad post hoppas aldrig över.** Posterna bakom kan bero på den — ett set kan inte
+skickas innan sitt pass finns. En kö som glatt fortsätter förbi ett fel skapar hål i molndatan
+som ingen upptäcker. Kön stoppas i stället och felet syns.
+
+**En trasig batch körs om en post i taget.** `apply_mutations` är atomär, så ett fel fäller
+hela batchen — och då vet man bara att "en av 50 rader är fel", vilket inte går att felsöka.
+Isoleringen kostar några extra anrop i det sällsynta felfallet och sparar en kväll.
+
+**Hämtningsmarkören flyttas inte när ingenting hämtades.** En tom sida får inte råka hoppa
+förbi rader som landar en millisekund senare.
+
+Dessutom: **7.3 håller genom konstruktion, inte genom en kontroll.** Kravet att en utgången
+token inte får blockera loggningen är uppfyllt för att beroendet inte finns — `TodayPage`
+importerar `db/repo`, aldrig `sync/`. Det finns ingen kodväg från loggning till session att
+råka bryta.
 
 ---
 
-## 4. Verifierat
+## 3. Verifierat
 
-- 81 tester, typecheck, lint, produktionsbygge — alla gröna.
-- **3.7 offlinestart verifierad på iPhone** i flygplansläge, installerad på hemskärmen.
-  iOS systemruta om saknad dataåtkomst är väntad: servicearbetaren gör en uppdateringskoll
-  vid start. Att appen ändå renderade är beviset.
-- Grind 1, 2 och 3 passerade. Databasens isolering bevisad med 11 av 11 kontroller.
-- Katalogens id:n verifierade mot databasens kontrollsummor.
+- **103 tester gröna.** 16 av dem mot synken, med fejkade klienter: FIFO-ordning,
+  övergående kontra permanenta fel, isolering av trasig post, att en misslyckad post inte
+  hoppas över, idempotens vid omsändning, och att lokalt vinner över hämtat.
+- Typecheck, lint och produktionsbygge gröna.
+- Tidigare: offlinestart och hela loggningsvägen verifierade på iPhone, databasens isolering
+  bevisad med 11 av 11 kontroller.
 
-## 5. INTE verifierat
+## 4. INTE verifierat — läs detta
 
-- **5.10 — hela loggningsvägen offline på riktigt.** Testerna körs mot `fake-indexeddb` i
-  Node, inte mot Safari på en iPhone. Det som återstår är Adams test.
-- **0.8** — om en lokal notis håller i tre minuter. Blockerar 6.6. Adam har skjutit upp den
-  till fas 6, vilket är rimligt.
-- `apply_mutations` är fortfarande oprövad mot riktig trafik.
+**Synken har aldrig pratat med din riktiga Supabase.** Alla 16 tester går mot fejkade
+klienter. Det bevisar **logiken** men säger ingenting om **kontraktet** mot den riktiga
+`apply_mutations` — fältnamn, typer, hur PostgREST formulerar sina fel. Det är uppgift 7.12
+och kräver dig.
 
-## 6. Kända avvikelser och beslut
+Övrigt oprövat: uppgift **0.8** (om en lokal notis håller i tre minuter, blockerar 6.6).
 
-- **2.20 struken.** Leaked Password Protection finns enligt Adams observation inte på Free
-  Tier. Advisorn kommer fortsätta rapportera den — förväntat, inte förbisett.
-- `rls_auto_enable` × 2 i advisorn — Supabases egen, falsk positiv.
+## 5. Vad du behöver göra — enda som blockerar
+
+Synken är avstängd tills miljövariablerna finns. Utan dem loggar appen som vanligt, helt
+lokalt, och visar "Endast lokalt" som synkstatus.
+
+**Lokalt:** skapa `.env` i reporoten (den är gitignorerad):
+
+```
+VITE_SUPABASE_URL=https://oyccchcleypfuyuqmueq.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+**I Vercel:** samma två variabler under Settings → Environment Variables, sedan en ny deploy.
+Variabler med `VITE_`-prefix bakas in vid bygget — en befintlig deploy plockar inte upp dem.
+
+> Endast **publishable**-nyckeln. Secret-nyckeln kringgår RLS helt och får aldrig i en
+> `VITE_`-variabel, eftersom allt med det prefixet hamnar i det publika bygget.
+
+**Sedan, uppgift 7.12:** logga in under Inställningar, logga ett pass i flygplansläge, slå på
+nätet och kontrollera att passet dyker upp i Supabase Table Editor. Ändra sedan något direkt
+i Table Editor och se att det kommer ner i appen.
+
+## 6. Kända avvikelser
+
+- **7.13, mätt inte åtgärdat:** `@supabase/supabase-js` tog huvudbundlen från **237 kB till
+  575 kB**. Biblioteket behövs bara för synk, aldrig i loggningsvägen, så det borde inte
+  ligga i det som precachas för offlinestart. Att lata-ladda det gör `getSupabase()` asynkron
+  och ripplar genom fyra moduler — **mät om det märks på riktig telefon först**.
 - `npm audit`: 5 high i `eslint → minimatch → brace-expansion`. DevDependency, väntar på patch.
-- `@types/node` tillagd i `tsconfig.types` för att katalogtestet använder `node:crypto`.
-  Tradeoff: Node-globaler blir synliga för TypeScript även i appkoden. Vite skulle fånga ett
-  faktiskt felaktigt Node-anrop vid bygget, men det är värt att veta.
+- `rls_auto_enable` och `auth_leaked_password_protection` i advisorn — båda medvetna.
 
 ---
 
 ## 7. Nästa steg
 
-**Adam:** deploya och kör **5.10** — logga ett riktigt pass i flygplansläge, gärna 20+ set,
-stäng appen, öppna igen och kontrollera att allt finns kvar. Det är första gången appen gör
-något den är byggd för.
+1. **Du:** miljövariabler + 7.12. Det är först då datan faktiskt är i säkert förvar.
+2. **Claude:** **fas 6, vilotimern.** 6.1–6.5 går att bygga nu; 6.6 (notisen) väntar på 0.8.
+3. Därefter fas 8 (LLM-reserven) eller fas 9 (historik och PB).
 
-**Claude därefter, i den ordning du väljer:**
-- **5.9** — skapa ny övning från en parsermiss. Liten, och gör fritextfältet komplett.
-- **Fas 6** — vilotimern. Kräver 0.8 innan 6.6 (notisdelen), men 6.1–6.5 går att bygga nu.
-- **Fas 7** — synken. Grind 2 är passerad, så den är fri. Störst arbete, men det är den som
-  gör att datan överlever en trasig telefon.
-
-Min rekommendation: **5.9 följt av fas 7.** Vilotimern är trevlig, men just nu finns
-träningsdatan bara på en enhet — och det är den risken som växer för varje pass som loggas.
+Fas 9 före fas 8 är förmodligen rätt: historiken gör appen mer användbar för dig varje pass,
+medan LLM-reserven bara träder in när den lokala parsern missar — och den missar sällan.
