@@ -1,14 +1,25 @@
+import { Route, Routes } from 'react-router';
+import { AppShell } from './ui/AppShell';
+import { TodayPage } from './ui/pages/TodayPage';
+import { HistoryPage } from './ui/pages/HistoryPage';
+import { SettingsPage } from './ui/pages/SettingsPage';
+
 /**
- * Platshållare från fas 1. Ersätts i fas 5 av vyn för aktivt pass.
- * Ingen appfunktionalitet finns ännu — se docs/TASKS.md.
+ * Rutterna.
+ *
+ * Ingen `loader` och ingen datahämtning per rutt — data kommer från Dexie via
+ * `useLiveQuery` (fas 5), inte från navigeringen. Det är därför navigering
+ * fungerar identiskt med och utan nät.
  */
 export function App() {
   return (
-    <main className="mx-auto max-w-lg p-6">
-      <h1 className="text-xl font-semibold">Gym</h1>
-      <p className="mt-2 text-sm text-[var(--color-dim)]">
-        Skelett från fas 1. Loggningen byggs i fas 5.
-      </p>
-    </main>
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route index element={<TodayPage />} />
+        <Route path="historik" element={<HistoryPage />} />
+        <Route path="installningar" element={<SettingsPage />} />
+        <Route path="*" element={<TodayPage />} />
+      </Route>
+    </Routes>
   );
 }

@@ -12,22 +12,31 @@
 html,
 body,
 #root {
+  /* dvh, inte vh: annars uppstår "chin gap" i standalone-läge på iOS. */
   height: 100dvh;
+  overflow: hidden;
 }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-fg);
-  /* Marginalerna som håller UI:t undan från Dynamic Island och hemindikatorn. */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-    env(safe-area-inset-bottom) env(safe-area-inset-left);
   -webkit-tap-highlight-color: transparent;
+  /* Safe-area hanteras av AppShell, inte här. En blankettpadding på body
+     skulle lägga en remsa bakgrundsfärg utanför navigeringen i stället för
+     att låta den blöda ut till skärmkanten. */
 }
 
-/* Gymergonomi: alla tryckytor minst 48x48 px (PLAN.md §2.3). */
+/* Gymergonomi: alla tryckytor minst 48x48 px (PLAN.md §2.3). Under hård
+   ansträngning minskar finmotoriken, och händerna är svettiga eller kritade. */
 button,
 [role='button'],
 input,
-select {
+select,
+a[href] {
   min-height: 48px;
+}
+
+/* Länkar i löptext ska inte tvingas till 48 px. */
+p a[href] {
+  min-height: 0;
 }

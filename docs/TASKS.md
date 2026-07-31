@@ -141,13 +141,11 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
       varje övning behöver både fullt namn, vardagligt kortnamn och engelsk motsvarighet.
       **Klart när:** `select count(*) from exercises where owner_id is null` ≥ 30, och varje
       rad har minst två alias.
-- [ ] **2.17 Negativt åtkomsttest — SKRIPTET ÄR SKRIVET, TESTET ÄR INTE KÖRT.**
-      `scripts/rls-negative-test.mjs`, 10 kontroller mot rå REST utan beroenden.
-      **Adam måste först skapa två testanvändare** i Dashboard → Authentication → Users →
-      Add user, med *Auto Confirm User* ikryssat. Sedan köra skriptet med URL, publishable-
-      nyckel och de fyra testkontouppgifterna som miljövariabler (instruktionen står överst
-      i filen).
-      **Klart när:** skriptet skriver `GODKÄNT: 10 av 10 kontroller`.
+- [x] **2.17 Negativt åtkomsttest — KÖRT 2026-07-31. `GODKÄNT: 11 av 11 kontroller.`**
+      Två riktiga auth-användare, `scripts/rls-negative-test.mjs` mot rå REST. B fick noll
+      rader vid läsning av A:s data, 403 vid försök att skriva en rad märkt med A:s
+      `user_id`, och testdatan städades bort efteråt.
+      (Skriptet har 11 kontroller, inte 10 som det stod här tidigare — min felräkning.)
 - [x] **2.18 `get_advisors` i security-läge — KÖRD 2026-07-31.**
       **Rapporten kom INTE tillbaka ren.** Fyra varningar, alla av typen "SECURITY DEFINER-
       funktion körbar av anon/authenticated". Rotorsak: **Postgres ger EXECUTE på nya
@@ -155,40 +153,82 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
       men inte för `handle_new_user`, `set_updated_at` eller `jsonb_to_text_array`.
       Praktisk risk låg (triggerfunktioner går inte att anropa via RPC), men åtgärdad ändå.
       Se 2.19.
-- [ ] **2.19 Kör `supabase/migrations/0002_revoke_function_execute.sql`.** Drar tillbaka
-      EXECUTE från PUBLIC på de tre funktionerna, och ger tillbaka den till `authenticated`
-      för `jsonb_to_text_array` — utan den raden slutar varje synkbatch med en egen övning
-      att fungera. `rls_auto_enable` lämnas orörd: den är Supabases egen, returnerar
-      `event_trigger` och går inte att anropa via RPC.
-      **Klart när:** filen kört utan fel, och `get_advisors` bara rapporterar
-      `rls_auto_enable` kvar.
+- [x] **2.19 `0002_revoke_function_execute.sql` KÖRD 2026-07-31.** Verifierat direkt mot
+      databasen efteråt: `handle_new_user` och `set_updated_at` har nu bara
+      `postgres=X/postgres`, och `jsonb_to_text_array` behöll `authenticated=X/postgres`
+      precis som den måste. `rls_auto_enable` orörd, som avsett.
 
-🚧 **GRIND 2 — INTE PASSERAD.** Kräver att 2.17 är kört och grönt och att 2.19 är kört.
-Migrationens självkontroll räcker inte: den verifierar att RLS är påslaget och att policyer
-*finns*, inte att de är *rätta*. En policy med `using (true)` hade räknats som godkänd.
+🚧 **GRIND 2 — PASSERAD 2026-07-31.** Fas 5 och 7 får röra databasen.
 
-**Verifierat i förbifarten (läsning, inga skrivningar):** samtliga 20 policyer är scopade
-`to authenticated` och använder `(select auth.uid())`-formen — ingen `using (true)` någonstans.
-Det är en granskning av definitionerna, inte ett bevis för körningsbeteendet. Beviset är 2.17.
+**Bevisen:** 2.17 kört med två riktiga användare, 11 av 11 kontroller godkända.
+2.18 kört. 2.19 kört och verifierat mot `pg_proc`. Samtliga 20 policyer lästa direkt ur
+`pg_policies` — alla scopade `to authenticated` med `(select auth.uid())`-formen, ingen
+`using (true)` någonstans.
+
+- [ ] **2.20 Slå på Leaked Password Protection.** `get_advisors` rapporterade den efter att
+      auth-användarna skapats — varningen fanns inte innan, eftersom lintet först slår till
+      när Auth används. Supabase kan kontrollera lösenord mot HaveIBeenPwned vid
+      registrering och byte. Planen bygger på e-post + lösenord (§3.4), så det är direkt
+      relevant. Dashboard → Authentication → Policies (Password protection).
+      **Klart när:** `get_advisors` inte längre rapporterar `auth_leaked_password_protection`.
+
+**Kvarvarande advisorvarning, medvetet obehandlad:** `rls_auto_enable` × 2. Den är Supabases
+egen funktion, returnerar `event_trigger` och går inte att anropa via RPC — en falsk positiv.
+Att revokera på plattformsägda objekt riskerar att gå sönder vid nästa uppdatering utan att
+vinna något.
 
 ---
 
 ## Fas 3 — PWA-skalet
 
-- [ ] **3.1 Lägg till `vite-plugin-pwa`** med `registerType: 'prompt'`.
-      **Klart när:** ett produktionsbygge genererar en servicearbetare.
-- [ ] **3.2 Skriv `manifest.json`.** `display: standalone`, namn, ikoner (192/512 px), mörk
-      temafärg. **Klart när:** Lighthouse rapporterar appen som installerbar.
-- [ ] **3.3 Lägg till `viewport-fit=cover`** i `index.html` och en global CSS-regel som
-      applicerar `env(safe-area-inset-*)` som padding. **Klart när:** inget UI hamnar bakom
-      hemindikatorn på iPhone.
-- [ ] **3.4 Sätt `100dvh` på ytterbehållaren.** **Klart när:** ingen "chin gap" i standalone.
-- [ ] **3.5 Anropa `navigator.storage.persist()` vid appstart** och logga utfallet.
-      **Klart när:** utfallet syns i en debugvy.
-- [ ] **3.6 Bygg uppdateringsnotisen.** Diskret rad när ny servicearbetare väntar; aktiveras
-      bara när inget pass är aktivt. **Klart när:** en ny deploy inte byter app mitt i ett pass.
-- [ ] **3.7 Verifiera offlinestart.** Bygg, installera, slå på flygplansläge, starta appen.
+- [x] **3.1 `vite-plugin-pwa` med `registerType: 'prompt'`.** Produktionsbygget genererar
+      `dist/sw.js` med **9 precachade poster, inga dubbletter**.
+
+      Två val i workbox-konfigurationen som är värda att veta om:
+      **Ingen `runtimeCaching`.** Supabase-anrop får aldrig cachas av servicearbetaren —
+      synken (fas 7) äger sin egen köhantering, och en cachad databasrespons skulle visa
+      gammal data som om den vore färsk.
+      **Ikonansvaret är uppdelat** (plugin-et tar manifestikonerna, `includeAssets` tar
+      apple-touch-icon, och png saknas i `globPatterns`). Med båda vägarna hamnade varje
+      ikon två gånger i precache-manifestet. Det gick bra så länge revisionerna var
+      identiska — men två poster för samma URL med olika revision får workbox att faila vid
+      install, och då startar appen inte offline alls.
+- [x] **3.2 Manifestet.** Genereras av plugin-et. `display: standalone`, `orientation:
+      portrait`, `lang: sv`, mörk tema- och bakgrundsfärg, ikoner i 192/512 px plus en
+      **maskable**-variant där motivet skalats till 62 % så att det överlever Androids och
+      iOS beskärning. Ikonerna genereras av `scripts/make-app-icons.mjs`, så PNG-filerna i
+      repot har en spårbar källa.
+- [x] **3.3 `viewport-fit=cover` + safe-area.** Metataggen i `index.html`, och
+      `env(safe-area-inset-bottom)` som padding på **bottennavigeringen** i stället för på
+      `body`. Med padding på body hade en remsa bakgrundsfärg lagt sig utanför navigeringen;
+      nu blöder den ut till skärmkanten medan innehållet lyfts ovanför hemindikatorn.
+- [x] **3.4 `100dvh`** på `html`, `body` och `#root`.
+- [x] **3.5 `navigator.storage.persist()`** anropas vid appstart, och utfallet syns under
+      **Inställningar**: läge, detalj, använt utrymme och uppskattat tak. Nekas beständig
+      lagring visas en uppmaning att installera appen — det är inget att gömma, eftersom iOS
+      annars kan rensa osynkade pass efter sju dagar.
+- [x] **3.6 Uppdateringsnotisen.** Diskret rad i botten med *Uppdatera* / *Senare*, ingen
+      blockerande dialog.
+
+      **Kravet "får inte byta app mitt i ett pass" är löst strukturellt, inte med logik:**
+      `registerType: 'prompt'` gör att en ny servicearbetare **aldrig** aktiveras utan ett
+      knapptryck. Det finns därför ingen kodväg där appen byts ut mitt i ett pass, och inget
+      passtillstånd att hålla reda på. Vill vi senare *dölja* notisen under ett pågående
+      pass är det en kosmetisk förbättring i fas 5, inte en säkerhetsåtgärd.
+- [ ] **3.7 Verifiera offlinestart — FÖRUTSÄTTNINGARNA KLARA, TESTET ÅTERSTÅR.**
+      Verifierat i bygget: app-skalet (`index.html`, JS-bundlen, CSS:en, workbox-window,
+      manifestet och ikonerna) ligger i precache-manifestet, och `navigateFallback` pekar på
+      `index.html` så att varje rutt serveras av det precachade skalet.
+      Det är den strukturella förutsättningen, **inte** ett bevis. Kvar för Adam:
+      deploya, installera på hemskärmen, slå på flygplansläge och starta appen.
       **Klart när:** appen startar och renderar utan nät.
+
+**Utöver uppgiftslistan:** routing med `react-router` (tre rutter: Pass, Historik,
+Inställningar) och ett appskal med bottennavigering — tummen når botten, varje flik är 64 px
+hög. Rutterna har medvetet **inga loaders**: data kommer från Dexie via `useLiveQuery`
+(fas 5), inte från navigeringen. Det är därför navigering fungerar identiskt med och utan nät.
+
+**Fas 3 verifierad:** typecheck, lint och 59 tester gröna. Bygge: 237 kB JS / 76 kB gzip.
 
 ---
 
