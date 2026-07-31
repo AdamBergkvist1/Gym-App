@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router';
 import { UpdatePrompt } from './UpdatePrompt';
+import { SyncStatus } from './SyncStatus';
 
 /**
  * Appskalet: innehållsyta + bottennavigering.
@@ -20,6 +21,9 @@ export function AppShell() {
     <div className="flex h-[100dvh] flex-col">
       <main className="min-h-0 flex-1 overflow-y-auto px-4 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto max-w-lg py-4">
+          <div className="mb-2 flex justify-end">
+            <SyncStatus compact />
+          </div>
           <Outlet />
         </div>
       </main>

@@ -76,6 +76,55 @@ export async function loadExerciseRefs(database: GymDatabase = db): Promise<Exer
     }));
 }
 
+/**
+ * Skapar en egen övning. Uppgift 5.9.
+ *
+ * `ownerId` sätts till null lokalt och fylls av servern från JWT:n vid synk —
+ * samma regel som för allt annat: klienten bestämmer aldrig vem datan tillhör.
+ * Namnet blir sitt eget första alias, så att fritextparsern hittar den direkt.
+ */
+export async function createExercise(
+  name: string,
+  database: GymDatabase = db
+): Promise<LocalExercise> {
+  const trimmed = name.trim();
+  if (trimmed === '') throw new Error('övningen måste ha ett namn');
+
+  const normalized = normalizeName(trimmed);
+  const existing = await database.exercises.where('normalizedName').equals(normalized).first();
+  if (existing) return existing;
+
+  const row: LocalExercise = {
+    id: newId(),
+    ownerId: null,
+    name: trimmed,
+    normalizedName: normalized,
+    aliases: [normalized],
+    primaryMuscle: 'övrigt',
+    equipment: null,
+    isArchived: false,
+    isDeleted: false,
+    updatedAt: now(),
+  };
+
+  await database.transaction('rw', database.exercises, database.outbox, async () => {
+    await database.exercises.add(row);
+    await database.outbox.add(
+      outboxEntry('exercises', row.id, {
+        id: row.id,
+        name: row.name,
+        aliases: row.aliases,
+        primary_muscle: row.primaryMuscle,
+        secondary_muscles: [],
+        equipment: row.equipment,
+        is_archived: false,
+        is_deleted: false,
+      })
+    );
+  });
+  return row;
+}
+
 // ---------------------------------------------------------------- pass
 
 export async function getActiveWorkout(database: GymDatabase = db): Promise<LocalWorkout | null> {

@@ -2,12 +2,14 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type GymDatabase } from './db';
 import {
+  createExercise,
   deleteSet,
   endWorkout,
   ensureCatalog,
   getActiveWorkout,
   getLastPerformance,
   getSetsForWorkout,
+  loadExerciseRefs,
   logSet,
   pendingCount,
   startWorkout,
@@ -195,5 +197,36 @@ describe('katalogen', () => {
     expect(await db.exercises.count()).toBe(45);
     await ensureCatalog(db);
     expect(await db.exercises.count()).toBe(45);
+  });
+});
+
+describe('5.9 skapa egen övning från en parsermiss', () => {
+  it('skapar övningen och köar den', async () => {
+    const ex = await createExercise('Nackpress', db);
+    expect(ex.name).toBe('Nackpress');
+    expect(ex.normalizedName).toBe('nackpress');
+    // Namnet blir sitt eget alias, annars hittar parsern den inte.
+    expect(ex.aliases).toContain('nackpress');
+
+    const entries = (await db.outbox.toArray()).filter((e) => e.table === 'exercises');
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.payload).not.toHaveProperty('owner_id');
+  });
+
+  it('är idempotent — samma namn ger samma rad', async () => {
+    const a = await createExercise('Nackpress', db);
+    const b = await createExercise('  nackpress  ', db);
+    expect(b.id).toBe(a.id);
+    expect((await db.outbox.toArray()).filter((e) => e.table === 'exercises')).toHaveLength(1);
+  });
+
+  it('vägrar tomt namn', async () => {
+    await expect(createExercise('   ', db)).rejects.toThrow();
+  });
+
+  it('gör övningen sökbar för parsern direkt', async () => {
+    await createExercise('Nackpress', db);
+    const refs = await loadExerciseRefs(db);
+    expect(refs.some((r) => r.normalizedName === 'nackpress')).toBe(true);
   });
 });

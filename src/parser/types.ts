@@ -46,6 +46,14 @@ export interface Unresolved {
   rawText: string;
   reason: UnresolvedReason;
   hint?: string;
+  /**
+   * Namnet parsern försökte slå upp, när `reason` är `unknown_exercise`.
+   *
+   * Finns som eget fält och inte bara i `hint`, eftersom UI:t behöver det för
+   * att kunna erbjuda "skapa övningen" (uppgift 5.9). Att plocka ut det ur en
+   * prosasträng hade fungerat tills någon skrev om formuleringen.
+   */
+  attemptedName?: string;
 }
 
 export interface ParseContext {

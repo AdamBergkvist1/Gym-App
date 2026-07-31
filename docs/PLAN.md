@@ -759,3 +759,64 @@ Skrivs ut så att det inte behöver diskuteras igen:
 Datan finns dock i två kopior — IndexedDB på telefonen och Postgres i molnet — och
 export-funktionen (§3.6, v1.1) är den tredje. Det är rimligt för ett personligt projekt, men
 det är ett medvetet risktagande och inte en försummelse.
+
+---
+
+## 8. Designspråket — en egen fas, inte en efterhandsputs
+
+Fram till och med fas 9 byggs UI:t medvetet råt: rätt struktur, rätt tryckytor, rätt
+informationshierarki — men ingen polering. Det är ett val, inte en försummelse. Att finputsa
+en vy som fortfarande kan komma att byggas om är bortkastat arbete.
+
+Men det får inte stanna där. SPEC pekar ut ett tydligt designspråk: vetenskapligt datafokus
+från RP Hypertrophy, minimalistisk mörk estetik från Jeff Nippard och Boostcamp, siffrorna i
+centrum, inget fluff. Skillnaden mellan en app som gör rätt saker och en man vill öppna sitt
+femtionde pass ligger nästan helt i detaljer som är osynliga var för sig.
+
+**Det här är därför en egen fas — fas 11 i `TASKS.md` — och inte något som smygs in
+undan för undan.** Görs det styckvis blir resultatet ojämnt, och ojämnt är värre än rått.
+
+### 8.1 När den ska göras
+
+**Efter fas 9**, när alla ytor finns. Att polera innan historikvyn och timern existerar
+betyder att man designar hälften av appen två gånger — och att designspråket sätts av den
+första vyn som råkade bli byggd i stället för av helheten.
+
+Undantaget är sådant som är billigare att göra rätt direkt än att rätta senare: tryckytor,
+`inputMode`, safe-area och tabellsiffror. Det ligger redan inne.
+
+### 8.2 Vad fasen faktiskt ska omfatta
+
+Formulerat som krav, inte som smak, så att det går att avgöra när det är klart:
+
+- **Typografisk skala.** I dag används Tailwinds förval rakt av. En app där siffrorna är
+  huvudpersonen behöver en egen skala där setraden är största elementet på skärmen och
+  allt annat underordnar sig den.
+- **Tabellsiffror överallt.** `tabular-nums` finns på setraden men inte i historiken eller
+  timern. Siffror som hoppar i sidled när de ändras känns billigt och gör dem svårlästa.
+- **Vertikal rytm.** Avstånden är i dag valda per komponent. De ska följa en gemensam skala.
+- **Tryckåterkoppling.** Ingen knapp har i dag ett `:active`-tillstånd. Under hård
+  ansträngning, med svettiga fingrar, är omedelbar visuell kvittens på ett tryck skillnaden
+  mellan att lita på appen och att trycka igen.
+- **Rörelse med måtta.** Setraden dyker upp abrupt. En kort inanimation gör att ögat hittar
+  den nya raden utan att leta. Allt över ~150 ms känns långsamt mitt i ett pass.
+- **Tomma tillstånd.** "Inga set ännu" är i dag en grå rad. Första passet är det enda
+  tillfället att förklara fritextsyntaxen, och det tillfället används inte.
+- **Färgsemantik.** Grönt används för sparat, gult för tvetydigt. Det behöver bli ett system
+  med definierade betydelser, inte enstaka val — och kontrasterna ska klara WCAG AA mot den
+  mörka bakgrunden.
+- **Personbästa ska synas.** Ett set som slår ett PB ska markeras i samma ögonblick det
+  loggas. Det är den enskilt starkaste återkopplingen en träningsapp kan ge, och den kostar
+  nästan ingenting när e1RM-funktionen från fas 9 redan finns.
+- **Densitet.** Ett pass med 25 set ska gå att överblicka utan att skrolla sönder tummen.
+  Nuvarande radhöjd är vald för att vara lätt att träffa, inte för att rymma ett helt pass.
+
+### 8.3 Vad fasen INTE ska omfatta
+
+Skrivs ut, eftersom designfaser är notoriskt lätta att låta svälla:
+
+- Inga nya funktioner. Ändras beteendet är det en annan uppgift.
+- Inget designsystem-bibliotek. Appen har ett tiotal komponenter; ett ramverk för det vore
+  mer kod att underhålla än det ersätter.
+- Ingen ljus variant. Mörkt tema är enda temat (§2.2).
+- Ingen animationsmotor. CSS-transitioner räcker.

@@ -37,9 +37,17 @@ interface Props {
   unitPreference: 'kg' | 'lb';
   defaultEffortScale: 'rir' | 'rpe';
   onLog: (set: ParsedSet) => Promise<LocalSet>;
+  /** Uppgift 5.9 — skapar övningen och låter användaren logga direkt efteråt. */
+  onCreateExercise: (name: string) => Promise<void>;
 }
 
-export function QuickLog({ exercises, unitPreference, defaultEffortScale, onLog }: Props) {
+export function QuickLog({
+  exercises,
+  unitPreference,
+  defaultEffortScale,
+  onLog,
+  onCreateExercise,
+}: Props) {
   const [text, setText] = useState('');
   const [problem, setProblem] = useState<Unresolved | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -126,12 +134,37 @@ export function QuickLog({ exercises, unitPreference, defaultEffortScale, onLog 
       </form>
 
       {problem && (
-        <p role="alert" className="mt-2 text-sm text-amber-400">
-          {REASON_TEXT[problem.reason]}
-          {problem.hint !== undefined && (
-            <span className="text-[var(--color-dim)]"> ({problem.hint})</span>
+        <div role="alert" className="mt-2">
+          <p className="text-sm text-amber-400">
+            {REASON_TEXT[problem.reason]}
+            {problem.hint !== undefined && (
+              <span className="text-[var(--color-dim)]"> ({problem.hint})</span>
+            )}
+          </p>
+          {/*
+            Uppgift 5.9. En miss ska ha en väg vidare, inte bara ett nej.
+            Övningen skapas, texten ligger kvar, och nästa tryck på Logga
+            fungerar — två tryck totalt.
+          */}
+          {problem.reason === 'unknown_exercise' && problem.attemptedName !== undefined && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                const namn = problem.attemptedName;
+                if (namn === undefined) return;
+                setBusy(true);
+                void onCreateExercise(namn)
+                  .then(() => setProblem(null))
+                  .finally(() => setBusy(false));
+              }}
+              className="mt-2 w-full rounded-lg border border-[var(--color-line)]
+                         bg-[var(--color-surface)] px-3 text-sm disabled:opacity-50"
+            >
+              Skapa övningen &bdquo;{problem.attemptedName}&rdquo;
+            </button>
           )}
-        </p>
+        </div>
       )}
 
       {draft && (

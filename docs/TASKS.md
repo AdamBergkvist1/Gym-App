@@ -300,12 +300,17 @@ historiken och går att granska i efterhand.
 - [x] **5.8 Fritextfältet mot parsern.** Hög konfidens loggas direkt. Låg konfidens visar ett
       redigerbart utkast med förklaringen varför. Miss visar skälet på svenska **och behåller
       texten** — den får aldrig försvinna bara för att vi inte förstod den.
-- [ ] **5.9 "Skapa ny övning" från en parsermiss.** Inte byggd. I dag säger appen "känner
-      inte igen övningen" men erbjuder ingen väg vidare. Kräver `exercises`-grenen i utkorgen
-      (som `apply_mutations` redan stöder).
-      **Klart när:** okänt övningsnamn kan bli en egen övning på två tryck.
-- [ ] **5.10 Verifiera hela loggningsvägen offline.** Flygplansläge, logga ett helt pass.
-      **Klart när:** 25 set kan loggas utan nät, och finns kvar efter omstart av appen.
+- [x] **5.9 "Skapa ny övning" från en parsermiss.** Parsern lämnar nu tillbaka
+      `attemptedName` som **eget fält** — att plocka namnet ur prosahinten hade fungerat
+      tills någon skrev om formuleringen. Vid `unknown_exercise` visas en knapp; övningen
+      skapas med namnet som sitt eget alias så att parsern hittar den direkt, texten ligger
+      kvar i fältet, och nästa tryck på Logga fungerar. Två tryck totalt, som specificerat.
+      `createExercise` är idempotent på normaliserat namn och köar mot `exercises`-grenen
+      i utkorgen.
+- [x] **5.10 Loggningsvägen VERIFIERAD offline på enhet 2026-07-31.** Pass startat och flera
+      set loggade via fritext i flygplansläge. `Bänk 90x5` gick rakt igenom, `Bänk 5x5`
+      skapade utkast, spökdatan syntes, och både det pågående passet och all data överlevde
+      att appen stängdes helt.
 
 **Utöver uppgiftslistan:** `src/db/catalog.ts` — de 45 globala övningarna inbakade i bygget,
 med **databasens riktiga id:n**. Hade klienten seedat med egna id:n hade synken i fas 7 sett
@@ -352,28 +357,57 @@ fungerar — men nivå 1 byggs alltid, oavsett utfall.
 
 ## Fas 7 — Synk
 
-- [ ] **7.1 Bygg Supabase-klienten.** Publishable-nyckel från env. **Klart när:** klienten
-      instansieras utan att blockera appstart om nätet saknas.
-- [ ] **7.2 Bygg inloggning (e-post + lösenord).**
-      **Klart när:** inloggning fungerar och `user_id` cachas lokalt.
-- [ ] **7.3 Verifiera att utgången token inte blockerar loggning.** Manipulera token till
-      utgången, starta appen. **Klart när:** hela loggningsvägen fungerar ändå.
-- [ ] **7.4 Bygg utkorgens läsare.** FIFO på `seq`, plockar nästa `pending`.
-      **Klart när:** enhetstest visar rätt ordning.
-- [ ] **7.5 Bygg sändaren mot `apply_mutations`.** Batchar upp till N poster.
-      **Klart när:** ett offline-loggat pass hamnar i Postgres vid återansluten nät.
-- [ ] **7.6 Bygg backoff och felhantering.** Nätfel → försök igen. Permanent 4xx → `failed`.
-      **Klart när:** enhetstest täcker båda vägarna.
-- [ ] **7.7 Bygg synkindikatorn i UI.** Tre lägen: i synk, köar, **fel**. Felläget är synligt
-      och beskriver vad som inte gick fram. **Klart när:** en `failed`-post syns för användaren.
-- [ ] **7.8 Bygg hämtningen (moln → klient).** `updated_at > last_pulled_at` per tabell.
-      **Klart när:** ändring gjord i Supabase Studio dyker upp i appen efter omstart.
-- [ ] **7.9 Skydda mot överskrivning.** En hämtad rad med väntande utkorgspost skrivs inte över.
-      **Klart när:** enhetstest bevisar det.
-- [ ] **7.10 Bygg mjuk radering.** `is_deleted` i stället för `delete`.
-      **Klart när:** raderat set försvinner i UI och propagerar till molnet.
-- [ ] **7.11 Testa idempotensen på riktigt.** Bryt nätet mitt i en sändning, återanslut.
-      **Klart när:** inga dubbletter i `logged_sets`.
+- [x] **7.1 Supabase-klienten.** `getSupabase()` returnerar **null** när miljövariablerna
+      saknas. Det är inte ett fel — saknad konfiguration betyder "synk avstängd", inte
+      "appen trasig". Endast publishable-nyckeln finns i klienten.
+- [x] **7.2 Inloggning (e-post + lösenord).** Ligger under Inställningar och ingen annanstans.
+- [x] **7.3 Utgången token blockerar inte loggningen — och kan inte göra det.**
+      Loggningsvägen rör aldrig `getSupabase()` eller sessionen. Det är inte en kontroll som
+      kan glömmas bort utan en följd av att beroendet inte finns: `TodayPage` importerar
+      `db/repo`, aldrig `sync/`. En utgången token påverkar exakt en sak — att kön inte töms.
+- [x] **7.4 Utkorgens läsare.** FIFO på `seq`, batchar om 50. Testat att passet kommer före
+      sina set, vilket `apply_mutations` kräver.
+- [x] **7.5 Sändaren mot `apply_mutations`.** Skickar `mutation_id` per post, raderar posterna
+      först när servern kvitterat.
+- [x] **7.6 Felhantering.**
+
+      **Övergående** (nätfel, `PGRST301` utgången JWT): posterna ligger kvar orörda, inget
+      felläge visas. Att kön växer offline är precis vad appen är byggd för.
+
+      **Permanent** (t.ex. främmandenyckelbrott): posten markeras `failed` med felmeddelandet
+      och **kön STOPPAS**. Två saker här är medvetna och viktiga:
+      dels **hoppas en misslyckad post aldrig över** — posterna efter kan bero på den, och en
+      kö som fortsätter förbi ett fel skapar hål i molndatan som ingen upptäcker;
+      dels **isoleras den trasiga posten** genom att batchen körs om en post i taget. Utan det
+      vet man bara att "en av 50 rader är fel", vilket inte går att felsöka.
+- [x] **7.7 Synkindikatorn.** Kompakt i skalet, fullständig under Inställningar. Felläget är
+      det enda som får färg och kräver åtgärd — plus en knapp för att försöka igen.
+- [x] **7.8 Hämtningen.** Markör per tabell i `meta`, `updated_at > markör`. Markören flyttas
+      **inte** när ingenting hämtades: en tom sida får inte råka hoppa förbi rader som kommer
+      in en millisekund senare.
+- [x] **7.9 Lokalt vinner.** En hämtad rad med väntande utkorgspost skrivs aldrig över.
+      Testat med en serverrad som påstår sig vara nyare och raderad — den lokala raden står
+      kvar orörd.
+- [x] **7.10 Mjuk radering.** Byggd redan i fas 5; `deleteSet` sätter `isDeleted` och köar.
+- [x] **7.11 Idempotensen testad.** Poster som skickas två gånger (som vid ett tappat svar)
+      ger `applied: 0, skipped: 2` och noll dubbletter — samma kvittensmekanik som
+      `sync_mutations` i `apply_mutations`.
+
+**Fas 7 verifierad:** 16 nya synktester mot fejkade klienter, 103 totalt. Typecheck, lint
+och bygge gröna.
+
+- [ ] **7.12 Verifiera synken mot riktig Supabase.** Allt ovan är testat mot fejkade klienter,
+      vilket bevisar logiken men **inte** kontraktet mot den riktiga `apply_mutations`.
+      Adam behöver fylla i `.env` och logga in.
+      **Klart när:** ett offline-loggat pass syns i Supabase Table Editor efter återansluten
+      nät, och en ändring gjord i Table Editor dyker upp i appen.
+- [ ] **7.13 Överväg att lata-ladda `@supabase/supabase-js`.** **Mätt 2026-07-31:**
+      huvudbundlen växte från **237 kB till 575 kB** när klienten lades till — mer än en
+      fördubbling. Biblioteket behövs bara för synk, aldrig i loggningsvägen, så det borde
+      inte ligga i det som precachas för att appen ska starta offline.
+      Kräver att `getSupabase()` blir asynkron, vilket rippplar genom push, pull, engine och
+      auth. **Mät först om det märks** på en riktig telefon innan refaktoreringen görs — 575 kB
+      över ett hemnät är något helt annat än över 3G.
 
 ---
 
@@ -437,11 +471,46 @@ fungerar — men nivå 1 byggs alltid, oavsett utfall.
 
 ---
 
-## Fas 11 — Backlog (efter v1)
+## Fas 11 — Designpolering (UX/UI)
 
-- [ ] **11.1 Export till JSON och CSV.**
-- [ ] **11.2 Rutiner och mallar** (`routines`, `routine_exercises` — additivt).
-- [ ] **11.3 Volym per muskelgrupp och vecka.**
-- [ ] **11.4 MCP-server (spår 2)** — när Supabase stöder autentiserad MCP.
-- [ ] **11.5 Superset och dropset.**
-- [ ] **11.6 Jämför Groq mot Gemini på samma indata** med `ai_parse_log` som underlag.
+Efterfrågad av Adam 2026-07-31 efter att ha använt appen på riktigt: den fungerar men är
+"basic och rätt ful". Det är väntat — UI:t har byggts råt med flit. Men det ska vara ett
+beslut, inte något som glöms bort, och det ska göras **samlat**. Görs det styckvis blir
+resultatet ojämnt, och ojämnt är värre än rått.
+
+Fullständigt resonemang inklusive vad fasen INTE ska omfatta: `PLAN.md` §8.
+Referens enligt SPEC: RP Hypertrophy för datafokus, Jeff Nippard och Boostcamp för estetik.
+
+**Ligger efter fas 9 med flit.** Att polera innan historikvyn och timern finns betyder att
+designspråket sätts av den vy som råkade byggas först, i stället för av helheten.
+
+- [ ] **11.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
+      största elementet på skärmen; allt annat underordnar sig den.
+      **Klart när:** skalan är definierad i `index.css` och ingen komponent sätter egen storlek.
+- [ ] **11.2 `tabular-nums` överallt där siffror ändras.** Finns på setraden, saknas i
+      historik och timer. Siffror som hoppar i sidled är svårlästa och känns billiga.
+- [ ] **11.3 Vertikal rytm.** Avstånden är i dag valda per komponent. Ska följa en skala.
+- [ ] **11.4 Tryckåterkoppling.** Ingen knapp har `:active`-tillstånd. Med svettiga fingrar
+      är omedelbar kvittens skillnaden mellan att lita på appen och att trycka igen.
+      **Klart när:** varje tryckyta svarar synligt inom en bildruta.
+- [ ] **11.5 Rörelse med måtta.** Setraden dyker upp abrupt. En kort inanimation gör att ögat
+      hittar den nya raden. **Klart när:** inget övergångsförlopp överstiger ~150 ms.
+- [ ] **11.6 Tomma tillstånd.** Första passet är enda tillfället att lära ut fritextsyntaxen,
+      och det tillfället används inte i dag.
+- [ ] **11.7 Färgsemantik som system.** Grönt = sparat, gult = tvetydigt är i dag enstaka val.
+      **Klart när:** betydelserna är definierade och kontrasterna klarar WCAG AA mot mörk botten.
+- [ ] **11.8 Personbästa markeras när det slås.** Den starkaste återkopplingen en träningsapp
+      kan ge, och nästan gratis när e1RM från fas 9 finns.
+- [ ] **11.9 Densitet.** Ett pass med 25 set ska gå att överblicka. Nuvarande radhöjd är vald
+      för träffsäkerhet, inte för överblick — de två målen ska vägas mot varandra.
+
+---
+
+## Fas 12 — Backlog (efter v1)
+
+- [ ] **12.1 Export till JSON och CSV.**
+- [ ] **12.2 Rutiner och mallar** (`routines`, `routine_exercises` — additivt).
+- [ ] **12.3 Volym per muskelgrupp och vecka.**
+- [ ] **12.4 MCP-server (spår 2)** — när Supabase stöder autentiserad MCP.
+- [ ] **12.5 Superset och dropset.**
+- [ ] **12.6 Jämför Groq mot Gemini på samma indata** med `ai_parse_log` som underlag.

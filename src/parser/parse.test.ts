@@ -108,6 +108,15 @@ describe('4.7 avvisning — hellre otolkat än feltolkat', () => {
     });
   }
 
+  it('lämnar tillbaka namnet den inte kände igen, så UI:t kan erbjuda att skapa det', () => {
+    const r = parseSetText('Blaha 90x5', ctx());
+    expect(r.unresolved[0]!.attemptedName).toBe('blaha');
+  });
+
+  it('sätter inte attemptedName när övningen inte är problemet', () => {
+    expect(parseSetText('Bänk 90', ctx()).unresolved[0]!.attemptedName).toBeUndefined();
+  });
+
   it('avvisar ansträngning utanför 0–10', () => {
     const r = parseSetText('Bänk 90x5 @14', ctx());
     expect(r.sets).toHaveLength(0);

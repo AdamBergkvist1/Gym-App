@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import {
+  createExercise,
   deleteSet,
   endWorkout,
   getActiveWorkout,
@@ -116,6 +117,9 @@ export function TodayPage() {
         unitPreference="kg"
         defaultEffortScale="rir"
         onLog={handleParsedLog}
+        onCreateExercise={async (namn) => {
+          await createExercise(namn, db);
+        }}
       />
 
       <SetList

@@ -23,7 +23,12 @@ export default tseslint.config(
       // Luckor ska vara synliga, aldrig tyst ersatta (CLAUDE.md). En tom catch
       // som sväljer ett fel är exakt det mönstret.
       'no-empty': ['error', { allowEmptyCatch: false }],
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      // `_namn` är den etablerade markeringen för "medvetet oanvänd" — den
+      // gäller lika mycket för destrukturerade variabler som för argument.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
+      ],
     },
   }
 );

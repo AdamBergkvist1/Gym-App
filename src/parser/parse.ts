@@ -38,8 +38,18 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-function unresolved(rawText: string, reason: UnresolvedReason, hint?: string): ParseResult {
-  const item: Unresolved = { rawText, reason, ...(hint === undefined ? {} : { hint }) };
+function unresolved(
+  rawText: string,
+  reason: UnresolvedReason,
+  hint?: string,
+  attemptedName?: string
+): ParseResult {
+  const item: Unresolved = {
+    rawText,
+    reason,
+    ...(hint === undefined ? {} : { hint }),
+    ...(attemptedName === undefined ? {} : { attemptedName }),
+  };
   return { sets: [], unresolved: [item] };
 }
 
@@ -113,7 +123,7 @@ export function parseSetText(raw: string, ctx: ParseContext): ParseResult {
 
   const exercise = matchExercise(nameQuery, ctx.exercises);
   if (!exercise) {
-    return unresolved(raw, 'unknown_exercise', `känner inte igen "${nameQuery}"`);
+    return unresolved(raw, 'unknown_exercise', `känner inte igen "${nameQuery}"`, nameQuery);
   }
 
   const enteredWeight = Number(m[2]);
