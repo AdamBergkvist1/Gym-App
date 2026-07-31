@@ -3,125 +3,102 @@
 **Datum:** 2026-07-31
 
 **Aktuellt läge:**
-Migrationen är körd, **fas 4 (parsern) är klar och grind 3 öppen**. Kvar innan grind 2
-stänger: två saker som bara Adam kan göra — köra 0002 och köra det negativa åtkomsttestet.
+**Grind 1, 2 och 3 är alla passerade.** Fas 0, 1, 2, 3 och 4 är klara. Databasen är bevisat
+isolerad, parsern är testad, och PWA-skalet står. Nästa naturliga steg är **fas 5** —
+loggningsvägen mot Dexie, som är det första som ger appen ett faktiskt värde.
 
 ---
 
-## 1. Vad som hände detta pass
+## 1. Grind 2 — stängd, med bevis
 
-- **Fas 1** klar och verifierad (Vite 7, React 19, strikt TS, Tailwind 4, Vitest, ESLint).
-- **Migrationen 0001 körd av Adam** utan fel. Projekt `Gym-App`, ref `oyccchcleypfuyuqmueq`,
-  eu-north-1, Postgres 17.6.
-- **Uppgift 2.18 körd** — och rapporten kom **inte** tillbaka ren. Se avsnitt 2.
-- **Fas 4 klar**: 59 tester gröna, 91,3 % grenäckning på `src/parser/`.
+| Uppgift | Utfall |
+| :---- | :---- |
+| 2.17 negativt åtkomsttest | **11 av 11 kontroller godkända** med två riktiga auth-användare |
+| 2.18 `get_advisors` | Kört. Hittade fyra varningar → 0002 |
+| 2.19 `0002`-migrationen | Kört och verifierad mot `pg_proc` |
+| Policygranskning | Alla 20 policyer lästa ur `pg_policies`: scopade `to authenticated`, `(select auth.uid())`-formen, ingen `using (true)` |
 
----
+Efter 0002 har `handle_new_user` och `set_updated_at` bara `postgres=X/postgres`, och
+`jsonb_to_text_array` behöll `authenticated=X/postgres` — den raden är den enda i 0002 som
+hade brutit något om den utelämnats, eftersom `apply_mutations` är SECURITY INVOKER.
 
-## 2. Fyndet: advisorn hittade ett hål jag själv införde
-
-`get_advisors` gav fyra varningar av typen "SECURITY DEFINER-funktion körbar av
-anon/authenticated".
-
-**Rotorsak:** Postgres ger `EXECUTE` på nya funktioner till `PUBLIC` som standard. Det är
-alltså inte Supabase som öppnar dem. I 0001 revokerade jag detta för `apply_mutations` men
-glömde `handle_new_user`, `set_updated_at` och `jsonb_to_text_array`.
-
-**Storleken på felet, ärligt:** den praktiska risken var **låg**. Triggerfunktioner
-returnerar `trigger` och kan inte anropas via RPC över huvud taget. Det var ett onödigt
-beviljande, inte en öppen dörr. Men en advisor-rapport som innehåller brus man vant sig vid
-att ignorera är värdelös, och stängningen kostar ingenting.
-
-**Åtgärd:** `supabase/migrations/0002_revoke_function_execute.sql`. Den innehåller en rad som
-inte får utelämnas: `grant execute on function jsonb_to_text_array to authenticated`.
-`apply_mutations` är SECURITY INVOKER och körs med anroparens rättigheter — utan den raden
-slutar varje synkbatch som innehåller en egen övning att fungera.
-
-**`rls_auto_enable` lämnas orörd.** Den är Supabases egen, skapad av Adams Auto-RLS-
-inställning, och returnerar `event_trigger` — den går inte att anropa via RPC.
-Advisorvarningen för den är en falsk positiv. Att revokera på plattformsägda objekt riskerar
-att gå sönder vid nästa uppdatering utan att vinna något.
-
-### Vad som mättes i stället för antogs
-
-Frågan "slutar triggrarna fungera om `authenticated` tappar EXECUTE?" avgjordes i en
-transaktion som rullades tillbaka, med rollen satt till `authenticated`: `updated_at`
-bumpades korrekt **både med och utan** revoke. Postgres kontrollerar EXECUTE när en trigger
-*skapas*, inte varje gång den avfyras.
-
-Första mätförsöket gav fel svar (`bumpad = false`) och såg ut att bevisa motsatsen.
-Orsaken visade sig vara **Adams Auto-RLS**, som slog på RLS på testtabellerna i samma sekund
-de skapades — `authenticated` såg noll rader, så `insert ... select` skrev ingenting. Att
-Auto-RLS fungerar är alltså verifierat i förbifarten. Ett artefaktfel som nästan blev en
-felaktig slutsats.
+**Kvarvarande advisorvarningar, med avsikt:**
+- `rls_auto_enable` × 2 — Supabases egen funktion, returnerar `event_trigger` och går inte
+  att anropa via RPC. Falsk positiv. Plattformsägda objekt lämnas orörda.
+- **`auth_leaked_password_protection` — NY, och värd att åtgärda.** Uppgift 2.20. Varningen
+  dök upp först när auth-användarna skapades, eftersom lintet slår till när Auth används.
+  Supabase kan kontrollera lösenord mot HaveIBeenPwned. Planen bygger på e-post + lösenord,
+  så det är en relevant och gratis skärpning. Dashboard → Authentication → Password
+  protection.
 
 ---
 
-## 3. Varför grind 2 fortfarande är stängd
+## 2. Fas 3 — PWA-skalet
 
-Adam läste "Success. No rows returned" som att allt var godkänt. Migrationens
-självkontrollblock verifierar tre saker: att RLS är **påslaget**, att varje tabell **har**
-minst en policy, och att katalogen har ≥30 rader. Det kan **inte** se om policyerna är
-**rätta** — en policy med `using (true)` hade räknats som godkänd.
+Klart utom slutverifieringen. Vad som finns:
 
-**Verifierat genom läsning (inga skrivningar):** samtliga 20 policyer är scopade
-`to authenticated` och använder `(select auth.uid())`-formen. Ingen `using (true)` någonstans.
-Det är en granskning av definitionerna, inte ett bevis för körningsbeteendet.
+- `vite-plugin-pwa` i **prompt-läge**, 9 precachade poster, inga dubbletter.
+- Genererat manifest: standalone, portrait, mörka färger, ikoner i 192/512 plus en
+  **maskable**-variant skalad till 62 % så att motivet överlever beskärning till cirkel.
+- `react-router` med tre rutter — Pass, Historik, Inställningar — och ett appskal med
+  bottennavigering som är padd­ad med `env(safe-area-inset-bottom)`.
+- `navigator.storage.persist()` vid start, med utfallet synligt under Inställningar.
+- Uppdateringsnotis: diskret rad, ingen blockerande dialog.
 
-**Beviset är 2.17**, som mäter det enda som betyder något: att användare B faktiskt får noll
-rader. Skriptet finns, testet är inte kört.
+**Tre beslut som bär vikt och därför har kommentarer i koden:**
 
----
-
-## 4. Verifierat (bevis)
-
-- **Fas 1:** typecheck, lint, build — gröna.
-- **Fas 4:** 59 tester gröna. Röd→grön-övergången är två separata commits (`361dd9a` röd,
-  `5759769` grön), så TDD-ordningen går att granska i historiken. Täckning `src/parser/`
-  91,3 % grenar / 99 % satser.
-- **Migrationerna:** parsade med PostgreSQL:s egen parser (`libpg-query`) — 0001 88 satser,
-  0002 5 satser, inga syntaxfel. 0001 dessutom körd skarpt av Adam.
-- **Policydefinitionerna:** lästa direkt ur `pg_policies` i det körande projektet.
-- **Triggerbeteendet efter revoke:** mätt i återrullad transaktion, se avsnitt 2.
-
-## 5. INTE verifierat
-
-- **2.17 är inte kört.** Kräver två testanvändare.
-- **0002 är inte kört.** Skriven och parsad, inte applicerad.
-- **PL/pgSQL-kropparna i 0002** är granskade för hand, inte maskinellt — samma begränsning
-  som för 0001 (den yttre parsern ser en funktionskropp som en stränglitteral).
-- **Uppgift 0.8** — om en lokal notis håller i tre minuter. Blockerar endast 6.6.
-- `apply_mutations` är fortfarande oprövad mot riktig trafik. Den revideras sannolikt i fas 7.
-
-## 6. Kända fel
-
-- `npm audit`: 5 high, alla i kedjan `eslint → minimatch → brace-expansion`. **Beslut taget
-  2026-07-31: vi väntar på patchen.** Endast devDependency, når aldrig ett produktionsbygge.
-- Gym-App ligger i **samma Supabase-organisation** som `news-signal-engine`. Ingen åtgärd,
-  men Fair Use-restriktioner gäller organisationen, inte projektet.
+1. **Ingen `runtimeCaching` alls.** Supabase-anrop får aldrig cachas av servicearbetaren.
+   Synken (fas 7) äger sin egen köhantering, och en cachad databasrespons skulle visa gammal
+   data som om den vore färsk — precis den sortens tysta fel projektet är byggt för att undvika.
+2. **Ikonansvaret är uppdelat** mellan plugin-et och `includeAssets`, och png saknas i
+   `globPatterns`. Med båda vägarna hamnade varje ikon **två gånger** i precache-manifestet.
+   Det gick bra så länge revisionerna var identiska — men två poster för samma URL med olika
+   revision får workbox att faila vid install, och då startar appen inte offline alls.
+   Upptäckt genom att inspektera det genererade `sw.js`, inte genom att anta.
+3. **"Byt aldrig app mitt i ett pass" är löst strukturellt.** Prompt-läget aktiverar aldrig
+   en ny servicearbetare utan ett knapptryck. Det finns därför ingen kodväg som kan göra det,
+   och inget passtillstånd att hålla reda på.
 
 ---
 
-## 7. Nästa steg
+## 3. Verifierat (bevis)
 
-**Adam, två saker:**
+- **Fas 3:** produktionsbygge genererar `dist/sw.js`; precache-manifestet inspekterat post
+  för post — app-skalet finns med, `navigateFallback` pekar på `index.html`, noll dubbletter.
+- **Fas 4:** 59 tester gröna. Röd→grön syns som två commits (`361dd9a` → `5759769`).
+  Grenäckning `src/parser/` 91,3 %.
+- **Databasen:** se avsnitt 1. Allt läst direkt ur det körande projektet.
+- **Verktygskedjan:** `npm run typecheck`, `npm run lint`, `npm test` gröna. Bygge
+  237 kB JS / 76 kB gzip.
 
-1. **Kör `supabase/migrations/0002_revoke_function_execute.sql`** i SQL Editor. Den ska
-   skriva `OK. Inga av våra funktioner är öppna för PUBLIC.`
-2. **Kör det negativa åtkomsttestet (2.17).** Skapa först två testanvändare i Dashboard →
-   Authentication → Users → Add user, med *Auto Confirm User* ikryssat. Kör sedan:
+## 4. INTE verifierat
 
-   ```
-   SUPABASE_URL=... SUPABASE_PUBLISHABLE_KEY=... \
-   TEST_A_EMAIL=... TEST_A_PASSWORD=... \
-   TEST_B_EMAIL=... TEST_B_PASSWORD=... \
-   node scripts/rls-negative-test.mjs
-   ```
+- **3.7 offlinestart.** Förutsättningarna är på plats och inspekterade, men appen har inte
+  startats utan nät. Det är ett test på enhet, inte i en byggkedja.
+- **0.8** — om en lokal notis håller i tre minuter. Blockerar endast 6.6.
+- `apply_mutations` är oprövad mot riktig trafik. Revideras sannolikt i fas 7.
+- PL/pgSQL-kropparna i migrationerna är granskade för hand, inte maskinellt. Båda filerna är
+  dock körda skarpt utan fel, vilket i praktiken täcker det.
 
-   Skriptet gör 10 kontroller och ska sluta med `GODKÄNT: 10 av 10 kontroller`. Blir något
-   underkänt är grind 2 kvar stängd och skriptet säger vad som gick fel.
+## 5. Kända fel
 
-**Därefter kan Claude ta:**
-- **Fas 3** (PWA-skalet) — oberoende av Supabase, kan göras när som helst.
-- **Fas 5** (loggning mot Dexie) — kräver inte heller Supabase, bara grind 3 som nu är öppen.
-- **Fas 7** (synk) kräver att grind 2 är stängd.
+- `npm audit`: 5 high i kedjan `eslint → minimatch → brace-expansion`. Beslut 2026-07-31:
+  vi väntar på patchen. DevDependency, når aldrig produktionsbygget.
+- Gym-App ligger i samma Supabase-organisation som `news-signal-engine`. Fair Use-
+  restriktioner gäller organisationen. Noterat, inte ett problem i dagens storlek.
+
+---
+
+## 6. Nästa steg
+
+**Adam, tre saker — alla små:**
+
+1. **Slå på Leaked Password Protection** (uppgift 2.20). En toggle.
+2. **Deploya och verifiera offlinestart** (3.7): installera på hemskärmen, flygplansläge,
+   starta appen. Nu finns det äntligen något att titta på.
+3. **Uppgift 0.8** när det passar — tremminuterstestet för notisen. Blockerar bara 6.6.
+
+**Claude tar sedan fas 5** (uppgift 5.1–5.10): Dexie-schemat, `logSet()` med utkorgspost i
+samma transaktion, spökdata via det sammansatta indexet, vyn för aktivt pass, och
+inkopplingen av parsern som redan är klar. Efter fas 5 går det att logga ett helt pass
+offline — och då är appen för första gången användbar på ett gym.
