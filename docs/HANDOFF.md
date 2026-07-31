@@ -3,125 +3,125 @@
 **Datum:** 2026-07-31
 
 **Aktuellt läge:**
-**Fas 1 är klar och verifierad.** Fas 2 är **skriven men inte körd** — migrationen ligger som
-en fil och väntar på att Adam kör den i Supabase SQL Editor. Grind 2 gäller: ingen kod som
-skriver till Supabase får byggas förrän 2.17 och 2.18 är gröna.
+Migrationen är körd, **fas 4 (parsern) är klar och grind 3 öppen**. Kvar innan grind 2
+stänger: två saker som bara Adam kan göra — köra 0002 och köra det negativa åtkomsttestet.
 
 ---
 
 ## 1. Vad som hände detta pass
 
-**Fas 1 — projektuppsättning (uppgift 1.1–1.7, klar).**
-Vite 7 + React 19 + TypeScript strikt + Tailwind v4 + Vitest + ESLint. Verifierat:
-`npm run typecheck`, `npm run lint`, `npm test` (3 gröna) och `npm run build`
-(194 kB / 61 kB gzip) går alla igenom.
-
-Tre val som avviker från uppgiftstexten, med skäl:
-
-1. **Scaffoldat manuellt, inte med `npm create vite@latest`.** Kommandot erbjuder sig att
-   tömma katalogen när den inte är tom, och `docs/` och `test/` låg redan där. Risken var
-   inte värd bekvämligheten.
-2. **`passWithNoTests` är medvetet AV.** Med den påslagen hade en trasig testglob senare gett
-   grön svit med noll tester — exakt det felläge projektet ska undvika. I stället skrevs
-   `src/lib/id.ts` med tester direkt: klientgenererade UUID:n, som hela idempotensmodellen
-   vilar på.
-3. **Prettier utelämnad.** Ingen formateringskonflikt finns ännu, och en konfigurationsfil
-   utan problem att lösa är bara underhåll. Läggs till om formateringsdiffar börjar störa.
-
-**Fas 2 — migrationen skriven (uppgift 2.3–2.16).**
-`supabase/migrations/0001_initial_schema.sql`, 716 rader, en fil att klistra in.
+- **Fas 1** klar och verifierad (Vite 7, React 19, strikt TS, Tailwind 4, Vitest, ESLint).
+- **Migrationen 0001 körd av Adam** utan fel. Projekt `Gym-App`, ref `oyccchcleypfuyuqmueq`,
+  eu-north-1, Postgres 17.6.
+- **Uppgift 2.18 körd** — och rapporten kom **inte** tillbaka ren. Se avsnitt 2.
+- **Fas 4 klar**: 59 tester gröna, 91,3 % grenäckning på `src/parser/`.
 
 ---
 
-## 2. Fynd som ändrade migrationen
+## 2. Fyndet: advisorn hittade ett hål jag själv införde
 
-**Adams inställning "auto-expose AV" är rätt satt — och den kräver explicita GRANT.**
-Verifierat mot Supabase dokumentation: med "default privileges for new entities" avstängt
-blir nya tabeller i `public` **inte** automatiskt nåbara via Data API. Utan explicita
-`grant`-satser svarar PostgREST med `42501 permission denied` på varje anrop. Migrationen
-har därför ett eget GRANT-avsnitt. Utan det hade fas 7 gått rakt in i en vägg som ser ut
-som ett RLS-fel men inte är det.
+`get_advisors` gav fyra varningar av typen "SECURITY DEFINER-funktion körbar av
+anon/authenticated".
 
-`anon` får ingenting alls, och avsnittet avslutas med ett explicit
-`revoke all on all tables in schema public from anon`. Appen kräver inloggning, så en
-oinloggad roll har inget legitimt ärende — och det ger ett lager utöver RLS: även en
-felskriven policy kan inte utnyttjas utan behörighet.
+**Rotorsak:** Postgres ger `EXECUTE` på nya funktioner till `PUBLIC` som standard. Det är
+alltså inte Supabase som öppnar dem. I 0001 revokerade jag detta för `apply_mutations` men
+glömde `handle_new_user`, `set_updated_at` och `jsonb_to_text_array`.
 
-**Två designval i schemat som är värda att känna till:**
+**Storleken på felet, ärligt:** den praktiska risken var **låg**. Triggerfunktioner
+returnerar `trigger` och kan inte anropas via RPC över huvud taget. Det var ett onödigt
+beviljande, inte en öppen dörr. Men en advisor-rapport som innehåller brus man vant sig vid
+att ignorera är värdelös, och stängningen kostar ingenting.
 
-- **Sammansatt främmandenyckel i stället för subquery i RLS.** `workouts` har
-  `unique (id, user_id)`, och `logged_sets` har en FK på `(workout_id, user_id)`. Det
-  garanterar att ett set och dess pass alltid tillhör samma användare — utan att någon policy
-  behöver slå upp ägaren i en annan tabell, vilket hade körts per rad.
-- **`normalized_name` är en genererad kolumn** (`lower(btrim(name))`). Den kan aldrig glida
-  isär från `name`. **Normaliseringen i `src/parser/normalize.ts` måste matcha uttrycket
-  exakt** — annars hittar parsern inte övningar som finns i katalogen. Det står som kommentar
-  i SQL-filen.
+**Åtgärd:** `supabase/migrations/0002_revoke_function_execute.sql`. Den innehåller en rad som
+inte får utelämnas: `grant execute on function jsonb_to_text_array to authenticated`.
+`apply_mutations` är SECURITY INVOKER och körs med anroparens rättigheter — utan den raden
+slutar varje synkbatch som innehåller en egen övning att fungera.
 
----
+**`rls_auto_enable` lämnas orörd.** Den är Supabases egen, skapad av Adams Auto-RLS-
+inställning, och returnerar `event_trigger` — den går inte att anropa via RPC.
+Advisorvarningen för den är en falsk positiv. Att revokera på plattformsägda objekt riskerar
+att gå sönder vid nästa uppdatering utan att vinna något.
 
-## 3. Verifierat (bevis)
+### Vad som mättes i stället för antogs
 
-- **Fas 1-verktygskedjan** — typecheck, lint, 3 tester och produktionsbygge körda, alla gröna.
-- **Migrationens yttre SQL** — parsad med PostgreSQL:s egen parser (`libpg-query`):
-  **88 satser, inga syntaxfel.**
-- **Supabase Data API-behörigheter** — verifierat mot deras dokumentation, se avsnitt 2.
-- Tidigare verifierade fakta (fas 0-mätningen, MCP saknar auth på Edge Functions,
-  `(select auth.uid())`-optimeringen, gratisnivåns gränser, publishable/secret-nycklarna)
-  står kvar oförändrade i `PLAN.md`.
+Frågan "slutar triggrarna fungera om `authenticated` tappar EXECUTE?" avgjordes i en
+transaktion som rullades tillbaka, med rollen satt till `authenticated`: `updated_at`
+bumpades korrekt **både med och utan** revoke. Postgres kontrollerar EXECUTE när en trigger
+*skapas*, inte varje gång den avfyras.
 
-## 4. INTE verifierat
-
-- **Migrationen är inte körd.** Ingen Docker finns i utvecklingsmiljön, så den kunde inte
-  provköras mot en riktig Postgres. Den är dessutom beroende av `auth.users` och `auth.uid()`,
-  som bara finns i Supabase.
-- **PL/pgSQL-kropparna är inte parser-verifierade.** För den yttre parsern är en funktionskropp
-  bara en stränglitteral. `apply_mutations`, `handle_new_user`, `set_updated_at`,
-  `jsonb_to_text_array` och självkontrollblocket är granskade för hand, inte maskinellt.
-  Ett fel där visar sig som ett tydligt felmeddelande vid `create function` — klistra in det
-  så rättar jag.
-- **`apply_mutations` är den del som mest sannolikt behöver revideras** när utkorgen byggs i
-  fas 7. Den är `create or replace`, så det kostar ingenting.
-- Om en lokal notis håller i tre minuter — **uppgift 0.8**, fortfarande öppen, blockerar
-  endast uppgift 6.6.
-
-## 5. Kända fel
-
-- **`npm audit`: 5 high severity.** Alla är samma transitiva kedja:
-  `eslint → @eslint/config-array → minimatch → brace-expansion` (DoS via obegränsad
-  expansion). **Endast devDependency** — eslint följer aldrig med i produktionsbygget, så
-  inget av detta når en användare. `npm audit fix --force` vill installera eslint 10, en
-  brytande major. Bedömning: vänta tills eslint släpper en patch, eller tills vi ändå
-  uppgraderar. Inte tyst ignorerat — noterat här så beslutet går att ompröva.
-- Ingen Docker i utvecklingsmiljön, se avsnitt 4.
+Första mätförsöket gav fel svar (`bumpad = false`) och såg ut att bevisa motsatsen.
+Orsaken visade sig vara **Adams Auto-RLS**, som slog på RLS på testtabellerna i samma sekund
+de skapades — `authenticated` såg noll rader, så `insert ... select` skrev ingenting. Att
+Auto-RLS fungerar är alltså verifierat i förbifarten. Ett artefaktfel som nästan blev en
+felaktig slutsats.
 
 ---
 
-## 6. Nästa steg
+## 3. Varför grind 2 fortfarande är stängd
 
-**Adam kör migrationen.** Öppna `supabase/migrations/0001_initial_schema.sql`, markera allt,
-klistra in i Supabase SQL Editor, kör.
+Adam läste "Success. No rows returned" som att allt var godkänt. Migrationens
+självkontrollblock verifierar tre saker: att RLS är **påslaget**, att varje tabell **har**
+minst en policy, och att katalogen har ≥30 rader. Det kan **inte** se om policyerna är
+**rätta** — en policy med `using (true)` hade räknats som godkänd.
 
-Filen är idempotent — den går att köra om utan att något dubbleras. Den avslutas med ett
-självkontrollblock som **kastar** om RLS saknas på någon tabell, om någon tabell saknar
-policy, eller om övningskatalogen har färre än 30 rader. Vid framgång skriver den:
+**Verifierat genom läsning (inga skrivningar):** samtliga 20 policyer är scopade
+`to authenticated` och använder `(select auth.uid())`-formen. Ingen `using (true)` någonstans.
+Det är en granskning av definitionerna, inte ett bevis för körningsbeteendet.
 
-```
-OK. RLS aktiverat och policyer på plats för 6 tabeller.
-OK. Övningskatalogen innehåller 45 globala övningar.
-```
+**Beviset är 2.17**, som mäter det enda som betyder något: att användare B faktiskt får noll
+rader. Skriptet finns, testet är inte kört.
 
-Kommer något annat ut — klistra in det.
+---
 
-**Därefter, kvar i fas 2:**
-- **2.17 Negativt åtkomsttest.** Två testanvändare; B ska få **noll rader, inte ett fel** när
-  hen försöker läsa A:s set. Skrivs som ett körbart skript i `scripts/`.
-- **2.18 `get_advisors` i security-läge** — ska komma tillbaka utan RLS-varningar.
+## 4. Verifierat (bevis)
 
-🚧 **Grind 2 måste passeras innan fas 5 och 7 rör databasen.**
+- **Fas 1:** typecheck, lint, build — gröna.
+- **Fas 4:** 59 tester gröna. Röd→grön-övergången är två separata commits (`361dd9a` röd,
+  `5759769` grön), så TDD-ordningen går att granska i historiken. Täckning `src/parser/`
+  91,3 % grenar / 99 % satser.
+- **Migrationerna:** parsade med PostgreSQL:s egen parser (`libpg-query`) — 0001 88 satser,
+  0002 5 satser, inga syntaxfel. 0001 dessutom körd skarpt av Adam.
+- **Policydefinitionerna:** lästa direkt ur `pg_policies` i det körande projektet.
+- **Triggerbeteendet efter revoke:** mätt i återrullad transaktion, se avsnitt 2.
 
-**Sedan fas 3** (PWA-skalet) eller **fas 4** (parsern, testdriven). Fas 4 är helt oberoende av
-Supabase och kan köras parallellt med att grind 2 stängs.
+## 5. INTE verifierat
 
-**Uppgift 0.8** kan göras när som helst före fas 6. Instruktionen står kvar i föregående
-handoff-version i git-historiken, och i `PLAN.md` §2.6.
+- **2.17 är inte kört.** Kräver två testanvändare.
+- **0002 är inte kört.** Skriven och parsad, inte applicerad.
+- **PL/pgSQL-kropparna i 0002** är granskade för hand, inte maskinellt — samma begränsning
+  som för 0001 (den yttre parsern ser en funktionskropp som en stränglitteral).
+- **Uppgift 0.8** — om en lokal notis håller i tre minuter. Blockerar endast 6.6.
+- `apply_mutations` är fortfarande oprövad mot riktig trafik. Den revideras sannolikt i fas 7.
+
+## 6. Kända fel
+
+- `npm audit`: 5 high, alla i kedjan `eslint → minimatch → brace-expansion`. **Beslut taget
+  2026-07-31: vi väntar på patchen.** Endast devDependency, når aldrig ett produktionsbygge.
+- Gym-App ligger i **samma Supabase-organisation** som `news-signal-engine`. Ingen åtgärd,
+  men Fair Use-restriktioner gäller organisationen, inte projektet.
+
+---
+
+## 7. Nästa steg
+
+**Adam, två saker:**
+
+1. **Kör `supabase/migrations/0002_revoke_function_execute.sql`** i SQL Editor. Den ska
+   skriva `OK. Inga av våra funktioner är öppna för PUBLIC.`
+2. **Kör det negativa åtkomsttestet (2.17).** Skapa först två testanvändare i Dashboard →
+   Authentication → Users → Add user, med *Auto Confirm User* ikryssat. Kör sedan:
+
+   ```
+   SUPABASE_URL=... SUPABASE_PUBLISHABLE_KEY=... \
+   TEST_A_EMAIL=... TEST_A_PASSWORD=... \
+   TEST_B_EMAIL=... TEST_B_PASSWORD=... \
+   node scripts/rls-negative-test.mjs
+   ```
+
+   Skriptet gör 10 kontroller och ska sluta med `GODKÄNT: 10 av 10 kontroller`. Blir något
+   underkänt är grind 2 kvar stängd och skriptet säger vad som gick fel.
+
+**Därefter kan Claude ta:**
+- **Fas 3** (PWA-skalet) — oberoende av Supabase, kan göras när som helst.
+- **Fas 5** (loggning mot Dexie) — kräver inte heller Supabase, bara grind 3 som nu är öppen.
+- **Fas 7** (synk) kräver att grind 2 är stängd.
