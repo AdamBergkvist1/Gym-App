@@ -221,23 +221,55 @@ Timern överlever både omladdning och bakgrundsläge.
 **Wake Lock** begärs när timern startar och **återbegärs på `visibilitychange`** — låset
 släpps av webbläsaren så fort appen tappar fokus, så ett enda anrop räcker inte.
 
-> ⚠️ **En kvarvarande mätning innan fas 6 byggs: håller timern i tre minuter?**
+### 2.6.1 Treminutersfrågan — AVGJORD 2026-07-31
+
+**Utfall: notisen når inte fram i bakgrunden. Men inte av det skäl vi antog.**
+
+Två riktiga vilotider på 180 s, appen stängd, mätdata ur appens egen diagnostik:
+
+| Vilotid | Fel | `wasHidden` | `firedOnResume` | Adams upplevelse |
+| :---- | :---- | :---- | :---- | :---- |
+| 180 s | +11 s | ja | nej | Ingen notis. Kom i samma ögonblick appen öppnades. |
+| 180 s | +20 s | ja | nej | Samma sak. |
+
+**Vad datan bevisar:** `wasHidden: true` med bara 11–20 sekunders fel betyder att sidans
+JavaScript **faktiskt körde medan appen låg i bakgrunden**. iOS strypte intervallet till att
+vakna med tiotals sekunders mellanrum, men frös det inte. Koden anropade
+`registration.showNotification()` i bakgrunden, och anropet lyckades.
+
+**Vad Adam observerade:** ingen notis förrän appen öppnades — båda gångerna, medan han
+aktivt väntade på den.
+
+**Slutsatsen:** iOS **skapade** notisen men **presenterade** den inte förrän appen kom i
+förgrunden. Det är visningen operativsystemet håller inne, inte timern.
+
+> **Ett fel i mätningen som är värt att komma ihåg.** Diagnostiken loggade när *vi anropade*
+> `showNotification()`, inte när *iOS visade* notisen. I fas 0-testet med 5 sekunders
+> fördröjning sammanföll de två, så felet syntes inte. Här gör de inte det, och `firedOnResume`
+> kunde därför aldrig fånga det verkliga felläget — den svarade `nej` på en fråga den inte
+> mätte. Det var den mänskliga observationen som avgjorde saken.
 >
-> Mätningen ovan använde **5 sekunders** fördröjning. En vilotid är 2–5 minuter. Det som
-> utlöste notisen var en `setTimeout` i sidans egen JavaScript — och iOS fryser bakgrundade
-> webbsidors JavaScript efter en kort stund. Fem sekunder hann sannolikt inom nådatiden.
-> Tre minuter kanske inte gör det.
->
-> Misslyckas det ser man det inte som tystnad utan som att **notisen kommer i samma sekund
-> som man öppnar appen igen** — vilket är värre än inget larm, eftersom det ser ut att
-> fungera.
->
-> `TimestampTrigger` / Notification Triggers API, som skulle lösa det genom att låta
-> operativsystemet hålla i schemaläggningen, finns bara i Chromium och har aldrig
-> implementerats i Safari. Vi har alltså ingen given reservplan, och det är just därför
-> mätningen måste göras före bygget: **uppgift 0.8 i `TASKS.md`, med 3 minuters fördröjning.**
-> Faller den ut negativt är svaret sannolikt att låta Wake Lock hålla skärmen tänd och
-> acceptera att appen ska ligga framme under vilan — inte att bygga Web Push.
+> Lärdomen: när en mätning och en användares upplevelse säger emot varandra är det inte
+> självklart att mätningen har rätt. Kontrollera först att den mäter det man tror.
+
+**Beslutad arkitektur efter mätningen:**
+
+| Läge | Kanal | Status |
+| :---- | :---- | :---- |
+| Appen framme (normalfallet under vila) | **Visuellt** + Wake Lock håller skärmen tänd | ✅ Fungerar |
+| Appen i bakgrunden | Lokal notis | ⚠️ Skapas men visas först vid återkomst |
+
+**Wake Lock är därmed inte en bekvämlighet utan bärande.** Vilan förutsätter att appen ligger
+framme med skärmen tänd — och det gör den, eftersom Wake Lock begärs vid timerstart och
+återbegärs vid `visibilitychange`.
+
+**Vi bygger inte Web Push för att lösa detta.** Den kräver nät i det ögonblick larmet ska gå,
+vilket är precis vad ett gym saknar. Att byta ett larm som fungerar utan nät mot ett som
+kräver nät vore fel riktning. `TimestampTrigger`, som hade låtit operativsystemet hålla i
+schemaläggningen, finns bara i Chromium och har aldrig implementerats i Safari.
+
+**Kvarstående möjlighet, inte planerad:** notisen kan vara värd att behålla ändå — den kommer
+fram när man återvänder till appen och skadar ingenting. Den är kvar av det skälet.
 
 ---
 

@@ -48,24 +48,34 @@ inget kvar som motiverar att vänta.
 
 ---
 
-## 3. Vilotimern — slutsatsen är inte given än
+## 3. Vilotimern — frågan är AVGJORD
 
-Mätdata 2026-07-31: två bakgrundslarm på 180 s vilotid, **+11 s och +20 s** försening.
+Full analys i `PLAN.md` §2.6.1. Slutsatsen: **notisen når inte fram i bakgrunden** — men
+inte av det skäl någon av oss antog.
 
-**Din tolkning var att iOS fryser timern. Det stämmer möjligen inte.** En försening på
-11–20 sekunder på en 180-sekunderstimer är *liten*. Hade iOS fryst timern helt vore
-förseningen lika lång som tiden tills appen råkade öppnas — ofta minuter. 11–20 s tyder
-snarare på att iOS **strypte** timern till att vakna med tiotals sekunders mellanrum, alltså
-att notisen faktiskt gick i bakgrunden, bara något sen.
+Mätdata: två larm på 180 s, appen stängd. `wasHidden: ja`, `firedOnResume: nej`, fel +11 s
+och +20 s. Adam fick ingen notis förrän han öppnade appen, båda gångerna, medan han aktivt
+väntade.
 
-**Kolumnen "På återkomst" avgör:**
-- `nej` → larmet fungerar. 20 sekunder sent är fullt användbart för en vilotimer, och ingen
-  åtgärd behövs alls.
-- `ja` → du har rätt, och rätt åtgärd är Wake Lock som håller skärmen tänd under vilan.
-  Aldrig Web Push, som kräver nät.
+**Vad det betyder:** `wasHidden: ja` med bara 11–20 sekunders fel bevisar att sidans
+JavaScript **körde i bakgrunden** — iOS strypte intervallet men frös det inte, och
+`showNotification()` anropades och lyckades. Ändå syntes ingen notis. Alltså: iOS **skapade**
+notisen men **presenterade** den inte förrän appen kom i förgrunden.
 
-Sammanfattningsraden skriver ut "iOS fryser timern" rakt ut i `ja`-fallet. Du citerade
-förseningarna men inte den raden, vilket kan betyda att den inte stod där.
+**Mätningen mätte fel sak.** Diagnostiken loggade när vi *anropade* `showNotification()`,
+inte när iOS *visade* den. I fas 0-testet med 5 sekunders fördröjning sammanföll de två, så
+felet syntes aldrig. `firedOnResume` kunde därför aldrig fånga det verkliga felläget — den
+svarade `nej` på en fråga den inte mätte. Det var den mänskliga observationen som avgjorde.
+
+Lärdomen är värd att behålla: **när en mätning och en användares upplevelse säger emot
+varandra är det inte självklart att mätningen har rätt.** Kontrollera först att den mäter
+det man tror.
+
+**Följd för arkitekturen:** Wake Lock är inte en bekvämlighet utan bärande. Vilan förutsätter
+att appen ligger framme med tänd skärm, vilket den gör — låset begärs vid timerstart och
+återbegärs vid `visibilitychange`. Web Push byggs inte: den kräver nät i det ögonblick
+larmet ska gå, alltså precis vad ett gym saknar. Notisen behålls ändå, eftersom den kommer
+fram när man återvänder till appen och skadar ingenting.
 
 ---
 
@@ -80,7 +90,11 @@ förseningarna men inte den raden, vilket kan betyda att den inte stod där.
 ## 5. INTE verifierat
 
 - **Historikvyerna på riktig enhet.** Byggda och enhetstestade, men inte sedda i Safari.
-- Timerns bakgrundsbeteende — se avsnitt 3.
+  Det är det första att titta på nästa gång.
+- **Wake Lock på riktig hårdvara.** Nu när den bär larmet är det värt att bekräfta att
+  skärmen faktiskt håller sig tänd genom en hel 180-sekundersvila.
+- Diagnostikens `firedOnResume` är opålitlig — se avsnitt 3. Den är kvar men ska inte
+  litas på; timerns bakgrundsfråga är ändå avgjord.
 
 ## 6. Kända avvikelser
 
@@ -93,13 +107,20 @@ förseningarna men inte den raden, vilket kan betyda att den inte stod där.
 
 ## 7. Nästa steg
 
-**Du:** deploya och titta på historiken — datan du synkade upp finns nu i appen. Kolla också
-"På återkomst"-kolumnen under Inställningar → Vilotimerns larm.
+**Du:** deploya och titta på historiken — datan du synkade upp finns nu i appen. Timerfrågan
+är avklarad, inget mer att mäta där.
 
-**Claude:** min rekommendation är **4.13 före fas 8**. Att trimma grammatiken är en dags
-arbete och gör den vanligaste inmatningen bättre direkt för varje pass. Fas 8 är större, och
-en LLM som får rätta efter en bättre grammatik behöver dessutom rätta färre saker — vilket
-gör den både billigare och mer träffsäker.
+**Claude nästa pass, i den ordningen:**
+
+1. **4.13 — trimma grammatiken.** Korpusen står i uppgiften, testdrivet som resten av fas 4.
+   Ungefär en dags arbete, och det gör den vanligaste inmatningen bättre varje pass.
+2. **Fas 8 — LLM-coachen.** Historiken finns nu, så 8.0 (utöka kontraktet med träningsdata)
+   är fri att bygga. En LLM som får rätta efter en *bättre* grammatik har dessutom färre
+   saker att rätta, vilket gör den både billigare och mer träffsäker — därför denna ordning.
+
+Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning — knapparna ±30 s finns, men
+inte sparad tid per övning), **7.13** (lata-ladda supabase-js), **fas 10** (deploy-automatik),
+**fas 11** (designpoleringen).
 
 Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning), **7.13** (lata-ladda
 supabase-js), **fas 10** (deploy-automatik).

@@ -53,21 +53,25 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
       Det farliga felläget är inte tystnad utan **försening**: kommer notisen i samma sekund
       som appen öppnas ser det ut att fungera. Kolumnen "på återkomst" finns för att fånga
       exakt det.
-      **FÖRSTA MÄTDATAN, 2026-07-31:** två larm i bakgrunden på 180 s vilotid, med
-      **+11 s och +20 s** försening. Adams upplevelse: notiserna kom när han öppnade appen.
+      **AVGJORD 2026-07-31.** Full analys i `PLAN.md` §2.6.1. Kort:
 
-      **Slutsatsen är ännu inte given, och skillnaden spelar roll.** En försening på 11–20 s
-      på en 180-sekunderstimer är *liten*. Hade iOS fryst timern helt skulle förseningen ha
-      varit lika lång som tiden tills appen råkade öppnas — ofta minuter. 11–20 s tyder
-      snarare på att iOS **strypte** timern till att vakna med tiotals sekunders mellanrum,
-      alltså att notisen faktiskt gick i bakgrunden, bara något sen.
+      Två larm på 180 s, appen stängd: `wasHidden: ja`, `firedOnResume: nej`, fel +11 s och
+      +20 s. Adam fick ingen notis förrän han öppnade appen — båda gångerna, medan han
+      aktivt väntade.
 
-      **Kolumnen "På återkomst" avgör.** `nej` = larmet fungerar, 20 s sent är fullt
-      användbart för en vilotimer och ingen åtgärd behövs. `ja` = iOS fryser den, och rätt
-      åtgärd är att låta Wake Lock hålla skärmen tänd under vilan (aldrig Web Push).
-      Sammanfattningsraden skriver ut "iOS fryser timern" rakt ut i `ja`-fallet.
-      **Klart när:** kolumnen är avläst från minst tre bakgrundslarm och slutsatsen skriven
-      i `PLAN.md` §2.6.
+      **JavaScript körde alltså i bakgrunden** (det är vad `wasHidden: ja` med 11–20 s fel
+      bevisar), men **iOS presenterade inte notisen förrän appen kom i förgrunden**.
+      Timern fungerar; visningen håller operativsystemet inne.
+
+      **Mätningen mätte fel sak** — den loggade när vi *anropade* `showNotification()`, inte
+      när iOS *visade* den. I fas 0-testet med 5 s fördröjning sammanföll de två, så felet
+      syntes inte. `firedOnResume` svarade därför `nej` på en fråga den inte mätte, och det
+      var den mänskliga observationen som avgjorde. Värt att komma ihåg: när mätning och
+      upplevelse säger emot varandra, kontrollera först att mätningen mäter rätt sak.
+
+      **Följd:** Wake Lock är inte en bekvämlighet utan bärande. Vilan förutsätter att appen
+      ligger framme med tänd skärm. Web Push byggs inte — den kräver nät i det ögonblick
+      larmet ska gå, vilket är precis vad ett gym saknar.
 
 ---
 
