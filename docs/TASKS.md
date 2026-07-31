@@ -165,12 +165,12 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
 `pg_policies` — alla scopade `to authenticated` med `(select auth.uid())`-formen, ingen
 `using (true)` någonstans.
 
-- [ ] **2.20 Slå på Leaked Password Protection.** `get_advisors` rapporterade den efter att
-      auth-användarna skapats — varningen fanns inte innan, eftersom lintet först slår till
-      när Auth används. Supabase kan kontrollera lösenord mot HaveIBeenPwned vid
-      registrering och byte. Planen bygger på e-post + lösenord (§3.4), så det är direkt
-      relevant. Dashboard → Authentication → Policies (Password protection).
-      **Klart när:** `get_advisors` inte längre rapporterar `auth_leaked_password_protection`.
+- [x] ~~**2.20 Slå på Leaked Password Protection.**~~ **Struken 2026-07-31.** Adams
+      observation: inställningen finns inte på Free Tier. Beslut: vi lever med det, eftersom
+      han är ende användaren och väljer sitt eget lösenord. Att inställningen skulle vara
+      betalfunktion är hans iakttagelse i gränssnittet, inte något jag verifierat.
+      **Advisorn kommer fortsätta rapportera varningen** — det är förväntat, inte ett
+      förbisett fel. Ompröva om appen någon gång får fler användare.
 
 **Kvarvarande advisorvarning, medvetet obehandlad:** `rls_auto_enable` × 2. Den är Supabases
 egen funktion, returnerar `event_trigger` och går inte att anropa via RPC — en falsk positiv.
@@ -215,13 +215,12 @@ vinna något.
       knapptryck. Det finns därför ingen kodväg där appen byts ut mitt i ett pass, och inget
       passtillstånd att hålla reda på. Vill vi senare *dölja* notisen under ett pågående
       pass är det en kosmetisk förbättring i fas 5, inte en säkerhetsåtgärd.
-- [ ] **3.7 Verifiera offlinestart — FÖRUTSÄTTNINGARNA KLARA, TESTET ÅTERSTÅR.**
-      Verifierat i bygget: app-skalet (`index.html`, JS-bundlen, CSS:en, workbox-window,
-      manifestet och ikonerna) ligger i precache-manifestet, och `navigateFallback` pekar på
-      `index.html` så att varje rutt serveras av det precachade skalet.
-      Det är den strukturella förutsättningen, **inte** ett bevis. Kvar för Adam:
-      deploya, installera på hemskärmen, slå på flygplansläge och starta appen.
-      **Klart när:** appen startar och renderar utan nät.
+- [x] **3.7 Offlinestart VERIFIERAD på enhet 2026-07-31.** iPhone, installerad på hemskärmen,
+      flygplansläge: appen startar, bottennavigeringen och innehållet renderar.
+      iOS visar en systemruta om att dataåtkomst saknas — det är väntat och inte ett fel:
+      servicearbetaren gör en uppdateringskoll vid start, och iOS kommenterar varje
+      nätförsök i flygplansläge. Att appen ändå renderade är beviset för att precachen bar
+      den.
 
 **Utöver uppgiftslistan:** routing med `react-router` (tre rutter: Pass, Historik,
 Inställningar) och ett appskal med bottennavigering — tummen når botten, varje flik är 64 px
@@ -271,27 +270,52 @@ historiken och går att granska i efterhand.
 
 ## Fas 5 — Lokalt datalager och loggning
 
-- [ ] **5.1 Definiera Dexie-schemat.** `src/db/schema.ts` med de fem stores i planen §2.4.
-      **Klart när:** databasen öppnas i webbläsaren och stores syns i devtools.
-- [ ] **5.2 Skriv `createWorkout()` och `endWorkout()`.** Klientgenererat UUID.
-      **Klart när:** enhetstest visar att ett pass skapas och avslutas.
-- [ ] **5.3 Skriv `logSet()`.** Skriver till `logged_sets` **och** `outbox` i en transaktion.
-      **Klart när:** enhetstest visar att båda skrivs, eller ingen vid fel.
-- [ ] **5.4 Skriv `getLastPerformance(exerciseId)`.** Använder det sammansatta indexet.
-      **Klart när:** enhetstest returnerar senaste setet för rätt övning.
-- [ ] **5.5 Bygg vyn "Aktivt pass".** Lista över loggade set, knapp för nytt set.
-      **Klart när:** `useLiveQuery` uppdaterar listan utan omladdning.
-- [ ] **5.6 Bygg setinmatningen med spökdata.** Vikt- och repsfält förifyllda som transparent
-      platshållartext från 5.4. `inputmode="decimal"`, tryckytor ≥ 48 px.
-      **Klart när:** förra passets siffror syns som grå text i tomma fält.
-- [ ] **5.7 Bygg "tyst framgång".** Ingen popup vid sparat set — diskret färgändring enligt
-      SPEC. **Klart när:** ett set kan loggas utan att något blockerar skärmen.
-- [ ] **5.8 Koppla in fritextfältet mot parsern.** Träff → förifyllda redigerbara fält. Miss →
-      synligt otolkat utkast. **Klart när:** `Bänk 90x5` ger ett redigerbart setförslag offline.
-- [ ] **5.9 Bygg "skapa ny övning" från en parsermiss.**
+- [x] **5.1 Dexie-schemat.** `src/db/db.ts`, fem stores.
+
+      **Rättelse mot `PLAN.md` §2.4:** planen listade `isDeleted` som index på `workouts`.
+      Det går inte. IndexedDB accepterar bara number, string, Date, binärdata och arrayer
+      som nycklar — **booleaner är inte giltiga nycklar**. Raderade rader filtreras i minnet
+      i stället, vilket är gratis i den här storleksordningen. Hade det byggts som planerat
+      hade indexet blivit tyst trasigt.
+- [x] **5.2 `startWorkout()` / `endWorkout()`.** Klientgenererade UUID:n. Startar aldrig ett
+      andra pass när ett redan är aktivt, och behandlar en inaktuell markör som "inget
+      aktivt pass" i stället för att krascha.
+- [x] **5.3 `logSet()`.** Skriver till `loggedSets` **och** `outbox` i en Dexie-transaktion.
+      Testat att båda skrivs — och att **ingendera** skrivs vid ogiltig indata.
+      `setIndex` räknas per övning inom passet, så att "set 2 av bänkpress" stämmer även
+      när övningarna varvas.
+- [x] **5.4 `getLastPerformance()`.** Använder det sammansatta indexet
+      `[exerciseId+performedAt]`. Hoppar över raderade och uppvärmningsset, och kan utesluta
+      det pågående passet — SPEC säger "förra passet", och siffrorna från passet man står i
+      är inte spökdata, de står redan på skärmen.
+- [x] **5.5 Vyn "Aktivt pass".** `useLiveQuery` genom hela vyn: skrivningen går till
+      IndexedDB och listan uppdaterar sig själv. Ingen laddningsindikator i den kritiska
+      vägen, eftersom ingen läsning går till nätet.
+- [x] **5.6 Setinmatning med spökdata.** Förra passets siffror som **platshållare**, inte
+      förifyllda värden. Skillnaden är avsiktlig: ett förifyllt fält som användaren inte rör
+      blir loggat som om det vore inmatat. `inputMode="decimal"` respektive `"numeric"`,
+      tryckytor ≥ 48 px.
+- [x] **5.7 Tyst framgång.** Diskret grön ton på den nya raden i 1,2 s. Ingen dialog, inget
+      som blockerar skärmen.
+- [x] **5.8 Fritextfältet mot parsern.** Hög konfidens loggas direkt. Låg konfidens visar ett
+      redigerbart utkast med förklaringen varför. Miss visar skälet på svenska **och behåller
+      texten** — den får aldrig försvinna bara för att vi inte förstod den.
+- [ ] **5.9 "Skapa ny övning" från en parsermiss.** Inte byggd. I dag säger appen "känner
+      inte igen övningen" men erbjuder ingen väg vidare. Kräver `exercises`-grenen i utkorgen
+      (som `apply_mutations` redan stöder).
       **Klart när:** okänt övningsnamn kan bli en egen övning på två tryck.
 - [ ] **5.10 Verifiera hela loggningsvägen offline.** Flygplansläge, logga ett helt pass.
       **Klart när:** 25 set kan loggas utan nät, och finns kvar efter omstart av appen.
+
+**Utöver uppgiftslistan:** `src/db/catalog.ts` — de 45 globala övningarna inbakade i bygget,
+med **databasens riktiga id:n**. Hade klienten seedat med egna id:n hade synken i fas 7 sett
+dem som nya rader och skapat 45 dubbletter. Katalogen är transkriberad för hand och verifieras
+av `catalog.test.ts` mot md5-kontrollsummor tagna ur Supabase — ändras katalogen i en framtida
+migration ska summorna uppdateras i samma commit, annars går testet sönder, vilket är precis
+vad det ska göra.
+
+**Fas 5 verifierad:** 81 tester gröna (22 nya mot en riktig IndexedDB via `fake-indexeddb`),
+typecheck och lint rena.
 
 ---
 
