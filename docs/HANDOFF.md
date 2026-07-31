@@ -3,96 +3,103 @@
 **Datum:** 2026-07-31
 
 **Aktuellt läge:**
-**Appen är funktionellt komplett för ett riktigt pass.** Logga med fritext, spökdata,
-vilotimer med larm, och allt hamnar i Supabase. Fas 0–7 klara. Kvar: fas 8 (LLM-reserven),
-9 (historik och PB), 10 (deploy), 11 (designpolering).
+Fas 0–7 och 9 är klara. **Appen är komplett för verklig användning**: logga, vila, synka,
+och nu se historik och personbästa. Kvar: fas 4.13 (trimma parsern), fas 8 (LLM-coachen),
+fas 10 (deploy) och fas 11 (designpolering).
 
 ---
 
-## 1. Synken är verifierad mot den riktiga databasen
+## 1. Fas 9 — historik och progression
 
-Inte bara mot fejkade klienter. Kontrollerat direkt i Postgres:
+- Passlista med volym, setantal och längd. Pågående pass märks ut.
+- Övningsvy på `/ovning/:id` med alla set över tid.
+- e1RM enligt Epley som ren funktion.
+- PB-kort och en handritad SVG-sparkline.
 
-| | |
-| :---- | :---- |
-| Pass | 2 |
-| Set | 6 |
-| Kvitton i `sync_mutations` | 9 |
-| Användare | 1 |
-| Dubbletter | 0 |
-| Set med `source = 'local_parse'` | **6 av 6** |
+**Två beslut i matematiken som bär funktionen:**
 
-Den sista raden är den intressanta: **parsern skrev varje set hela vägen** från fritext i
-flygplansläge, via utkorgen, genom `apply_mutations`, till Postgres. Kontraktet håller, inte
-bara logiken.
+**e1RM returnerar `null` över 15 reps** i stället för en siffra. Ett estimat räknat på 25
+reps ser ut som data men är brus — och brus i en progressionsgraf är värre än en lucka,
+eftersom luckan syns och bruset inte gör det. Ett singel returnerar sin egen vikt i stället
+för att räknas upp av formeln.
 
----
-
-## 2. Fas 6 — vilotimern
-
-Timern lagras som **sluttidpunkt**, aldrig som nedräknande räknare. Testat att kvarvarande
-tid blir rätt även om alla intervall strypts i två minuter; med en räknare hade felet växt
-med tiden.
-
-Larmet följer mätningen från fas 0, inte antaganden: **visuellt i förgrunden** (grön yta,
-inga behörigheter, kan inte tas ifrån oss av en iOS-uppdatering), **lokal notis i
-bakgrunden** (kom fram med iOS eget ljud och vibration trots tyst läge). Vibration och
-Web Audio är strukna sedan mätningen.
-
-Wake Lock begärs vid start och **återbegärs vid `visibilitychange`** — låset släpps av
-webbläsaren så fort appen tappar fokus.
-
-### 6.6 byggdes trots att 0.8 aldrig kördes
-
-Adam vaskade prerekvisitet med motiveringen att den riktiga timern får bli testet. Det är
-rimligt — men bara om smällen går att se. Utan notisen finns dessutom ingenting att testa.
-
-**Mätningen är därför inbyggd i stället för borttagen.** Varje larm loggar hur många sekunder
-fel det gick, om appen var dold, och — viktigast — **om larmet utlöstes först när appen kom
-tillbaka i förgrunden**. Sammanfattningen visas under Inställningar → Vilotimerns larm och
-säger uttryckligen ifrån när underlaget är för tunt, i stället för att visa en siffra som ser
-ut som ett resultat.
-
-Det farliga felläget är inte tystnad utan **försening**: kommer notisen i samma sekund som
-appen öppnas ser det ut att fungera.
+**Tyngsta set och bästa e1RM visas som två skilda rekord.** De är inte samma sak: 90×3 är
+tyngre på stången, men 80×8 är den starkare prestationen (e1RM 101,3 mot 99,0). Att slå ihop
+dem hade dolt exakt den insikt e1RM finns för att ge.
 
 ---
 
-## 3. Verifierat
+## 2. Två åtaganden som nu står utskrivna
 
-- **116 tester gröna.** Typecheck, lint och produktionsbygge likaså.
-- Synken mot riktig Supabase — se avsnitt 1.
-- Tidigare: offlinestart och loggningsvägen på iPhone, databasisolering 11 av 11,
-  katalogens id:n mot kontrollsummor, parsern 91,3 % grenäckning.
+Efter ditt första riktiga pass, inskrivna så att de inte kan glömmas:
 
-## 4. INTE verifierat
+**`PLAN.md` §4.0 + uppgift 4.13 — grammatiken måste trimmas.** Parsern klarar `Bänk 90x5`
+men inte `80x7 bänk`. Det är inte ett gränsfall utan så folk skriver mitt i ett set, och
+varje sådan miss undergräver premissen att fritext ska vara snabbare än att fylla i fält.
+Korpusen som ska klaras står i uppgiften, och den byggs testdrivet som resten av fas 4.
+Regeln som inte får luckras upp: att stödja omvänd ordning får inte göra `20x30` mindre
+tvetydig.
 
-- **Timerns beteende i bakgrunden på riktig hårdvara.** Det är själva mätningen som nu
-  pågår. Enhetstesterna bevisar tidsberäkningen, inte att iOS låter den köra.
-- Notisbehörigheten behöver beviljas en gång under Inställningar innan bakgrundslarmet kan
-  fungera.
+**Fas 8 inleds nu med en ruta som säger att den SKA byggas.** Målet är uttryckligen en
+sömlös AI-coach-känsla. Den lokala grammatiken är **golvet** som gör att appen fungerar utan
+nät — inte taket. Ny uppgift **8.0**: kontraktet mot `/ai/parse` ska utökas med historik,
+för utan den blir fas 8 en andra parser i stället för en coach. Nu när fas 9 är klar finns
+inget kvar som motiverar att vänta.
 
-## 5. Kända avvikelser
+---
 
-- **7.13:** `@supabase/supabase-js` tog bundlen från 237 till 575 kB (nu 605 kB precache).
-  Behövs bara för synk, aldrig i loggningsvägen. Mät om det märks på riktig telefon innan
-  refaktorering — 605 kB över hemnät är något annat än över 3G.
+## 3. Vilotimern — slutsatsen är inte given än
+
+Mätdata 2026-07-31: två bakgrundslarm på 180 s vilotid, **+11 s och +20 s** försening.
+
+**Din tolkning var att iOS fryser timern. Det stämmer möjligen inte.** En försening på
+11–20 sekunder på en 180-sekunderstimer är *liten*. Hade iOS fryst timern helt vore
+förseningen lika lång som tiden tills appen råkade öppnas — ofta minuter. 11–20 s tyder
+snarare på att iOS **strypte** timern till att vakna med tiotals sekunders mellanrum, alltså
+att notisen faktiskt gick i bakgrunden, bara något sen.
+
+**Kolumnen "På återkomst" avgör:**
+- `nej` → larmet fungerar. 20 sekunder sent är fullt användbart för en vilotimer, och ingen
+  åtgärd behövs alls.
+- `ja` → du har rätt, och rätt åtgärd är Wake Lock som håller skärmen tänd under vilan.
+  Aldrig Web Push, som kräver nät.
+
+Sammanfattningsraden skriver ut "iOS fryser timern" rakt ut i `ja`-fallet. Du citerade
+förseningarna men inte den raden, vilket kan betyda att den inte stod där.
+
+---
+
+## 4. Verifierat
+
+- **137 tester gröna.** Typecheck, lint och produktionsbygge likaså.
+- Synken mot riktig Supabase: 2 pass, 6 set, 9 kvitton, noll dubbletter, alla set med
+  `source = 'local_parse'`.
+- Tidigare: offlinestart och loggning på iPhone, databasisolering 11 av 11, katalogens id:n
+  mot kontrollsummor, parsern 91,3 % grenäckning.
+
+## 5. INTE verifierat
+
+- **Historikvyerna på riktig enhet.** Byggda och enhetstestade, men inte sedda i Safari.
+- Timerns bakgrundsbeteende — se avsnitt 3.
+
+## 6. Kända avvikelser
+
+- **7.13:** bundlen är 614 kB precache, varav supabase-js är merparten. Behövs bara för
+  synk, aldrig i loggningsvägen. Mät på riktig telefon innan refaktorering.
 - `npm audit`: 5 high i `eslint → minimatch → brace-expansion`. DevDependency.
-- `rls_auto_enable` och `auth_leaked_password_protection` i advisorn — båda medvetna.
+- Advisorn: `rls_auto_enable` och `auth_leaked_password_protection` — båda medvetna.
 
 ---
 
-## 6. Nästa steg
+## 7. Nästa steg
 
-**Adam:** deploya, **tillåt notiser** under Inställningar, och träna. Titta i
-Inställningar → Vilotimerns larm efter några pass. Står det att larmen kom "på återkomst"
-har vi fått vårt svar — och då är rätt åtgärd att låta Wake Lock hålla skärmen tänd och
-acceptera att appen ligger framme under vilan, inte att bygga Web Push.
+**Du:** deploya och titta på historiken — datan du synkade upp finns nu i appen. Kolla också
+"På återkomst"-kolumnen under Inställningar → Vilotimerns larm.
 
-**Claude:** min rekommendation är **fas 9 (historik och PB) före fas 8 (LLM-reserven)**.
-Historiken gör appen bättre varje pass; LLM-reserven träder bara in när den lokala parsern
-missar, och den missar sällan. Fas 9 ger dessutom e1RM, som fas 11 behöver för att kunna
-markera personbästa.
+**Claude:** min rekommendation är **4.13 före fas 8**. Att trimma grammatiken är en dags
+arbete och gör den vanligaste inmatningen bättre direkt för varje pass. Fas 8 är större, och
+en LLM som får rätta efter en bättre grammatik behöver dessutom rätta färre saker — vilket
+gör den både billigare och mer träffsäker.
 
-Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning) och **7.13** (lata-ladda
-supabase-js).
+Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning), **7.13** (lata-ladda
+supabase-js), **fas 10** (deploy-automatik).
