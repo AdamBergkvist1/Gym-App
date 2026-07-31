@@ -3,102 +3,96 @@
 **Datum:** 2026-07-31
 
 **Aktuellt läge:**
-**Grind 1, 2 och 3 är alla passerade.** Fas 0, 1, 2, 3 och 4 är klara. Databasen är bevisat
-isolerad, parsern är testad, och PWA-skalet står. Nästa naturliga steg är **fas 5** —
-loggningsvägen mot Dexie, som är det första som ger appen ett faktiskt värde.
+**Appen går att logga pass i.** Fas 0–5 är klara så när som på två punkter (5.9 och 5.10).
+Alla tre grindar är passerade. Nästa steg är Adams test på riktigt gym, och därefter fas 6
+(vilotimern) eller fas 7 (synken).
 
 ---
 
-## 1. Grind 2 — stängd, med bevis
+## 1. Vad som finns nu
 
-| Uppgift | Utfall |
-| :---- | :---- |
-| 2.17 negativt åtkomsttest | **11 av 11 kontroller godkända** med två riktiga auth-användare |
-| 2.18 `get_advisors` | Kört. Hittade fyra varningar → 0002 |
-| 2.19 `0002`-migrationen | Kört och verifierad mot `pg_proc` |
-| Policygranskning | Alla 20 policyer lästa ur `pg_policies`: scopade `to authenticated`, `(select auth.uid())`-formen, ingen `using (true)` |
+Ett pass kan startas, set kan loggas med fritext (`Bänk 90x5`) eller manuellt med spökdata,
+raderas, och passet avslutas — allt mot IndexedDB, utan nät, utan konto. Varje mutation
+lägger samtidigt en post i utkorgen, redo för synken i fas 7.
 
-Efter 0002 har `handle_new_user` och `set_updated_at` bara `postgres=X/postgres`, och
-`jsonb_to_text_array` behöll `authenticated=X/postgres` — den raden är den enda i 0002 som
-hade brutit något om den utelämnats, eftersom `apply_mutations` är SECURITY INVOKER.
-
-**Kvarvarande advisorvarningar, med avsikt:**
-- `rls_auto_enable` × 2 — Supabases egen funktion, returnerar `event_trigger` och går inte
-  att anropa via RPC. Falsk positiv. Plattformsägda objekt lämnas orörda.
-- **`auth_leaked_password_protection` — NY, och värd att åtgärda.** Uppgift 2.20. Varningen
-  dök upp först när auth-användarna skapades, eftersom lintet slår till när Auth används.
-  Supabase kan kontrollera lösenord mot HaveIBeenPwned. Planen bygger på e-post + lösenord,
-  så det är en relevant och gratis skärpning. Dashboard → Authentication → Password
-  protection.
+**81 tester gröna**, varav 22 nya mot en riktig IndexedDB via `fake-indexeddb`.
 
 ---
 
-## 2. Fas 3 — PWA-skalet
+## 2. Två fel som bygget avslöjade
 
-Klart utom slutverifieringen. Vad som finns:
+**`PLAN.md` §2.4 var fel om indexen.** Planen listade `isDeleted` som index på `workouts`.
+IndexedDB accepterar bara number, string, Date, binärdata och arrayer som nycklar —
+**booleaner är inte giltiga nycklar**. Hade det byggts som planerat hade indexet blivit tyst
+trasigt. Raderade rader filtreras nu i minnet, vilket är gratis i den här storleksordningen.
 
-- `vite-plugin-pwa` i **prompt-läge**, 9 precachade poster, inga dubbletter.
-- Genererat manifest: standalone, portrait, mörka färger, ikoner i 192/512 plus en
-  **maskable**-variant skalad till 62 % så att motivet överlever beskärning till cirkel.
-- `react-router` med tre rutter — Pass, Historik, Inställningar — och ett appskal med
-  bottennavigering som är padd­ad med `env(safe-area-inset-bottom)`.
-- `navigator.storage.persist()` vid start, med utfallet synligt under Inställningar.
-- Uppdateringsnotis: diskret rad, ingen blockerande dialog.
-
-**Tre beslut som bär vikt och därför har kommentarer i koden:**
-
-1. **Ingen `runtimeCaching` alls.** Supabase-anrop får aldrig cachas av servicearbetaren.
-   Synken (fas 7) äger sin egen köhantering, och en cachad databasrespons skulle visa gammal
-   data som om den vore färsk — precis den sortens tysta fel projektet är byggt för att undvika.
-2. **Ikonansvaret är uppdelat** mellan plugin-et och `includeAssets`, och png saknas i
-   `globPatterns`. Med båda vägarna hamnade varje ikon **två gånger** i precache-manifestet.
-   Det gick bra så länge revisionerna var identiska — men två poster för samma URL med olika
-   revision får workbox att faila vid install, och då startar appen inte offline alls.
-   Upptäckt genom att inspektera det genererade `sw.js`, inte genom att anta.
-3. **"Byt aldrig app mitt i ett pass" är löst strukturellt.** Prompt-läget aktiverar aldrig
-   en ny servicearbetare utan ett knapptryck. Det finns därför ingen kodväg som kan göra det,
-   och inget passtillstånd att hålla reda på.
+**Katalogen måste ha databasens id:n, inte egna.** Klienten behöver övningarna lokalt redan
+vid första start, i en källare, utan konto. Hade den seedat med nygenererade UUID:n hade
+synken i fas 7 sett 45 nya rader och dubblerat hela katalogen — en tyst korruption som ingen
+upptäcker förrän katalogen är full av dubbletter. `src/db/catalog.ts` innehåller därför de
+riktiga id:na, hämtade ur Supabase, transkriberade för hand och **verifierade av
+`catalog.test.ts` mot md5-kontrollsummor tagna ur databasen**. Ändras katalogen i en framtida
+migration ska summorna uppdateras i samma commit — annars går testet sönder, vilket är exakt
+vad det ska göra.
 
 ---
 
-## 3. Verifierat (bevis)
+## 3. Designval värda att känna till
 
-- **Fas 3:** produktionsbygge genererar `dist/sw.js`; precache-manifestet inspekterat post
-  för post — app-skalet finns med, `navigateFallback` pekar på `index.html`, noll dubbletter.
-- **Fas 4:** 59 tester gröna. Röd→grön syns som två commits (`361dd9a` → `5759769`).
-  Grenäckning `src/parser/` 91,3 %.
-- **Databasen:** se avsnitt 1. Allt läst direkt ur det körande projektet.
-- **Verktygskedjan:** `npm run typecheck`, `npm run lint`, `npm test` gröna. Bygge
-  237 kB JS / 76 kB gzip.
-
-## 4. INTE verifierat
-
-- **3.7 offlinestart.** Förutsättningarna är på plats och inspekterade, men appen har inte
-  startats utan nät. Det är ett test på enhet, inte i en byggkedja.
-- **0.8** — om en lokal notis håller i tre minuter. Blockerar endast 6.6.
-- `apply_mutations` är oprövad mot riktig trafik. Revideras sannolikt i fas 7.
-- PL/pgSQL-kropparna i migrationerna är granskade för hand, inte maskinellt. Båda filerna är
-  dock körda skarpt utan fel, vilket i praktiken täcker det.
-
-## 5. Kända fel
-
-- `npm audit`: 5 high i kedjan `eslint → minimatch → brace-expansion`. Beslut 2026-07-31:
-  vi väntar på patchen. DevDependency, når aldrig produktionsbygget.
-- Gym-App ligger i samma Supabase-organisation som `news-signal-engine`. Fair Use-
-  restriktioner gäller organisationen. Noterat, inte ett problem i dagens storlek.
+- **Spökdata är platshållartext, inte förifyllda värden.** Ett förifyllt fält som användaren
+  aldrig rör blir loggat som om det vore inmatat. En platshållare måste bekräftas men räcker
+  som minnesstöd, vilket är hela poängen.
+- **Hög konfidens loggas direkt, låg konfidens frågar.** `Bänk 90x5` sparas tyst med en
+  diskret grön ton på raden. `Bänk 5x5` visar ett redigerbart utkast med förklaringen varför.
+- **Otolkad text försvinner aldrig.** Vid en miss står skälet på svenska och texten ligger
+  kvar i fältet.
+- **`setIndex` räknas per övning inom passet**, inte per pass — så att "set 2 av bänkpress"
+  stämmer även när övningarna varvas.
+- **`user_id` skickas aldrig i utkorgens payload.** Servern tar alltid ägaren ur JWT:n.
+  Att skicka den skulle antyda att klienten bestämmer vem datan tillhör.
 
 ---
 
-## 6. Nästa steg
+## 4. Verifierat
 
-**Adam, tre saker — alla små:**
+- 81 tester, typecheck, lint, produktionsbygge — alla gröna.
+- **3.7 offlinestart verifierad på iPhone** i flygplansläge, installerad på hemskärmen.
+  iOS systemruta om saknad dataåtkomst är väntad: servicearbetaren gör en uppdateringskoll
+  vid start. Att appen ändå renderade är beviset.
+- Grind 1, 2 och 3 passerade. Databasens isolering bevisad med 11 av 11 kontroller.
+- Katalogens id:n verifierade mot databasens kontrollsummor.
 
-1. **Slå på Leaked Password Protection** (uppgift 2.20). En toggle.
-2. **Deploya och verifiera offlinestart** (3.7): installera på hemskärmen, flygplansläge,
-   starta appen. Nu finns det äntligen något att titta på.
-3. **Uppgift 0.8** när det passar — tremminuterstestet för notisen. Blockerar bara 6.6.
+## 5. INTE verifierat
 
-**Claude tar sedan fas 5** (uppgift 5.1–5.10): Dexie-schemat, `logSet()` med utkorgspost i
-samma transaktion, spökdata via det sammansatta indexet, vyn för aktivt pass, och
-inkopplingen av parsern som redan är klar. Efter fas 5 går det att logga ett helt pass
-offline — och då är appen för första gången användbar på ett gym.
+- **5.10 — hela loggningsvägen offline på riktigt.** Testerna körs mot `fake-indexeddb` i
+  Node, inte mot Safari på en iPhone. Det som återstår är Adams test.
+- **0.8** — om en lokal notis håller i tre minuter. Blockerar 6.6. Adam har skjutit upp den
+  till fas 6, vilket är rimligt.
+- `apply_mutations` är fortfarande oprövad mot riktig trafik.
+
+## 6. Kända avvikelser och beslut
+
+- **2.20 struken.** Leaked Password Protection finns enligt Adams observation inte på Free
+  Tier. Advisorn kommer fortsätta rapportera den — förväntat, inte förbisett.
+- `rls_auto_enable` × 2 i advisorn — Supabases egen, falsk positiv.
+- `npm audit`: 5 high i `eslint → minimatch → brace-expansion`. DevDependency, väntar på patch.
+- `@types/node` tillagd i `tsconfig.types` för att katalogtestet använder `node:crypto`.
+  Tradeoff: Node-globaler blir synliga för TypeScript även i appkoden. Vite skulle fånga ett
+  faktiskt felaktigt Node-anrop vid bygget, men det är värt att veta.
+
+---
+
+## 7. Nästa steg
+
+**Adam:** deploya och kör **5.10** — logga ett riktigt pass i flygplansläge, gärna 20+ set,
+stäng appen, öppna igen och kontrollera att allt finns kvar. Det är första gången appen gör
+något den är byggd för.
+
+**Claude därefter, i den ordning du väljer:**
+- **5.9** — skapa ny övning från en parsermiss. Liten, och gör fritextfältet komplett.
+- **Fas 6** — vilotimern. Kräver 0.8 innan 6.6 (notisdelen), men 6.1–6.5 går att bygga nu.
+- **Fas 7** — synken. Grind 2 är passerad, så den är fri. Störst arbete, men det är den som
+  gör att datan överlever en trasig telefon.
+
+Min rekommendation: **5.9 följt av fas 7.** Vilotimern är trevlig, men just nu finns
+träningsdatan bara på en enhet — och det är den risken som växer för varje pass som loggas.
