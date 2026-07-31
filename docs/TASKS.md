@@ -53,8 +53,21 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
       Det farliga felläget är inte tystnad utan **försening**: kommer notisen i samma sekund
       som appen öppnas ser det ut att fungera. Kolumnen "på återkomst" finns för att fånga
       exakt det.
-      **Klart när:** diagnostiken visar utfall från minst några riktiga pass, och slutsatsen
-      skrivs in i `PLAN.md` §2.6.
+      **FÖRSTA MÄTDATAN, 2026-07-31:** två larm i bakgrunden på 180 s vilotid, med
+      **+11 s och +20 s** försening. Adams upplevelse: notiserna kom när han öppnade appen.
+
+      **Slutsatsen är ännu inte given, och skillnaden spelar roll.** En försening på 11–20 s
+      på en 180-sekunderstimer är *liten*. Hade iOS fryst timern helt skulle förseningen ha
+      varit lika lång som tiden tills appen råkade öppnas — ofta minuter. 11–20 s tyder
+      snarare på att iOS **strypte** timern till att vakna med tiotals sekunders mellanrum,
+      alltså att notisen faktiskt gick i bakgrunden, bara något sen.
+
+      **Kolumnen "På återkomst" avgör.** `nej` = larmet fungerar, 20 s sent är fullt
+      användbart för en vilotimer och ingen åtgärd behövs. `ja` = iOS fryser den, och rätt
+      åtgärd är att låta Wake Lock hålla skärmen tänd under vilan (aldrig Web Push).
+      Sammanfattningsraden skriver ut "iOS fryser timern" rakt ut i `ja`-fallet.
+      **Klart när:** kolumnen är avläst från minst tre bakgrundslarm och slutsatsen skriven
+      i `PLAN.md` §2.6.
 
 ---
 
@@ -268,6 +281,29 @@ historiken och går att granska i efterhand.
 
 **Fas 4 verifierad:** 59 tester gröna, `npm run typecheck` och `npm run lint` rena.
 
+- [ ] **4.13 TRIMMA GRAMMATIKEN FÖR GYM-SLANG.** Upptäckt 2026-07-31 vid Adams första
+      riktiga pass: parsern klarar `Bänk 90x5` men **inte `80x7 bänk`**. Det är inte ett
+      gränsfall — det är så folk skriver mitt i ett set. Varje sådan miss undergräver hela
+      premissen att fritext ska vara snabbare än att fylla i fält.
+
+      **Testdrivet som fas 4 i övrigt:** korpusen nedan skrivs som röda tester först.
+
+      | Indata | Vad som saknas i dag |
+      | :---- | :---- |
+      | `80x7 bänk` | vikt/reps **före** övningen |
+      | `bänk 90 5` | fungerar redan — regressionsvakt |
+      | `90kg 5r bänkpress` | omvänd ordning med enheter |
+      | `bänk 90x5x3` | i dag `ambiguous_numbers`; borde bli 3 set à 90×5 |
+      | `3x8 bänk 60` | set×reps-notation följt av vikt |
+      | `bänk 90x5 90x5` | två set på en rad |
+      | `bp 100x3` | kortalias fungerar redan — regressionsvakt |
+
+      **Regeln som inte får luckras upp:** hellre `unresolved` än en gissning. Att stödja
+      omvänd ordning får inte göra `20x30` mindre tvetydig — den ska fortfarande be om
+      bekräftelse. Konfidensregeln i §4.9 gäller oförändrat.
+      **Klart när:** hela korpusen är grön och de 6 avvisningsfallen från 4.7 fortfarande
+      avvisas.
+
 🚧 **GRIND 3 — ÖPPNAD 2026-07-31.** UI får anropa parsern.
 
 ---
@@ -428,6 +464,29 @@ och bygge gröna.
 
 ## Fas 8 — LLM-reserven
 
+> ### ⚠️ DENNA FAS SKA BYGGAS. Den är uppskjuten, inte struken.
+>
+> Bekräftat av Adam 2026-07-31. **Målet är en sömlös AI-coach-känsla** — att man skriver som
+> man tänker och att appen förstår, utan att någonsin behöva anpassa sig till en syntax.
+>
+> Den lokala grammatiken (fas 4, trimmad i 4.13) kommer aldrig ensam dit. Den är **golvet**
+> som gör att appen fungerar i en gymkällare utan nät — inte taket.
+>
+> **Varför den väntar på fas 9 och inget annat:** en LLM som bara ser den inmatade texten kan
+> *tolka* den. En LLM som också ser träningshistoriken kan *resonera* om den — veta att 90 kg
+> är tungt just för Adam, förstå vad "samma som förra gången" betyder, och reagera när ett
+> inmatat värde är orimligt mot historiken. Det är skillnaden mellan en parser och en coach,
+> och den kräver att historiken finns först.
+>
+> Ordningen är alltså inte en nedprioritering utan en förutsättning. När fas 9 är klar finns
+> inget kvar som motiverar att vänta.
+
+- [ ] **8.0 Utöka `/ai/parse`-kontraktet med historik.** Beslutat 2026-07-31. Utan detta blir
+      fas 8 en andra parser i stället för en coach.
+      Kontraktet i `PLAN.md` §4.4 utökas med: senaste utförandet per övning i passet,
+      användarens vanliga viktspann per övning, och pågående passets set.
+      **Klart när:** funktionen kan besvara "samma som förra gången" och flagga ett värde som
+      avviker kraftigt från historiken.
 - [ ] **8.1 Skapa Groq-konto med EGEN organisation/nyckel**, skild från `news-signal-engine`.
       **Klart när:** nyckeln är satt som secret i Supabase, inte i repot.
 - [ ] **8.2 Skapa Gemini-nyckel, likaså separat.**
@@ -460,16 +519,26 @@ och bygge gröna.
 
 ## Fas 9 — Historik och progression
 
-- [ ] **9.1 Bygg passhistoriken.** Lista med datum, övningar, totalvolym.
-      **Klart när:** listan renderas från Dexie.
-- [ ] **9.2 Bygg övningsvyn.** Alla set för en övning över tid.
-      **Klart när:** vyn öppnas från både historik och aktivt pass.
-- [ ] **9.3 Implementera e1RM (Epley) som ren funktion + enhetstest.**
-      **Klart när:** testerna är gröna för kända värden.
-- [ ] **9.4 Bygg PB-vyn.** Tyngsta set, högsta e1RM, per övning.
-      **Klart när:** värdena stämmer mot handräknat testdata.
-- [ ] **9.5 Bygg SVG-sparkline för e1RM över tid.** Inget bibliotek.
-      **Klart när:** grafen renderas för en övning med ≥ 5 set.
+- [x] **9.1 Passhistoriken.** Datum (med "I dag" / "I går"), setantal, totalvolym och
+      passlängd. Pågående pass märks ut. Raderade set räknas inte in i volymen.
+- [x] **9.2 Övningsvyn** på `/ovning/:id`, nåbar från historikens övningslista. Alla set över
+      tid med datum, vikt, reps och e1RM per rad.
+- [x] **9.3 e1RM enligt Epley** som ren funktion med 8 tester.
+
+      Två beslut i funktionen: **ett singel returnerar sin egen vikt** i stället för att
+      räknas upp av formeln, och **e1RM returnerar `null` över 15 reps** i stället för en
+      siffra. Ett e1RM räknat på 25 reps ser ut som data men är brus, och brus i en
+      progressionsgraf är värre än en lucka — det senare syns, det förra inte.
+- [x] **9.4 PB-vyn.** **Tyngsta set och bästa e1RM visas som två SKILDA rekord**, eftersom de
+      inte är samma sak: 90×3 är tyngre på stången, men 80×8 är den starkare prestationen
+      (e1RM 101,3 mot 99,0). Att slå ihop dem hade dolt exakt den insikt e1RM finns för att
+      ge. Uppvärmningsset räknas aldrig som rekord.
+- [x] **9.5 SVG-sparkline för e1RM.** Handritad, inget bibliotek — Recharts och uPlot är
+      hundratals kB för en vy, och bundlen är redan stor. Hanterar en helt platt serie utan
+      division med noll, och säger ifrån vid färre än två mätpunkter i stället för att rita
+      en tom ruta.
+
+**Fas 9 verifierad:** 21 nya tester (137 totalt), typecheck, lint och bygge gröna.
 
 ---
 

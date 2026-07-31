@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router';
 import { AppShell } from './ui/AppShell';
 import { TodayPage } from './ui/pages/TodayPage';
 import { HistoryPage } from './ui/pages/HistoryPage';
+import { ExercisePage } from './ui/pages/ExercisePage';
 import { SettingsPage } from './ui/pages/SettingsPage';
 
 /**
@@ -17,6 +18,7 @@ export function App() {
       <Route element={<AppShell />}>
         <Route index element={<TodayPage />} />
         <Route path="historik" element={<HistoryPage />} />
+        <Route path="ovning/:id" element={<ExercisePage />} />
         <Route path="installningar" element={<SettingsPage />} />
         <Route path="*" element={<TodayPage />} />
       </Route>

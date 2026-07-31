@@ -460,6 +460,28 @@ Skrivs ut för att det ska vara ett beslut och inte en glömska:
 
 ## 4. Fritextinmatning: parser och AI
 
+> ### ⚠️ 4.0 Två åtaganden som inte får glömmas bort
+>
+> Skrivet 2026-07-31 efter Adams första riktiga pass med appen. Båda är **beslut**, inte
+> önskemål, och de står först i kapitlet för att de annars försvinner i detaljerna.
+>
+> **1. Den lokala grammatiken är för stel och MÅSTE trimmas.**
+> Den klarar `Bänk 90x5` men inte `80x7 bänk` — vikt och reps före övningsnamnet. Det är
+> inte ett gränsfall utan så folk faktiskt skriver mitt i ett pass. Varje sådan miss
+> undergräver hela premissen: att fritext ska vara snabbare än att fylla i fält.
+> Se uppgift **4.13** i `TASKS.md` för korpusen som ska klaras.
+>
+> **2. Fas 8 SKA byggas. Den är uppskjuten, inte struken.**
+> Målet är uttryckligen en **sömlös AI-coach-känsla** — att man kan skriva som man tänker
+> och att appen förstår. Den lokala grammatiken kommer aldrig ensam dit; den är golvet som
+> gör att appen fungerar offline, inte taket.
+>
+> **Varför den väntar på fas 9:** en LLM som bara ser den inmatade texten kan tolka den. En
+> LLM som också ser träningshistoriken kan *resonera* om den — veta att 90 kg är tungt
+> just för Adam, förstå vad "samma som förra gången" betyder, upptäcka att ett inmatat
+> värde är orimligt. Det är skillnaden mellan en parser och en coach, och den skillnaden
+> kräver att historiken finns först.
+
 ### 4.1 Tre lager
 
 | Lager | Kör var | Ser LLM-nyckeln? | Ansvar |
