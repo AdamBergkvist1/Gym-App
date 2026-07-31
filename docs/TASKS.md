@@ -85,67 +85,91 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
 
 ## Fas 2 — Supabase: schema och RLS
 
-> **Uppgift 2.3–2.16 är skrivna som EN fil:** `supabase/migrations/0001_initial_schema.sql`.
-> Adam kör den i Supabase SQL Editor. De är markerade som gjorda först när filen har körts
-> utan fel — skriven kod är inte körd kod.
->
-> Filen är idempotent och avslutas med ett självkontrollblock som **kastar** om RLS eller
-> policyer saknas, eller om övningskatalogen har färre än 30 rader. En migration som "gick
-> igenom" utan att ha skapat något ser annars likadan ut som en som lyckades.
+> **Uppgift 2.3–2.16: KLARA.** `supabase/migrations/0001_initial_schema.sql` kördes av Adam
+> i Supabase SQL Editor 2026-07-31 utan fel. Projektet: `Gym-App`, eu-north-1, Postgres 17.6.
+> Självkontrollblocket passerade, vilket bevisar att RLS är påslaget på alla sex tabeller,
+> att var och en har minst en policy, och att katalogen har ≥30 övningar.
 
-- [ ] **2.1 Skapa Supabase-projekt på Free Tier.** Egen organisation, **inte** delad med
-      `news-signal-engine`. Notera att gratisnivån ger **två aktiva projekt totalt**, räknat
-      över alla organisationer där du är ägare eller admin. Skapa i **Settings > API Keys**
-      de nya `sb_publishable_…` / `sb_secret_…`-nycklarna direkt.
-      **Klart när:** projekt-URL och publishable-nyckel finns i lokal `.env`, och den hemliga
-      nyckeln finns **enbart** i lösenordshanteraren — inte i repot.
+- [x] **2.1 Supabase-projekt skapat 2026-07-31.** `Gym-App`, ref `oyccchcleypfuyuqmueq`,
+      region eu-north-1 (Stockholm), Postgres 17.6, status ACTIVE_HEALTHY. Data API på,
+      auto-expose av, Auto-RLS på. Nycklarna finns bara hos Adam.
+
+      **Avvikelse värd att notera:** projektet ligger i **samma organisation** som
+      `news-signal-engine` (`qfqgeranbxnftnnlkcfo`), inte i en egen. Ingen åtgärd krävs — men
+      konsekvensen är att prenumerationsplanen och Fair Use-restriktioner gäller
+      *organisationen*, inte projektet. Slår signalmotorn i taket kan Gym-App bli begränsat
+      med den. Båda är i dag försumbart små, så det är noterat, inte ett problem.
+      (Kravet på *separata organisationer* i `PLAN.md` §4.5 gäller Groq och Gemini, där
+      kvotkollisionen är dokumenterad och verklig — det står kvar.)
 - [ ] **2.2 Supabase CLI — uppskjuten.** Adam kör migrationen i webb-editorn tills vidare,
       så CLI:t behövs inte än. Filerna ligger ändå i `supabase/migrations/` med
       migrationsnamn, så CLI:t kan ta över utan att något behöver flyttas.
       **Behövs senast i fas 8**, när Edge Functions ska deployas — det går inte från webben.
-- [ ] **2.3 Migration: `profiles`.** Tabell enligt planen §3.1 + trigger som skapar rad vid ny
+- [x] **2.3 Migration: `profiles`.** Tabell enligt planen §3.1 + trigger som skapar rad vid ny
       `auth.users`. **Klart när:** migrationen kör rent mot en tom databas.
-- [ ] **2.4 Migration: `exercises`.** Tabell enligt §3.1 inklusive `owner_id` nullable.
+- [x] **2.4 Migration: `exercises`.** Tabell enligt §3.1 inklusive `owner_id` nullable.
       **Klart när:** migrationen kör rent.
-- [ ] **2.5 Migration: `workouts`.** **Klart när:** migrationen kör rent.
-- [ ] **2.6 Migration: `logged_sets`.** Inklusive `user_id` denormaliserad och
+- [x] **2.5 Migration: `workouts`.** **Klart när:** migrationen kör rent.
+- [x] **2.6 Migration: `logged_sets`.** Inklusive `user_id` denormaliserad och
       främmandenycklar. `effort` som **ett fält**: `effort_type` (`'rir'` / `'rpe'`) +
       `effort_value` — beslutat 2026-07-30, inte två separata kolumner.
       **Klart när:** migrationen kör rent.
-- [ ] **2.7 Migration: `sync_mutations` och `ai_parse_log`.**
+- [x] **2.7 Migration: `sync_mutations` och `ai_parse_log`.**
       **Klart när:** migrationen kör rent.
-- [ ] **2.8 Migration: `updated_at`-trigger** på alla tabeller med det fältet.
+- [x] **2.8 Migration: `updated_at`-trigger** på alla tabeller med det fältet.
       **Klart när:** en `update` bumpar `updated_at` utan att klienten skickar det.
-- [ ] **2.9 Migration: samtliga index enligt §3.2.**
+- [x] **2.9 Migration: samtliga index enligt §3.2.**
       **Klart när:** `\di` visar alla fem indexgrupperna.
-- [ ] **2.10 Migration: aktivera RLS på alla tabeller.** Enbart `enable row level security`,
+- [x] **2.10 Migration: aktivera RLS på alla tabeller.** Enbart `enable row level security`,
       inga policyer ännu. **Klart när:** ett `select` som anon returnerar noll rader.
-- [ ] **2.11 Migration: RLS-policyer för `workouts`.** Fyra separata policyer (SELECT/INSERT/
+- [x] **2.11 Migration: RLS-policyer för `workouts`.** Fyra separata policyer (SELECT/INSERT/
       UPDATE/DELETE) med `(select auth.uid()) = user_id`. **Klart när:** migrationen kör rent.
-- [ ] **2.12 Migration: RLS-policyer för `logged_sets`.** Fyra policyer. `WITH CHECK` på INSERT
+- [x] **2.12 Migration: RLS-policyer för `logged_sets`.** Fyra policyer. `WITH CHECK` på INSERT
       verifierar dessutom att `workout_id` pekar på ett pass som ägs av samma användare.
       **Klart när:** migrationen kör rent.
-- [ ] **2.13 Migration: RLS-policyer för `exercises`.** SELECT tillåter `owner_id is null OR
+- [x] **2.13 Migration: RLS-policyer för `exercises`.** SELECT tillåter `owner_id is null OR
       owner_id = (select auth.uid())`. Skrivoperationer kräver `owner_id = (select
       auth.uid())`. **Klart när:** global katalograd går att läsa men inte ändra.
-- [ ] **2.14 Migration: RLS-policyer för `profiles`, `sync_mutations`, `ai_parse_log`.**
+- [x] **2.14 Migration: RLS-policyer för `profiles`, `sync_mutations`, `ai_parse_log`.**
       **Klart när:** migrationen kör rent.
-- [ ] **2.15 Migration: funktionen `apply_mutations(batch jsonb)`.** `SECURITY INVOKER`. Hoppar
+- [x] **2.15 Migration: funktionen `apply_mutations(batch jsonb)`.** `SECURITY INVOKER`. Hoppar
       över `mutation_id` som redan finns i `sync_mutations`. Allt i en transaktion.
       **Klart när:** samma batch körd två gånger ger samma radantal som en gång.
-- [ ] **2.16 Seed: global övningskatalog.** 30–50 vanliga övningar med `aliases` ifyllda
+- [x] **2.16 Seed: global övningskatalog.** 30–50 vanliga övningar med `aliases` ifyllda
       (svenska + engelska + kortformer). `owner_id = null`. Genereras av Claude — beslutat
       2026-07-30. Aliasen är inte dekoration: de är det parsern i fas 4 matchar mot, så
       varje övning behöver både fullt namn, vardagligt kortnamn och engelsk motsvarighet.
       **Klart när:** `select count(*) from exercises where owner_id is null` ≥ 30, och varje
       rad har minst två alias.
-- [ ] **2.17 Negativt åtkomsttest.** Skapa två testanvändare. Användare B försöker läsa A:s
-      `logged_sets` via PostgREST. **Klart när:** B får **noll rader, inte ett felmeddelande** —
-      och testet är sparat som ett körbart skript i `scripts/`.
-- [ ] **2.18 Kör `get_advisors` i security-läge.**
-      **Klart när:** rapporten kommer tillbaka utan RLS-varningar.
+- [ ] **2.17 Negativt åtkomsttest — SKRIPTET ÄR SKRIVET, TESTET ÄR INTE KÖRT.**
+      `scripts/rls-negative-test.mjs`, 10 kontroller mot rå REST utan beroenden.
+      **Adam måste först skapa två testanvändare** i Dashboard → Authentication → Users →
+      Add user, med *Auto Confirm User* ikryssat. Sedan köra skriptet med URL, publishable-
+      nyckel och de fyra testkontouppgifterna som miljövariabler (instruktionen står överst
+      i filen).
+      **Klart när:** skriptet skriver `GODKÄNT: 10 av 10 kontroller`.
+- [x] **2.18 `get_advisors` i security-läge — KÖRD 2026-07-31.**
+      **Rapporten kom INTE tillbaka ren.** Fyra varningar, alla av typen "SECURITY DEFINER-
+      funktion körbar av anon/authenticated". Rotorsak: **Postgres ger EXECUTE på nya
+      funktioner till PUBLIC by default.** I 0001 revokerades detta för `apply_mutations`
+      men inte för `handle_new_user`, `set_updated_at` eller `jsonb_to_text_array`.
+      Praktisk risk låg (triggerfunktioner går inte att anropa via RPC), men åtgärdad ändå.
+      Se 2.19.
+- [ ] **2.19 Kör `supabase/migrations/0002_revoke_function_execute.sql`.** Drar tillbaka
+      EXECUTE från PUBLIC på de tre funktionerna, och ger tillbaka den till `authenticated`
+      för `jsonb_to_text_array` — utan den raden slutar varje synkbatch med en egen övning
+      att fungera. `rls_auto_enable` lämnas orörd: den är Supabases egen, returnerar
+      `event_trigger` och går inte att anropa via RPC.
+      **Klart när:** filen kört utan fel, och `get_advisors` bara rapporterar
+      `rls_auto_enable` kvar.
 
-🚧 **GRIND 2:** Ingen kod som skriver till Supabase får skrivas innan 2.17 och 2.18 är gröna.
+🚧 **GRIND 2 — INTE PASSERAD.** Kräver att 2.17 är kört och grönt och att 2.19 är kört.
+Migrationens självkontroll räcker inte: den verifierar att RLS är påslaget och att policyer
+*finns*, inte att de är *rätta*. En policy med `using (true)` hade räknats som godkänd.
+
+**Verifierat i förbifarten (läsning, inga skrivningar):** samtliga 20 policyer är scopade
+`to authenticated` och använder `(select auth.uid())`-formen — ingen `using (true)` någonstans.
+Det är en granskning av definitionerna, inte ett bevis för körningsbeteendet. Beviset är 2.17.
 
 ---
 
