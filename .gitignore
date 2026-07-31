@@ -1,0 +1,22 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Hemligheter. Se CLAUDE.md regel 4 — nycklar finns bara som miljövariabler.
+.env
+.env.*
+!.env.example
+
+# Verktyg
+.vite/
+coverage/
+*.tsbuildinfo
+.vercel/
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/extensions.json

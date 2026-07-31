@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+
+/* Endast mörkt tema — PLAN.md §2.2. Ingen ljus variant byggs. */
+@theme {
+  --color-bg: #0a0a0a;
+  --color-surface: #171717;
+  --color-line: #2e2e2e;
+  --color-fg: #ededed;
+  --color-dim: #8a8a8a;
+}
+
+html,
+body,
+#root {
+  height: 100dvh;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  /* Marginalerna som håller UI:t undan från Dynamic Island och hemindikatorn. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Gymergonomi: alla tryckytor minst 48x48 px (PLAN.md §2.3). */
+button,
+[role='button'],
+input,
+select {
+  min-height: 48px;
+}

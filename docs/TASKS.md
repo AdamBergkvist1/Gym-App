@@ -56,24 +56,42 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
 
 ## Fas 1 — Projektuppsättning
 
-- [ ] **1.1 Initiera Vite-projekt.** `npm create vite@latest` med mallen `react-ts` i repots
-      rot. **Klart när:** `npm run dev` visar startsidan.
-- [ ] **1.2 Lägg till Tailwind CSS.** Konfigurera för mörkt tema som enda tema.
-      **Klart när:** en `bg-neutral-950 text-neutral-100`-klass slår igenom.
-- [ ] **1.3 Konfigurera TypeScript strikt.** `strict: true`, `noUncheckedIndexedAccess: true`.
-      **Klart när:** `npm run typecheck` finns som script och går igenom.
-- [ ] **1.4 Lägg till Vitest.** **Klart när:** `npm test` kör och rapporterar 0 tester.
-- [ ] **1.5 Lägg till ESLint + Prettier.** **Klart när:** `npm run lint` går igenom.
-- [ ] **1.6 Skapa `.env.example`** med `VITE_SUPABASE_URL` och
-      `VITE_SUPABASE_PUBLISHABLE_KEY` (den nya `sb_publishable_…`, inte legacy-`anon`).
-      **Innehåller inga värden.** **Klart när:** filen finns och `.env` är i `.gitignore`.
-- [ ] **1.7 Definiera mappstrukturen** (`src/db/`, `src/parser/`, `src/sync/`, `src/ui/`,
-      `src/timer/`, `src/lib/`) med en tom `index.ts` i varje.
-      **Klart när:** strukturen finns och är committad.
+- [x] **1.1 Initiera Vite-projekt.** Scaffoldat **manuellt** i stället för
+      `npm create vite@latest` — det kommandot erbjuder sig att tömma katalogen när den inte
+      är tom, och `docs/` och `test/` låg redan där. Risken var inte värd bekvämligheten.
+      Vite 7 + React 19 + TypeScript.
+- [x] **1.2 Lägg till Tailwind CSS.** v4 via `@tailwindcss/vite`. Mörkt tema som enda tema,
+      färgskala som CSS-variabler i `src/index.css`, plus globala regler för
+      `env(safe-area-inset-*)`, `100dvh` och 48 px tryckytor.
+- [x] **1.3 Konfigurera TypeScript strikt.** `strict`, `noUncheckedIndexedAccess`,
+      `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, `noUnusedLocals/Parameters`.
+- [x] **1.4 Lägg till Vitest.** **`passWithNoTests` är medvetet AV** — annars hade en trasig
+      testglob senare gett grön svit med noll tester, exakt det felläge projektet ska undvika.
+      Därför skrevs `src/lib/id.ts` (klientgenererade UUID:n, grunden för idempotensen) med
+      tester direkt. 3 tester, gröna.
+- [x] **1.5 Lägg till ESLint.** Flat config, typescript-eslint. Prettier utelämnad: ingen
+      formateringskonflikt finns ännu och en till konfigurationsfil utan problem att lösa är
+      bara underhåll. Läggs till om formateringsdiffar börjar störa.
+- [x] **1.6 Skapa `.env.example`** med `VITE_SUPABASE_URL` och
+      `VITE_SUPABASE_PUBLISHABLE_KEY`. Inga värden. `.env` gitignorerad, med en utskriven
+      varning om att allt med `VITE_`-prefix bakas in i det publika bygget.
+- [x] **1.7 Mappstruktur** `src/{db,parser,sync,ui,timer,lib}` med en `index.ts` i varje som
+      säger vilken fas som fyller den.
+
+**Fas 1 verifierad:** `npm run typecheck`, `npm run lint`, `npm test` (3 gröna) och
+`npm run build` (194 kB / 61 kB gzip) går alla igenom.
 
 ---
 
 ## Fas 2 — Supabase: schema och RLS
+
+> **Uppgift 2.3–2.16 är skrivna som EN fil:** `supabase/migrations/0001_initial_schema.sql`.
+> Adam kör den i Supabase SQL Editor. De är markerade som gjorda först när filen har körts
+> utan fel — skriven kod är inte körd kod.
+>
+> Filen är idempotent och avslutas med ett självkontrollblock som **kastar** om RLS eller
+> policyer saknas, eller om övningskatalogen har färre än 30 rader. En migration som "gick
+> igenom" utan att ha skapat något ser annars likadan ut som en som lyckades.
 
 - [ ] **2.1 Skapa Supabase-projekt på Free Tier.** Egen organisation, **inte** delad med
       `news-signal-engine`. Notera att gratisnivån ger **två aktiva projekt totalt**, räknat
@@ -81,8 +99,10 @@ Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
       de nya `sb_publishable_…` / `sb_secret_…`-nycklarna direkt.
       **Klart när:** projekt-URL och publishable-nyckel finns i lokal `.env`, och den hemliga
       nyckeln finns **enbart** i lösenordshanteraren — inte i repot.
-- [ ] **2.2 Installera Supabase CLI och `supabase init`.**
-      **Klart när:** `supabase/config.toml` finns i repot.
+- [ ] **2.2 Supabase CLI — uppskjuten.** Adam kör migrationen i webb-editorn tills vidare,
+      så CLI:t behövs inte än. Filerna ligger ändå i `supabase/migrations/` med
+      migrationsnamn, så CLI:t kan ta över utan att något behöver flyttas.
+      **Behövs senast i fas 8**, när Edge Functions ska deployas — det går inte från webben.
 - [ ] **2.3 Migration: `profiles`.** Tabell enligt planen §3.1 + trigger som skapar rad vid ny
       `auth.users`. **Klart när:** migrationen kör rent mot en tom databas.
 - [ ] **2.4 Migration: `exercises`.** Tabell enligt §3.1 inklusive `owner_id` nullable.
