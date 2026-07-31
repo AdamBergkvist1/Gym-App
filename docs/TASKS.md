@@ -194,43 +194,38 @@ Det är en granskning av definitionerna, inte ett bevis för körningsbeteendet.
 
 ## Fas 4 — Den lokala parsern (testdriven)
 
-**Reglerna för denna fas:** testfilen skrivs och committas *före* implementationsfilen. Varje
-testfall ska vara rött innan det blir grönt. Ingen implementationskod committas i samma commit
-som sina tester.
+**KLAR 2026-07-31.** Ordningen hölls: testerna committades i `361dd9a` medan modulerna inte
+fanns och sviten var röd; implementationen i nästa commit. Röd→grön-övergången syns i
+historiken och går att granska i efterhand.
 
-- [ ] **4.1 Definiera typerna.** `src/parser/types.ts`: `ParsedSet`, `ParseResult`
-      (`{ sets, unresolved, confidence }`), `Unresolved` (med `reason`).
-      **Klart när:** typerna kompilerar och ingen använder `any`.
-- [ ] **4.2 Skriv testerna för normalisering.** `src/parser/normalize.test.ts`: gemener,
-      trimning, `92,5` → `92.5`, `×`/`*`/`x` → gemensam separator.
-      **Klart när:** testerna finns och **misslyckas**.
-- [ ] **4.3 Implementera normaliseringen.** **Klart när:** 4.2 är grön.
-- [ ] **4.4 Skriv testerna för övningsmatchning.** `src/parser/matchExercise.test.ts` mot en
-      fejkad katalog: exakt namn, alias, gemener, engelskt alias, okänd övning → `null`, två
-      lika bra träffar → `null` (aldrig gissa).
-      **Klart när:** testerna finns och **misslyckas**.
-- [ ] **4.5 Implementera övningsmatchningen.** Fuzzy med tröskel. **Klart när:** 4.4 är grön.
-- [ ] **4.6 Skriv testerna för hela grammatiken — positiva fall.** `src/parser/parse.test.ts`.
-      **Exakt de 16 raderna i planens tabell "Testkorpus"** i §4.3, en `it()` per rad.
-      **Klart när:** 16 tester finns och **misslyckas**.
-- [ ] **4.7 Skriv testerna för avvisning.** Samma fil. **Exakt de 6 raderna i planens tabell
-      "Måste avvisas"**. Varje ska ge `unresolved` med en `reason`, aldrig ett set.
-      **Klart när:** 6 tester finns och **misslyckas**.
-- [ ] **4.8 Skriv testerna för enhetsregeln.** Tal utan enhet tolkas enligt
-      `unit_preference`; `lb`-profil ger `weight_kg` konverterat. Ingen tolkning utan känd
-      enhet. **Klart när:** testerna finns och **misslyckas**.
-- [ ] **4.9 Skriv testerna för vikt/reps-konfidens.** `20x30` och `Bänk 5x5` ska ge låg
-      konfidens och kräva bekräftelse; `Bänk 90x5` ska ge hög.
-      **Klart när:** testerna finns och **misslyckas**.
-- [ ] **4.10 Implementera parsern.** **Klart när:** samtliga tester i 4.6–4.9 är gröna och
-      inget testfall har ändrats för att passa implementationen.
-- [ ] **4.11 Lägg till egenskapstest (fuzz).** Slumpade strängar in — parsern får aldrig kasta
-      undantag, bara returnera `unresolved`.
-      **Klart när:** 1 000 slumpade indata ger noll undantag.
-- [ ] **4.12 Mät täckningen på `src/parser/`.**
-      **Klart när:** grenäckning ≥ 90 % och siffran är noterad i `HANDOFF.md`.
+- [x] **4.1 Typerna.** `src/parser/types.ts`. Inga `any`.
+- [x] **4.2–4.3 Normalisering.** `normalizeName` speglar databasens genererade kolumn
+      (`lower(btrim(name))`) exakt. Kontraktet är utskrivet som testfall, eftersom en
+      glidning där tyst gör att parsern slutar hitta övningar som finns — utan felmeddelande.
+      `normalizeInput` är generösare: kollapsar blanksteg, gör `*` och `×` till `x`, och
+      decimalkomma till punkt **bara mellan siffror**. Ett generellt komma→punkt hade
+      förstört varenda anteckning.
+- [x] **4.4–4.5 Övningsmatchning.** Exakt → prefix → felstavning (Levenshtein ≤ 1). Två
+      kandidater med samma poäng ger `null`, aldrig ett val. `hantel` matchar därför varken
+      Hantelcurl eller Hantelpress.
+- [x] **4.6 Testkorpus.** Alla 16 raderna ur `PLAN.md` §4.3, en `it()` per rad.
+- [x] **4.7 Avvisning.** Alla 6 raderna, var och en med sitt eget skäl i `UnresolvedReason`.
+- [x] **4.8 Enhetsregeln.** Enhet gissas aldrig. Utan utskriven enhet används profilens, och
+      `unitSource` gör skillnaden mellan *faktum* och *tolkning* synlig för UI:t.
+- [x] **4.9 Konfidens.** Låg konfidens utan utskriven enhet när vikten ≤ 30 eller reps > 30.
+      Skriver användaren ut enheten har hen själv löst tvetydigheten — då frågar vi inte.
+- [x] **4.10 Implementationen.** 56 tester gröna på första körningen.
+- [x] **4.11 Fuzz.** 1000 slumpade indata från en deterministisk PRNG (seedad, så ett
+      misslyckande går att återskapa) plus 15 extremfall. Parsern kastar aldrig — ett
+      undantag där blir en vit skärm mitt i ett pass.
+- [x] **4.12 Täckning.** `src/parser/`: **91,3 % grenäckning**, 99 % satser. Kravet var 90 %.
+      `parse.ts` 94,8 %, `matchExercise.ts` 82,5 % (oträffat: en tidig utgång i
+      Levenshtein-funktionen). Siffran inkluderar tomma platshållarfiler på 0 % — de är
+      medvetet inte bortfiltrerade, så den verkliga täckningen på logiken är högre.
 
-🚧 **GRIND 3:** Inget UI får anropa parsern innan 4.10 och 4.12 är klara.
+**Fas 4 verifierad:** 59 tester gröna, `npm run typecheck` och `npm run lint` rena.
+
+🚧 **GRIND 3 — ÖPPNAD 2026-07-31.** UI får anropa parsern.
 
 ---
 
