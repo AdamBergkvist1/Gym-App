@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { parseSetText } from '../parser/parse';
+import { aiAvailability, parseWithAi } from '../ai/client';
 import type { ExerciseRef, ParsedSet, Unresolved, UnresolvedReason } from '../parser/types';
 import type { LocalSet } from '../db/types';
 
@@ -31,7 +32,11 @@ interface Draft {
   sets: ParsedSet[];
   weight: string;
   reps: string;
+  /** Kom förslaget från AI:n? Då ska det märkas ut. */
+  fromAi?: boolean;
 }
+
+type AiState = 'idle' | 'thinking' | 'failed' | 'offline' | 'unavailable';
 
 interface Props {
   exercises: ExerciseRef[];
@@ -53,6 +58,7 @@ export function QuickLog({
   const [problem, setProblem] = useState<Unresolved | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [aiState, setAiState] = useState<AiState>('idle');
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,8 +72,38 @@ export function QuickLog({
       // förstod den.
       setProblem(problemet);
       setDraft(null);
+
+      // Fas 8: AI-reserven träder in HÄR och bara här — efter att den lokala
+      // grammatiken sagt ifrån. Aldrig i förväg, aldrig medan man skriver.
+      const tillgänglig = await aiAvailability();
+      if (tillgänglig !== 'ready') {
+        setAiState(tillgänglig === 'offline' ? 'offline' : 'unavailable');
+        return;
+      }
+
+      setAiState('thinking');
+      const utfall = await parseWithAi(text);
+      const aiProblem = utfall.result.unresolved[0];
+
+      if (utfall.result.sets.length === 0) {
+        setAiState('failed');
+        if (aiProblem) setProblem(aiProblem);
+        return;
+      }
+
+      setAiState('idle');
+      setProblem(null);
+      // AI-tolkade set får ALLTID bekräftas. Modellen föreslår; människan
+      // avgör. Det är skillnaden mellan en assistent och en gissningsmaskin.
+      setDraft({
+        sets: utfall.result.sets,
+        weight: String(utfall.result.sets[0]!.weightKg),
+        reps: String(utfall.result.sets[0]!.reps),
+        fromAi: true,
+      });
       return;
     }
+    setAiState('idle');
 
     const parsed = result.sets;
     if (parsed.length === 0) return;
@@ -180,15 +216,33 @@ export function QuickLog({
         </div>
       )}
 
+      {aiState === 'thinking' && (
+        <p className="mt-2 text-sm text-[var(--color-dim)]">Frågar AI:n…</p>
+      )}
+      {aiState === 'offline' && problem && (
+        <p className="mt-1 text-xs text-[var(--color-dim)]">
+          Offline — AI-tolkning kräver nät. Texten ligger kvar.
+        </p>
+      )}
+
       {draft && (
         <div className="mt-2 rounded-lg border border-amber-700/60 bg-amber-950/30 p-3">
+          {draft.fromAi && (
+            <p className="mb-1 text-xs font-semibold text-amber-400">AI-tolkning</p>
+          )}
           <p className="text-sm">
             Är det <strong>{draft.sets[0]!.exerciseName}</strong>, {draft.weight} kg ×{' '}
             {draft.reps} reps
             {draft.sets.length > 1 && <> — {draft.sets.length} set</>}?
           </p>
+          {/* Modellens motivering. Härledd data får aldrig se ut som inmatad. */}
+          {draft.sets[0]!.reasoning !== undefined && (
+            <p className="mt-1 text-xs text-amber-300">{draft.sets[0]!.reasoning}</p>
+          )}
           <p className="mt-1 text-xs text-[var(--color-dim)]">
-            Talen är tvetydiga när ingen enhet skrivs ut. Rätta om det blev fel.
+            {draft.fromAi
+              ? 'AI:n tolkade det åt dig. Kontrollera innan du sparar.'
+              : 'Talen är tvetydiga när ingen enhet skrivs ut. Rätta om det blev fel.'}
           </p>
           <div className="mt-2 flex gap-2">
             <input

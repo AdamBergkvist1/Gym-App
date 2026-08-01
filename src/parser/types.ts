@@ -30,6 +30,12 @@ export interface ParsedSet {
   unitSource: 'explicit' | 'profile';
   /** `low` betyder att UI:t ska be om bekräftelse innan setet sparas. */
   confidence: Confidence;
+  /**
+   * Sätts bara av AI-vägen (fas 8), när modellen härlett något ur historiken
+   * — t.ex. "samma vikt som förra passet". Visas för användaren, eftersom
+   * härledd data aldrig får se ut som inmatad data.
+   */
+  reasoning?: string;
 }
 
 export type UnresolvedReason =

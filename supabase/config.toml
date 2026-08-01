@@ -1,0 +1,8 @@
+project_id = "gym-app"
+
+[functions.ai-parse]
+# JWT-kontrollen görs i funktionen med anroparens token, inte av plattformen.
+# Plattformens verify_jwt förstår inte de nya publishable-nycklarna, och vi
+# behöver ändå användarens session för att kunna avvisa anonyma anrop —
+# funktionen får aldrig bli en gratis LLM-proxy för vem som helst med URL:en.
+verify_jwt = false

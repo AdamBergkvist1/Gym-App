@@ -494,34 +494,75 @@ och bygge gröna.
 > Ordningen är alltså inte en nedprioritering utan en förutsättning. När fas 9 är klar finns
 > inget kvar som motiverar att vänta.
 
-- [ ] **8.0 Utöka `/ai/parse`-kontraktet med historik.** Beslutat 2026-07-31. Utan detta blir
-      fas 8 en andra parser i stället för en coach.
-      Kontraktet i `PLAN.md` §4.4 utökas med: senaste utförandet per övning i passet,
-      användarens vanliga viktspann per övning, och pågående passets set.
-      **Klart när:** funktionen kan besvara "samma som förra gången" och flagga ett värde som
-      avviker kraftigt från historiken.
-- [ ] **8.1 Skapa Groq-konto med EGEN organisation/nyckel**, skild från `news-signal-engine`.
+- [x] **8.0 Kontraktet utökat med historik. Klart 2026-08-01.** `src/ai/context.ts`.
+      Modellen får: hela övningskatalogen (id, namn, alias), **senaste utförandet** per
+      övning, **typiskt viktspann** (min/median/max och medianreps över de 20 senaste seten),
+      **bästa e1RM**, och **det pågående passets set**.
+
+      Det är detta som gör skillnaden mellan en parser och en coach: "samma som förra
+      gången" har något att syfta på, "en till" vet vad som just loggades, och ett värde
+      som avviker kraftigt från det typiska går att känna igen.
+
+      **Payloaden är medvetet begränsad** — hela katalogen (den behövs för att kunna välja
+      ett giltigt id) men historik bara för de **12 senast tränade** övningarna. Ett eget
+      test vaktar att payloaden håller sig under 20 000 tecken även med full historik: den
+      går i varje anrop, och växer den okontrollerat blir varje fritextmiss dyrare och
+      långsammare utan att någon märker det.
+      **11 tester.**
+> **8.1, 8.2 och deployen kräver Adam — koden är klar och väntar.**
+>
+> ```
+> supabase secrets set GROQ_API_KEY=... GEMINI_API_KEY=...
+> supabase functions deploy ai-parse
+> ```
+>
+> CLI:t behövs nu (uppgift 2.2) — Edge Functions går inte att deploya från webbeditorn.
+
+- [ ] **8.1 Skapa Groq-nyckel i EGEN organisation**, skild från `news-signal-engine`.
+      Signalmotorn har en dokumenterad incident där ett testanrop tömde dygnskvoten och slog
+      ut 22 % av en handelsdags signaler. Delas kontot kan en fritextmiss på gymmet tysta
+      produktionssignaler — eller tvärtom.
       **Klart när:** nyckeln är satt som secret i Supabase, inte i repot.
 - [ ] **8.2 Skapa Gemini-nyckel, likaså separat.**
       **Klart när:** nyckeln är satt som secret i Supabase.
-- [ ] **8.3 Definiera JSON-schemat för parsersvaret.** Delas mellan klient och funktion.
-      **Klart när:** schemat validerar de förväntade utdata från fas 4:s testkorpus.
-- [ ] **8.4 Skapa Edge Function `ai-parse`.** Förstahandsval: `@supabase/server`-SDK:n med
-      `withSupabase({ auth: 'user' })`, som ger en färdig klient scopead till anroparens RLS.
-      Kräver `verify_jwt = false` i `config.toml` — auktoriseringen sker i SDK:n i stället.
-      **Klart när:** anrop utan giltig session avvisas, och ett anrop med session bara ser
-      egna rader.
-- [ ] **8.5 Bygg leverantörsgränssnittet `parseWithLLM`.** En implementation per leverantör,
-      vald via miljövariabel. **Klart när:** byte av leverantör är en env-ändring.
-- [ ] **8.6 Implementera Groq-vägen.** **Klart när:** en fritextrad som fas 4:s parser missar
-      returnerar giltig JSON mot schemat.
-- [ ] **8.7 Implementera Gemini-vägen som fallback.** Utlöses vid kvotfel eller timeout.
-      **Klart när:** ett simulerat Groq-fel går vidare till Gemini.
-- [ ] **8.8 Bygg timeout och degradering.** 4 s. Vid timeout → `unresolved`, aldrig tomt
-      lyckat svar. **Klart när:** simulerad timeout ger `unresolved` och UI:t erbjuder manuell
-      inmatning.
-- [ ] **8.9 Validera modellens utdata mot schemat i klienten** innan något skrivs till Dexie.
-      **Klart när:** ett medvetet trasigt svar behandlas som `unresolved`.
+- [x] **8.3 JSON-schemat definierat.** `src/ai/types.ts` är sanningen; Edge Function-koden
+      speglar det i egen Deno-kod. De **kan inte** dela modul över nätverksgränsen — Deno
+      kräver filändelser i importer, Vite gör det inte — och en fragil delningslösning vore
+      sämre än fyrtio duplicerade rader. Båda filerna har en kommentar om att ändringar ska
+      ske i samma commit.
+- [x] **8.4 Edge Function `ai-parse` skriven.** `supabase/functions/ai-parse/`.
+      Klienten byggs med **anroparens token**, aldrig med den hemliga nyckeln.
+      `verify_jwt = false` i `config.toml`; auktoriseringen sker i funktionen, eftersom
+      plattformens kontroll inte förstår de nya publishable-nycklarna.
+
+      Fyra säkerhetsgränser, utskrivna i filhuvudet: **LLM-nycklarna finns bara där** som
+      miljövariabler; **anonyma anrop avvisas** (annars vore funktionen en gratis LLM-proxy
+      för vem som helst med URL:en); **funktionen skriver ingenting till databasen** — den
+      tolkar och svarar, klienten validerar och skriver, så att en bugg i funktionen i
+      värsta fall ger ett dåligt förslag och aldrig korrupt data; och **`user_id` finns inte
+      i kontraktet**, så modellen får aldrig ett fält som avgör vem datan tillhör.
+- [x] **8.5–8.7 Leverantörsgränssnittet.** `parseWithLLM` med en implementation per
+      leverantör, ordningen styrd av `AI_PROVIDER_ORDER`. **Groq primär** för latensen —
+      svarstiden är den avgörande egenskapen mitt i ett pass. **Gemini reserv** med egen
+      kvot, så att ett kvottak hos den ena inte tar ner fritextinmatningen helt.
+      Ett permanent fel hos Groq (t.ex. saknad nyckel) faller ändå vidare till Gemini —
+      annars vore reserven värdelös just i det fall den behövs mest.
+- [x] **8.8 Timeout och degradering.** 3,5 s i funktionen, 4 s i klienten. **Aldrig ett tomt
+      lyckat svar** — varken funktionen eller klienten kan returnera "det gick bra men blev
+      inget". Vid fel blir det ett `unresolved` med ett skäl på svenska, och UI:t faller
+      tillbaka på manuell inmatning.
+- [x] **8.9 Validering av modellens utdata.** `src/ai/validate.ts`, **11 tester**.
+
+      **Modellen är aldrig auktoritet.** Den föreslår; valideringen avgör vad som får bli
+      data. Det farligaste felläget är ett **påhittat övnings-id** som ser ut som ett UUID:
+      utan kontrollen mot katalogen hade setet skrivits mot en övning som inte finns, och
+      främmandenyckeln hade fällt hela synkbatchen långt senare — med ett felmeddelande
+      långt från orsaken.
+
+      Övrigt som avvisas: orimlig vikt eller reps, svar som inte är objekt, och tomma svar
+      (som blir `unresolved`, aldrig tyst framgång). Ett trasigt set avvisas ensamt, inte
+      hela svaret. **Förvalet är LÅG konfidens** — har modellen härlett något ur historiken
+      ska människan bekräfta.
 - [ ] **8.10 Skriv till `ai_parse_log`.** Inklusive `provider`, `latency_ms` och `outcome`.
       **Klart när:** en rad skapas per fritextinmatning, både för `local` och `llm`.
 - [ ] **8.11 Fånga `outcome` i UI.** Sparar användaren förslaget orört → `accepted`; ändrar
