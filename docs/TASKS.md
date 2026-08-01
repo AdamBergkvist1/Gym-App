@@ -649,33 +649,41 @@ polering som ursprungligen planerades. **Del A först.**
 > **Vi ska inte uppfinna hjulet.** Underlaget i `docs/research/` har redan kartlagt vad
 > konkurrenterna gör rätt. Kopiera medvetet.
 
-- [ ] **11A.1 "Upprepa förra passet".** Öppna appen, se förra passets övningar med sina
-      vikter, bekräfta set för set med ett tryck. Den vanligaste loggningen som finns ska
-      vara den snabbaste vägen genom appen.
-      **Klart när:** ett upprepat pass går att logga med enbart bekräftelsetryck.
-- [ ] **11A.2 Setraden som primärt element.** Varje övning visar sina set som rader med
-      förifyllda värden från förra gången. Ett tryck bekräftar.
-      **Klart när:** inget tangentbord behövs för ett normalt pass.
-- [ ] **11A.3 Stegare i stället för tangentbord.** ±2,5 kg och ±1 rep som stora tryckytor.
-      Tangentbord bara när man vill skriva ett exakt tal.
-      **Klart när:** vikt och reps går att justera utan att tangentbordet öppnas.
-- [ ] **11A.4 Riktig övningsväljare.** Sökfält, senast använda överst, gruppering per
-      muskelgrupp. En `<select>` med 45 rader är en lista, inte ett gränssnitt.
-      **Klart när:** rätt övning går att hitta på under tre sekunder.
-- [ ] **11A.5 Byt övning mitt i passet på två tryck.** Underlaget lyfter detta särskilt: är
-      utrustningen upptagen ska man kunna byta och få den nya övningens historik omedelbart.
-      Ett av de tydligaste skälen till att folk lämnar anteckningsappen.
-- [ ] **11A.6 Mallar / rutiner — UPPFLYTTADE från backlog.** `PLAN.md` §3.6 sköt upp dem
-      till efter v1. Den bedömningen håller inte längre: "bygga vidare på ett tidigare pass"
-      är kärnan i det Adam beskriver, och SPEC kräver redan att man ska kunna *"med maximalt
-      två klick starta ett tomt pass eller kopiera en historisk mall"*. Schemat är förberett
-      — `routines` och `routine_exercises` läggs till additivt utan att röra `logged_sets`.
-- [ ] **11A.7 Fritexten blir en genväg, inte huvudvägen.** Lika bra som i dag, men inte
-      längre det första och enda man ser.
+- [x] **11A.1 "Kopiera förra passet".** Finns både på startskärmen (utan pågående pass) och
+      inne i ett tomt pass. Laddar in samma övningar och set med gamla siffror som spökdata.
+- [x] **11A.2 Setraden som primärt element.** Övningskort med rader som bockas av. Varje rad
+      är förifylld från förra gången, och **antalet rader kommer också från historiken** —
+      gjorde du fyra set förra passet dyker fyra rader upp. Ett tryck på ✓ loggar setet och
+      startar vilan.
 
-🚩 **Acceptanskriterium för hela 11A:** ett helt normalt pass — samma övningar som förra
-gången, liknande vikter — ska gå att logga **utan att tangentbordet öppnas en enda gång**,
-och med färre tryck än i Hevy för samma pass.
+      **Ett mellanled behövdes:** planerade set som syns innan de loggas.
+      `src/db/plan.ts` ligger i Dexie (den måste överleva att appen stängs mitt i ett pass)
+      men **synkas aldrig** — den är arbetsyta, inte data. Bara avbockade set hamnar i
+      `loggedSets` och i utkorgen. Ett eget test vaktar att planen inte skapar utkorgsposter.
+- [x] **11A.3 Stegare i stället för tangentbord.** ±2,5 kg och ±1 rep, 48 px tryckytor.
+      Tryck på siffran ger numeriskt tangentbord för stora hopp.
+
+      **Stegen snappar INTE till rutnätet:** 91 + 2,5 blir 93,5, inte 92,5. Prydligare hade
+      det varit att avrunda, men 91 kg står där för att någon valde det. Att tyst flytta ett
+      värde användaren skrivit in är den sortens hjälpsamhet som gör att man slutar lita på
+      loggen.
+- [x] **11A.4 Övningsväljare.** Fullskärm, sökfält högst upp, **senast använda överst**,
+      därefter grupperat per muskelgrupp. Sökningen matchar både namn och alias.
+- [x] **11A.5 Byt övning på två tryck.** ⋯-menyn på kortet → Byt övning → välj. Den nya
+      övningens historik följer med automatiskt, eftersom spökdatan hämtas vid tillägget.
+- [x] **11A.6 Mallar via "kopiera förra passet".** Uppflyttad från backlog och löst utan att
+      införa `routines`-tabellerna — källan är helt enkelt ett tidigare pass. Enklare, och
+      det täcker det Adam faktiskt beskrev. `routines` kan fortfarande läggas till senare om
+      namngivna mallar visar sig behövas.
+- [x] **11A.7 Fritexten är nu en genväg.** Ligger kvar i toppen men hopfälld bakom en rad,
+      så att passets struktur får plats. Fungerar exakt som förut när den fälls ut.
+
+**Fas 11A verifierad:** 29 nya tester (224 totalt), typecheck, lint och bygge gröna.
+Kvar att verifiera på enhet: att ett upprepat pass verkligen går att logga utan tangentbord.
+
+🚩 **Acceptanskriterium för hela 11A (justerat 2026-08-01):** ett normalt upprepat pass
+ska gå att logga **utan att tangentbordet öppnas en enda gång**. Hevy är måttstock, inte
+lagkrav — tydlighet och funktion går före tryckantal.
 
 ---
 

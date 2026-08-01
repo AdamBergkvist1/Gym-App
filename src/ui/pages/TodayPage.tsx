@@ -3,27 +3,40 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import {
   createExercise,
-  deleteSet,
   endWorkout,
   getActiveWorkout,
-  getSetsForWorkout,
   logSet,
   pendingCount,
   startWorkout,
 } from '../../db/repo';
+import {
+  addExerciseToPlan,
+  addSetToPlan,
+  clearPlan,
+  confirmPlannedSet,
+  copyWorkoutIntoPlan,
+  findPreviousWorkoutId,
+  getPlan,
+  removeExerciseFromPlan,
+  removeSetFromPlan,
+  unconfirmPlannedSet,
+  updatePlannedSet,
+} from '../../db/plan';
 import type { ParsedSet } from '../../parser/types';
 import { QuickLog } from '../QuickLog';
-import { ManualEntry } from '../ManualEntry';
-import { SetList } from '../SetList';
+import { ExerciseCard } from '../ExerciseCard';
+import { ExercisePicker } from '../ExercisePicker';
 import { RestTimer } from '../RestTimer';
 import { DEFAULT_REST_SECONDS, startRestTimer } from '../../timer/restTimer';
 
 /**
- * Vyn för aktivt pass. Uppgift 5.5, 5.7.
+ * Passvyn. Uppgift 11A.1, 11A.2, 11A.7.
  *
- * All data kommer från Dexie via `useLiveQuery`. Ingen läsning går till nätet,
- * och därför finns ingen laddningsspinnare i den kritiska vägen: skrivningen
- * går till IndexedDB och UI:t uppdateras av prenumerationen.
+ * RITNINGEN, och därmed informationsarkitekturen:
+ * fritextrutan ligger kvar i toppen som en **snabblänk**, men resten av
+ * skärmen domineras av passets struktur — övningskort med setrader som bockas
+ * av. Tidigare var det tvärtom: fritexten var hjälten och manuell inmatning låg
+ * hopfälld bakom en länk. Det var tvärtemot hur folk faktiskt loggar.
  */
 
 function elapsed(fromIso: string): string {
@@ -33,34 +46,29 @@ function elapsed(fromIso: string): string {
 }
 
 export function TodayPage() {
-  const [justAdded, setJustAdded] = useState<string | null>(null);
-  const [visaManuell, setVisaManuell] = useState(false);
+  const [picker, setPicker] = useState<{ mode: 'add' | 'swap'; replacing?: string } | null>(null);
+  const [visaFritext, setVisaFritext] = useState(false);
 
   const workout = useLiveQuery(() => getActiveWorkout(), [], undefined);
   const exercises = useLiveQuery(() => db.exercises.toArray(), [], []);
-  const sets = useLiveQuery(
-    () => (workout ? getSetsForWorkout(workout.id) : Promise.resolve([])),
+  const plan = useLiveQuery(
+    () => (workout ? getPlan(workout.id) : Promise.resolve(null)),
     [workout?.id],
-    []
+    null
+  );
+  const previousId = useLiveQuery(
+    () => findPreviousWorkoutId(workout?.id ?? null),
+    [workout?.id],
+    null
   );
   const osynkade = useLiveQuery(() => pendingCount(), [], 0);
 
   const exerciseMap = new Map(exercises.map((e) => [e.id, e]));
   const exerciseRefs = exercises
     .filter((e) => !e.isArchived && !e.isDeleted)
-    .map((e) => ({
-      id: e.id,
-      name: e.name,
-      normalizedName: e.normalizedName,
-      aliases: e.aliases,
-    }));
+    .map((e) => ({ id: e.id, name: e.name, normalizedName: e.normalizedName, aliases: e.aliases }));
 
-  /** Markerar raden kort — "tyst framgång", ingen popup. */
-  function flash(id: string) {
-    setJustAdded(id);
-    setTimeout(() => setJustAdded((current) => (current === id ? null : current)), 1200);
-  }
-
+  // ---- fritext (11A.7: genväg, inte huvudväg) ----
   async function handleParsedLog(parsed: ParsedSet) {
     if (!workout) throw new Error('inget aktivt pass');
     const row = await logSet(
@@ -76,96 +84,172 @@ export function TodayPage() {
       },
       db
     );
-    flash(row.id);
-    // 6.2 — timern startar utan extra tryck. Ett loggat set betyder att man
-    // just börjat vila, så det är rätt ögonblick och kräver ingen handling.
     void startRestTimer(DEFAULT_REST_SECONDS, row.id);
     return row;
   }
 
-  // useLiveQuery ger undefined tills första svaret kommit.
   if (workout === undefined) return null;
 
+  // ---- inget pågående pass ----
   if (workout === null) {
     return (
-      <section className="space-y-4">
+      <section className="space-y-3">
         <h1 className="text-2xl font-semibold">Pass</h1>
-        <p className="text-sm text-[var(--color-dim)]">Inget pågående pass.</p>
+
         <button
           type="button"
           onClick={() => void startWorkout()}
-          className="w-full rounded-lg bg-[var(--color-fg)] py-4 text-lg font-semibold text-[var(--color-bg)]"
+          className="w-full rounded-lg bg-[var(--color-fg)] py-4 text-lg font-semibold text-[var(--color-bg)] active:opacity-80"
         >
           Starta pass
         </button>
+
+        {/* 11A.6 — den vanligaste loggningen som finns ska vara den snabbaste
+            vägen genom appen, inte något man letar reda på. */}
+        {previousId !== null && (
+          <button
+            type="button"
+            onClick={() =>
+              void (async () => {
+                const w = await startWorkout();
+                await copyWorkoutIntoPlan(w.id, previousId);
+              })()
+            }
+            className="w-full rounded-lg border border-[var(--color-line)] py-4 text-lg active:bg-[var(--color-surface)]"
+          >
+            Kopiera förra passet
+          </button>
+        )}
+
         {osynkade > 0 && (
           <p className="text-xs text-[var(--color-dim)]">
-            {osynkade} ändringar väntar på synk. Synken byggs i fas 7 — datan ligger kvar
-            lokalt tills dess.
+            {osynkade} ändringar väntar på synk.
           </p>
         )}
       </section>
     );
   }
 
+  const övningar = plan?.exercises ?? [];
+  const klaraSet = övningar.reduce(
+    (n, e) => n + e.sets.filter((s) => s.loggedSetId !== null).length,
+    0
+  );
+
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <header className="flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold">Pass</h1>
-        <span className="text-sm text-[var(--color-dim)]">
-          {elapsed(workout.startedAt)} · {sets.length} set
+        <span className="text-sm text-[var(--color-dim)] tabular-nums">
+          {elapsed(workout.startedAt)} · {klaraSet} set
         </span>
       </header>
 
       <RestTimer />
 
-      <QuickLog
-        exercises={exerciseRefs}
-        unitPreference="kg"
-        defaultEffortScale="rir"
-        onLog={handleParsedLog}
-        onCreateExercise={async (namn) => {
-          await createExercise(namn, db);
-        }}
-      />
-
-      <SetList
-        sets={sets}
-        exercises={exerciseMap}
-        justAddedId={justAdded}
-        onDelete={(id) => void deleteSet(id, db)}
-      />
-
-      <div className="rounded-lg border border-[var(--color-line)] p-3">
+      {/* 11A.7 — fritexten är en genväg. Den ligger kvar i toppen men är
+          hopfälld tills man vill ha den, så att passets struktur får plats. */}
+      {visaFritext ? (
+        <div className="rounded-lg border border-[var(--color-line)] p-2">
+          <QuickLog
+            exercises={exerciseRefs}
+            unitPreference="kg"
+            defaultEffortScale="rir"
+            onLog={handleParsedLog}
+            onCreateExercise={async (namn) => {
+              await createExercise(namn, db);
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setVisaFritext(false)}
+            className="mt-1 min-h-0 text-xs text-[var(--color-dim)]"
+          >
+            Dölj snabbinmatning
+          </button>
+        </div>
+      ) : (
         <button
           type="button"
-          onClick={() => setVisaManuell((v) => !v)}
-          className="w-full text-left text-sm text-[var(--color-dim)]"
+          onClick={() => setVisaFritext(true)}
+          className="w-full rounded-lg border border-dashed border-[var(--color-line)] py-2 text-sm text-[var(--color-dim)]"
         >
-          {visaManuell ? '− Dölj manuell inmatning' : '+ Manuell inmatning'}
+          ⌨ Skriv i stället — &bdquo;Bänk 90x5&ldquo;
         </button>
-        {visaManuell && (
-          <div className="mt-3">
-            <ManualEntry
-              exercises={exercises.filter((e) => !e.isArchived && !e.isDeleted)}
-              workoutId={workout.id}
-              onLog={async (input) => {
-                const row = await logSet({ workoutId: workout.id, ...input }, db);
-                flash(row.id);
-                void startRestTimer(DEFAULT_REST_SECONDS, row.id);
-              }}
-            />
-          </div>
-        )}
-      </div>
+      )}
+
+      {övningar.map((pe) => (
+        <ExerciseCard
+          key={pe.exerciseId}
+          planned={pe}
+          exercise={exerciseMap.get(pe.exerciseId)}
+          onChangeSet={(setId, patch) =>
+            void updatePlannedSet(workout.id, pe.exerciseId, setId, patch)
+          }
+          onConfirmSet={(setId) =>
+            void (async () => {
+              const { loggedSetId } = await confirmPlannedSet(workout.id, pe.exerciseId, setId);
+              // Avbockning startar vilan — samma ögonblick som i fritextvägen.
+              void startRestTimer(DEFAULT_REST_SECONDS, loggedSetId);
+            })()
+          }
+          onUnconfirmSet={(setId) => void unconfirmPlannedSet(workout.id, pe.exerciseId, setId)}
+          onRemoveSet={(setId) => void removeSetFromPlan(workout.id, pe.exerciseId, setId)}
+          onAddSet={() => void addSetToPlan(workout.id, pe.exerciseId)}
+          onRemoveExercise={() => void removeExerciseFromPlan(workout.id, pe.exerciseId)}
+          onSwapExercise={() => setPicker({ mode: 'swap', replacing: pe.exerciseId })}
+        />
+      ))}
+
+      {/* Central och stor, enligt ritningen. */}
+      <button
+        type="button"
+        onClick={() => setPicker({ mode: 'add' })}
+        className="w-full rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]
+                   py-4 text-lg font-medium active:opacity-80"
+      >
+        + Lägg till övning
+      </button>
+
+      {övningar.length === 0 && previousId !== null && (
+        <button
+          type="button"
+          onClick={() => void copyWorkoutIntoPlan(workout.id, previousId)}
+          className="w-full rounded-lg border border-[var(--color-line)] py-3 text-[var(--color-dim)]"
+        >
+          Kopiera förra passet
+        </button>
+      )}
 
       <button
         type="button"
-        onClick={() => void endWorkout()}
+        onClick={() =>
+          void (async () => {
+            await endWorkout();
+            await clearPlan(workout.id);
+          })()
+        }
         className="w-full rounded-lg border border-[var(--color-line)] py-3 text-[var(--color-dim)]"
       >
         Avsluta pass
       </button>
+
+      {picker && (
+        <ExercisePicker
+          title={picker.mode === 'swap' ? 'Byt övning' : 'Lägg till övning'}
+          excludeIds={övningar.map((e) => e.exerciseId)}
+          onClose={() => setPicker(null)}
+          onPick={(exerciseId) =>
+            void (async () => {
+              if (picker.mode === 'swap' && picker.replacing) {
+                await removeExerciseFromPlan(workout.id, picker.replacing);
+              }
+              await addExerciseToPlan(workout.id, exerciseId);
+              setPicker(null);
+            })()
+          }
+        />
+      )}
     </section>
   );
 }

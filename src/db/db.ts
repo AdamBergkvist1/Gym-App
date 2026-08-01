@@ -7,6 +7,7 @@ import type {
   MetaRow,
   OutboxEntry,
 } from './types';
+import type { WorkoutPlan } from './plan';
 
 /**
  * Den lokala databasen. Uppgift 5.1.
@@ -27,6 +28,7 @@ class GymDatabase extends Dexie {
   outbox!: EntityTable<OutboxEntry, 'seq'>;
   meta!: EntityTable<MetaRow, 'key'>;
   parseLog!: EntityTable<LocalParseLog, 'id'>;
+  plans!: EntityTable<WorkoutPlan, 'workoutId'>;
 
   constructor(name = 'gym') {
     super(name);
@@ -43,6 +45,12 @@ class GymDatabase extends Dexie {
     // migrerar befintliga databaser utan att röra de gamla tabellerna.
     this.version(2).stores({
       parseLog: 'id, createdAt, parser, outcome',
+    });
+    // v3: passets plan (uppgift 11A). Arbetsyta, inte data — den synkas
+    // aldrig. Ligger ändå i Dexie eftersom den måste överleva att appen
+    // stängs mitt i ett pass, vilket den hela tiden gör på ett gym.
+    this.version(3).stores({
+      plans: 'workoutId',
     });
   }
 }

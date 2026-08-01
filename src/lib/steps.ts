@@ -1,0 +1,59 @@
+/**
+ * Stegarnas aritmetik. Uppgift 11A.3.
+ *
+ * Ett medvetet val: **stegen SNAPPAR INTE till ett rutnät.** 91 + 2,5 blir
+ * 93,5, inte 92,5.
+ *
+ * Det hade sett prydligare ut att avrunda till närmaste 2,5, men 91 kg står
+ * där för att användaren skrev in det — kanske är det en maskin med udda
+ * steg. Att tyst flytta ett värde användaren valt är precis den sortens
+ * hjälpsamhet som gör att man slutar lita på en logg. Förutsägbart slår
+ * prydligt.
+ */
+
+/** Minsta viktökning på en skivstång: två 1,25-skivor. */
+export const WEIGHT_STEP_KG = 2.5;
+export const REP_STEP = 1;
+
+/** Flyttalsavrundning så att 92,5 + 2,5 aldrig blir 95.00000000000001. */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+export function stepWeight(
+  current: number,
+  direction: 1 | -1,
+  step: number = WEIGHT_STEP_KG
+): number {
+  if (!Number.isFinite(current)) return 0;
+  // Aldrig negativ vikt. Kroppsviktsövningar loggas som 0.
+  return Math.max(0, round2(current + direction * step));
+}
+
+export function stepReps(current: number, direction: 1 | -1): number {
+  if (!Number.isInteger(current)) return 1;
+  // Ett set med noll reps är inte ett set.
+  return Math.max(1, current + direction * REP_STEP);
+}
+
+/** Tolkar det användaren skrivit i ett viktfält. Svenskt komma tillåtet. */
+export function parseWeightInput(raw: string): number | null {
+  const trimmad = raw.replace(',', '.').trim();
+  // `Number('')` är 0. Utan denna rad hade ett tomt fält tyst blivit noll kilo
+  // — ett värde som ser ut som data men aldrig matades in.
+  if (trimmad === '') return null;
+  const n = Number(trimmad);
+  return Number.isFinite(n) && n >= 0 ? round2(n) : null;
+}
+
+export function parseRepsInput(raw: string): number | null {
+  const trimmad = raw.trim();
+  if (trimmad === '') return null;
+  const n = Number(trimmad);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+/** 92,5 → "92,5" och 90 → "90". Svensk decimalkomma, inga onödiga nollor. */
+export function formatWeight(kg: number): string {
+  return Number.isInteger(kg) ? String(kg) : kg.toFixed(1).replace('.', ',');
+}
