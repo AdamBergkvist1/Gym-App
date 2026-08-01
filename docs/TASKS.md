@@ -602,3 +602,22 @@ designspråket sätts av den vy som råkade byggas först, i stället för av he
 - [ ] **12.4 MCP-server (spår 2)** — när Supabase stöder autentiserad MCP.
 - [ ] **12.5 Superset och dropset.**
 - [ ] **12.6 Jämför Groq mot Gemini på samma indata** med `ai_parse_log` som underlag.
+- [ ] **12.7 Personligt anpassat 1RM i stället för Epley.** Efterfrågat av Adam 2026-08-01
+      efter att ha sett e1RM-siffrorna: *"frågan är bara om det är så accurate"*.
+
+      **Han har rätt att tvivla.** Epley är en **populationsformel** — den antar att alla har
+      samma förhållande mellan maxstyrka och uthållighet. Det stämmer inte: vissa är
+      rep-starka och får sitt max systematiskt underskattat, andra tvärtom. Felet är alltså
+      inte slumpmässigt utan konsekvent åt samma håll för en given person, vilket är värre
+      än brus eftersom det ser stabilt ut.
+
+      **Vad formeln ändå duger till:** att jämföra dina egna set med varandra över tid.
+      Trenden är meningsfull även när nivån är fel — och det är trenden grafen visar.
+      **Vad den inte duger till:** att påstå vad du faktiskt lyfter.
+
+      **Åtgärden:** anpassa kurvan efter användarens egen data. Med tillräckligt många set
+      över olika rep-intervall går exponenten att skatta individuellt i stället för att
+      antas. Kräver data över tid, vilket är precis vad appen nu samlar in.
+      **Klart när:** e1RM räknas med en personlig parameter när underlaget räcker, och
+      faller tillbaka på Epley när det inte gör det — med skillnaden **synlig i UI:t**, så
+      att en anpassad siffra aldrig förväxlas med en antagen.

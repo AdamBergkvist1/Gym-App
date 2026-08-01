@@ -94,7 +94,8 @@ describe('4.7 avvisning — hellre otolkat än feltolkat', () => {
     ['90x5', 'missing_exercise', 'ingen övning'],
     ['Bänk 90', 'missing_reps', 'reps saknas'],
     ['Blaha 90x5', 'unknown_exercise', 'okänd övning'],
-    ['Bänk 90x5x3', 'ambiguous_numbers', 'tre tal — tvetydigt'],
+    // 90x5x3 flyttad till de POSITIVA fallen i 4.13 — den betyder tre set.
+    ['Bänk 90x5x3x2', 'ambiguous_numbers', 'fyra tal i följd — ingen känd form'],
     ['', 'empty', 'tom sträng'],
   ];
 
@@ -183,5 +184,128 @@ describe('4.9 vikt/reps-konfidens', () => {
   it('utskriven enhet gör tvetydigheten till ett medvetet val', () => {
     // Användaren har själv sagt vilket tal som är vikten. Då ska vi inte fråga.
     expect(onlySet('Bänk 20 kg x 30').confidence).toBe('high');
+  });
+});
+
+// =====================================================================
+// 4.13 — gym-slang. Grammatiken var för stel; upptäckt vid Adams första
+// riktiga pass 2026-07-31. Korpusen nedan är den från TASKS.md.
+// =====================================================================
+
+/** Plockar ut alla set och gör testet högljutt om något blev otolkat. */
+function allSets(raw: string, c: ParseContext = ctx()) {
+  const r = parseSetText(raw, c);
+  expect(r.unresolved, `oväntat otolkat: ${JSON.stringify(r.unresolved)}`).toHaveLength(0);
+  return r.sets;
+}
+
+describe('4.13 omvänd ordning — vikt och reps före övningen', () => {
+  it('"80x7 bänk"', () => {
+    const s = onlySet('80x7 bänk');
+    expect(s.exerciseId).toBe(BENKPRESS_ID);
+    expect(s.weightKg).toBe(80);
+    expect(s.reps).toBe(7);
+  });
+
+  it('"90kg 5r bänkpress" — omvänd ordning med utskrivna enheter', () => {
+    const s = onlySet('90kg 5r bänkpress');
+    expect(s.exerciseId).toBe(BENKPRESS_ID);
+    expect(s.weightKg).toBe(90);
+    expect(s.reps).toBe(5);
+    expect(s.unitSource).toBe('explicit');
+  });
+
+  it('"100 kg 3 reps knäböj"', () => {
+    const s = onlySet('100 kg 3 reps knäböj');
+    expect(s.exerciseName).toBe('Knäböj');
+    expect(s.weightKg).toBe(100);
+    expect(s.reps).toBe(3);
+  });
+
+  it('enhetssuffixet avgör vad som är vikt, oavsett ordning', () => {
+    // Repmarkören sitter på det FÖRSTA talet — då är det repsen.
+    const s = onlySet('bänk 5r 90kg');
+    expect(s.weightKg).toBe(90);
+    expect(s.reps).toBe(5);
+  });
+});
+
+describe('4.13 flera set på en rad', () => {
+  it('"bänk 90x5x3" ger TRE set à 90×5', () => {
+    const sets = allSets('bänk 90x5x3');
+    expect(sets).toHaveLength(3);
+    for (const s of sets) {
+      expect(s.exerciseId).toBe(BENKPRESS_ID);
+      expect(s.weightKg).toBe(90);
+      expect(s.reps).toBe(5);
+    }
+  });
+
+  it('"3x8 bänk 60" — set×reps före, vikt efter', () => {
+    const sets = allSets('3x8 bänk 60');
+    expect(sets).toHaveLength(3);
+    for (const s of sets) {
+      expect(s.weightKg).toBe(60);
+      expect(s.reps).toBe(8);
+    }
+  });
+
+  it('"bänk 90x5 90x5" — två separata par', () => {
+    const sets = allSets('bänk 90x5 90x5');
+    expect(sets).toHaveLength(2);
+    expect(sets.map((s) => `${s.weightKg}x${s.reps}`)).toEqual(['90x5', '90x5']);
+  });
+
+  it('"bänk 90x5 85x5" — två par med olika vikt', () => {
+    const sets = allSets('bänk 90x5 85x5');
+    expect(sets.map((s) => `${s.weightKg}x${s.reps}`)).toEqual(['90x5', '85x5']);
+  });
+
+  it('anteckningen följer med på alla set i raden', () => {
+    const sets = allSets('bänk 90x5x2, kändes tungt');
+    expect(sets).toHaveLength(2);
+    for (const s of sets) expect(s.note).toBe('kändes tungt');
+  });
+
+  it('vägrar orimligt många set i stället för att svälja en felskrivning', () => {
+    const r = parseSetText('bänk 90x5x40', ctx());
+    expect(r.sets).toHaveLength(0);
+    expect(r.unresolved[0]!.reason).toBe('ambiguous_numbers');
+  });
+});
+
+describe('4.13 regressionsvakter — det som redan fungerade får inte gå sönder', () => {
+  it('"bänk 90 5" tolkas fortfarande som ett set', () => {
+    const s = onlySet('bänk 90 5');
+    expect(s.weightKg).toBe(90);
+    expect(s.reps).toBe(5);
+  });
+
+  it('"bp 100x3" — kortalias', () => {
+    const s = onlySet('bp 100x3');
+    expect(s.exerciseId).toBe(BENKPRESS_ID);
+    expect(s.weightKg).toBe(100);
+  });
+
+  it('"20x30" är fortfarande LIKA tvetydigt som förut', () => {
+    // Att stödja omvänd ordning får inte göra tvetydiga tal mindre tvetydiga.
+    expect(onlySet('Bänk 20x30').confidence).toBe('low');
+  });
+
+  it('"Bänk 5x5" är fortfarande låg konfidens', () => {
+    expect(onlySet('Bänk 5x5').confidence).toBe('low');
+  });
+
+  it('flerset ärver konfidensregeln', () => {
+    const sets = allSets('bänk 20x30x2');
+    expect(sets).toHaveLength(2);
+    for (const s of sets) expect(s.confidence).toBe('low');
+  });
+
+  it('okänd övning avvisas fortfarande, även i omvänd ordning', () => {
+    const r = parseSetText('90x5 blaha', ctx());
+    expect(r.sets).toHaveLength(0);
+    expect(r.unresolved[0]!.reason).toBe('unknown_exercise');
+    expect(r.unresolved[0]!.attemptedName).toBe('blaha');
   });
 });
