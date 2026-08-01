@@ -127,6 +127,46 @@ bekräftas av en människa innan det sparas.
 **AI:n träder in först när den lokala grammatiken sagt ifrån.** Aldrig i förväg, aldrig
 medan man skriver, aldrig i bakgrunden. Offline nämns den inte ens — texten ligger kvar.
 
+## 6c. Fas 11 omstrukturerad — och det är en korrigering, inte ett tillägg
+
+Adam invände 2026-08-01 att appen riskerar att bli förälskad i sin egen textparser. Han har
+rätt, och Fas 11 var för smalt formulerad för att fånga det.
+
+**Som appen ser ut i dag är fritexten hjälten** och manuell inmatning ligger hopfälld bakom
+en länk, med en rå `<select>` av 45 övningar. I Strong och Hevy sker uppskattningsvis 90 %
+av loggningen genom att trycka och bekräfta — särskilt när man bygger vidare på ett tidigare
+pass. Vår informationsarkitektur är alltså tvärtemot branschens, och tvärtemot hur folk
+faktiskt loggar.
+
+Fas 11 är därför delad: **11A är det touch-baserade gränssnittet (strukturellt)** och
+**11B är den visuella poleringen** som redan var planerad. 11A först, och den är sannolikt
+viktigare för hur appen upplevs än allt annat som återstår.
+
+**En tidigare avgränsning föll med detta:** `PLAN.md` §3.6 sköt upp rutiner och mallar till
+efter v1. Det håller inte längre — "bygga vidare på ett tidigare pass" är kärnan i det Adam
+beskriver, och SPEC kräver redan att man ska kunna kopiera en historisk mall på två klick.
+Mallarna är uppflyttade till 11A.6.
+
+🚩 **Acceptanskriterium för 11A:** ett normalt upprepat pass ska gå att logga **utan att
+tangentbordet öppnas en enda gång**, och med färre tryck än i Hevy.
+
+## 6d. Telemetrin (8.10–8.11)
+
+En rad per fritextinmatning, för både lokal grammatik och AI. Går via utkorgen som all annan
+data — de flesta inmatningar sker utan nät, och telemetri som bara skrevs online hade
+systematiskt missat de intressantaste fallen.
+
+**Förvalet är `rejected`.** En rad som aldrig ledde till ett sparat set är inte accepterad,
+och att anta motsatsen hade gjort statistiken systematiskt för snäll. Vid `edited` sparas
+**vad det rätta värdet blev** — utan det går felen att räkna men inte att analysera.
+
+Panelen under Inställningar vägrar visa en procentsats under fem försök. Fyra av fyra är
+100 %, och en siffra som ser ut som ett resultat utan att vara det är värre än ingen siffra.
+
+> ⚠️ **Migration 0003 MÅSTE köras innan appen används med denna version.** Den lägger till
+> `ai_parse_log`-grenen i `apply_mutations`. Utan den avvisas mutationen som "okänd tabell",
+> och eftersom utkorgen stannar vid permanenta fel — med flit — **fastnar hela synken**.
+
 ## 7. Nästa steg
 
 **Du:** deploya och titta på historiken — datan du synkade upp finns nu i appen. Timerfrågan
@@ -151,11 +191,11 @@ supabase functions deploy ai-parse
 Testa sedan med något den lokala grammatiken omöjligt kan klara:
 `samma som förra gången men två kilo tyngre`, `en till på samma`, `tre set bänk som sist`.
 
-**Claude därefter:**
+**Claude därefter: fas 11A — det touch-baserade gränssnittet.** Se avsnitt 6c. Det är den
+enskilt största kvarvarande skillnaden mot en app man vill använda varje pass.
 
-1. **8.10–8.11 — `ai_parse_log`.** Utan den kan vi aldrig svara på hur ofta AI:n har rätt,
-   och då går det inte att försvara vare sig latensen eller modellvalet.
-2. **Fas 11 — designpoleringen.** Alla ytor finns nu, vilket var villkoret.
+Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning), **7.13** (lata-ladda
+supabase-js), **12.7** (personligt anpassat 1RM i stället för Epley).
 
 Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning — knapparna ±30 s finns, men
 inte sparad tid per övning), **7.13** (lata-ladda supabase-js), **fas 10** (deploy-automatik),
