@@ -105,18 +105,57 @@ fram när man återvänder till appen och skadar ingenting.
 
 ---
 
+## 6b. Fas 8 — AI-reserven (2026-08-01)
+
+Hela pipelinen är byggd och testad. **Den har aldrig pratat med en riktig modell** — det
+kräver nycklar och en deploy, se avsnitt 7.
+
+**8.0 byggdes först, och det är avsiktligt.** Modellen får hela katalogen, senaste
+utförandet per övning, typiskt viktspann, bästa e1RM och det pågående passets set. Det är
+detta som skiljer en coach från en andra parser: *"samma som förra gången"* har något att
+syfta på, *"en till"* vet vad som just loggades, och ett värde långt utanför det typiska går
+att känna igen. Payloaden är begränsad till de 12 senast tränade övningarna, med ett test
+som vaktar att den håller sig under 20 000 tecken — den går i varje anrop.
+
+**Valideringen behandlas som säkerhet, inte finputs.** Modellen föreslår; `validate.ts`
+avgör vad som får bli data. Det farligaste felläget är ett **påhittat övnings-id** som ser
+ut som ett UUID: utan kontrollen mot katalogen hade setet skrivits mot en övning som inte
+finns, och främmandenyckeln hade fällt hela synkbatchen långt senare med ett felmeddelande
+långt från orsaken. Förvalet är **låg konfidens** — allt modellen härlett ur historiken
+bekräftas av en människa innan det sparas.
+
+**AI:n träder in först när den lokala grammatiken sagt ifrån.** Aldrig i förväg, aldrig
+medan man skriver, aldrig i bakgrunden. Offline nämns den inte ens — texten ligger kvar.
+
 ## 7. Nästa steg
 
 **Du:** deploya och titta på historiken — datan du synkade upp finns nu i appen. Timerfrågan
 är avklarad, inget mer att mäta där.
 
-**Claude nästa pass, i den ordningen:**
+**Du måste sätta nycklarna och deploya innan AI-vägen kan testas.** Det kräver Supabase CLI
+— Edge Functions går inte att deploya från webbeditorn (uppgift 2.2, som varit uppskjuten
+till precis nu).
 
-1. **4.13 — trimma grammatiken.** Korpusen står i uppgiften, testdrivet som resten av fas 4.
-   Ungefär en dags arbete, och det gör den vanligaste inmatningen bättre varje pass.
-2. **Fas 8 — LLM-coachen.** Historiken finns nu, så 8.0 (utöka kontraktet med träningsdata)
-   är fri att bygga. En LLM som får rätta efter en *bättre* grammatik har dessutom färre
-   saker att rätta, vilket gör den både billigare och mer träffsäker — därför denna ordning.
+```
+npm i -g supabase
+supabase login
+supabase link --project-ref oyccchcleypfuyuqmueq
+supabase secrets set GROQ_API_KEY=... GEMINI_API_KEY=...
+supabase functions deploy ai-parse
+```
+
+> **Egna nycklar i en egen organisation**, skilda från `news-signal-engine`. Signalmotorn
+> har en dokumenterad incident där ett testanrop tömde dygnskvoten och slog ut 22 % av en
+> handelsdags signaler. Delas kontot kan en fritextmiss på gymmet tysta produktionssignaler.
+
+Testa sedan med något den lokala grammatiken omöjligt kan klara:
+`samma som förra gången men två kilo tyngre`, `en till på samma`, `tre set bänk som sist`.
+
+**Claude därefter:**
+
+1. **8.10–8.11 — `ai_parse_log`.** Utan den kan vi aldrig svara på hur ofta AI:n har rätt,
+   och då går det inte att försvara vare sig latensen eller modellvalet.
+2. **Fas 11 — designpoleringen.** Alla ytor finns nu, vilket var villkoret.
 
 Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning — knapparna ±30 s finns, men
 inte sparad tid per övning), **7.13** (lata-ladda supabase-js), **fas 10** (deploy-automatik),
