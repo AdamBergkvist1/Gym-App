@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { parseSetText } from '../parser/parse';
 import { aiAvailability, parseWithAi } from '../ai/client';
+import { recordParseAttempt, setParseOutcome } from '../db/parseLog';
 import type { ExerciseRef, ParsedSet, Unresolved, UnresolvedReason } from '../parser/types';
 import type { LocalSet } from '../db/types';
 
@@ -34,6 +35,8 @@ interface Draft {
   reps: string;
   /** Kom förslaget från AI:n? Då ska det märkas ut. */
   fromAi?: boolean;
+  /** Raden i `parseLog` som ska få sitt utfall när användaren bestämt sig. */
+  logId: string;
 }
 
 type AiState = 'idle' | 'thinking' | 'failed' | 'offline' | 'unavailable';
@@ -93,6 +96,14 @@ export function QuickLog({
 
       setAiState('idle');
       setProblem(null);
+      const aiLogId = await recordParseAttempt({
+        rawText: text,
+        parser: 'llm',
+        sets: utfall.result.sets,
+        provider: utfall.provider,
+        model: utfall.model,
+        latencyMs: utfall.latencyMs,
+      });
       // AI-tolkade set får ALLTID bekräftas. Modellen föreslår; människan
       // avgör. Det är skillnaden mellan en assistent och en gissningsmaskin.
       setDraft({
@@ -100,6 +111,7 @@ export function QuickLog({
         weight: String(utfall.result.sets[0]!.weightKg),
         reps: String(utfall.result.sets[0]!.reps),
         fromAi: true,
+        logId: aiLogId,
       });
       return;
     }
@@ -110,11 +122,18 @@ export function QuickLog({
 
     setProblem(null);
 
+    const logId = await recordParseAttempt({ rawText: text, parser: 'local', sets: parsed });
+
     // Räcker att ETT set är tvetydigt för att fråga om hela raden — de delar
     // ändå tolkning, och att spara hälften vore värre än att fråga en gång.
     const första = parsed[0]!;
     if (parsed.some((s) => s.confidence === 'low')) {
-      setDraft({ sets: parsed, weight: String(första.weightKg), reps: String(första.reps) });
+      setDraft({
+        sets: parsed,
+        weight: String(första.weightKg),
+        reps: String(första.reps),
+        logId,
+      });
       return;
     }
 
@@ -122,6 +141,8 @@ export function QuickLog({
     try {
       // I ordning, så att setIndex blir rätt.
       for (const s of parsed) await onLog(s);
+      // Sparat orört, utan att användaren behövt röra något: accepted.
+      await setParseOutcome(logId, 'accepted');
       setText('');
       setDraft(null);
     } finally {
@@ -143,14 +164,27 @@ export function QuickLog({
 
     setBusy(true);
     try {
-      for (const s of draft.sets) {
-        await onLog(ändrad ? { ...s, weightKg: weight, reps, confidence: 'high' } : s);
-      }
+      const sparade = draft.sets.map((s) =>
+        ändrad ? { ...s, weightKg: weight, reps, confidence: 'high' as const } : s
+      );
+      for (const s of sparade) await onLog(s);
+
+      // 8.11: rörde användaren siffrorna hade parsern fel — och exakt VAD som
+      // blev rätt sparas, så att felen går att analysera och inte bara räknas.
+      await setParseOutcome(draft.logId, ändrad ? 'edited' : 'accepted', ändrad ? sparade : null);
+
       setText('');
       setDraft(null);
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Avbryt = förslaget dög inte. Det är ett resultat, inte en icke-händelse. */
+  async function dismissDraft() {
+    if (!draft) return;
+    await setParseOutcome(draft.logId, 'rejected');
+    setDraft(null);
   }
 
   return (
@@ -270,7 +304,7 @@ export function QuickLog({
             </button>
             <button
               type="button"
-              onClick={() => setDraft(null)}
+              onClick={() => void dismissDraft()}
               className="rounded-md border border-[var(--color-line)] px-3 text-[var(--color-dim)]"
             >
               Avbryt

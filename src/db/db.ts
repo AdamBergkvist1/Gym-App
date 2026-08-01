@@ -1,5 +1,12 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { LocalExercise, LocalSet, LocalWorkout, MetaRow, OutboxEntry } from './types';
+import type {
+  LocalExercise,
+  LocalParseLog,
+  LocalSet,
+  LocalWorkout,
+  MetaRow,
+  OutboxEntry,
+} from './types';
 
 /**
  * Den lokala databasen. Uppgift 5.1.
@@ -19,6 +26,7 @@ class GymDatabase extends Dexie {
   loggedSets!: EntityTable<LocalSet, 'id'>;
   outbox!: EntityTable<OutboxEntry, 'seq'>;
   meta!: EntityTable<MetaRow, 'key'>;
+  parseLog!: EntityTable<LocalParseLog, 'id'>;
 
   constructor(name = 'gym') {
     super(name);
@@ -30,6 +38,11 @@ class GymDatabase extends Dexie {
       loggedSets: 'id, workoutId, [exerciseId+performedAt], performedAt',
       outbox: '++seq, status, mutationId',
       meta: 'key',
+    });
+    // v2: telemetri för fritextparsningen (uppgift 8.10). Additiv — Dexie
+    // migrerar befintliga databaser utan att röra de gamla tabellerna.
+    this.version(2).stores({
+      parseLog: 'id, createdAt, parser, outcome',
     });
   }
 }

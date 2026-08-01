@@ -50,7 +50,7 @@ export interface LocalSet {
 }
 
 export type OutboxStatus = 'pending' | 'sending' | 'failed';
-export type SyncTable = 'workouts' | 'logged_sets' | 'exercises';
+export type SyncTable = 'workouts' | 'logged_sets' | 'exercises' | 'ai_parse_log';
 
 /**
  * En osänd mutation.
@@ -71,6 +71,35 @@ export interface OutboxEntry {
   attempts: number;
   lastError: string | null;
   status: OutboxStatus;
+}
+
+export type ParseOutcome = 'accepted' | 'edited' | 'rejected';
+export type ParserKind = 'local' | 'llm';
+
+/**
+ * En fritextinmatning och vad den blev. Uppgift 8.10.
+ *
+ * Utan den här raden går det aldrig att svara på hur ofta parsern har rätt —
+ * och då går det varken att försvara LLM-anropets latens eller att välja modell
+ * på annat än känsla.
+ *
+ * Skrivs lokalt först och synkas via utkorgen som allt annat: de flesta
+ * inmatningar sker i en gymkällare, och en telemetrirad som bara skrivs online
+ * hade systematiskt missat exakt de fall som är intressantast.
+ */
+export interface LocalParseLog {
+  id: string;
+  rawText: string;
+  parser: ParserKind;
+  provider: string | null;
+  model: string | null;
+  /** Vad parsern föreslog, i serverns fältnamn. */
+  parsed: unknown;
+  outcome: ParseOutcome;
+  /** Vad det blev efter användarens rättelse, när `outcome = 'edited'`. */
+  corrected: unknown;
+  latencyMs: number | null;
+  createdAt: string;
 }
 
 export interface MetaRow {

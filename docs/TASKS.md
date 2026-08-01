@@ -563,11 +563,31 @@ och bygge gröna.
       (som blir `unresolved`, aldrig tyst framgång). Ett trasigt set avvisas ensamt, inte
       hela svaret. **Förvalet är LÅG konfidens** — har modellen härlett något ur historiken
       ska människan bekräfta.
-- [ ] **8.10 Skriv till `ai_parse_log`.** Inklusive `provider`, `latency_ms` och `outcome`.
-      **Klart när:** en rad skapas per fritextinmatning, både för `local` och `llm`.
-- [ ] **8.11 Fånga `outcome` i UI.** Sparar användaren förslaget orört → `accepted`; ändrar
-      hen ett fält → `edited`; slänger hen det → `rejected`.
-      **Klart när:** alla tre utfallen går att framkalla manuellt.
+- [x] **8.10 Telemetrin skriven. Klar 2026-08-01.** `src/db/parseLog.ts` + Dexie v2.
+      En rad per fritextinmatning, för **både** `local` och `llm`.
+
+      **Går via utkorgen som all annan data**, inte direkt till PostgREST. De flesta
+      inmatningar sker i en gymkällare — en telemetrirad som bara skrevs online hade
+      systematiskt missat exakt de fall som är intressantast att mäta.
+
+      **Kräver migration 0003**, som lägger till `ai_parse_log`-grenen i `apply_mutations`.
+      Utan den avvisas mutationen med "okänd tabell" och **hela utkorgen fastnar** — kön
+      stannar ju vid permanenta fel, med flit. Migrationen måste köras innan en klient med
+      8.10 används.
+- [x] **8.11 Utfallet fångas i UI:t.** `accepted` = sparat orört. `edited` = användaren
+      rättade först, **och vad det blev sparas** — utan det rättade värdet går felen att
+      räkna men inte att analysera. `rejected` = förslaget ledde aldrig till ett set.
+
+      **Förvalet är `rejected`.** En rad som aldrig ledde till ett sparat set är inte
+      accepterad, och att anta motsatsen hade gjort statistiken systematiskt för snäll.
+      En mätning som smickrar sig själv är värdelös.
+
+      Resultatet visas under **Inställningar → Fritextparsningens träffsäkerhet**, med
+      lokal grammatik och AI-reserv **åtskilda** så att de går att jämföra. Panelen säger
+      uttryckligen ifrån under fem försök i stället för att visa en procentsats — fyra av
+      fyra är 100 %, och en siffra som ser ut som ett resultat men inte är det är värre än
+      ingen siffra alls.
+      **11 tester.**
 
 ---
 
@@ -609,7 +629,57 @@ och bygge gröna.
 
 ---
 
-## Fas 11 — Designpolering (UX/UI)
+## Fas 11 — Gränssnittet: touch-först, sedan polering
+
+**Fasen är delad i två efter Adams invändning 2026-08-01.** Del A är strukturell och
+sannolikt viktigare för hur appen upplevs än allt annat som återstår. Del B är den
+polering som ursprungligen planerades. **Del A först.**
+
+---
+
+### 11A — Det touch-baserade gränssnittet (STRUKTURELLT)
+
+> **Detta är inte polering.** Fullständigt resonemang i `PLAN.md` §8.1b.
+>
+> Som appen ser ut i dag är fritexten hjälten och manuell inmatning ligger hopfälld bakom
+> en länk, med en rå `<select>` av 45 övningar. Det är tvärtemot hur Strong och Hevy
+> fungerar — där sker uppskattningsvis **90 % av loggningen genom att trycka och bekräfta**,
+> särskilt när man bygger vidare på ett tidigare pass.
+>
+> **Vi ska inte uppfinna hjulet.** Underlaget i `docs/research/` har redan kartlagt vad
+> konkurrenterna gör rätt. Kopiera medvetet.
+
+- [ ] **11A.1 "Upprepa förra passet".** Öppna appen, se förra passets övningar med sina
+      vikter, bekräfta set för set med ett tryck. Den vanligaste loggningen som finns ska
+      vara den snabbaste vägen genom appen.
+      **Klart när:** ett upprepat pass går att logga med enbart bekräftelsetryck.
+- [ ] **11A.2 Setraden som primärt element.** Varje övning visar sina set som rader med
+      förifyllda värden från förra gången. Ett tryck bekräftar.
+      **Klart när:** inget tangentbord behövs för ett normalt pass.
+- [ ] **11A.3 Stegare i stället för tangentbord.** ±2,5 kg och ±1 rep som stora tryckytor.
+      Tangentbord bara när man vill skriva ett exakt tal.
+      **Klart när:** vikt och reps går att justera utan att tangentbordet öppnas.
+- [ ] **11A.4 Riktig övningsväljare.** Sökfält, senast använda överst, gruppering per
+      muskelgrupp. En `<select>` med 45 rader är en lista, inte ett gränssnitt.
+      **Klart när:** rätt övning går att hitta på under tre sekunder.
+- [ ] **11A.5 Byt övning mitt i passet på två tryck.** Underlaget lyfter detta särskilt: är
+      utrustningen upptagen ska man kunna byta och få den nya övningens historik omedelbart.
+      Ett av de tydligaste skälen till att folk lämnar anteckningsappen.
+- [ ] **11A.6 Mallar / rutiner — UPPFLYTTADE från backlog.** `PLAN.md` §3.6 sköt upp dem
+      till efter v1. Den bedömningen håller inte längre: "bygga vidare på ett tidigare pass"
+      är kärnan i det Adam beskriver, och SPEC kräver redan att man ska kunna *"med maximalt
+      två klick starta ett tomt pass eller kopiera en historisk mall"*. Schemat är förberett
+      — `routines` och `routine_exercises` läggs till additivt utan att röra `logged_sets`.
+- [ ] **11A.7 Fritexten blir en genväg, inte huvudvägen.** Lika bra som i dag, men inte
+      längre det första och enda man ser.
+
+🚩 **Acceptanskriterium för hela 11A:** ett helt normalt pass — samma övningar som förra
+gången, liknande vikter — ska gå att logga **utan att tangentbordet öppnas en enda gång**,
+och med färre tryck än i Hevy för samma pass.
+
+---
+
+### 11B — Visuell polering
 
 Efterfrågad av Adam 2026-07-31 efter att ha använt appen på riktigt: den fungerar men är
 "basic och rätt ful". Det är väntat — UI:t har byggts råt med flit. Men det ska vara ett
@@ -619,27 +689,28 @@ resultatet ojämnt, och ojämnt är värre än rått.
 Fullständigt resonemang inklusive vad fasen INTE ska omfatta: `PLAN.md` §8.
 Referens enligt SPEC: RP Hypertrophy för datafokus, Jeff Nippard och Boostcamp för estetik.
 
-**Ligger efter fas 9 med flit.** Att polera innan historikvyn och timern finns betyder att
-designspråket sätts av den vy som råkade byggas först, i stället för av helheten.
+**Ligger efter 11A med flit.** Att polera ett gränssnitt som ska struktureras om är
+bortkastat arbete — och designspråket ska sättas av den slutliga formen, inte av den
+nuvarande.
 
-- [ ] **11.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
+- [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
       **Klart när:** skalan är definierad i `index.css` och ingen komponent sätter egen storlek.
-- [ ] **11.2 `tabular-nums` överallt där siffror ändras.** Finns på setraden, saknas i
+- [ ] **11B.2 `tabular-nums` överallt där siffror ändras.** Finns på setraden, saknas i
       historik och timer. Siffror som hoppar i sidled är svårlästa och känns billiga.
-- [ ] **11.3 Vertikal rytm.** Avstånden är i dag valda per komponent. Ska följa en skala.
-- [ ] **11.4 Tryckåterkoppling.** Ingen knapp har `:active`-tillstånd. Med svettiga fingrar
+- [ ] **11B.3 Vertikal rytm.** Avstånden är i dag valda per komponent. Ska följa en skala.
+- [ ] **11B.4 Tryckåterkoppling.** Ingen knapp har `:active`-tillstånd. Med svettiga fingrar
       är omedelbar kvittens skillnaden mellan att lita på appen och att trycka igen.
       **Klart när:** varje tryckyta svarar synligt inom en bildruta.
-- [ ] **11.5 Rörelse med måtta.** Setraden dyker upp abrupt. En kort inanimation gör att ögat
+- [ ] **11B.5 Rörelse med måtta.** Setraden dyker upp abrupt. En kort inanimation gör att ögat
       hittar den nya raden. **Klart när:** inget övergångsförlopp överstiger ~150 ms.
-- [ ] **11.6 Tomma tillstånd.** Första passet är enda tillfället att lära ut fritextsyntaxen,
+- [ ] **11B.6 Tomma tillstånd.** Första passet är enda tillfället att lära ut fritextsyntaxen,
       och det tillfället används inte i dag.
-- [ ] **11.7 Färgsemantik som system.** Grönt = sparat, gult = tvetydigt är i dag enstaka val.
+- [ ] **11B.7 Färgsemantik som system.** Grönt = sparat, gult = tvetydigt är i dag enstaka val.
       **Klart när:** betydelserna är definierade och kontrasterna klarar WCAG AA mot mörk botten.
-- [ ] **11.8 Personbästa markeras när det slås.** Den starkaste återkopplingen en träningsapp
+- [ ] **11B.8 Personbästa markeras när det slås.** Den starkaste återkopplingen en träningsapp
       kan ge, och nästan gratis när e1RM från fas 9 finns.
-- [ ] **11.9 Densitet.** Ett pass med 25 set ska gå att överblicka. Nuvarande radhöjd är vald
+- [ ] **11B.9 Densitet.** Ett pass med 25 set ska gå att överblicka. Nuvarande radhöjd är vald
       för träffsäkerhet, inte för överblick — de två målen ska vägas mot varandra.
 
 ---

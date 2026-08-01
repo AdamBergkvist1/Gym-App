@@ -839,7 +839,58 @@ första vyn som råkade bli byggd i stället för av helheten.
 Undantaget är sådant som är billigare att göra rätt direkt än att rätta senare: tryckytor,
 `inputMode`, safe-area och tabellsiffror. Det ligger redan inne.
 
-### 8.2 Vad fasen faktiskt ska omfatta
+### 8.1b DEL A: det touch-baserade gränssnittet är HUVUDSAKEN
+
+Tillagt 2026-08-01 på Adams begäran, och det är en **strategisk korrigering**, inte ett
+tillägg till en polerlista.
+
+**Problemet med hur appen ser ut i dag.** Fritextfältet ligger överst och är hjälten.
+Manuell inmatning ligger hopfälld bakom en länk, med en rå `<select>` av 45 övningar. Det
+är tvärtemot hur riktiga träningsappar fungerar — och tvärtemot hur folk faktiskt loggar.
+
+**Adams observation, som stämmer med underlaget i `docs/research/`:** i Strong och Hevy sker
+uppskattningsvis 90 % av loggningen genom att trycka, scrolla och bekräfta — särskilt när
+man bygger vidare på ett tidigare pass. Fritexten är en genväg för den som vill, inte
+huvudvägen.
+
+**Vi ska inte uppfinna hjulet.** Underlaget har redan kartlagt vad konkurrenterna gör rätt.
+Det ska kopieras medvetet, inte återuppfinnas sämre.
+
+> **Det här är inte designpolering.** Det är en omstrukturering av appens primära
+> gränssnitt, och den är sannolikt viktigare för hur appen upplevs än allt annat som
+> återstår. Fas 11 delas därför i **del A (touch-gränssnittet, strukturellt)** och
+> **del B (visuell polering)**. Del A först.
+
+**Konsekvens för en tidigare avgränsning:** `PLAN.md` §3.6 sköt upp rutiner och mallar till
+efter v1. Den bedömningen håller inte längre. "Bygga vidare på ett tidigare pass" är själva
+kärnan i det Adam beskriver, och SPEC säger redan att man ska kunna *"med maximalt två klick
+starta ett tomt pass eller kopiera en historisk mall"*. Mallarna flyttas därför upp i del A.
+Schemat är förberett för det: `routines` och `routine_exercises` kan läggas till additivt
+utan att röra `logged_sets`.
+
+**Vad del A ska leverera — mätt mot branschstandard, inte mot vad som är lätt:**
+
+- **Upprepa förra passet.** Öppna appen, se förra passets övningar med sina vikter, och
+  bekräfta set för set med ett tryck. Detta är den vanligaste loggningen som finns och ska
+  vara den snabbaste vägen genom appen.
+- **Setraden som primärt element.** Varje övning i passet visar sina set som rader med
+  förifyllda värden från förra gången. Ett tryck bekräftar. Inget tangentbord behövs för ett
+  normalt pass.
+- **Stegare i stället för tangentbord.** ±2,5 kg och ±1 rep som stora tryckytor. Tangentbord
+  bara när man vill skriva ett exakt tal.
+- **Riktig övningsväljare.** Sökfält, senast använda överst, gruppering per muskelgrupp.
+  En `<select>` med 45 rader är inte ett gränssnitt, det är en lista.
+- **Byt övning mitt i passet på två tryck.** Underlaget lyfter detta särskilt: är
+  utrustningen upptagen ska man kunna byta till en annan övning och få dess historik
+  omedelbart. Det är ett av de tydligaste skälen till att folk lämnar anteckningsappen.
+- **Fritexten blir en genväg, inte huvudvägen.** Den ska finnas kvar och vara lika bra som
+  i dag, men den ska inte längre vara det första och enda man ser.
+
+**Hur vi vet när del A är klar:** ett helt normalt pass — samma övningar som förra gången,
+liknande vikter — ska gå att logga **utan att tangentbordet öppnas en enda gång**, och med
+färre tryck än i Hevy för samma pass.
+
+### 8.2 DEL B: vad den visuella poleringen ska omfatta
 
 Formulerat som krav, inte som smak, så att det går att avgöra när det är klart:
 
