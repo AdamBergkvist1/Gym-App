@@ -309,3 +309,31 @@ describe('4.13 regressionsvakter — det som redan fungerade får inte gå sönd
     expect(r.unresolved[0]!.attemptedName).toBe('blaha');
   });
 });
+
+describe('4.13 vakterna mot orimliga former', () => {
+  const avvisas: Array<[string, string]> = [
+    ['bänk 90x5x3.5', 'set måste vara ett heltal'],
+    ['bänk 90x0', 'noll reps'],
+    ['bänk 90x5.5', 'reps måste vara heltal'],
+    ['3x8.5 bänk 60', 'brutna reps i set×reps-formen'],
+    ['3.5x8 bänk 60', 'brutet antal set'],
+    ['bänk 90x5 85x5 80x5 75x5 70x5 65x5 60x5 55x5 50x5 45x5 40x5 35x5', 'för många par'],
+    ['bänk 90 5 85', 'tre tal utan känd form'],
+    ['bänk 90x5x3x2x4', 'fem tal'],
+  ];
+
+  for (const [input, vad] of avvisas) {
+    it(`${JSON.stringify(input.slice(0, 40))} → ambiguous_numbers (${vad})`, () => {
+      const r = parseSetText(input, ctx());
+      expect(r.sets, 'inget set får skapas').toHaveLength(0);
+      expect(r.unresolved[0]!.reason).toBe('ambiguous_numbers');
+      // Skälet ska gå att visa för användaren, inte bara loggas.
+      expect(r.unresolved[0]!.hint).toBeTruthy();
+    });
+  }
+
+  it('accepterar exakt tio set men inte elva', () => {
+    expect(parseSetText('bänk 90x5x10', ctx()).sets).toHaveLength(10);
+    expect(parseSetText('bänk 90x5x11', ctx()).sets).toHaveLength(0);
+  });
+});

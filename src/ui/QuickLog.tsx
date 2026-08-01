@@ -27,7 +27,8 @@ const REASON_TEXT: Record<UnresolvedReason, string> = {
 };
 
 interface Draft {
-  set: ParsedSet;
+  /** Alla set raden gav. `90x5x3` ger tre. */
+  sets: ParsedSet[];
   weight: string;
   reps: string;
 }
@@ -68,19 +69,23 @@ export function QuickLog({
       return;
     }
 
-    const parsed = result.sets[0];
-    if (!parsed) return;
+    const parsed = result.sets;
+    if (parsed.length === 0) return;
 
     setProblem(null);
 
-    if (parsed.confidence === 'low') {
-      setDraft({ set: parsed, weight: String(parsed.weightKg), reps: String(parsed.reps) });
+    // Räcker att ETT set är tvetydigt för att fråga om hela raden — de delar
+    // ändå tolkning, och att spara hälften vore värre än att fråga en gång.
+    const första = parsed[0]!;
+    if (parsed.some((s) => s.confidence === 'low')) {
+      setDraft({ sets: parsed, weight: String(första.weightKg), reps: String(första.reps) });
       return;
     }
 
     setBusy(true);
     try {
-      await onLog(parsed);
+      // I ordning, så att setIndex blir rätt.
+      for (const s of parsed) await onLog(s);
       setText('');
       setDraft(null);
     } finally {
@@ -94,9 +99,17 @@ export function QuickLog({
     const reps = Number(draft.reps);
     if (!Number.isFinite(weight) || !Number.isInteger(reps) || reps <= 0) return;
 
+    const första = draft.sets[0]!;
+    // Rörde användaren fälten gäller den rättelsen hela raden. Rörde hen dem
+    // inte behåller varje set sina egna värden — annars hade "90x5 85x5" blivit
+    // två likadana set så fort man bekräftade.
+    const ändrad = weight !== första.weightKg || reps !== första.reps;
+
     setBusy(true);
     try {
-      await onLog({ ...draft.set, weightKg: weight, reps, confidence: 'high' });
+      for (const s of draft.sets) {
+        await onLog(ändrad ? { ...s, weightKg: weight, reps, confidence: 'high' } : s);
+      }
       setText('');
       setDraft(null);
     } finally {
@@ -170,8 +183,9 @@ export function QuickLog({
       {draft && (
         <div className="mt-2 rounded-lg border border-amber-700/60 bg-amber-950/30 p-3">
           <p className="text-sm">
-            Är det <strong>{draft.set.exerciseName}</strong>, {draft.weight} kg × {draft.reps}{' '}
-            reps?
+            Är det <strong>{draft.sets[0]!.exerciseName}</strong>, {draft.weight} kg ×{' '}
+            {draft.reps} reps
+            {draft.sets.length > 1 && <> — {draft.sets.length} set</>}?
           </p>
           <p className="mt-1 text-xs text-[var(--color-dim)]">
             Talen är tvetydiga när ingen enhet skrivs ut. Rätta om det blev fel.

@@ -285,28 +285,37 @@ historiken och går att granska i efterhand.
 
 **Fas 4 verifierad:** 59 tester gröna, `npm run typecheck` och `npm run lint` rena.
 
-- [ ] **4.13 TRIMMA GRAMMATIKEN FÖR GYM-SLANG.** Upptäckt 2026-07-31 vid Adams första
-      riktiga pass: parsern klarar `Bänk 90x5` men **inte `80x7 bänk`**. Det är inte ett
-      gränsfall — det är så folk skriver mitt i ett set. Varje sådan miss undergräver hela
-      premissen att fritext ska vara snabbare än att fylla i fält.
+- [x] **4.13 GRAMMATIKEN TRIMMAD FÖR GYM-SLANG. Klar 2026-08-01.** Hela korpusen grön:
+      `80x7 bänk`, `90kg 5r bänkpress`, `100 kg 3 reps knäböj`, `3x8 bänk 60`,
+      `bänk 90x5x3` (tre set), `bänk 90x5 85x5` (två set).
 
-      **Testdrivet som fas 4 i övrigt:** korpusen nedan skrivs som röda tester först.
+      **Grammatiken skrevs om, inte lappades.** Den gamla var ETT regex förankrat i båda
+      ändar — det fungerade så länge inmatningen såg ut som `bänk 90x5`, men ett ankrat
+      mönster förutsätter en fast ordning och kunde därför aldrig hantera att övningsnamnet
+      flyttar sig. Ersatt av en tokeniserare (`tokenize.ts`) plus formtolkning (`shapes.ts`).
 
-      | Indata | Vad som saknas i dag |
-      | :---- | :---- |
-      | `80x7 bänk` | vikt/reps **före** övningen |
-      | `bänk 90 5` | fungerar redan — regressionsvakt |
-      | `90kg 5r bänkpress` | omvänd ordning med enheter |
-      | `bänk 90x5x3` | i dag `ambiguous_numbers`; borde bli 3 set à 90×5 |
-      | `3x8 bänk 60` | set×reps-notation följt av vikt |
-      | `bänk 90x5 90x5` | två set på en rad |
-      | `bp 100x3` | kortalias fungerar redan — regressionsvakt |
+      **Nyckelinsikten: formen läses ur HUR talen satt ihop, inte ur deras storlek.**
+      En magnitudregel ("det största talet är vikten") ser klok ut och går sönder direkt på
+      `20x30x2` — där är 30 störst men är repsen. Kopplingen mellan talen (`x`, blanksteg,
+      eller text emellan) är entydig där magnituden gissar:
+      `90x5x3` är en x-kedja → vikt × reps × set. `3x8 bänk 60` har övningsnamnet emellan →
+      set × reps, sedan vikt. `90x5 85x5` är två x-par skilda av blanksteg → två set.
 
-      **Regeln som inte får luckras upp:** hellre `unresolved` än en gissning. Att stödja
-      omvänd ordning får inte göra `20x30` mindre tvetydig — den ska fortfarande be om
-      bekräftelse. Konfidensregeln i §4.9 gäller oförändrat.
-      **Klart när:** hela korpusen är grön och de 6 avvisningsfallen från 4.7 fortfarande
-      avvisas.
+      **Regeln som inte luckrades upp:** `20x30` och `5x5` ger fortfarande låg konfidens och
+      ber om bekräftelse — det finns egna regressionsvakter för båda. Samtliga sex
+      avvisningsfall från 4.7 avvisas fortfarande.
+
+      **En medveten specändring:** `bänk 90x5x3` flyttades från avvisningslistan till de
+      positiva fallen. Den ersattes där av `90x5x3x2`, som inte är någon känd form.
+
+      **Nya vakter:** högst 10 set per rad, heltalskrav på både reps och antal set, och
+      `hint` på varje avvisning så att skälet går att visa för användaren i stället för att
+      bara loggas.
+
+      **Verifierat:** 83 parsertester, **91,8 % grenäckning** på `src/parser/` (kravet är 90).
+      UI:t loggar nu alla set från en rad i ordning — och rättar man siffrorna i
+      bekräftelserutan gäller rättelsen hela raden, medan orörda fält behåller varje sets
+      egna värden, så att `90x5 85x5` inte kollapsar till två likadana set.
 
 🚧 **GRIND 3 — ÖPPNAD 2026-07-31.** UI får anropa parsern.
 
