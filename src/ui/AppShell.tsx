@@ -19,7 +19,13 @@ const TABS = [
 export function AppShell() {
   return (
     <div className="flex h-[100dvh] flex-col">
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 pt-[env(safe-area-inset-top)]">
+      {/*
+        `overflow-x-hidden` är ett skyddsnät, inte en lösning: ingen vy ska
+        kunna bli bredare än skärmen. Men när det ändå händer ska sidan inte
+        gå att dra i sidled — då blir felet synligt som avklippt innehåll i
+        stället för att gömma sig bakom en horisontell scroll.
+      */}
+      <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto max-w-lg py-4">
           <div className="mb-2 flex justify-end">
             <SyncStatus compact />

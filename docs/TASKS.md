@@ -750,3 +750,40 @@ nuvarande.
       **Klart när:** e1RM räknas med en personlig parameter när underlaget räcker, och
       faller tillbaka på Epley när det inte gör det — med skillnaden **synlig i UI:t**, så
       att en anpassad siffra aldrig förväxlas med en antagen.
+
+---
+
+## Fas 11A — efterjustering 2026-08-01 (layoutbugg + rullhjul)
+
+Adam stresstestade 11A på iPhone och hittade två fel. Båda var mina.
+
+- [x] **11A.8 Layoutbuggen — setraden klipptes av på mobilskärm.** Repsens `+` hamnade
+      utanför skärmen och ta-bort-krysset syntes inte alls i porträttläge.
+
+      **Rotorsak:** raden hade åtta tryckytor (−/värde/+ för vikt, −/värde/+ för reps,
+      bekräfta, ta bort). Det får inte plats på 375 px, och jag skrev själv i förra
+      överlämningen att raden var trång — men shippade ändå. Det var fel; en känd risk som
+      inte mäts är inte hanterad.
+
+      **Fixen är inte mindre knappar utan färre.** Raden har nu **tre element**: setnummer,
+      värde, bekräfta. Bara värdeknappen växer (`flex-1 min-w-0`), resten har fast bredd.
+      Räknat på iPhone SE: 100 px fast, **249 px kvar** till värdeknappen — den kan inte
+      klippas. `overflow-x-hidden` på skalet är ett skyddsnät så att ett framtida fel syns
+      som avklippt innehåll i stället för att gömma sig bakom en sidledsscroll.
+- [x] **11A.9 Rullhjul i stället för klumpiga steg.** Fasta 2,5 kg-steg är fel för hantlar,
+      och sjutton tryck för att gå från 20 till 62,5 är inte ett gränssnitt.
+
+      **`SetAdjustSheet`** — bottenark som öppnas genom att trycka på värdet i raden.
+      Vikten har **ett hjul per siffra** (100-tal, 10-tal, 1-tal, halvkilo) precis som Adam
+      bad om, så 20 → 62,5 är två drag. Entalshjulet ger 1 kg-finjustering för hantlar.
+      ±1 och ±2,5 finns kvar för den som bara vill nudga.
+
+      **Hjulen är byggda med `scroll-snap`, inte ett bibliotek.** Webbläsarens egen
+      scrollning ger tröghet, studs och rätt känsla på iOS gratis — ett JS-drivet hjul
+      känns alltid som en imitation och hade lagt hundratals kB på en redan stor bundle.
+
+      Sifferaritmetiken ligger i `src/lib/digits.ts` med **10 egna tester**, eftersom det är
+      precis den sortens kod som ser trivial ut och går sönder på 92,5 eller 0,5.
+
+**Verifierat:** 234 tester, typecheck, lint och bygge gröna. Breddbudgeten är uträknad.
+**Inte verifierat:** hur det ser ut och känns i Safari — det är Adams test.

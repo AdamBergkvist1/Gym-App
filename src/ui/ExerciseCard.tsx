@@ -1,21 +1,24 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { SetRow } from './SetRow';
+import { SetAdjustSheet } from './SetAdjustSheet';
+import { getLastPerformance } from '../db/repo';
 import type { PlannedExercise } from '../db/plan';
 import type { LocalExercise } from '../db/types';
 
 /**
- * En övning i passet, som kort. Uppgift 11A.2.
+ * En övning i passet, som kort. Uppgift 11A.2 och 11A.5.
  *
- * Kortet är passets struktur: övningsnamn, dess set som rader, och en
- * "+ Lägg till set". Byt-knappen är 11A.5 — är utrustningen upptagen ska man
- * kunna byta övning och få den nyas historik direkt.
+ * Kortet äger justeringsarket för sina rader — det behöver övningens namn och
+ * ska bara finnas i ett exemplar åt gången.
  */
 
 interface Props {
   planned: PlannedExercise;
   exercise: LocalExercise | undefined;
-  onChangeSet: (setId: string, patch: { weightKg?: number; reps?: number }) => void;
+  workoutId: string;
+  onChangeSet: (setId: string, patch: { weightKg?: number; reps?: number; isWarmup?: boolean }) => void;
   onConfirmSet: (setId: string) => void;
   onUnconfirmSet: (setId: string) => void;
   onRemoveSet: (setId: string) => void;
@@ -27,6 +30,7 @@ interface Props {
 export function ExerciseCard({
   planned,
   exercise,
+  workoutId,
   onChangeSet,
   onConfirmSet,
   onUnconfirmSet,
@@ -36,7 +40,16 @@ export function ExerciseCard({
   onSwapExercise,
 }: Props) {
   const [meny, setMeny] = useState(false);
+  const [justerar, setJusterar] = useState<string | null>(null);
+
+  const ghost = useLiveQuery(
+    () => getLastPerformance(planned.exerciseId, { excludeWorkoutId: workoutId }),
+    [planned.exerciseId, workoutId],
+    null
+  );
+
   const klara = planned.sets.filter((s) => s.loggedSetId !== null).length;
+  const aktivt = planned.sets.find((s) => s.id === justerar);
 
   return (
     <section className="overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]">
@@ -45,6 +58,7 @@ export function ExerciseCard({
           <h2 className="truncate font-semibold">{exercise?.name ?? 'Okänd övning'}</h2>
           <p className="text-xs text-[var(--color-dim)] tabular-nums">
             {klara} av {planned.sets.length} set
+            {ghost && ` · sist ${ghost.weightKg} kg × ${ghost.reps}`}
           </p>
         </div>
         <button
@@ -52,7 +66,7 @@ export function ExerciseCard({
           onClick={() => setMeny((v) => !v)}
           aria-label={`Fler val för ${exercise?.name ?? 'övningen'}`}
           aria-expanded={meny}
-          className="h-12 w-10 min-h-0 text-[var(--color-dim)]"
+          className="h-12 w-10 min-h-0 shrink-0 text-[var(--color-dim)]"
         >
           ⋯
         </button>
@@ -60,8 +74,7 @@ export function ExerciseCard({
 
       {meny && (
         <div className="flex flex-wrap gap-2 border-b border-[var(--color-line)] px-3 pb-2">
-          {/* 11A.5 — byt övning på två tryck. Historiken följer med automatiskt,
-              eftersom den nya övningens spökdata hämtas när den läggs till. */}
+          {/* 11A.5 — byt övning på två tryck. Historiken följer med automatiskt. */}
           <button
             type="button"
             onClick={() => {
@@ -88,7 +101,7 @@ export function ExerciseCard({
             }}
             className="min-h-0 rounded-md border border-[var(--color-line)] px-3 py-1.5 text-sm text-amber-400"
           >
-            Ta bort
+            Ta bort övning
           </button>
         </div>
       )}
@@ -99,10 +112,10 @@ export function ExerciseCard({
             key={s.id}
             index={i}
             set={s}
-            onChange={(patch) => onChangeSet(s.id, patch)}
+            ghost={ghost ? { weightKg: ghost.weightKg, reps: ghost.reps } : null}
+            onOpenAdjust={() => setJusterar(s.id)}
             onConfirm={() => onConfirmSet(s.id)}
             onUnconfirm={() => onUnconfirmSet(s.id)}
-            onRemove={() => onRemoveSet(s.id)}
           />
         ))}
       </ul>
@@ -114,6 +127,22 @@ export function ExerciseCard({
       >
         + Lägg till set
       </button>
+
+      {aktivt && (
+        <SetAdjustSheet
+          exerciseName={exercise?.name ?? 'Övning'}
+          setNumber={planned.sets.findIndex((s) => s.id === aktivt.id) + 1}
+          weightKg={aktivt.weightKg}
+          reps={aktivt.reps}
+          isWarmup={aktivt.isWarmup}
+          onChange={(patch) => onChangeSet(aktivt.id, patch)}
+          onRemove={() => {
+            onRemoveSet(aktivt.id);
+            setJusterar(null);
+          }}
+          onClose={() => setJusterar(null)}
+        />
+      )}
     </section>
   );
 }

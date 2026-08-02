@@ -183,6 +183,7 @@ export function TodayPage() {
           key={pe.exerciseId}
           planned={pe}
           exercise={exerciseMap.get(pe.exerciseId)}
+          workoutId={workout.id}
           onChangeSet={(setId, patch) =>
             void updatePlannedSet(workout.id, pe.exerciseId, setId, patch)
           }

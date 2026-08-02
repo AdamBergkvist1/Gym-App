@@ -1,64 +1,41 @@
-import { useState } from 'react';
-import { formatWeight, parseRepsInput, parseWeightInput, stepReps, stepWeight } from '../lib/steps';
+import { formatWeight } from '../lib/steps';
 import type { PlannedSet } from '../db/plan';
 
 /**
- * En setrad. Uppgift 11A.2 och 11A.3 — kärnan i hela det manuella flödet.
+ * En setrad. Uppgift 11A.2, omgjord 2026-08-01.
  *
- * RITNINGEN: loggade du 90×5 förra gången ska ett tryck på repsens `+` räcka
- * för att logga 90×6. Tangentbordet ska aldrig behöva öppnas för ett normalt
- * pass. Vill du göra ett stort hopp (90 → 120) trycker du på SIFFRAN och får
- * ett numeriskt tangentbord — men stegarna är primära.
+ * VARFÖR DEN GJORDES OM: den första versionen hade −/värde/+ för både vikt och
+ * reps, plus bekräfta och ta bort — åtta tryckytor på en rad. Det fick inte
+ * plats på en iPhone i porträttläge; repsens `+` hamnade utanför skärmen och
+ * kryssknappen syntes inte alls.
  *
- * Spökdata visas dämpad tills den rörts eller bockats av. Härledd data ska
- * aldrig se ut som inmatad data.
+ * Fixen är inte mindre knappar. **Raden har nu tre element** — nummer, värde,
+ * bekräfta — och all justering ligger i ett bottenark (`SetAdjustSheet`). Det
+ * är också hur Hevy och Strong gör: raden är till för att läsa och bocka av,
+ * inte för att mecka i.
+ *
+ * Layouten kan inte klippas: värdeknappen är den enda som får växa (`flex-1`,
+ * `min-w-0`), resten har fast bredd.
  */
 
 interface Props {
   index: number;
   set: PlannedSet;
-  onChange: (patch: { weightKg?: number; reps?: number }) => void;
+  /** Vad som lyftes senast i övningen — visas som jämförelse. */
+  ghost: { weightKg: number; reps: number } | null;
+  onOpenAdjust: () => void;
   onConfirm: () => void;
   onUnconfirm: () => void;
-  onRemove: () => void;
 }
 
-/** Stor tryckyta. 48 px är golvet, och fingrarna är svettiga. */
-const STEP_BTN =
-  'flex h-12 w-11 shrink-0 items-center justify-center rounded-md border ' +
-  'border-[var(--color-line)] text-xl leading-none select-none active:opacity-60';
-
-export function SetRow({ index, set, onChange, onConfirm, onUnconfirm, onRemove }: Props) {
-  const [editing, setEditing] = useState<'weight' | 'reps' | null>(null);
-  const [draft, setDraft] = useState('');
-
+export function SetRow({ index, set, ghost, onOpenAdjust, onConfirm, onUnconfirm }: Props) {
   const confirmed = set.loggedSetId !== null;
-
-  function startEdit(field: 'weight' | 'reps') {
-    if (confirmed) return;
-    setEditing(field);
-    setDraft(field === 'weight' ? formatWeight(set.weightKg) : String(set.reps));
-  }
-
-  function commitEdit() {
-    if (editing === 'weight') {
-      const v = parseWeightInput(draft);
-      // Ogiltig inmatning behåller det gamla värdet. Att tolka skräp som noll
-      // vore att skriva data ingen matat in.
-      if (v !== null) onChange({ weightKg: v });
-    } else if (editing === 'reps') {
-      const v = parseRepsInput(draft);
-      if (v !== null) onChange({ reps: v });
-    }
-    setEditing(null);
-  }
-
   const dämpad = set.fromGhost && !confirmed;
 
   return (
     <li
       className={[
-        'flex items-center gap-1.5 border-b border-[var(--color-line)] px-2 py-1.5 last:border-b-0',
+        'flex items-center gap-2 border-b border-[var(--color-line)] px-2 py-1.5 last:border-b-0',
         confirmed ? 'bg-emerald-950/40' : '',
       ].join(' ')}
     >
@@ -66,103 +43,31 @@ export function SetRow({ index, set, onChange, onConfirm, onUnconfirm, onRemove 
         {index + 1}
       </span>
 
-      {/* ---- vikt ---- */}
-      {!confirmed && (
-        <button
-          type="button"
-          aria-label={`Minska vikten för set ${index + 1}`}
-          onClick={() => onChange({ weightKg: stepWeight(set.weightKg, -1) })}
-          className={STEP_BTN}
-        >
-          −
-        </button>
-      )}
-      {editing === 'weight' ? (
-        <input
-          autoFocus
-          inputMode="decimal"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commitEdit}
-          onKeyDown={(e) => e.key === 'Enter' && commitEdit()}
-          aria-label="Vikt i kg"
-          className="h-12 w-16 min-h-0 rounded-md border border-[var(--color-fg)] bg-[var(--color-bg)] text-center text-lg tabular-nums"
-        />
-      ) : (
-        <button
-          type="button"
-          onClick={() => startEdit('weight')}
-          aria-label={`Vikt ${formatWeight(set.weightKg)} kilo, tryck för att skriva in`}
-          className={[
-            'h-12 w-16 min-h-0 shrink-0 rounded-md text-lg tabular-nums',
-            dämpad ? 'text-[var(--color-dim)]' : '',
-          ].join(' ')}
-        >
+      {/* Enda elementet som får växa. Hela ytan öppnar justeringen. */}
+      <button
+        type="button"
+        onClick={onOpenAdjust}
+        aria-label={`Justera set ${index + 1}: ${formatWeight(set.weightKg)} kilo gånger ${set.reps} reps`}
+        className="flex min-w-0 flex-1 items-baseline gap-1.5 rounded-md px-1 text-left active:bg-[var(--color-bg)]"
+      >
+        <span className={`text-xl tabular-nums ${dämpad ? 'text-[var(--color-dim)]' : ''}`}>
           {formatWeight(set.weightKg)}
-        </button>
-      )}
-      {!confirmed && (
-        <button
-          type="button"
-          aria-label={`Öka vikten för set ${index + 1}`}
-          onClick={() => onChange({ weightKg: stepWeight(set.weightKg, 1) })}
-          className={STEP_BTN}
-        >
-          +
-        </button>
-      )}
-
-      <span className="shrink-0 text-xs text-[var(--color-dim)]">×</span>
-
-      {/* ---- reps ---- */}
-      {!confirmed && (
-        <button
-          type="button"
-          aria-label={`Minska reps för set ${index + 1}`}
-          onClick={() => onChange({ reps: stepReps(set.reps, -1) })}
-          className={STEP_BTN}
-        >
-          −
-        </button>
-      )}
-      {editing === 'reps' ? (
-        <input
-          autoFocus
-          inputMode="numeric"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commitEdit}
-          onKeyDown={(e) => e.key === 'Enter' && commitEdit()}
-          aria-label="Antal reps"
-          className="h-12 w-12 min-h-0 rounded-md border border-[var(--color-fg)] bg-[var(--color-bg)] text-center text-lg tabular-nums"
-        />
-      ) : (
-        <button
-          type="button"
-          onClick={() => startEdit('reps')}
-          aria-label={`${set.reps} reps, tryck för att skriva in`}
-          className={[
-            'h-12 w-12 min-h-0 shrink-0 rounded-md text-lg tabular-nums',
-            dämpad ? 'text-[var(--color-dim)]' : '',
-          ].join(' ')}
-        >
+        </span>
+        <span className="text-xs text-[var(--color-dim)]">kg</span>
+        <span className="text-xs text-[var(--color-dim)]">×</span>
+        <span className={`text-xl tabular-nums ${dämpad ? 'text-[var(--color-dim)]' : ''}`}>
           {set.reps}
-        </button>
-      )}
-      {!confirmed && (
-        <button
-          type="button"
-          aria-label={`Öka reps för set ${index + 1}`}
-          onClick={() => onChange({ reps: stepReps(set.reps, 1) })}
-          className={STEP_BTN}
-        >
-          +
-        </button>
-      )}
+        </span>
+        {set.isWarmup && <span className="text-xs text-[var(--color-dim)]">uppv</span>}
 
-      <span className="flex-1" />
+        {/* Förra gången, när den skiljer sig — jämförelsen är hela poängen. */}
+        {ghost && !confirmed && (ghost.weightKg !== set.weightKg || ghost.reps !== set.reps) && (
+          <span className="truncate text-xs text-[var(--color-dim)] tabular-nums">
+            (sist {formatWeight(ghost.weightKg)}×{ghost.reps})
+          </span>
+        )}
+      </button>
 
-      {/* ---- bekräfta ---- */}
       <button
         type="button"
         onClick={confirmed ? onUnconfirm : onConfirm}
@@ -177,17 +82,6 @@ export function SetRow({ index, set, onChange, onConfirm, onUnconfirm, onRemove 
       >
         ✓
       </button>
-
-      {!confirmed && (
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={`Ta bort set ${index + 1}`}
-          className="h-12 w-7 min-h-0 shrink-0 text-[var(--color-dim)]"
-        >
-          ×
-        </button>
-      )}
     </li>
   );
 }
