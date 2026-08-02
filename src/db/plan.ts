@@ -250,6 +250,53 @@ export async function confirmPlannedSet(
   return { plan: next, loggedSetId: loggat.id };
 }
 
+/**
+ * Kopplar ett REDAN loggat set till planen, som en färdigbockad rad.
+ *
+ * Fritext- och AI-vägen skriver direkt till `loggedSets` utan att gå via
+ * planen. Utan den här funktionen hamnar setet i databasen men syns aldrig i
+ * passvyn — det ser ut som dataförlust fast det bara är osynlighet, vilket är
+ * ett värre fel eftersom man då loggar om samma set.
+ *
+ * Planen är visningsmodellen. Allt som loggas i ett pass ska finnas i den.
+ */
+export async function attachLoggedSetToPlan(
+  workoutId: string,
+  input: {
+    exerciseId: string;
+    loggedSetId: string;
+    weightKg: number;
+    reps: number;
+    isWarmup?: boolean;
+  },
+  database: GymDatabase = db
+): Promise<WorkoutPlan> {
+  const plan = await getPlan(workoutId, database);
+
+  const rad: PlannedSet = {
+    id: newId(),
+    weightKg: input.weightKg,
+    reps: input.reps,
+    isWarmup: input.isWarmup ?? false,
+    loggedSetId: input.loggedSetId,
+    fromGhost: false,
+  };
+
+  const finns = plan.exercises.some((e) => e.exerciseId === input.exerciseId);
+
+  return save(
+    {
+      ...plan,
+      exercises: finns
+        ? plan.exercises.map((e) =>
+            e.exerciseId === input.exerciseId ? { ...e, sets: [...e.sets, rad] } : e
+          )
+        : [...plan.exercises, { exerciseId: input.exerciseId, sets: [rad] }],
+    },
+    database
+  );
+}
+
 /** Ångra en avbockning. Setet mjukraderas och raden blir redigerbar igen. */
 export async function unconfirmPlannedSet(
   workoutId: string,

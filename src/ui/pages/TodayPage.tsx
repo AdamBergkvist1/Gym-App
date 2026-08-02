@@ -11,6 +11,7 @@ import {
 } from '../../db/repo';
 import {
   addExerciseToPlan,
+  attachLoggedSetToPlan,
   addSetToPlan,
   clearPlan,
   confirmPlannedSet,
@@ -69,7 +70,7 @@ export function TodayPage() {
     .map((e) => ({ id: e.id, name: e.name, normalizedName: e.normalizedName, aliases: e.aliases }));
 
   // ---- fritext (11A.7: genväg, inte huvudväg) ----
-  async function handleParsedLog(parsed: ParsedSet) {
+  async function handleParsedLog(parsed: ParsedSet, fromAi: boolean) {
     if (!workout) throw new Error('inget aktivt pass');
     const row = await logSet(
       {
@@ -80,10 +81,20 @@ export function TodayPage() {
         effortType: parsed.effortType,
         effortValue: parsed.effortValue,
         note: parsed.note,
-        source: 'local_parse',
+        // Ett AI-tolkat set får inte bokföras som lokalt tolkat — då blir
+        // träffsäkerhetsjämförelsen i 8.10 meningslös.
+        source: fromAi ? 'ai_parse' : 'local_parse',
       },
       db
     );
+    // Planen är visningsmodellen. Utan detta hamnar setet i databasen men
+    // syns aldrig i passvyn.
+    await attachLoggedSetToPlan(workout.id, {
+      exerciseId: parsed.exerciseId,
+      loggedSetId: row.id,
+      weightKg: parsed.weightKg,
+      reps: parsed.reps,
+    });
     void startRestTimer(DEFAULT_REST_SECONDS, row.id);
     return row;
   }

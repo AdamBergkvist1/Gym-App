@@ -45,7 +45,7 @@ interface Props {
   exercises: ExerciseRef[];
   unitPreference: 'kg' | 'lb';
   defaultEffortScale: 'rir' | 'rpe';
-  onLog: (set: ParsedSet) => Promise<LocalSet>;
+  onLog: (set: ParsedSet, fromAi: boolean) => Promise<LocalSet>;
   /** Uppgift 5.9 — skapar övningen och låter användaren logga direkt efteråt. */
   onCreateExercise: (name: string) => Promise<void>;
 }
@@ -140,7 +140,7 @@ export function QuickLog({
     setBusy(true);
     try {
       // I ordning, så att setIndex blir rätt.
-      for (const s of parsed) await onLog(s);
+      for (const s of parsed) await onLog(s, false);
       // Sparat orört, utan att användaren behövt röra något: accepted.
       await setParseOutcome(logId, 'accepted');
       setText('');
@@ -167,7 +167,7 @@ export function QuickLog({
       const sparade = draft.sets.map((s) =>
         ändrad ? { ...s, weightKg: weight, reps, confidence: 'high' as const } : s
       );
-      for (const s of sparade) await onLog(s);
+      for (const s of sparade) await onLog(s, draft.fromAi === true);
 
       // 8.11: rörde användaren siffrorna hade parsern fel — och exakt VAD som
       // blev rätt sparas, så att felen går att analysera och inte bara räknas.

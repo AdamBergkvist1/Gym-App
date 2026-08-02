@@ -4,6 +4,7 @@ import { createTestDb, type GymDatabase } from './db';
 import { endWorkout, ensureCatalog, logSet, startWorkout } from './repo';
 import {
   addExerciseToPlan,
+  attachLoggedSetToPlan,
   addSetToPlan,
   confirmPlannedSet,
   copyWorkoutIntoPlan,
@@ -247,5 +248,57 @@ describe('planen är arbetsyta, inte data', () => {
 
     // Bara passet självt ska ha köats, ingenting från planen.
     expect((await db.outbox.toArray()).length).toBe(före);
+  });
+});
+
+describe('11A.10 fritext- och AI-set måste synas i passvyn', () => {
+  it('kopplar ett redan loggat set till planen', async () => {
+    const w = await startWorkout(db);
+    const loggat = await logSet(
+      { workoutId: w.id, exerciseId: BENK, weightKg: 95, reps: 5, source: 'ai_parse' },
+      db
+    );
+
+    const plan = await attachLoggedSetToPlan(
+      w.id,
+      { exerciseId: BENK, loggedSetId: loggat.id, weightKg: 95, reps: 5 },
+      db
+    );
+
+    // Utan detta hamnar setet i databasen men syns aldrig — det ser ut som
+    // dataförlust fast det bara är osynlighet, vilket är värre eftersom man
+    // då loggar om samma set.
+    expect(plan.exercises).toHaveLength(1);
+    const rad = plan.exercises[0]!.sets[0]!;
+    expect(rad.loggedSetId).toBe(loggat.id);
+    expect(rad.weightKg).toBe(95);
+    expect(rad.fromGhost).toBe(false);
+  });
+
+  it('lägger till i en övning som redan finns i planen', async () => {
+    const w = await startWorkout(db);
+    await addExerciseToPlan(w.id, BENK, db);
+    const före = (await getPlan(w.id, db)).exercises[0]!.sets.length;
+
+    const loggat = await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 95, reps: 5 }, db);
+    const plan = await attachLoggedSetToPlan(
+      w.id,
+      { exerciseId: BENK, loggedSetId: loggat.id, weightKg: 95, reps: 5 },
+      db
+    );
+
+    expect(plan.exercises).toHaveLength(1); // ingen dubblettövning
+    expect(plan.exercises[0]!.sets).toHaveLength(före + 1);
+  });
+
+  it('skapar övningen i planen när fritexten nämner en som inte lagts till', async () => {
+    const w = await startWorkout(db);
+    const loggat = await logSet({ workoutId: w.id, exerciseId: KNABOJ, weightKg: 100, reps: 5 }, db);
+    const plan = await attachLoggedSetToPlan(
+      w.id,
+      { exerciseId: KNABOJ, loggedSetId: loggat.id, weightKg: 100, reps: 5 },
+      db
+    );
+    expect(plan.exercises[0]!.exerciseId).toBe(KNABOJ);
   });
 });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { SetRow } from './SetRow';
+import { SetRow, SET_GRID } from './SetRow';
 import { SetAdjustSheet } from './SetAdjustSheet';
 import { getLastPerformance } from '../db/repo';
 import type { PlannedExercise } from '../db/plan';
@@ -105,6 +105,28 @@ export function ExerciseCard({
           </button>
         </div>
       )}
+
+      {/*
+        Kolumnrubriker EN gång, som i referensbilden. Det är detta som gör att
+        cellerna får plats: de behöver inte upprepa "kg" och "×" på varje rad.
+      */}
+      <div
+        className={`${SET_GRID} border-y border-[var(--color-line)] bg-[var(--color-bg)]/40 px-2 py-1`}
+      >
+        <span className="text-center text-[0.65rem] tracking-wide text-[var(--color-dim)] uppercase">
+          Set
+        </span>
+        <span className="text-center text-[0.65rem] tracking-wide text-[var(--color-dim)] uppercase">
+          Förra
+        </span>
+        <span className="text-center text-[0.65rem] tracking-wide text-[var(--color-dim)] uppercase">
+          Kg
+        </span>
+        <span className="text-center text-[0.65rem] tracking-wide text-[var(--color-dim)] uppercase">
+          Reps
+        </span>
+        <span className="text-center text-[0.65rem] text-[var(--color-dim)]">✓</span>
+      </div>
 
       <ul>
         {planned.sets.map((s, i) => (

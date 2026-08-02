@@ -787,3 +787,37 @@ Adam stresstestade 11A på iPhone och hittade två fel. Båda var mina.
 
 **Verifierat:** 234 tester, typecheck, lint och bygge gröna. Breddbudgeten är uträknad.
 **Inte verifierat:** hur det ser ut och känns i Safari — det är Adams test.
+
+- [x] **11A.10 KRITISK BUGG: fritext- och AI-set syntes aldrig i passvyn.**
+      Rapporterad 2026-08-02. Adam skrev "samma som förra men 5 kg mer", AI:n räknade rätt
+      till 95 kg, han tryckte spara — och inget set dök upp. Det såg ut som dataförlust.
+
+      **Datan var aldrig borta.** Kontrollerat direkt i Postgres: `95.00 kg × 5 Bänkpress`
+      låg där, synkad. Felet var att den var **osynlig**.
+
+      **Rotorsak, och det är mitt fel från 11A:** efter ombyggnaden renderar passvyn bara
+      *planen*, men fritext- och AI-vägen skriver rakt till `loggedSets` utan att lägga något
+      i planen. Två parallella skrivvägar, bara en visningsväg. Osynlighet är värre än ett
+      synligt fel — man loggar om samma set i tron att det inte gick igenom.
+
+      **Fix:** `attachLoggedSetToPlan` kopplar ett redan loggat set till planen som en
+      färdigbockad rad. **Planen är visningsmodellen; allt som loggas i ett pass ska finnas
+      i den.** Tre regressionstester.
+- [x] **11A.11 AI-set bokfördes som `local_parse`.** Hittad i samma spår. `handleParsedLog`
+      hårdkodade källan, så varje AI-tolkat set räknades som lokalt tolkat — vilket gjorde
+      hela träffsäkerhetsjämförelsen i 8.10 meningslös innan den ens använts.
+- [x] **11A.12 Setraden byggd efter referensbilderna.** `docs/Reference-pics/`.
+
+      Mina två tidigare försök klipptes av på mobilskärm. Referensappen löser det med en
+      **tabell: fem smala kolumner och rubriker EN gång** — `Set | Förra | Kg | Reps | ✓`.
+
+      Det är inte en detalj utan hela knepet: när kolumnen är namngiven i huvudet behöver
+      cellen inte bära sin egen etikett. Mina versioner upprepade "kg" och "×" på varje rad
+      och hade steppare inline — det var det som sprängde bredden.
+
+      Spökdatan flyttade till **Förra-kolumnen**, precis som i referensen och som
+      underlaget i `docs/research/` beskrev från början. `W` i orange markerar
+      uppvärmningsset.
+
+      **Breddbudget iPhone SE:** 317 px tillgängligt, 164 px fasta kolumner, **153 px kvar**
+      till Förra-kolumnen som är den enda flexibla. Ingen kolumn kan tryckas utanför skärmen.
