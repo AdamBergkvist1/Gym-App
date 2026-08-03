@@ -58,6 +58,39 @@ används och var de går sönder — stjärnor säger inget om underhåll.
 2–3 alternativ med **licens · senaste commit · stjärnor · gzipad storlek · antal transitiva
 beroenden**. Därefter en rekommendation. Sedan väntar du på beslut.
 
+## 7.2b Licensen avgör vad som får göras — läs den FÖRST
+
+Licensen är inte en formalitet i slutet. Den avgör om koden över huvud taget får röras, och
+ska redovisas **innan** något annat diskuteras.
+
+| Licens | Vad vi får göra |
+|---|---|
+| **Unlicense, CC0, public domain** | Allt. Inga villkor |
+| **MIT, ISC, BSD, Apache-2.0** | Kopiera fritt. **Kräver att upphovsrättsraden följer med** |
+| **AGPL, GPL, LGPL** | ⛔ **KOPIERA ALDRIG KOD.** Läsa för idéer är fritt och lagligt |
+| **Ingen licens / `NOASSERTION`** | ⛔ Behandla som "alla rättigheter förbehållna". Fråga Adam |
+
+**Varför AGPL är förbjudet här:** det är copyleft med nätverksklausul. Kopieras AGPL-kod in i
+appen måste **hela appen** släppas under AGPL — inte bara den kopierade delen, och inte bara
+i dag utan för all framtid. Att repot redan är publikt är inte samma sak; AGPL hindrar oss
+också från att någonsin stänga eller sälja appen.
+
+**Gränsen som gäller:** layout, informationsarkitektur och interaktionsmönster är **inte**
+upphovsrättsskyddade. Att studera en AGPL-app och bygga något liknande själv är lagligt och
+uppmuntras. Det är att kopiera **kodrader** som utlöser villkoret.
+
+## 7.2c Härkomstregistret — `docs/EXTERNT.md`
+
+**Allt vi hämtar utifrån ska stå i `docs/EXTERNT.md`**: vad, varifrån, vilken licens, vilka
+filer hos oss det berör, och om det är kopierat eller bara läst som inspiration.
+
+Registret är inte byråkrati. Utan det går det inte att svara på frågan *"får vi göra det här
+med koden?"* om ett halvår, och då blir svaret i praktiken nej — eller värre, ett ja som ingen
+kan belägga. För MIT-licenserad kod är registret dessutom det som **uppfyller** licensvillkoret
+om attribution.
+
+**Ingen extern kod eller data committas utan en rad i registret i samma commit.**
+
 ## 7.3 Att införliva extern kod
 
 Den verkliga supply-chain-risken sitter i `npm install` — postinstall-skript kör godtycklig
