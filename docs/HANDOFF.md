@@ -1,61 +1,108 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-07-31
+**Datum:** 2026-08-03
 
 **Aktuellt läge:**
-Fas 0–7 och 9 är klara. **Appen är komplett för verklig användning**: logga, vila, synka,
-och nu se historik och personbästa. Kvar: fas 4.13 (trimma parsern), fas 8 (LLM-coachen),
-fas 10 (deploy) och fas 11 (designpolering).
+Fas 0–11A är klara. **Appen är deployad och används.** Kvar: fas 11B (designrundan),
+uppgift 10.5 (städa dubbla Vercel-projekt) samt några småuppgifter.
+
+> **Denna fil skrevs om 2026-08-03 efter en genomgång av dokumentation mot verklighet.**
+> Se §0. Föregående version var daterad 2026-07-31, påstod att fas 10 var ogjord, och
+> upprepade samma stycke tre gånger i rad.
 
 ---
 
-## 1. Fas 9 — historik och progression
+## 0. Genomgången 2026-08-03 — vad som var fel
 
-- Passlista med volym, setantal och längd. Pågående pass märks ut.
-- Övningsvy på `/ovning/:id` med alla set över tid.
-- e1RM enligt Epley som ren funktion.
-- PB-kort och en handritad SVG-sparkline.
+Adam bad om en kontroll av att repot och dokumentationen stämmer med verkligheten. Den
+gjordes, och den hittade saker. **Alla punkter nedan är mätta, inte resonerade.**
 
-**Två beslut i matematiken som bär funktionen:**
+### 0.1 Fas 10 var gjord men bokförd som ogjord
 
-**e1RM returnerar `null` över 15 reps** i stället för en siffra. Ett estimat räknat på 25
-reps ser ut som data men är brus — och brus i en progressionsgraf är värre än en lucka,
-eftersom luckan syns och bruset inte gör det. Ett singel returnerar sin egen vikt i stället
-för att räknas upp av formeln.
+`TASKS.md` hade hela fas 10 obockad. Verkligheten: **30 deployments** på GitHub, senaste
+från dagens commit. 10.1 och 10.2 var klara sedan tidigare.
 
-**Tyngsta set och bästa e1RM visas som två skilda rekord.** De är inte samma sak: 90×3 är
-tyngre på stången, men 80×8 är den starkare prestationen (e1RM 101,3 mot 99,0). Att slå ihop
-dem hade dolt exakt den insikt e1RM finns för att ge.
+**Hur 10.2 kunde verifieras utan tillgång till Vercels panel:** produktionsappen visar
+synkstatus **"Inte inloggad"**. En lokal körning utan `.env` visar i stället **"Endast
+lokalt"** och loggar *"Supabase är inte konfigurerat"*. Miljövariablerna finns alltså i
+hostingen. (Det finns ingen `.env` lokalt — därför kör dev-servern helt utan Supabase.)
+
+**Varför det spelade roll:** en plan som påstår att gjort arbete är ogjort får nästa
+session att bygga om något som redan fungerar.
+
+### 0.2 🚩 Två Vercel-projekt mot samma repo — ett serverar fel sida
+
+| Projekt | Adress | Innehåll |
+|---|---|---|
+| `adam-gym-app` | **https://adam-gym-app.vercel.app** | ✅ Appen |
+| `gym-app` | `gym-app-gold-psi-81.vercel.app` | ❌ `test/feedback-test.html` — larmtestet från fas 0 |
+
+Fel adress stod som repots `homepageUrl` på GitHub. **Rättad 2026-08-03.**
+
+**Varför det inte är kosmetiskt:** installeras PWA:n från fel adress hamnar larmtestet på
+hemskärmen och det ser ut som att appen är trasig. Två produktionsadresser ger dessutom
+**två servicearbetare och två separata IndexedDB-lagringar** — ett pass loggat i fel flik
+hamnar i en databas man sedan inte hittar. Samma sorts tysta fel som 11A.10.
+
+Åtgärd ligger som **uppgift 10.5** och kräver Adam, eftersom Vercels panel inte går att nå
+härifrån.
+
+### 0.3 Advisorns `rls_auto_enable` — nu mätt, inte antagen
+
+Tidigare överlämningar avfärdade varningen som "medveten". Det räckte inte som underlag, så
+den testades:
+
+```
+BLOCKERAT AV POSTGRES: trigger functions can only be called as triggers
+```
+
+Funktionen returnerar `event_trigger` och **går inte att anropa via RPC**, oavsett vilka
+EXECUTE-rättigheter `anon` har. Resonemanget i migration `0002` var alltså korrekt hela
+tiden — men det var ett resonemang, och nu är det en mätning. Varningen är en falsk positiv.
+
+### 0.4 Migration 0003 ÄR körd i produktion
+
+Föregående överlämning varnade i fetstil att den måste köras. Verifierat på två sätt:
+`apply_mutations` innehåller `ai_parse_log`-grenen, och tabellen har **2 rader** — data har
+alltså tagit sig hela vägen genom synkvägen. Varningen är inte längre aktuell och är borttagen.
+
+`list_migrations` returnerar tom lista: migrationerna kördes manuellt i SQL-editorn, inte
+via CLI:n. Det är inget fel, men det betyder att **migrationsfilerna i repot inte automatiskt
+speglar databasen** — de måste jämföras för hand.
+
+### 0.5 Siffror som var inaktuella
+
+| Påstående | Verkligt värde |
+|---|---|
+| "234 tester" | **237** (18 filer), plus 12 Playwright |
+| "614 kB precache" | **642,67 KiB precache**, bundle 631,54 kB rå / **189,86 kB gzip** |
+| "5 high i npm audit" | **0 sårbarheter** |
 
 ---
 
-## 2. Två åtaganden som nu står utskrivna
+## 1. Databasen — verifierad 2026-08-03
 
-Efter ditt första riktiga pass, inskrivna så att de inte kan glömmas:
+| Tabell | Rader | RLS |
+|---|---|---|
+| `profiles` | 2 | ✅ |
+| `exercises` | 45 | ✅ |
+| `workouts` | 6 | ✅ |
+| `logged_sets` | 12 | ✅ |
+| `sync_mutations` | 28 | ✅ |
+| `ai_parse_log` | 2 | ✅ |
 
-**`PLAN.md` §4.0 + uppgift 4.13 — grammatiken måste trimmas.** Parsern klarar `Bänk 90x5`
-men inte `80x7 bänk`. Det är inte ett gränsfall utan så folk skriver mitt i ett set, och
-varje sådan miss undergräver premissen att fritext ska vara snabbare än att fylla i fält.
-Korpusen som ska klaras står i uppgiften, och den byggs testdrivet som resten av fas 4.
-Regeln som inte får luckras upp: att stödja omvänd ordning får inte göra `20x30` mindre
-tvetydig.
-
-**Fas 8 inleds nu med en ruta som säger att den SKA byggas.** Målet är uttryckligen en
-sömlös AI-coach-känsla. Den lokala grammatiken är **golvet** som gör att appen fungerar utan
-nät — inte taket. Ny uppgift **8.0**: kontraktet mot `/ai/parse` ska utökas med historik,
-för utan den blir fas 8 en andra parser i stället för en coach. Nu när fas 9 är klar finns
-inget kvar som motiverar att vänta.
+`apply_mutations` är SECURITY INVOKER och `anon` saknar EXECUTE — bara `authenticated` kan
+köra den. Det är migration `0002` som håller.
 
 ---
 
-## 3. Vilotimern — frågan är AVGJORD
+## 2. Vilotimern — frågan är AVGJORD
 
 Full analys i `PLAN.md` §2.6.1. Slutsatsen: **notisen når inte fram i bakgrunden** — men
 inte av det skäl någon av oss antog.
 
 Mätdata: två larm på 180 s, appen stängd. `wasHidden: ja`, `firedOnResume: nej`, fel +11 s
-och +20 s. Adam fick ingen notis förrän han öppnade appen, båda gångerna, medan han aktivt
-väntade.
+och +20 s. Adam fick ingen notis förrän han öppnade appen, båda gångerna.
 
 **Vad det betyder:** `wasHidden: ja` med bara 11–20 sekunders fel bevisar att sidans
 JavaScript **körde i bakgrunden** — iOS strypte intervallet men frös det inte, och
@@ -63,143 +110,118 @@ JavaScript **körde i bakgrunden** — iOS strypte intervallet men frös det int
 notisen men **presenterade** den inte förrän appen kom i förgrunden.
 
 **Mätningen mätte fel sak.** Diagnostiken loggade när vi *anropade* `showNotification()`,
-inte när iOS *visade* den. I fas 0-testet med 5 sekunders fördröjning sammanföll de två, så
-felet syntes aldrig. `firedOnResume` kunde därför aldrig fånga det verkliga felläget — den
-svarade `nej` på en fråga den inte mätte. Det var den mänskliga observationen som avgjorde.
+inte när iOS *visade* den. `firedOnResume` svarade "nej" på en fråga den inte mätte. Det var
+den mänskliga observationen som avgjorde.
 
-Lärdomen är värd att behålla: **när en mätning och en användares upplevelse säger emot
-varandra är det inte självklart att mätningen har rätt.** Kontrollera först att den mäter
-det man tror.
+**Lärdomen är värd att behålla:** när en mätning och en användares upplevelse säger emot
+varandra är det inte självklart att mätningen har rätt. Kontrollera först att den mäter det
+man tror. *(Samma lärdom gäller dokumentation — se §0.)*
 
-**Följd för arkitekturen:** Wake Lock är inte en bekvämlighet utan bärande. Vilan förutsätter
-att appen ligger framme med tänd skärm, vilket den gör — låset begärs vid timerstart och
-återbegärs vid `visibilitychange`. Web Push byggs inte: den kräver nät i det ögonblick
-larmet ska gå, alltså precis vad ett gym saknar. Notisen behålls ändå, eftersom den kommer
-fram när man återvänder till appen och skadar ingenting.
+**Följd:** Wake Lock bär vilan i dag.
 
----
-
-## 4. Verifierat
-
-- **137 tester gröna.** Typecheck, lint och produktionsbygge likaså.
-- Synken mot riktig Supabase: 2 pass, 6 set, 9 kvitton, noll dubbletter, alla set med
-  `source = 'local_parse'`.
-- Tidigare: offlinestart och loggning på iPhone, databasisolering 11 av 11, katalogens id:n
-  mot kontrollsummor, parsern 91,3 % grenäckning.
-
-## 5. INTE verifierat
-
-- **Historikvyerna på riktig enhet.** Byggda och enhetstestade, men inte sedda i Safari.
-  Det är det första att titta på nästa gång.
-- **Wake Lock på riktig hårdvara.** Nu när den bär larmet är det värt att bekräfta att
-  skärmen faktiskt håller sig tänd genom en hel 180-sekundersvila.
-- Diagnostikens `firedOnResume` är opålitlig — se avsnitt 3. Den är kvar men ska inte
-  litas på; timerns bakgrundsfråga är ändå avgjord.
-
-## 6. Kända avvikelser
-
-- **7.13:** bundlen är 614 kB precache, varav supabase-js är merparten. Behövs bara för
-  synk, aldrig i loggningsvägen. Mät på riktig telefon innan refaktorering.
-- `npm audit`: 5 high i `eslint → minimatch → brace-expansion`. DevDependency.
-- Advisorn: `rls_auto_enable` och `auth_leaked_password_protection` — båda medvetna.
+> **NYTT 2026-08-03 — ntfy gör om förutsättningen.** Web Push avfärdades för att den kräver
+> nät i det ögonblick larmet går. Adam har bekräftat att han **alltid har wifi eller mobilnät
+> på gymmet**, vilket river den invändningen. ntfy stöder dessutom **fördröjd leverans
+> server-side**: appen skickar begäran när setet loggas — då är den framme — och ntfy:s
+> server levererar när vilan tar slut. Telefonens JavaScript behöver aldrig köra i bakgrunden.
+> ntfy har en native iOS-app, så notisen presenteras som en riktig notis.
+> **Adopterad, ej byggd.** Analys i `ai-workbench`.
 
 ---
 
-## 6b. Fas 8 — AI-reserven (2026-08-01)
+## 3. Fas 8 — AI-reserven
 
-Hela pipelinen är byggd och testad. **Den har aldrig pratat med en riktig modell** — det
-kräver nycklar och en deploy, se avsnitt 7.
+Hela pipelinen är byggd och testad. Modellen får katalogen, senaste utförandet per övning,
+typiskt viktspann, bästa e1RM och det pågående passets set. Payloaden är begränsad till de
+12 senast tränade övningarna, med ett test som vaktar under 20 000 tecken.
 
-**8.0 byggdes först, och det är avsiktligt.** Modellen får hela katalogen, senaste
-utförandet per övning, typiskt viktspann, bästa e1RM och det pågående passets set. Det är
-detta som skiljer en coach från en andra parser: *"samma som förra gången"* har något att
-syfta på, *"en till"* vet vad som just loggades, och ett värde långt utanför det typiska går
-att känna igen. Payloaden är begränsad till de 12 senast tränade övningarna, med ett test
-som vaktar att den håller sig under 20 000 tecken — den går i varje anrop.
-
-**Valideringen behandlas som säkerhet, inte finputs.** Modellen föreslår; `validate.ts`
-avgör vad som får bli data. Det farligaste felläget är ett **påhittat övnings-id** som ser
-ut som ett UUID: utan kontrollen mot katalogen hade setet skrivits mot en övning som inte
-finns, och främmandenyckeln hade fällt hela synkbatchen långt senare med ett felmeddelande
-långt från orsaken. Förvalet är **låg konfidens** — allt modellen härlett ur historiken
-bekräftas av en människa innan det sparas.
+**Valideringen behandlas som säkerhet, inte finputs.** Det farligaste felläget är ett
+**påhittat övnings-id** som ser ut som ett UUID: utan kontrollen mot katalogen hade setet
+skrivits mot en övning som inte finns, och främmandenyckeln hade fällt hela synkbatchen
+långt senare med ett felmeddelande långt från orsaken. Förvalet är **låg konfidens**.
 
 **AI:n träder in först när den lokala grammatiken sagt ifrån.** Aldrig i förväg, aldrig
-medan man skriver, aldrig i bakgrunden. Offline nämns den inte ens — texten ligger kvar.
+medan man skriver, aldrig i bakgrunden.
 
-## 6c. Fas 11 omstrukturerad — och det är en korrigering, inte ett tillägg
+**Att `ai_parse_log` har 2 rader tyder på att AI-vägen faktiskt körts skarpt.** Om Edge
+Function-deployen och nycklarna är satta är inte verifierat härifrån — se §5.
 
-Adam invände 2026-08-01 att appen riskerar att bli förälskad i sin egen textparser. Han har
-rätt, och Fas 11 var för smalt formulerad för att fånga det.
+---
 
-**Som appen ser ut i dag är fritexten hjälten** och manuell inmatning ligger hopfälld bakom
-en länk, med en rå `<select>` av 45 övningar. I Strong och Hevy sker uppskattningsvis 90 %
-av loggningen genom att trycka och bekräfta — särskilt när man bygger vidare på ett tidigare
-pass. Vår informationsarkitektur är alltså tvärtemot branschens, och tvärtemot hur folk
-faktiskt loggar.
+## 4. Fas 11A — touch-först
 
-Fas 11 är därför delad: **11A är det touch-baserade gränssnittet (strukturellt)** och
-**11B är den visuella poleringen** som redan var planerad. 11A först, och den är sannolikt
-viktigare för hur appen upplevs än allt annat som återstår.
+Klar. Setraden är byggd som en tabell efter referensbilderna i `docs/Reference-pics/`:
+`Set | Förra | Kg | Reps | ✓`, rubriker en gång. Rullhjul via `SetAdjustSheet` med ett hjul
+per siffra. Breddbudget uträknad för iPhone SE: 317 px tillgängligt, 164 px fasta kolumner.
 
-**En tidigare avgränsning föll med detta:** `PLAN.md` §3.6 sköt upp rutiner och mallar till
-efter v1. Det håller inte längre — "bygga vidare på ett tidigare pass" är kärnan i det Adam
-beskriver, och SPEC kräver redan att man ska kunna kopiera en historisk mall på två klick.
-Mallarna är uppflyttade till 11A.6.
+**Två buggar som kostade och som nu är mekaniskt bevakade:**
+- **11A.8** setraden klipptes av på 375 px
+- **11A.12** ombyggd efter referensbilderna
 
-🚩 **Acceptanskriterium för 11A:** ett normalt upprepat pass ska gå att logga **utan att
-tangentbordet öppnas en enda gång**, och med färre tryck än i Hevy.
+Playwright-vakten (`e2e/no-horizontal-overflow.spec.ts`) kör mot 375 och 390 px i WebKit.
+**Vakten är bevisad:** ett injicerat 500 px-element fällde elementtestet på alla tre rutter
+medan dokumenttestet förblev grönt — `overflow-x-hidden` i skalet döljer symptomet. Utan
+den andra mätningen hade vakten varit grön genom precis de buggar den finns för.
 
-## 6d. Telemetrin (8.10–8.11)
+---
 
-En rad per fritextinmatning, för både lokal grammatik och AI. Går via utkorgen som all annan
-data — de flesta inmatningar sker utan nät, och telemetri som bara skrevs online hade
-systematiskt missat de intressantaste fallen.
+## 5. Verifierat 2026-08-03
 
-**Förvalet är `rejected`.** En rad som aldrig ledde till ett sparat set är inte accepterad,
-och att anta motsatsen hade gjort statistiken systematiskt för snäll. Vid `edited` sparas
-**vad det rätta värdet blev** — utan det går felen att räkna men inte att analysera.
+- **237 vitest-tester** i 18 filer, gröna. **12 Playwright-tester** gröna.
+- Typecheck, lint och produktionsbygge gröna.
+- `npm audit`: **0 sårbarheter**.
+- Produktionsappen renderar (Pass, Historik, Inställningar) och når Supabase.
+- Databasen: 6 tabeller, RLS på alla, radantal enligt §1.
+- Migration 0003 aktiv i produktion.
+- `rls_auto_enable` går inte att anropa via RPC.
 
-Panelen under Inställningar vägrar visa en procentsats under fem försök. Fyra av fyra är
-100 %, och en siffra som ser ut som ett resultat utan att vara det är värre än ingen siffra.
+## 6. INTE verifierat
 
-> ⚠️ **Migration 0003 MÅSTE köras innan appen används med denna version.** Den lägger till
-> `ai_parse_log`-grenen i `apply_mutations`. Utan den avvisas mutationen som "okänd tabell",
-> och eftersom utkorgen stannar vid permanenta fel — med flit — **fastnar hela synken**.
+- **Historikvyerna och 11A på riktig enhet.** Byggda, enhetstestade och Playwright-testade,
+  men inte sedda i Safari på Adams telefon. Playwright är WebKit men inte iOS Safari —
+  safe-area, 100vh, scroll-snap-tröghet och standalone-läget beter sig annorlunda.
+- **Wake Lock på riktig hårdvara** genom en hel 180-sekundersvila.
+- **Edge Function-deployen och AI-nycklarna.** `ai_parse_log` har rader, vilket tyder på att
+  vägen körts — men det är indicium, inte bevis. Kontrollera i Supabase-panelen.
+- **Om 10.3 är gjord** — om appen ligger på Adams hemskärm, och i så fall från vilken av de
+  två adresserna. Detta är viktigt: se §0.2.
 
-## 7. Nästa steg
+## 7. Kända avvikelser
 
-**Du:** deploya och titta på historiken — datan du synkade upp finns nu i appen. Timerfrågan
-är avklarad, inget mer att mäta där.
+- **7.13 bundle.** 631,54 kB rå, **189,86 kB gzip**, 642,67 KiB precache. Supabase-js är
+  merparten och behövs bara för synk, aldrig i loggningsvägen. *Notera att tidigare
+  överlämningar angav siffran okomprimerad, vilket överdriver problemet — 190 kB över nätet,
+  en gång, för en offline-first app är inte akut.*
+- **`auth_leaked_password_protection`** är fortfarande av. Enda kvarvarande äkta advisor-punkt.
+  Slås på i Supabase-panelen, kostar ingenting.
+- **Migrationsfilerna speglas inte automatiskt av databasen** — se §0.4.
 
-**Du måste sätta nycklarna och deploya innan AI-vägen kan testas.** Det kräver Supabase CLI
-— Edge Functions går inte att deploya från webbeditorn (uppgift 2.2, som varit uppskjuten
-till precis nu).
+---
 
-```
-npm i -g supabase
-supabase login
-supabase link --project-ref oyccchcleypfuyuqmueq
-supabase secrets set GROQ_API_KEY=... GEMINI_API_KEY=...
-supabase functions deploy ai-parse
-```
+## 8. Nästa steg
 
-> **Egna nycklar i en egen organisation**, skilda från `news-signal-engine`. Signalmotorn
-> har en dokumenterad incident där ett testanrop tömde dygnskvoten och slog ut 22 % av en
-> handelsdags signaler. Delas kontot kan en fritextmiss på gymmet tysta produktionssignaler.
+**Adam:**
+1. **Ta bort fel Vercel-projekt** (uppgift 10.5). Identifiera efter innehåll, inte namn:
+   det som visar *"Gym-App — Återkopplingstest"* ska bort.
+2. **Installera appen på hemskärmen från `https://adam-gym-app.vercel.app`** (10.3).
+3. Slå på leaked password protection i Supabase-panelen.
 
-Testa sedan med något den lokala grammatiken omöjligt kan klara:
-`samma som förra gången men två kilo tyngre`, `en till på samma`, `tre set bänk som sist`.
+**Claude:**
+1. **Kodgranskning** — `/code-review` och `/security-review` över hela repot. Var ännu inte
+   gjord när denna fil skrevs.
+2. **Fas 11B — designrundan.** Börjar med **11B.0a** (informationsarkitektur, hör hemma i
+   `SPEC.md`) och **11B.0b** (`docs/DESIGN.md`). Ingen kod förrän briefen är godkänd.
 
-**Claude därefter: fas 11A — det touch-baserade gränssnittet.** Se avsnitt 6c. Det är den
-enskilt största kvarvarande skillnaden mot en app man vill använda varje pass.
+**Kvarvarande småuppgifter:** 6.9 (sparad vilotid per övning), 7.13 (lata-ladda supabase-js),
+12.7 (personligt anpassat 1RM i stället för Epley), ntfy för vilotimern.
 
-Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning), **7.13** (lata-ladda
-supabase-js), **12.7** (personligt anpassat 1RM i stället för Epley).
+---
 
-Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning — knapparna ±30 s finns, men
-inte sparad tid per övning), **7.13** (lata-ladda supabase-js), **fas 10** (deploy-automatik),
-**fas 11** (designpoleringen).
+## 9. Regel som föll ut av genomgången
 
-Kvarvarande småuppgifter: **6.9** (justerbar vilotid per övning), **7.13** (lata-ladda
-supabase-js), **fas 10** (deploy-automatik).
+**Dokumentation ska verifieras, inte minnas.** Felen i §0 uppstod inte för att någon
+glömde — de uppstod för att påståendena skrevs från *avsikt* och aldrig kontrollerades mot
+*verklighet*. Nästa session ser bara den här filen, och tror på den.
+
+Konkret följd: siffror i denna fil (tester, bundle, radantal, deployments) ska mätas om vid
+varje överlämning, inte kopieras från föregående version.
