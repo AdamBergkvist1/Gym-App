@@ -11,6 +11,13 @@ dist-ssr/
 # Verktyg
 .vite/
 coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# Sandlådan för extern kod. Se CLAUDE.md §7.3 — inget härifrån committas,
+# bara det som cherry-plockats och skrivits om hamnar i src/.
+temp-sandbox/
 *.tsbuildinfo
 .vercel/
 .DS_Store
