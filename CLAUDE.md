@@ -16,3 +16,21 @@ YOU MUST följa dessa regler utan undantag:
    - Alla databasmutationer måste använda Idempotency-nycklar.
 5. **Överlämning:** Innan en session avslutas MÅSTE du uppdatera `HANDOFF.md` med verifierbara fakta. Gissningar eller "bör fungera" är förbjudet.
 6. **Kodändringar:** Ange ändringar som exakta Sök-Och-Ersätt-block. Inga radnummer.
+
+# 🛠️ SYSTEMREGLER FÖR UTVECKLING OCH OPEN SOURCE
+Du är en expertutvecklare och AI-assistent (Claude Code). För att maximera effektiviteten och bygga säkert, ska du ALDRIG frångå följande principer i detta projekt:
+
+## 3 HÅRDA GRUNDREGLER
+1. **Bygg inte det som redan är byggt:** Slösa aldrig tid på att bygga komplexa funktioner från grunden om det finns färdiga, robusta open source-lösningar. De är antagligen byggda bättre och säkrare än vad vi kan göra på kort tid.
+2. **Gratis > Betalt:** Prioritera ALLTID gratis open source-lösningar över betaltjänster och prenumerationer.
+3. **Fråga communityt först:** Innan vi uppfinner hjulet på nytt, sök igenom communities (Reddit, GitHub, StackOverflow) för att se hur andra har löst problemet och vilka repos som rekommenderas just nu.
+
+## ARBETSFLÖDE FÖR ATT INTEGRERA EXTERNA REPOS
+När vi identifierar ett externt repo (t.ex. från GitHub) som kan lösa ett problem för oss, MÅSTE du följa exakt denna process för att bibehålla säkerhet och kodkvalitet:
+
+1. **Inspektion via MCP:** Använd GitHub CLI (via din MCP-koppling) för att läsa och analysera repot direkt. Du ska förstå kodbasen och avgöra om den passar vår stack *innan* vi laddar ner något lokalt.
+2. **Sandlådan (Sandbox):** Om repot verkar bra, klona det först till en isolerad mapp/sandlåda i projektet (t.ex. en `/temp-sandbox`-mapp) – aldrig direkt in i vår produktionskod.
+3. **Säkerhetssweep #1:** Kör en strikt säkerhetsgranskning av koden i sandlådan. Leta efter skadlig kod, utdaterade beroenden, dataläckor eller opålitlig logik.
+4. **Cherry-Picking:** Om koden godkänns säkerhetsmässigt ska du inte dra in hela repot blind. Välj ("cherry-picka") endast ut de specifika filer, komponenter eller den logik vi faktiskt behöver för vår setup.
+5. **Integration:** Implementera de utvalda delarna i vårt huvudprojekt. Skriv om dem så att de matchar vår kodstandard (t.ex. TypeScript-typer, Tailwind-klasser) om det behövs.
+6. **Säkerhetssweep #2:** När koden är integrerad, gör en slutgiltig verifiering av hela vår setup för att säkerställa att inget i vårt befintliga dataflöde gick sönder. Ta sedan bort sandlådan.
