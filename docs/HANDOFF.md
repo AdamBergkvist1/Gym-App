@@ -1,6 +1,6 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-03
+**Datum:** 2026-08-03 (sessionen avslutad)
 
 **Aktuellt läge:**
 Fas 0–11A är klara. **Appen är deployad och används.** Kvar: fas 11B (designrundan),
@@ -167,7 +167,7 @@ den andra mätningen hade vakten varit grön genom precis de buggar den finns f�
 
 ## 5. Verifierat 2026-08-03
 
-- **237 vitest-tester** i 18 filer, gröna. **12 Playwright-tester** gröna.
+- **238 vitest-tester** i 18 filer, gröna. **12 Playwright-tester** gröna. (Mätt med `npm run status -- --full`.)
 - Typecheck, lint och produktionsbygge gröna.
 - `npm audit`: **0 sårbarheter**.
 - Produktionsappen renderar (Pass, Historik, Inställningar) och når Supabase.
@@ -223,22 +223,92 @@ den andra mätningen hade vakten varit grön genom precis de buggar den finns f�
 
 ---
 
+## 7b. Designrundan är förberedd — steg 1 och 2 klara
+
+**Fas 11B kördes inte igång i dag. Den förbereddes**, och två av fyra steg är avklarade.
+
+### Steg 1 klart: informationsarkitekturen är LÅST
+
+`SPEC.md` §2b, godkänd av Adam. **Fyra flikar:** Pass, Historik (med Statistik som segment),
+Övningar, Mer. Program (Push/Pull/Ben) blev startval i Pass, inte en flik. Kroppsvikt tillagd
+i `SPEC.md` §3b med gränsen utskriven: kroppsdata ja, kost och makros nej.
+
+**Adam preciserade också §1, och det ändrade rådgivningen.** Måttstocken är *"lika bra som de
+bästa apparna"*, inte *"snabbast till varje pris"*. Följden: saknas något Strong och Hevy har
+är det ett **hål**, inte en lyx. Det är därför Övningar blev en egen flik trots att den inte
+fanns i den ursprungliga formen.
+
+### Steg 2 klart: open source-sökningen, och den hittade en licensfälla
+
+**Liftosaur och wger — de två närmaste förebilderna — är båda AGPL-3.0.** Kopieras kod
+därifrån måste hela appen släppas under AGPL, för all framtid. Gränsen som gäller står i
+`CLAUDE.md` §7.2b: layout och interaktionsmönster är inte upphovsrättsskyddade, **kodrader
+är det.** Läsa ja, kopiera aldrig.
+
+**Beslut, alla godkända:**
+1. **Tokens: `radix-ui/colors`** (MIT). Valt för att 11B.7 kräver WCAG AA mot mörk botten och
+   Radix skalor har garanterade kontraststeg. Open Props valdes bort — Tailwind 4 ger redan
+   spacing och typografi.
+2. **Layout: läs `workout-cool` (MIT) och `liftosaur` (AGPL), kopiera inget.**
+3. **`free-exercise-db` uppskjuten.** 873 övningar, Unlicense, 978 kB. Skälet är INTE
+   storleken utan att katalogens id:n är checksummade mot Supabase — en utökning är en
+   datamigration, inte ett designbeslut. Villkor: när Adam saknar en övning han vill logga.
+
+**Nytt krav som föll ut:** `docs/EXTERNT.md` — härkomstregistret. Allt vi hämtar utifrån ska
+stå där med licens och status (kopierat / läst / övervägt), i samma commit. Registret öppnar
+med en tom Kopierat-tabell, vilket är korrekt: hittills är noll rader kod kopierade.
+
+### Kvar av steg 3 — nästa sessions arbete
+
+`docs/DESIGN.md` delas i tre granskningsbara bitar:
+
+- **3a Färgsystemet.** Radix-skalor → semantiska tokens, **med uppmätta kontrastvärden** så
+  att WCAG AA är bevisat och inte påstått. Fristående, kräver inget från Adam. **Börja här.**
+- **3b Typografi och rytm.** Setraden störst, `tabular-nums` överallt, vertikal rytm.
+- **3c Skärmskisser.** En per skärm. **Kräver referensmaterial** — se öppen fråga i §8.
+
+### Steg 4: implementation, en skärm i taget
+
+Varje skärm blir en egen branch och PR med Playwright-skärmdumpar innan merge. Adams uttryckliga
+önskemål: hellre en sak i taget än allt på en gång. Flödet i ord finns i
+`ai-workbench/workflows/pr-review-loop.md` — Adam skriver vad han vill ha, inte kommandon.
+
+**Åtagande från 11B:** navigationen ska genereras ur **en array**, inte hårdkodas på två
+ställen som i dag (`AppShell.tsx` + `App.tsx`). Att lägga till eller ta bort en flik ska vara
+en rad. Adams begäran, och billigt nu men dyrt senare.
+
+---
+
 ## 8. Nästa steg
 
-**Adam:**
-1. **Ta bort fel Vercel-projekt** (uppgift 10.5). Identifiera efter innehåll, inte namn:
-   det som visar *"Gym-App — Återkopplingstest"* ska bort.
-2. **Installera appen på hemskärmen från `https://adam-gym-app.vercel.app`** (10.3).
-3. Slå på leaked password protection i Supabase-panelen.
+### ❓ ÖPPEN FRÅGA — svara innan 3c kan börja
 
-**Claude:**
-1. **Kodgranskning** — `/code-review` och `/security-review` över hela repot. Var ännu inte
-   gjord när denna fil skrevs.
-2. **Fas 11B — designrundan.** Börjar med **11B.0a** (informationsarkitektur, hör hemma i
-   `SPEC.md`) och **11B.0b** (`docs/DESIGN.md`). Ingen kod förrän briefen är godkänd.
+**Hur ska referensmaterialet till skärmskisserna samlas in?** Rekommendationen var *båda, i
+den ordningen*: Claude browsar `liftosaur.com` och workout-cools demo och tar fram ett
+underlag, Adam kompletterar med egna skärmdumpar i `docs/Reference-pics/` på det han vill ha
+annorlunda. Då finns något konkret att reagera på i stället för att beställa i blindo.
+
+**Skälet att inte hoppa över Adams bilder:** `11A.12` byggdes från hans referensbilder efter
+att två av mina egna försök klippts av på mobilskärm. Referensversionen håller. Det var inte
+en tillfällighet.
+
+### Nästa session — börja här
+
+1. **3a — färgsystemet.** Fristående, kräver inget från Adam. Enda naturliga startpunkten.
+2. Ställ referensfrågan ovan, så att 3c kan planeras parallellt.
+
+**Adam, när det passar (inget brådskar):**
+- Kontrollera att hemskärmsikonen öppnar Pass-vyn. Installerades appen från det raderade
+  Vercel-projektet är genvägen död — lägg i så fall till den på nytt från
+  `https://adam-gym-app.vercel.app`.
+- **Bestäm om testdatan ska följa med.** Båda kontona i databasen är testkonton; det med
+  6 pass och 12 set är inte Adams riktiga konto. Skapas ett nytt konto följer datan **inte**
+  med — RLS isolerar per `user_id`, vilket är hela poängen. Är det testdata spelar det ingen
+  roll, men beslutet ska tas medvetet och inte upptäckas.
 
 **Kvarvarande småuppgifter:** 6.9 (sparad vilotid per övning), 7.13 (lata-ladda supabase-js),
-12.7 (personligt anpassat 1RM i stället för Epley), ntfy för vilotimern.
+12.7 (personligt anpassat 1RM i stället för Epley), ntfy för vilotimern (adopterad, ej byggd),
+8.1–8.2 (AI-nycklarna — **uppskjutna med flit, se §7**).
 
 ---
 
