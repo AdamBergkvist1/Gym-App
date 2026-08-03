@@ -687,7 +687,7 @@ lagkrav — tydlighet och funktion går före tryckantal.
 
 ---
 
-### 11B — Visuell polering
+### 11B — Designrundan
 
 Efterfrågad av Adam 2026-07-31 efter att ha använt appen på riktigt: den fungerar men är
 "basic och rätt ful". Det är väntat — UI:t har byggts råt med flit. Men det ska vara ett
@@ -700,6 +700,60 @@ Referens enligt SPEC: RP Hypertrophy för datafokus, Jeff Nippard och Boostcamp 
 **Ligger efter 11A med flit.** Att polera ett gränssnitt som ska struktureras om är
 bortkastat arbete — och designspråket ska sättas av den slutliga formen, inte av den
 nuvarande.
+
+---
+
+> ### ⚠️ Omstrukturerad 2026-08-03 — och det är en korrigering, inte ett tillägg
+>
+> Adam frågade om designen redan var färdig, och om det skulle bli **en riktig designrunda
+> där allt bestäms för alla funktioner** — eller bara putsning. Frågan avslöjade ett fel i
+> hur fasen var skriven.
+>
+> **11B var nio isolerade putsuppgifter.** Typografisk skala, `tabular-nums`, vertikal rytm,
+> tryckåterkoppling… Det är en checklista, inte en designrunda. Och fasen varnar i sin egen
+> ingress för att styckvis arbete blir ojämnt — samtidigt som den var upplagd för att göras
+> just styckvis. Nio separata beslut fattade var för sig **är** styckvis, oavsett att de står
+> under samma rubrik.
+>
+> **Fixen:** en ny uppgift **11B.0** där hela appen designas i ett svep, innan en rad kod
+> skrivs. Därefter blir 11B.1–11B.9 **implementation av den briefen** i stället för nio egna
+> beslut. Först då stämmer fasen med sin egen ingress.
+>
+> **Adams andra invändning hörde inte hemma i polering:** att en träningsapp "brukar ha flera
+> sidor och massa funktioner". Appen har fyra rutter i dag. Om informationsarkitekturen ska
+> växa är det ett **`SPEC.md`-beslut som måste tas före designbriefen** — inte något som
+> upptäcks halvvägs in i den. Det är uppgift 11B.0a, och den kommer först av allt.
+
+- [ ] **11B.0a Avgör informationsarkitekturen. `SPEC.md`, inte design.**
+      I dag: Pass, Historik, Övning, Inställningar. Frågan som ska besvaras innan något
+      ritas: **är fyra rutter den slutliga formen?** Kandidater att ta ställning till —
+      statistik/volym per muskelgrupp, program och rutiner, kroppsvikt, profil.
+
+      **Ett nej är ett lika giltigt svar som ett ja**, men det ska vara uttalat. Att upptäcka
+      halvvägs genom designrundan att appen behöver en femte flik betyder att navigationen,
+      typografin och tomma tillstånd designats mot fel form.
+      **Klart när:** `SPEC.md` §2 listar varje skärm appen ska ha i v1, och Adam har godkänt.
+
+- [ ] **11B.0b Designbriefen — `docs/DESIGN.md`. INGEN KOD FÖRRÄN GODKÄND.**
+      Alla skärmar samtidigt, inklusive bottenark, timer och övningsväljaren.
+
+      Arbetsordningen är hämtad från Chris Raroques flöde och står i
+      `ai-workbench/tools/`: **referenser → prototyp → implementation.**
+      1. Samla referenser (Mobbin, Boostcamp, RP Hypertrophy, Jeff Nippard) i
+         `docs/Reference-pics/`.
+      2. Skissa varje skärm mot referenserna. Figma om det behövs, annars bilder.
+      3. Fastställ **tokens**: färg, typografi, spacing, radier, ikonuppsättning.
+      4. Skriv `docs/DESIGN.md` med tokens plus en skiss per skärm.
+
+      **Varför referensdrivet och inte fritt:** `11A.12` byggdes från referensbilder efter
+      att mina två egna försök klipptes av på mobilskärm. Referensversionen håller. Det är
+      inte en tillfällighet — en referens bär beslut någon redan testat mot riktiga
+      användare, och den informationen finns inte i en beskrivning.
+      **Klart när:** `docs/DESIGN.md` finns och Adam har godkänt den.
+
+**11B.1–11B.9 nedan är implementation av briefen.** Ingen av dem är ett eget designbeslut
+längre — värdena kommer från `DESIGN.md`. Motsäger en uppgift briefen är det briefen som
+gäller, och uppgiften skrivs om.
 
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
