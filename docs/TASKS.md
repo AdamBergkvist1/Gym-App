@@ -618,12 +618,41 @@ och bygge gröna.
 
 ## Fas 10 — Deploy
 
-- [ ] **10.1 Koppla repot till Vercel.** Ramverksförval: Vite. Byggkommando `npm run build`,
-      utdatakatalog `dist`. **Klart när:** push till `main` bygger automatiskt.
-- [ ] **10.2 Sätt miljövariabler i hostingen.**
-      **Klart när:** produktionsbygget når Supabase.
+> ### 🚩 Rättad 2026-08-03 — fasen var redan gjord, men bokförd som ogjord
+>
+> Adam frågade "är inte appen redan på Vercel?" Svaret var ja, och `TASKS.md` hade fel.
+> **10.1 och 10.2 var klara sedan tidigare** utan att någonsin bockas av. En plan som
+> påstår att gjort arbete är ogjort är inte bara slarv — den skulle fått nästa session
+> att bygga om något som redan fungerade.
+>
+> **Produktionsadress: https://adam-gym-app.vercel.app**
+>
+> ⚠️ **Det finns TVÅ Vercel-projekt mot samma repo, och bara det ena är rätt.**
+> Se 10.5 nedan. Repots `homepageUrl` på GitHub pekar på **fel** projekt.
+
+- [x] **10.1 Koppla repot till Vercel.** Verifierat: 30 deployments, senaste från commit
+      `deab028` som pushades idag. Push till `main` bygger automatiskt.
+- [x] **10.2 Sätt miljövariabler i hostingen.** Verifierat indirekt men entydigt: produktions-
+      appen visar synkstatus **"Inte inloggad"**, medan en lokal körning utan `.env` visar
+      **"Endast lokalt"** och loggar *"Supabase är inte konfigurerat"*. Nycklarna finns alltså
+      i produktion. (Ingen `.env` finns lokalt — därför kör dev-servern utan Supabase.)
 - [ ] **10.3 Installera appen på Adams telefon från produktions-URL:en.**
-      **Klart när:** appen ligger på hemskärmen.
+      **Använd `https://adam-gym-app.vercel.app`** — inte den adress som står som homepage på
+      GitHub, den serverar fel sida. **Klart när:** appen ligger på hemskärmen.
+- [ ] **10.5 Städa upp de dubbla Vercel-projekten.** Två projekt bygger från samma repo:
+      - `adam-gym-app` → **rätt.** Serverar appen. Stabil adress `adam-gym-app.vercel.app`.
+      - `gym-app` → **fel.** Serverar `test/feedback-test.html` från fas 0 i stället för
+        appen, alltså larmtestsidan. Adressen `gym-app-gold-psi-81.vercel.app` står dessutom
+        som repots homepage på GitHub.
+
+      **Varför det inte är kosmetiskt:** installerar Adam PWA:n från homepage-länken hamnar
+      **larmtestet** på hemskärmen, inte appen — och det ser ut som att appen är trasig.
+      Två produktionsadresser för samma repo betyder också två servicearbetare och två
+      separata IndexedDB-lagringar; loggar man i fel flik hamnar passet i en databas man
+      sedan inte hittar. Det är samma sorts tysta fel som 11A.10.
+
+      **Klart när:** `gym-app`-projektet är borttaget eller ombyggt mot rätt utdata, och
+      repots homepage pekar på `adam-gym-app.vercel.app`.
 - [ ] **10.4 Kör ett helt riktigt pass i gymmet.** Utan nät.
       **Klart när:** passet är loggat och synkat efteråt, och erfarenheterna står i `HANDOFF.md`.
 
