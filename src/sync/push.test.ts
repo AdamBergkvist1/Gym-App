@@ -188,3 +188,46 @@ describe('7.11 idempotens', () => {
     expect(new Set(skickade).size).toBe(2); // inga dubbletter på servern
   });
 });
+
+describe('robusthet: kön får aldrig snurra', () => {
+  it('stoppar i stället för att loopa när en post saknar seq', async () => {
+    // Ett läge som inte SKA kunna uppstå — seq är Dexies primärnyckel. Men
+    // filtret i push.ts tog tyst bort sådana poster ur raderingslistan, vilket
+    // gjorde att `for(;;)` hämtade samma poster i all oändlighet och frös
+    // fliken mitt i ett pass. Testet vaktar att kön stannar i stället.
+    const utanSeq = [
+      {
+        seq: undefined,
+        mutationId: '11111111-1111-4111-8111-111111111111',
+        table: 'workouts',
+        payload: {},
+        status: 'pending',
+        attempts: 0,
+        lastError: null,
+      },
+    ];
+
+    let hämtningar = 0;
+    const fakeDb = {
+      outbox: {
+        where: () => ({
+          anyOf: () => ({
+            sortBy: () => {
+              hämtningar++;
+              // Fler än en handfull rundor betyder att buggen är tillbaka.
+              if (hämtningar > 5) throw new Error('EVIGHETSLOOP: kön hämtade om samma poster');
+              return Promise.resolve(utanSeq);
+            },
+          }),
+        }),
+        bulkDelete: () => Promise.resolve(),
+      },
+    } as unknown as GymDatabase;
+
+    const result = await pushOutbox(fakeClient(), fakeDb);
+
+    expect(result.blocked).toBe(true);
+    expect(result.error).toMatch(/utan seq/);
+    expect(hämtningar).toBe(1);
+  });
+});

@@ -85,6 +85,25 @@ export async function pushOutbox(client: RpcCaller, db: GymDatabase): Promise<Pu
       applied += result.applied;
       skipped += result.skipped;
       const seqs = entries.map((e) => e.seq).filter((s): s is number => typeof s === 'number');
+
+      // `seq` är Dexies autoinkrementerande primärnyckel och kan inte saknas på
+      // en post som just lästs ur tabellen. Men om den ändå gjorde det raderade
+      // filtret ovan posten ur raderingslistan i stället för att larma — och då
+      // hämtar `for(;;)` samma poster igen. Och igen. Fliken fryser mitt i ett
+      // pass, utan felmeddelande.
+      //
+      // Den defensiva kontrollen skapade alltså ett värre fel än det den skulle
+      // skydda mot. Här stoppas kön i stället, via samma `blocked`-väg som
+      // permanenta fel — den syns redan i synkindikatorn.
+      if (seqs.length !== entries.length) {
+        return {
+          applied,
+          skipped,
+          blocked: true,
+          error: `utkorgen innehåller ${entries.length - seqs.length} post(er) utan seq — synken stoppad i stället för att loopa`,
+        };
+      }
+
       await db.outbox.bulkDelete(seqs);
       continue;
     }
