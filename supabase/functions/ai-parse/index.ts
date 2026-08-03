@@ -279,11 +279,15 @@ async function callGemini(req: AiParseRequest, signal: AbortSignal): Promise<Pro
   const key = Deno.env.get('GEMINI_API_KEY');
   if (!key) throw new ProviderError('GEMINI_API_KEY saknas', false);
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
+  // Nyckeln går som HEADER, aldrig som query-parameter. `?key=...` är Googles
+  // äldre variant och fungerar — men query-strängar hamnar i proxyloggar,
+  // felrapporter och mätvärden på ett sätt som headers inte gör. En hemlighet
+  // som råkar loggas är läckt även om den aldrig lämnade servern med flit.
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
   const res = await fetch(url, {
     method: 'POST',
     signal,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: [{ role: 'user', parts: [{ text: buildUserMessage(req) }] }],
@@ -335,6 +339,19 @@ async function parseWithLLM(req: AiParseRequest, signal: AbortSignal): Promise<P
 /** Efter detta är väntan värre än att skriva in setet för hand. */
 const TIMEOUT_MS = 3500;
 
+// ---------------------------------------------------------------- gränser
+//
+// Taken sitter medvetet en bra bit ovanför vad klienten någonsin skickar
+// (katalog ~50 övningar, historik 12, payload under 20 000 tecken). Syftet är
+// inte att strypa vår egen app utan att stänga dörren för allt som INTE är
+// vår app. En legitim begäran ska aldrig nudda dem; en illvillig ska stoppas
+// innan den kostar något.
+const MAX_BODY_CHARS = 128_000;
+const MAX_RAW_TEXT_CHARS = 2_000;
+const MAX_CATALOGUE_ITEMS = 500;
+const MAX_HISTORY_ITEMS = 100;
+const MAX_WORKOUT_SETS = 200;
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -375,10 +392,30 @@ Deno.serve(async (req) => {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) return degraded('ogiltig session', 401);
 
-  // ---- begäran ----
+  // ---- begäran: storlek FÖRE innehåll ----
+  //
+  // Klienten begränsar payloaden till 20 000 tecken och har ett test som vaktar
+  // det (`src/ai/context.test.ts`). Men en gräns som bara finns i klienten är
+  // ingen gräns — den gäller vår kod, inte den som anropar. Med en giltig
+  // session (eller en stulen token) kunde vem som helst skicka en godtyckligt
+  // stor payload rakt in i LLM-kvoten.
+  //
+  // Det är inte hypotetiskt: `HANDOFF.md` beskriver en incident i ett annat
+  // projekt där ett enda testanrop tömde dygnskvoten och slog ut 22 % av en
+  // handelsdags signaler. Kvoten är delad och ändlig. Gränsen hör hemma här.
+  let rawBody: string;
+  try {
+    rawBody = await req.text();
+  } catch {
+    return degraded('kunde inte läsa begäran', 400);
+  }
+  if (rawBody.length > MAX_BODY_CHARS) {
+    return degraded('begäran är för stor', 413);
+  }
+
   let body: AiParseRequest;
   try {
-    body = (await req.json()) as AiParseRequest;
+    body = JSON.parse(rawBody) as AiParseRequest;
   } catch {
     return degraded('kunde inte läsa begäran', 400);
   }
@@ -386,10 +423,25 @@ Deno.serve(async (req) => {
   if (typeof body?.rawText !== 'string' || body.rawText.trim() === '') {
     return degraded('ingen text att tolka', 400);
   }
+  if (body.rawText.length > MAX_RAW_TEXT_CHARS) {
+    return degraded('texten är för lång för att tolkas', 413);
+  }
   if (!Array.isArray(body.catalogue) || body.catalogue.length === 0) {
     // Utan katalog kan modellen inte välja ett giltigt id och skulle tvingas
     // hitta på ett. Bättre att avvisa än att bjuda in till det.
     return degraded('katalogen saknas i begäran', 400);
+  }
+  // Avvisa hellre än att tyst kapa listorna. En begäran som stillsamt får sina
+  // 5 000 övningar nerskurna till 500 ser ut att ha lyckats, och nästa gång
+  // katalogen växer av ett legitimt skäl syns det ingenstans att den beskars.
+  if (body.catalogue.length > MAX_CATALOGUE_ITEMS) {
+    return degraded('katalogen är för stor', 413);
+  }
+  if (Array.isArray(body.history) && body.history.length > MAX_HISTORY_ITEMS) {
+    return degraded('historiken är för stor', 413);
+  }
+  if (body.currentWorkout && body.currentWorkout.sets?.length > MAX_WORKOUT_SETS) {
+    return degraded('passet innehåller för många set', 413);
   }
 
   // ---- tolkning ----
