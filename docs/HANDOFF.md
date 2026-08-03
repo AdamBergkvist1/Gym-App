@@ -181,8 +181,14 @@ den andra mätningen hade vakten varit grön genom precis de buggar den finns f�
   men inte sedda i Safari på Adams telefon. Playwright är WebKit men inte iOS Safari —
   safe-area, 100vh, scroll-snap-tröghet och standalone-läget beter sig annorlunda.
 - **Wake Lock på riktig hårdvara** genom en hel 180-sekundersvila.
-- **AI-nycklarna (`GROQ_API_KEY`, `GEMINI_API_KEY`).** Att `ai_parse_log` har rader tyder på
-  att vägen körts, men det är indicium, inte bevis. Kontrolleras i Edge Functions → Secrets.
+- **AI-nycklarna — mätt 2026-08-03, och läget är accepterat.** `ai_parse_log` visar att bara
+  **groq** någonsin kört (en gång, 2026-08-02). Gemini har aldrig svarat, alltså saknas den
+  nyckeln och **reserven finns inte**. Groq-nyckeln delas med `news-signal-engine`, vilket
+  betyder att kvoten kan tömmas åt båda hållen.
+
+  **Uppskjutet med flit** — AI-vägen har körts en enda gång, så risken är i praktiken noll och
+  skalar med användning, inte med tid. Villkor och detaljer i `TASKS.md` 8.1–8.2.
+  **Föreslå inte fixen igen förrän villkoret är uppfyllt.**
 
   *(Edge Function-deployen är däremot verifierad: `ai-parse` är **version 2, ACTIVE**,
   uppdaterad 2026-08-03, med `verify_jwt: true` — Supabase avvisar oautentiserade anrop

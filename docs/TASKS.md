@@ -525,6 +525,31 @@ och bygge gröna.
       **Klart när:** nyckeln är satt som secret i Supabase, inte i repot.
 - [ ] **8.2 Skapa Gemini-nyckel, likaså separat.**
       **Klart när:** nyckeln är satt som secret i Supabase.
+
+> ### 🟡 8.1 och 8.2 är UPPSKJUTNA med flit — 2026-08-03
+>
+> **Mätt läge:** `ai_parse_log` visar att endast **groq** (`llama-3.3-70b-versatile`) någonsin
+> kört, senast 2026-08-02. Gemini har aldrig svarat, alltså är nyckeln inte satt. Groq-nyckeln
+> är enligt Adam **samma som `news-signal-engine`**.
+>
+> **Två följder, båda accepterade tills vidare:**
+> 1. **Reserven finns inte.** `parseWithLLM` faller vidare till Gemini när Groq fallerar —
+>    men utan nyckel finns inget att falla till. Tar Groqs kvot slut dör AI-vägen helt.
+> 2. **Kvoten delas åt båda hållen.** En fritextmiss på gymmet kan tysta handelssignaler,
+>    och en tung handelsdag kan döda AI:n mitt i ett pass.
+>
+> **Varför det ändå är okej nu:** AI-vägen träder bara in när den lokala grammatiken sagt
+> ifrån, och har körts **en (1) gång**. Användningen är i praktiken noll. Risken skalar med
+> användningen, inte med tiden.
+>
+> **Detta är alltså ett beslut, inte en försummelse.** Bocka INTE av uppgifterna och föreslå
+> inte "fixen" igen förrän villkoret nedan är uppfyllt.
+>
+> ⏰ **Villkor för att göra det:** när AI-vägen används mer än någon enstaka gång per pass,
+> eller innan någon annan än Adam börjar använda appen.
+>
+> **Detalj som är lätt att missa när det görs:** Groqs kvot ligger på **kontot**, inte på
+> nyckeln. En andra nyckel i samma konto delar samma kvot — det måste vara ett separat konto.
 - [x] **8.3 JSON-schemat definierat.** `src/ai/types.ts` är sanningen; Edge Function-koden
       speglar det i egen Deno-kod. De **kan inte** dela modul över nätverksgränsen — Deno
       kräver filändelser i importer, Vite gör det inte — och en fragil delningslösning vore
