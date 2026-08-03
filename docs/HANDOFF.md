@@ -181,8 +181,12 @@ den andra mätningen hade vakten varit grön genom precis de buggar den finns f�
   men inte sedda i Safari på Adams telefon. Playwright är WebKit men inte iOS Safari —
   safe-area, 100vh, scroll-snap-tröghet och standalone-läget beter sig annorlunda.
 - **Wake Lock på riktig hårdvara** genom en hel 180-sekundersvila.
-- **Edge Function-deployen och AI-nycklarna.** `ai_parse_log` har rader, vilket tyder på att
-  vägen körts — men det är indicium, inte bevis. Kontrollera i Supabase-panelen.
+- **AI-nycklarna (`GROQ_API_KEY`, `GEMINI_API_KEY`).** Att `ai_parse_log` har rader tyder på
+  att vägen körts, men det är indicium, inte bevis. Kontrolleras i Edge Functions → Secrets.
+
+  *(Edge Function-deployen är däremot verifierad: `ai-parse` är **version 2, ACTIVE**,
+  uppdaterad 2026-08-03, med `verify_jwt: true` — Supabase avvisar oautentiserade anrop
+  innan funktionen ens startar, utöver kontrollen i koden.)*
 - **Om 10.3 är gjord** — om appen ligger på Adams hemskärm, och i så fall från vilken av de
   två adresserna. Detta är viktigt: se §0.2.
 
@@ -192,8 +196,23 @@ den andra mätningen hade vakten varit grön genom precis de buggar den finns f�
   merparten och behövs bara för synk, aldrig i loggningsvägen. *Notera att tidigare
   överlämningar angav siffran okomprimerad, vilket överdriver problemet — 190 kB över nätet,
   en gång, för en offline-first app är inte akut.*
-- **`auth_leaked_password_protection`** är fortfarande av. Enda kvarvarande äkta advisor-punkt.
-  Slås på i Supabase-panelen, kostar ingenting.
+- **`auth_leaked_password_protection` går INTE att slå på.** Kontrollerat i panelen
+  2026-08-03: funktionen är märkt *"Only available on Pro plan and above"*. Tidigare
+  överlämning påstod att den "kostar ingenting" — det var fel. Vi kör free tier, och regel 2
+  säger gratis före betalt.
+
+  **Advisorns varning kommer alltså stå kvar, och det är ett beslut — inte en försummelse.**
+  Kompenserat med gratis åtgärder i stället:
+  - `Allow new users to sign up` **avstängd**. Appen har en användare och kontot finns redan.
+    Ingen dörr att gissa lösenord mot slår varje lösenordspolicy.
+  - `Allow anonymous sign-ins` avstängd.
+  - Minsta lösenordslängd höjd 6 → 12. **Teckenklasskrav lämnas medvetet av** — de ger i
+    praktiken `Passord1!`, ett mönster angripare räknar med. NIST tog bort dem av det skälet.
+    Längd slår sammansättning.
+  - `Secure email change`, `Secure password change` och `Require current password` påslagna.
+    Den första är den viktigaste: utan den kan en kapad session byta e-post till angriparens
+    och ta över kontot permanent.
+  - Email-OTP:ns livslängd sänkt 3600 → 900 s.
 - **Migrationsfilerna speglas inte automatiskt av databasen** — se §0.4.
 
 ---
