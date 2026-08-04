@@ -10,9 +10,16 @@ import { defineConfig, devices } from '@playwright/test';
  * Wake Lock, haptik och PWA-standalone-beteende beter sig annorlunda på riktig
  * hårdvara. Enhetstestning krymper — den försvinner inte. Se HANDOFF.md.
  *
- * Två bredder med flit: 375 px är den smalaste skärm vi lovat stödja (iPhone SE),
- * och breddbudgeten i uppgift 11A.8/11A.12 är räknad mot just den. 390 px är den
- * vanligaste moderna. Går något sönder på bara den ena vill vi se vilken.
+ * TRE bredder, och SE är INTE målet — den är det smalaste testfallet. Layouten är
+ * responsiv: innehållet ligger i max-w-lg centrerat, så det fyller bredden på en
+ * telefon och centreras på en surfplatta. Får något plats på 375 px får det plats
+ * överallt.
+ *
+ *   375 px  iPhone SE — smalast vi lovat stödja. Breddbudgeten i 11A.8/11A.12
+ *           är räknad mot just den.
+ *   390 px  iPhone 13 — vanlig modern bredd.
+ *   393 px  iPhone 15 — Adams faktiska telefon. Testmatrisen ska innehålla den
+ *           enhet appen används på, inte bara ytterlägena.
  */
 export default defineConfig({
   testDir: './e2e',
@@ -46,6 +53,18 @@ export default defineConfig({
       use: {
         ...devices['Desktop Safari'],
         viewport: { width: 390, height: 844 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      // Adams faktiska telefon. Tillagd 2026-08-04 — testmatrisen ska innehålla
+      // den enhet appen faktiskt används på, inte bara ytterlägena.
+      name: 'iphone-15',
+      use: {
+        ...devices['Desktop Safari'],
+        viewport: { width: 393, height: 852 },
         deviceScaleFactor: 3,
         isMobile: true,
         hasTouch: true,
