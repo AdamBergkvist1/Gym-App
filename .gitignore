@@ -27,3 +27,6 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Skärmdumpar från npm run shots — artefakter, inte källkod.
+skarmdumpar/
