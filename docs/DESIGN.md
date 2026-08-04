@@ -330,12 +330,7 @@ det är den enda densitetsvinst som inte kostar träffsäkerhet.
   --text-meta: 0.8125rem;    /* 13px */
   --text-label: 0.6875rem;   /* 11px */
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
+  /* INGA egna spacing-tokens — se rättelsen nedan */
 }
 
 body { font-variant-numeric: tabular-nums; }
@@ -343,6 +338,14 @@ body { font-variant-numeric: tabular-nums; }
 
 **Klart när** (11B.1): ingen komponent sätter egen textstorlek — all typografi kommer från
 token.
+
+> ✏️ **Rättat 2026-08-04 under implementationen.** Briefen föreslog egna spacing-tokens
+> (`--space-1` … `--space-8`). Det visade sig vara fel: **Tailwind 4:s egen skala ger redan
+> exakt de värden vi kräver** — `p-1`=4, `p-2`=8, `p-3`=12, `p-4`=16, `p-6`=24, `p-8`=32.
+>
+> Egna tokens hade bara varit en andra uppsättning namn för samma tal, och två sanningar är
+> värre än en. **Det som behövdes var en regel om vilka värden som får användas, inte nya
+> variabler.**
 
 ## §3 Skärmskisser
 

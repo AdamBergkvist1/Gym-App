@@ -1,0 +1,73 @@
+# Grinden mellan en commit och produktion.
+#
+# VARFÖR DEN FINNS
+# Vercel bygger med `npm run build`, alltså `tsc --noEmit && vite build`. Typfel
+# stoppar därför en deploy — men **tester och lint kördes aldrig**. 238 gröna
+# tester som ingenting tvingade fram är inte ett skyddsnät, det är en vana.
+#
+# Upptäckt 2026-08-04 i en genomgång av vad som faktiskt kör var.
+#
+# Ordningen är vald efter hur snabbt något faller: lint på sekunder, typecheck
+# strax efter, enhetstester, och sist E2E som kostar en webbläsarnedladdning.
+# Faller något tidigt slipper vi betala för det som kommer efter.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# En ny push till samma gren avbryter den föregående körningen. Utan detta köar
+# tre snabba commits tre fulla körningar där bara den sista betyder något.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifiera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # `npm ci` och inte `npm install`: installerar exakt vad package-lock.json
+      # säger. Ett bygge som tyst uppgraderar ett beroende testar inte det vi
+      # kör.
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Enhetstester
+        run: npm test
+
+      # Bara WebKit. Appen körs uteslutande i iOS Safari, och att ladda ner
+      # Chromium och Firefox hade tredubblat tiden utan att testa något vi
+      # bryr oss om.
+      - name: Installera WebKit
+        run: npx playwright install --with-deps webkit
+
+      - name: E2E
+        run: npm run e2e
+
+      # Bara vid fel. En grön körning behöver inga artefakter, och de kostar
+      # lagring i onödan.
+      - name: Spara spår vid fel
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-spar
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
