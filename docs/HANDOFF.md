@@ -1,6 +1,73 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-03 (sessionen avslutad)
+**Datum:** 2026-08-04 (sessionen avslutad)
+
+---
+
+## 🆕 2026-08-04 — designrundan påbörjad, och appen sågs för första gången
+
+### Steg 4.1 klart: CI, tokens, en källa för navigationen
+
+**CI saknades helt.** Vercel bygger med `tsc --noEmit && vite build`, så typfel har alltid
+stoppat en deploy — men **tester och lint kördes ingenstans**. 238 gröna tester som ingenting
+tvingar fram är inte ett skyddsnät utan en vana. `.github/workflows/ci.yml` kör nu lint,
+typecheck, enhetstester och E2E vid varje push och PR.
+
+**Tokens ur `DESIGN.md` §1–2** i `index.css`. Kostade **0,1 kB gzip** — beviset för att
+"kopiera värden, inte kod" var rätt. `tabular-nums` ligger nu på `body`, så 11B.2 är omöjlig
+att bryta i stället för något man ska minnas.
+
+**Navigationen har en källa** (`src/ui/nav.ts`). Flikar och rutter stod på två ställen; nu
+genereras båda ur en array. Att lägga till Övningar och Mer blir en rad var.
+
+### 🚩 Appen granskades visuellt för första gången — och det ändrade allt
+
+Adam påpekade att jag designat mot en textbrief utan att titta på appen. Han hade rätt. Den
+inbyggda webbläsarpanelen kan inte fotograferas när panelen är dold, så
+**`npm run shots`** byggdes: Playwright startar vite, klickar sig fram till ett verkligt
+tillstånd och sparar sju PNG i WebKit. Fungerar headless, alltid.
+
+**Fem minuters tittande gav tre fel som briefen missade helt:**
+
+| Fel | Detalj |
+|---|---|
+| **Justeringsarket var 793 px på en 667 px skärm** | Headern med det sammansatta värdet låg **113 px utanför skärmen**. Man ändrade vikt med fyra hjul som visade `0 0 0 0` utan att se resultatet |
+| **`0` renderades som ett värde** | `plan.ts` skapar tomma rader med vikt 0 och menar *"måste fyllas i"*. Raden påstod `0 kg` |
+| **Bekräfta-knappen var 40×36 px** | Via `min-h-0`, under projektets egen 48-regel — på appens mest tryckta kontroll |
+
+**Adams omdöme att rullhjulen "inte blev fantastiska" var alltså rätt av fel skäl.** Felet
+satt inte i hjulen: siffran fanns, den låg utanför skärmen. Rotorsak: fem synliga rader per
+hjul, valt utan att någon mätte mot den minsta skärmen. Nu tre.
+
+### Steg 4.2 del 1 klart
+
+Setvärden 16 → 24 px. Bekräfta-knappen 48×48. `FÖRRA` visar ingenting i stället för ett
+streck. Uppvärmning märks neutralt (kategori, inte varning). Justeringsarket visar värdet i
+32 px överst. Egen växlare i stället för systemets vita kryssruta.
+
+**Ny vakt `e2e/bottenark.spec.ts` — och den fick skrivas två gånger.** Första versionen mätte
+att arket inte hamnar utanför skärmen, men `max-h` gör det omöjligt även när innehållet är
+för stort. Den var grön också med det gamla hjulet: **den mätte skyddsnätet, inte problemet.**
+Andra versionen mäter att innehållet ryms *utan scroll* och fällde både det gamla hjulet och
+min egen första fix. Arket fick trimmas i tre omgångar.
+
+### iPhone 15 tillagd i testmatrisen
+
+Adam frågade om layouten anpassas för enbart en telefon. **Nej — den är responsiv**
+(`max-w-lg` centrerat). SE testas för att den är *smalast*. Men hans faktiska telefon saknades
+och är nu med: **375 (SE) · 390 (13) · 393 (15)**, 30 E2E gröna.
+
+### Rättelse i briefen: tomma tillstånd är flöde, inte polering
+
+`DESIGN.md` sa att tomma tillstånd "skissas när skärmarna byggs". **De tre fel som hittades
+var alla tomma tillstånd.** Rättat — de ska undersökas före, inte skissas efter.
+
+### Kvar av steg 4.2
+
+Sammanfattningsraden `Set · Volym · Övningar`, vilotimern som chip i flödet, PB-chip, och
+**startskärmen** som fortfarande är en rubrik och en knapp på 550 px svart.
+
+---
 
 **Aktuellt läge:**
 Fas 0–11A är klara. **Appen är deployad och används.** Kvar: fas 11B (designrundan),
@@ -167,7 +234,7 @@ den andra mätningen hade vakten varit grön genom precis de buggar den finns f�
 
 ## 5. Verifierat 2026-08-03
 
-- **238 vitest-tester** i 18 filer, gröna. **12 Playwright-tester** gröna. (Mätt med `npm run status -- --full`.)
+- **238 vitest-tester** i 18 filer, gröna. **30 Playwright-tester** på tre skärmbredder. Allt mätt med `npm run status -- --full`, 2026-08-04.
 - Typecheck, lint och produktionsbygge gröna.
 - `npm audit`: **0 sårbarheter**.
 - Produktionsappen renderar (Pass, Historik, Inställningar) och når Supabase.
