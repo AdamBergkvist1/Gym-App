@@ -106,14 +106,17 @@ med svettiga ögon i dålig belysning, och telefoner sänker ljusstyrkan automat
 synkstatusen. **Grön får aldrig betyda "bra" i värderande mening** — ett tungt set är inte
 grönare än ett lätt. Loggen är en logg, inte en domare.
 
-**Gul = titta på den här innan du går vidare.** Låg konfidens från AI:n, ett värde långt
-utanför det typiska, ett uppvärmningsset.
+**Gul = titta på den här innan du går vidare.** Låg konfidens från AI:n, eller ett värde långt
+utanför det typiska. **Inget annat.**
 
-> ⚠️ **Öppen fråga till §3.** Gul bär i dag två helt olika betydelser: *"osäkert, bekräfta"*
-> och *"uppvärmning"* (`W` i orange enligt 11A.12). Uppvärmning är en **kategori**, inte en
-> varning — att märka den med varningsfärg säger åt ögat att något är fel när inget är fel.
-> Löses i skärmskisserna, inte här: sannolikt får uppvärmning en neutral markör och gul
-> reserveras för det som verkligen kräver ett beslut.
+> ✅ **Löst i §3.** Frågan var öppen när §1 skrevs: gul bar två skilda betydelser, *"osäkert,
+> bekräfta"* och *"uppvärmning"* (`W` i orange enligt 11A.12). Uppvärmning är en **kategori**,
+> inte en varning — att märka den med varningsfärg säger åt ögat att något är fel när inget är
+> fel.
+>
+> Svaret kom från Liftosaur, som märker uppvärmning med **ordet "Warmup"** i stället för med
+> färg. Hos oss blir `W` neutral (`--color-dim`), `F` röd, arbetsset vanlig text. **Gul
+> betyder därefter en enda sak** — och betyder därmed något.
 
 **Röd = något gick fel, eller något kommer försvinna.** Misslyckad synk, permanent fel i
 utkorgen, ta bort-knappar. Röd ska vara sällsynt; används den för ofta slutar den betyda något.
