@@ -15,8 +15,8 @@
  * så finns ett före/efter att jämföra.
  *
  * ANVÄNDNING
- *   npm run shots            iPhone SE, 375 px
- *   npm run shots -- --bred  iPhone 13, 390 px
+ *   npm run shots         iPhone SE, 375 px — smalast, fel syns först här
+ *   npm run shots -- --15 iPhone 15, 393 px — Adams telefon
  */
 
 import { chromium, webkit } from '@playwright/test';
@@ -27,8 +27,11 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const UT = join(ROOT, 'skarmdumpar');
-const BRED = process.argv.includes('--bred');
-const VIEWPORT = BRED ? { width: 390, height: 844 } : { width: 375, height: 667 };
+// Förvalet är SE — det smalaste fallet, där fel syns först. --15 ger Adams
+// faktiska telefon, som är den layout han själv ser.
+const VIEWPORT = process.argv.includes('--15')
+  ? { width: 393, height: 852 }
+  : { width: 375, height: 667 };
 const URL_BAS = 'http://localhost:5173';
 
 /** Startar vite och väntar tills den svarar. Dödas alltid i finally. */

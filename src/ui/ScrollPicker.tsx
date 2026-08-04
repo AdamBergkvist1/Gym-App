@@ -22,8 +22,22 @@ interface Props {
   className?: string;
 }
 
-const ITEM_H = 44; // px — stort nog att träffa, litet nog att visa fem rader
-const VISIBLE = 5;
+const ITEM_H = 44; // px — stort nog att träffa med svettiga fingrar
+
+/**
+ * Tre rader, inte fem. Ändrat 2026-08-04 i fas 11B steg 4.2.
+ *
+ * Fem rader valdes utan att någon mätte mot den minsta skärm vi lovat stödja.
+ * Resultatet: bottenarket blev **793 px högt på en 667 px skärm** (iPhone SE),
+ * och headern med övningsnamnet och det sammansatta värdet trycktes 113 px
+ * ovanför skärmkanten. Man kunde alltså aldrig se vilken vikt man ställde in —
+ * fyra sifferhjul som visade `0 0 0 0` utan någon sammanräknad siffra.
+ *
+ * Två hjulrader × 2 borttagna rader × 44 px = **176 px sparade**, vilket får in
+ * arket med marginal. Tre rader räcker: man ser valt värde plus ett steg åt
+ * vardera hållet, vilket är allt som behövs för att förstå att det går att dra.
+ */
+const VISIBLE = 3;
 
 export function ScrollPicker({ values, value, onChange, label, caption, className }: Props) {
   const ref = useRef<HTMLDivElement>(null);
