@@ -33,7 +33,7 @@ interface Props {
 }
 
 const NUDGE =
-  'flex h-11 flex-1 items-center justify-center rounded-md border ' +
+  'flex h-10 flex-1 items-center justify-center rounded-md border ' +
   'border-[var(--color-line)] text-lg active:opacity-60';
 
 export function SetAdjustSheet({
@@ -64,21 +64,33 @@ export function SetAdjustSheet({
         className="absolute inset-0 min-h-0 bg-black/60"
       />
 
-      <div className="relative w-full rounded-t-2xl border-t border-[var(--color-line)] bg-[var(--color-surface)] pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-[var(--color-line)]" aria-hidden />
+      {/* `max-h-[92dvh]` + scroll är ett SKYDDSNÄT, inte designen. Arket ska få
+          plats utan att scrolla — men växer innehållet någon gång igen ska det
+          bli scrollbart i stället för att tryckas utanför skärmen, vilket är
+          exakt vad som hände före 2026-08-04. */}
+      <div className="relative flex max-h-[92dvh] w-full flex-col overflow-y-auto rounded-t-2xl border-t border-[var(--color-line)] bg-[var(--color-surface)] pb-[env(safe-area-inset-bottom)]">
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[var(--color-line)]" aria-hidden />
 
-        <header className="px-4 pt-2 pb-1">
-          <h2 className="truncate text-lg font-semibold">{exerciseName}</h2>
-          <p className="text-sm text-[var(--color-dim)] tabular-nums">
-            Set {setNumber} · {formatWeight(weightKg)} kg × {reps}
+        {/* Det sammansatta värdet är arkets viktigaste element.
+            Fyra sifferhjul som visar `0 0 0 0` säger ingenting om att vikten är
+            62,5 — den siffran måste stå någonstans, stor nog att läsas medan
+            man drar. Den fanns här redan, men i 14 px och utanför skärmen. */}
+        <header className="shrink-0 px-4 pt-2 pb-1">
+          <p className="truncate text-meta text-[var(--color-dim)]">
+            {exerciseName} · set {setNumber}
+          </p>
+          <p className="text-timer font-semibold tabular-nums">
+            {formatWeight(weightKg)}
+            <span className="text-title text-[var(--color-dim)]"> kg × </span>
+            {reps}
           </p>
         </header>
 
         {/* ---- vikt ---- */}
         <div className="px-4 pt-2">
-          <p className="mb-1 text-xs font-semibold tracking-wider text-[var(--color-dim)] uppercase">
-            Vikt
-          </p>
+          {/* Ingen "Vikt"-etikett: headern visar redan "62,5 kg × 8" i 32 px,
+              vilket är exakt vad etiketten fanns för. Den kostade 20 px höjd på
+              en skärm där arket inte fick plats. */}
           <div className="flex items-start justify-center gap-1">
             <ScrollPicker
               label="Hundratal kilo"
@@ -147,7 +159,7 @@ export function SetAdjustSheet({
         </div>
 
         {/* ---- reps ---- */}
-        <div className="mt-4 flex items-start gap-4 px-4">
+        <div className="mt-3 flex items-start gap-4 px-4">
           <div className="flex-1">
             <p className="mb-1 text-xs font-semibold tracking-wider text-[var(--color-dim)] uppercase">
               Reps
@@ -160,7 +172,7 @@ export function SetAdjustSheet({
                 onChange={(v) => onChange({ reps: v })}
                 className="w-20"
               />
-              <div className="flex flex-1 flex-col gap-2 pt-8">
+              <div className="flex flex-1 flex-col gap-2 pt-4">
                 <button
                   type="button"
                   onClick={() => onChange({ reps: stepReps(reps, 1) })}
@@ -180,23 +192,48 @@ export function SetAdjustSheet({
           </div>
         </div>
 
-        <label className="mt-3 flex items-center gap-2 px-4 text-sm text-[var(--color-dim)]">
-          <input
-            type="checkbox"
-            checked={isWarmup}
-            onChange={(e) => onChange({ isWarmup: e.target.checked })}
-            className="size-5 min-h-0"
-          />
-          Uppvärmningsset
-        </label>
+        {/* Egen växlare i stället för <input type="checkbox">. Systemrutan
+            renderas vit och fyrkantig i WebKit oavsett `accent-color`, vilket i
+            ett mörkt gränssnitt ser ut som ett renderingsfel snarare än en
+            kontroll. `aria-pressed` ger samma information till skärmläsare som
+            en kryssruta gjorde.
 
-        <div className="mt-4 flex gap-2 p-4 pt-0">
+            Neutral, inte gul: uppvärmning är en kategori och inte en varning.
+            Se DESIGN.md §3. */}
+        <div className="mt-2 px-4">
+          <button
+            type="button"
+            onClick={() => onChange({ isWarmup: !isWarmup })}
+            aria-pressed={isWarmup}
+            className={[
+              'flex w-full items-center gap-3 rounded-lg border px-3 text-body',
+              isWarmup
+                ? 'border-[var(--color-line-strong)] bg-[var(--color-bg)] text-[var(--color-fg)]'
+                : 'border-[var(--color-line)] text-[var(--color-dim)]',
+            ].join(' ')}
+          >
+            <span
+              aria-hidden
+              className={[
+                'flex size-5 shrink-0 items-center justify-center rounded border text-xs',
+                isWarmup
+                  ? 'border-[var(--color-fg)] bg-[var(--color-fg)] text-[var(--color-bg)]'
+                  : 'border-[var(--color-line-strong)]',
+              ].join(' ')}
+            >
+              {isWarmup ? '✓' : ''}
+            </span>
+            Uppvärmningsset
+          </button>
+        </div>
+
+        <div className="mt-3 flex gap-2 p-4 pt-0">
           {bekräftaBort ? (
             <>
               <button
                 type="button"
                 onClick={onRemove}
-                className="flex-1 rounded-lg bg-amber-500 font-semibold text-[var(--color-bg)]"
+                className="flex-1 rounded-lg bg-[var(--color-err-solid)] font-semibold text-[var(--color-bg)]"
               >
                 Ta bort setet
               </button>
