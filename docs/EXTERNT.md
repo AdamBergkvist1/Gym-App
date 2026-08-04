@@ -25,11 +25,26 @@ samma commit.
 
 ## Kopierat
 
-*(Inget ännu. Första posten blir Radix Colors i fas 11B.)*
-
 | Vad | Källa | Licens | Våra filer | Datum |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| Färgvärden ur `grayDark`, `greenDark`, `amberDark`, `redDark` | [radix-ui/colors](https://github.com/radix-ui/colors) | **MIT** | `docs/DESIGN.md` §1 → `src/index.css` (fas 11B steg 4) | 2026-08-04 |
+
+### Radix Colors — detaljer
+
+- **Vad som kopierats:** enskilda hexvärden ur fyra mörka skalor. Steg 3, 8, 9 och 11 ur
+  green, amber och red, samt `gray8` som `--color-line-strong`.
+- **Vad som INTE kopierats:** ingen kod, inget npm-paket, ingen CSS-fil. **Bundlen växer
+  inte.** Detta är "data slår kod" ur `CLAUDE.md` §7.1 i praktiken.
+- **Varför just Radix:** uppgift 11B.7 kräver WCAG AA mot mörk botten. Radix skalor är
+  konstruerade med definierade roller och förutsägbar kontrast per steg. Tailwinds palett är
+  vald för utseende, inte för garanterad kontrast.
+- **Verifierat 2026-08-04:** samtliga textfärger uppmätta mot `#0a0a0a` med WCAG:s
+  luminansformel. Lägsta värde 9,40:1 mot kravet 4,5:1. Tabellen finns i `DESIGN.md` §1.
+
+> **MIT-attribution.** Licensen kräver att upphovsrättsraden följer med. För kopierade
+> *värden* i en egen fil är den här posten det som uppfyller villkoret — det är därför
+> registret finns. Skulle vi någon gång kopiera Radix **kod** ska licenstexten in i
+> filhuvudet också.
 
 ---
 
