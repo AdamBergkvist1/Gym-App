@@ -1,13 +1,91 @@
 @import 'tailwindcss';
 
-/* Endast mörkt tema — PLAN.md §2.2. Ingen ljus variant byggs. */
+/* Endast mörkt tema — PLAN.md §2.2. Ingen ljus variant byggs.
+ *
+ * Alla värden nedan är definierade i docs/DESIGN.md, som är sanningen. Ändras
+ * något här ska det ändras där först — annars driver koden och briefen isär,
+ * vilket är precis det fel genomgången 2026-08-03 handlade om.
+ */
 @theme {
+  /* ---------------------------------------------------------------- neutraler
+   * Bakgrunden ändras INTE: den ligger i PWA-manifestet som theme_color och
+   * background_color, så ett byte ändrar även startskärm och statusrad på iOS.
+   * Kontrast mot bg, uppmätt: fg 16,91:1 · dim 5,73:1.
+   */
   --color-bg: #0a0a0a;
   --color-surface: #171717;
   --color-line: #2e2e2e;
   --color-fg: #ededed;
   --color-dim: #8a8a8a;
+
+  /* Kanter som BÄR BETYDELSE — t.ex. en obekräftad setrads tryckyta.
+   * WCAG 1.4.11 kräver 3:1 för kanter som behövs för att identifiera en
+   * komponent. Radix gray8, uppmätt 3,15:1. Dekorativa kortramar använder
+   * --color-line och behöver inte nå dit. */
+  --color-line-strong: #606060;
+
+  /* ------------------------------------------------------- semantiska färger
+   * Radix Colors (MIT), mörka skalor. Registrerat i docs/EXTERNT.md.
+   * Vi kopierar VÄRDEN, inte kod — ingen bundle-ökning.
+   *
+   * Steg 11 = text, 9 = solid fyllning, 8 = kant, 3 = diskret yta.
+   * Färgad text använder ALLTID steg 11. Steg 9 är gjord för att vara en yta
+   * med text ovanpå, inte för att vara text själv.
+   *
+   * Samtliga texter uppmätta mot bg med WCAG:s luminansformel. Lägsta 9,40:1
+   * mot kravet 4,5:1. Marginalen är avsiktlig: skärmen läses med svettiga ögon
+   * i dålig belysning, och telefoner sänker ljusstyrkan i värme.
+   */
+
+  /* Sparat — och bara det. Grön betyder ALDRIG "bra" i värderande mening: ett
+   * tungt set är inte grönare än ett lätt. Loggen är en logg, inte en domare. */
+  --color-ok-text: #3dd68c;   /* 10,55:1 */
+  --color-ok-solid: #30a46c;  /*  6,27:1 */
+  --color-ok-line: #2f7c57;   /*  3,90:1 */
+  --color-ok-bg: #132d21;
+
+  /* Uppmärksamhet — kräver ett beslut av användaren. Låg konfidens från AI:n,
+   * eller ett värde långt utanför det typiska. INGET annat.
+   * Uppvärmning är en kategori och märks med tecken, inte med varningsfärg. */
+  --color-warn-text: #ffca16; /* 12,93:1 */
+  --color-warn-solid: #ffc53d;
+  --color-warn-line: #8f6424;
+  --color-warn-bg: #302008;
+
+  /* Fel och destruktivt. Ska vara sällsynt — används röd för ofta slutar den
+   * betyda något. */
+  --color-err-text: #ff9592;  /*  9,40:1 */
+  --color-err-solid: #e5484d;
+  --color-err-line: #b54548;
+  --color-err-bg: #3b1219;
+
+  /* Personbästa. Färgen bär inte budskapet ensam — den delar kulör med
+   * "sparat", så en utskriven PB-etikett följer alltid med. */
+  --color-pb-text: #b1f1cb;   /* 15,38:1 */
+  --color-pb-bg: #132d21;
+
+  /* ------------------------------------------------------------- typografi
+   * Namngivna efter ROLL, inte storlek. Setraden är största elementet i
+   * passets beständiga innehåll — det var inverterat före 11B, där setvärdet
+   * var 16 px och timern 36 px.
+   *
+   * Ingen egen webbfont: systemstacken ger SF Pro på iOS med äkta
+   * tabulärsiffror, kostar noll nedladdning och ritar text i första bildrutan.
+   */
+  --text-set: 1.5rem;          /* 24px — vikt och reps i setraden */
+  --text-timer: 2rem;          /* 32px — vilotimern medan den går */
+  --text-title: 1.375rem;      /* 22px — sidrubrik */
+  --text-exercise: 1.0625rem;  /* 17px — övningsnamn */
+  --text-body: 0.9375rem;      /* 15px — brödtext */
+  --text-meta: 0.8125rem;      /* 13px — spökdata, tider, metadata */
+  --text-label: 0.6875rem;     /* 11px — kolumnrubriker, versaler */
 }
+
+/* Vertikal rytm: basenhet 4 px. Tailwind 4:s egen skala ger redan exakt de
+ * värden briefen kräver — p-1=4, p-2=8, p-3=12, p-4=16, p-6=24, p-8=32. Egna
+ * spacing-tokens hade bara varit en andra uppsättning namn för samma tal, och
+ * två sanningar är värre än en. Regeln är alltså vilka värden som får användas,
+ * inte nya variabler. Se docs/DESIGN.md §2. */
 
 html,
 body,
@@ -24,10 +102,22 @@ body {
   /* Safe-area hanteras av AppShell, inte här. En blankettpadding på body
      skulle lägga en remsa bakgrundsfärg utanför navigeringen i stället för
      att låta den blöda ut till skärmkanten. */
+
+  /* Uppgift 11B.2, löst strukturellt i stället för ihågkommet.
+   *
+   * Tidigare var tabular-nums en klass man måste lägga på varje ställe där en
+   * siffra kan ändras — och sådant glöms. Som förval här blir regeln omöjlig
+   * att bryta. Priset är att siffror i löptext blir marginellt bredare; i en
+   * app som nästan uteslutande består av siffror är det rätt sida att fela på. */
+  font-variant-numeric: tabular-nums;
 }
 
 /* Gymergonomi: alla tryckytor minst 48x48 px (PLAN.md §2.3). Under hård
-   ansträngning minskar finmotoriken, och händerna är svettiga eller kritade. */
+   ansträngning minskar finmotoriken, och händerna är svettiga eller kritade.
+
+   OBS: `min-h-0` får inte användas för att kringgå detta. Setraden gör det i
+   dag och hamnar på 40x36 px för bekräfta-knappen — appens mest tryckta
+   kontroll. Rättas i steg 4.2. */
 button,
 [role='button'],
 input,

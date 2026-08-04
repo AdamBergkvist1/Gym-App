@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router';
 import { UpdatePrompt } from './UpdatePrompt';
 import { SyncStatus } from './SyncStatus';
+import { TABS } from './nav';
 
 /**
  * Appskalet: innehållsyta + bottennavigering.
@@ -8,13 +9,10 @@ import { SyncStatus } from './SyncStatus';
  * Navigeringen ligger i botten för att den ska nås med tummen. Varje knapp är
  * minst 48 px hög och navigeringen har `env(safe-area-inset-bottom)` som
  * padding, annars hamnar den bakom iPhones hemindikator och blir oklickbar.
+ *
+ * Flikarna kommer från `ui/nav.ts`, samma lista som rutterna i `App.tsx` läser.
+ * Att lägga till en flik är en rad där, inte två ändringar på två ställen.
  */
-
-const TABS = [
-  { to: '/', label: 'Pass', end: true },
-  { to: '/historik', label: 'Historik', end: false },
-  { to: '/installningar', label: 'Inställningar', end: false },
-] as const;
 
 export function AppShell() {
   return (
@@ -43,10 +41,12 @@ export function AppShell() {
       >
         <ul className="mx-auto flex max-w-lg">
           {TABS.map((tab) => (
-            <li key={tab.to} className="flex-1">
+            <li key={tab.path} className="flex-1">
               <NavLink
-                to={tab.to}
-                end={tab.end}
+                to={tab.path}
+                /* `end` bara för startsidan: utan det matchar "/" varje rutt
+                   och alla flikar ser aktiva ut samtidigt. */
+                end={tab.path === '/'}
                 className={({ isActive }) =>
                   [
                     'flex h-16 items-center justify-center text-sm',
