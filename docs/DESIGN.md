@@ -8,7 +8,7 @@ förutsättning för den, inte en dokumentation av den i efterhand.
 | Del | Innehåll | Läge |
 |---|---|---|
 | **§1** | Färgsystemet | ✅ **klar 2026-08-04** — väntar på godkännande |
-| §2 | Typografi och rytm | ⬜ ej påbörjad |
+| **§2** | Typografi och rytm | ✅ **klar 2026-08-04** — väntar på godkännande |
 | §3 | Skärmskisser | ⬜ blockerad — kräver referensmaterial |
 
 > **Ingen kod skrivs mot denna fil förrän Adam godkänt respektive del.** `index.css` och
@@ -174,7 +174,172 @@ De ersätts av tokens i fas 11B steg 4.
 
 ## §2 Typografi och rytm
 
-*Ej påbörjad. Bygger på §1.*
+Täcker uppgift **11B.1** (skala), **11B.2** (`tabular-nums`), **11B.3** (vertikal rytm) och
+underlaget till **11B.9** (densitet).
+
+### Vad mätningen visade
+
+Räknat över `src/` 2026-08-04:
+
+| Fynd | Siffra | Vad det betyder |
+|---|---|---|
+| `text-sm` + `text-xs` | **93 av 118** | 79 % av all text är liten. Appen är en vägg av småtext |
+| `font-semibold` | **33** mot 3 `font-normal` | Halvfet är i praktiken förvalet — och då skiljer vikt ingenting |
+| Setvärde | `text-base` = **16 px** | |
+| Vilotimer | `text-4xl` = **36 px** | |
+
+> 🚩 **Målet i 11B.1 är inverterat i dag.** Setraden ska vara största elementet, men timern är
+> **2,25 gånger större** än setvärdena. Det är inte en detalj — det är hela hierarkin bakåt.
+
+**Två fynd till, som inte hörde till uppgiften men föll ut ur mätningen:**
+
+**1. Tryckytorna i setraden bryter mot projektets egen regel.** `index.css` sätter
+`min-height: 48px` på alla knappar med motiveringen i `PLAN.md` §2.3: under hård ansträngning
+minskar finmotoriken och händerna är svettiga. Men `SetRow` använder `min-h-0` för att kringgå
+den:
+
+| Element | I dag | Regel |
+|---|---|---|
+| Bekräfta ✓ | **40 × 36 px** (`h-9 w-9`) | 48 × 48 |
+| Värdecell (kg, reps) | 52 × **44 px** (`h-11`) | 48 |
+
+Bekräfta-knappen är **appens mest tryckta kontroll**. Att just den är minst är fel väg.
+
+**2. `TASKS.md` 11B.2 är inaktuell.** Den säger att `tabular-nums` "saknas i historik och
+timer". Mätningen visar att både `HistoryPage`, `ExercisePage` och `RestTimer` redan har det.
+Uppgiften kvarstår men handlar om att göra det strukturellt, inte om att lägga till det.
+
+### Typsnitt — systemstacken behålls, och det är ett beslut
+
+Ingen egen webbfont. Skälen:
+
+- **Noll nedladdning.** Allt som precachas hämtas en gång i en gymkällare. En webbfont kostar
+  15–40 kB för noll funktion.
+- **Ingen FOUT.** Text ritas i första bildrutan, alltid.
+- **iOS ger SF Pro**, som har äkta tabulärsiffror. Det är precis vad en logg full av siffror
+  behöver, gratis.
+
+`font-mono` finns på ett ställe (`SettingsPage`, diagnostikvärden) och får vara kvar — det är
+maskindata, inte innehåll.
+
+### Skalan
+
+Sju steg, namngivna efter **roll** och inte storlek — samma princip som färgtokens.
+
+| Token | rem | px | Vikt | Används till |
+|---|---|---|---|---|
+| `--text-set` | 1.5 | **24** | 600 | Vikt och reps i setraden |
+| `--text-timer` | 2 | 32 | 600 | Vilotimern medan den går |
+| `--text-title` | 1.375 | 22 | 600 | Sidrubrik (`h1`) |
+| `--text-exercise` | 1.0625 | 17 | 600 | Övningsnamn på kortet |
+| `--text-body` | 0.9375 | 15 | 400 | Brödtext, standard |
+| `--text-meta` | 0.8125 | 13 | 400 | Spökdata, tider, metadata |
+| `--text-label` | 0.6875 | 11 | 600 | Kolumnrubriker, versaler |
+
+**Setvärdet går från 16 → 24 px.** Det är den enda ändring som faktiskt löser 11B.1.
+
+> ❓ **Beslut jag vill ha ditt ja på:** timern blir 32 px, alltså fortfarande större än
+> setraden. Bokstavligt läst bryter det mot 11B.1.
+>
+> **Mitt skäl:** de två konkurrerar aldrig om uppmärksamheten. Timern läses **på avstånd**,
+> med telefonen liggande på en bänk medan du vilar. Setraden läses **i handen** när du loggar.
+> Att krympa timern under setraden hade gjort den sämre på sitt enda jobb för att uppfylla en
+> regel bokstavligt.
+>
+> Jag föreslår att 11B.1 formuleras om till: *"setraden är största elementet i passets
+> beständiga innehåll"*. Timern är ett tillfälligt tillstånd, inte innehåll.
+
+**Vikt bär betydelse igen.** 600 reserveras för siffror som räknas, rubriker och övningsnamn.
+Allt annat är 400. I dag är 33 av 37 viktklasser halvfeta, vilket betyder att halvfet inte
+säger något alls.
+
+### `tabular-nums` blir strukturellt, inte ihågkommet
+
+```css
+body { font-variant-numeric: tabular-nums; }
+```
+
+**På `body`, inte per komponent.** 11B.2 har hittills varit en regel man måste komma ihåg 40
+gånger — och den glöms. Som förval blir den omöjlig att bryta.
+
+Priset är att siffror i löptext blir marginellt bredare. I en app som nästan uteslutande
+består av siffror är det rätt sida att fela på.
+
+### Vertikal rytm
+
+Basenhet **4 px**. Tillåtna värden: **4, 8, 12, 16, 24, 32**. Inget annat.
+
+| Avstånd | Värde | Var |
+|---|---|---|
+| Inuti en rad | 4 | Mellan kolumner i setraden |
+| Mellan rader | 8 | Setrader i ett övningskort |
+| Mellan kort | 12 | Övningskort i passvyn |
+| Mellan sektioner | 24 | Rubrik till innehåll |
+| Sidmarginal topp | 32 | Under statusraden |
+
+I dag används 20+ olika värden utan regel — `px-3`, `mt-2`, `px-4`, `gap-2`, `p-3`, `mt-1`
+och så vidare. Värdena är i sig inte fel; det som saknas är vilket som gäller när.
+
+### Tryckytor — rättning
+
+| Element | I dag | Ska bli | Kostnad |
+|---|---|---|---|
+| Bekräfta ✓ | 40 × 36 | **48 × 48** | 8 px bredd |
+| Värdecell | 52 × 44 | 52 × **48** | 0 px bredd |
+
+Bredden tas från `Förra`-kolumnen, som är den enda flexibla (`1fr`).
+**`min-h-0` får inte längre användas för att kringgå 48 px-regeln.**
+
+> ⚠️ **Måste verifieras, inte antas.** Setradens rutnät är
+> `grid-cols-[1.75rem_1fr_3.25rem_2.75rem_2.5rem]` med `gap-1` och `px-2` — 164 px fasta
+> kolumner plus 16 px mellanrum plus 16 px padding. Att öka ✓ till 48 px tar 8 px från
+> `Förra`. **Playwright-vakten mäter detta på 375 px i steg 4** innan det anses klart. Samma
+> fel som 11A.8 får inte upprepas: en känd risk som inte mäts är inte hanterad.
+
+### Densitet — 11B.9
+
+Kravet: ett pass med 25 set ska gå att överblicka. Med 48 px per rad blir det ~1 200 px, alltså
+knappt två skärmar.
+
+**Förslag: bekräftade rader krymper.** Ett avbockat set behöver inte samma tryckyta som ett
+som väntar — det ska gå att *läsa*, inte att *träffa*.
+
+| Tillstånd | Höjd | Motiv |
+|---|---|---|
+| Väntar | **48 px** | Ska träffas med svettiga fingrar |
+| Bekräftat | **40 px** | Ska läsas. Ångra sker genom att trycka på hela raden |
+
+Ångra-ytan blir 40 px hög men **hela radens bredd**, alltså långt större än 48×48 px i area.
+48 px-regeln finns för små, isolerade mål — inte för fullbreddsrader.
+
+Ett pass med 25 mestadels avbockade set går från ~1 200 till ~1 000 px. Ingen dramatik, men
+det är den enda densitetsvinst som inte kostar träffsäkerhet.
+
+### Tokens att lägga i `index.css`
+
+```css
+@theme {
+  --text-set: 1.5rem;        /* 24px */
+  --text-timer: 2rem;        /* 32px */
+  --text-title: 1.375rem;    /* 22px */
+  --text-exercise: 1.0625rem;/* 17px */
+  --text-body: 0.9375rem;    /* 15px */
+  --text-meta: 0.8125rem;    /* 13px */
+  --text-label: 0.6875rem;   /* 11px */
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+
+body { font-variant-numeric: tabular-nums; }
+```
+
+**Klart när** (11B.1): ingen komponent sätter egen textstorlek — all typografi kommer från
+token.
 
 ## §3 Skärmskisser
 
