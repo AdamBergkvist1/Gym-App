@@ -56,8 +56,9 @@ samma commit.
 - **Varför ändå:** tekniskt närmast oss av allt som finns. Det är en PWA med exakt samma
   iOS-problem vi brottats med (bakgrundstimers, notiser, Wake Lock), och utvecklaren har
   skrivit publikt om dem. Störst lärvärde av alla kandidater.
-- **Vad vi tagit:** ingenting. Endast layout- och interaktionsmönster som idéunderlag till
-  `DESIGN.md`.
+- **Vad vi tagit:** ingenting. Läst 2026-08-04 som idéunderlag till `DESIGN.md` §3. Det som
+  påverkade oss var ett *mönster*, inte kod: Liftosaur märker uppvärmningsset med ordet
+  "Warmup" i stället för med färg, vilket löste vår öppna fråga om att gul bar två betydelser.
 - **Gränsen:** layout och informationsarkitektur är inte upphovsrättsskyddat. Kodrader är det.
 
 ### workout-cool

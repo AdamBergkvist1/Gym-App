@@ -9,7 +9,7 @@ förutsättning för den, inte en dokumentation av den i efterhand.
 |---|---|---|
 | **§1** | Färgsystemet | ✅ **klar 2026-08-04** — väntar på godkännande |
 | **§2** | Typografi och rytm | ✅ **klar 2026-08-04** — väntar på godkännande |
-| §3 | Skärmskisser | ⬜ blockerad — kräver referensmaterial |
+| **§3** | Skärmskisser | ✅ **klar 2026-08-04** — väntar på godkännande |
 
 > **Ingen kod skrivs mot denna fil förrän Adam godkänt respektive del.** `index.css` och
 > komponenterna ändras i fas 11B steg 4, en skärm i taget.
@@ -343,4 +343,257 @@ token.
 
 ## §3 Skärmskisser
 
-*Blockerad: kräver referensmaterial. Se `HANDOFF.md` §8.*
+Formen är låst i `SPEC.md` §2b: fyra flikar — **Pass, Historik, Övningar, Mer**.
+
+### Referenserna och vad var och en bidrog med
+
+| Källa | Bidrag |
+|---|---|
+| `Reference-pics/Skärmbild …104637` (Hevy) | Setradens tabell `Set·Prev·KG·Reps·✓`, grön bakgrund på bekräftad rad, **PB-chip inline**, vilotimern som liten chip mellan övningar |
+| `Reference-pics/Skärmbild …104719` | **Sammanfattningsrad `Tid · Volym · Set`** överst i passet |
+| `Reference-pics/image8.webp`, `image16.webp` (MacroFactor) | Mörkt kortspråk, **stor siffra + liten etikett**, segmenterad tidsperiod `1V·1M·3M·1Å·Allt`, **trendlinje med osäkerhetsband** |
+| liftosaur.com (läst 2026-08-04, AGPL — inget kopierat) | Uppvärmning märks med **ordet "Warmup"**, inte med färg |
+
+### ✅ Den öppna frågan från §1 är löst
+
+Gul bar två betydelser: *"osäkert, bekräfta"* och *"uppvärmning"*. Liftosaur visar vägen ut —
+**uppvärmning är en kategori och märks med tecken, inte med varningsfärg.**
+
+| Markör | Betydelse | Utseende |
+|---|---|---|
+| `W` | Uppvärmning | `--color-dim`, **neutral** |
+| `F` | Failure / till utmattning | `--color-err-text` |
+| `1, 2, 3…` | Arbetsset | `--color-fg` |
+
+**Gul reserveras helt för det som kräver ett beslut av dig:** låg konfidens från AI:n, ett
+värde långt utanför det typiska. Efter detta betyder gul en enda sak, och då betyder den
+något.
+
+### Genomgående mönster
+
+**Kortet.** `--color-surface`, radie 12 px, `--color-line` som ram, `--space-3` inuti,
+`--space-3` mellan kort. Ingen skugga — skuggor på nästan svart är brus.
+
+**Sidrubrik.** `--text-title`, och till höger på samma rad en sammanfattning i
+`--text-meta`. Rubriken tar aldrig en egen rad för sig själv; skärmhöjd är dyrare än luft.
+
+**Segmenterad kontroll.** Piller, hela bredden, aktivt segment `--color-fg` på
+`--color-surface`. Används för Historik och för tidsperiod i Statistik.
+
+**Stor siffra + liten etikett.** Värdet i `--text-set` eller större, etiketten under i
+`--text-label` versaler `--color-dim`. Kommer från MacroFactor och är rätt för en app där
+siffran *är* innehållet.
+
+---
+
+### 3.1 Pass
+
+**Utan pågående pass** — programmen är genvägar, tomt pass är förstavalet (`SPEC.md` §2b):
+
+```
+┌──────────────────────────────────┐
+│ Pass                             │  --text-title
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │      Starta tomt pass        │ │  fylld, --color-fg, 56 px
+│ └──────────────────────────────┘ │
+│                                  │
+│  ┌───────┐ ┌───────┐ ┌───────┐   │  program, 48 px
+│  │ Push  │ │ Pull  │ │  Ben  │   │  kantade
+│  └───────┘ └───────┘ └───────┘   │
+│                                  │
+│  Kopiera förra passet         →  │  --text-body
+│  Bröst · 5 övningar · tisdag     │  --text-meta, --color-dim
+└──────────────────────────────────┘
+```
+
+Raden under "Kopiera förra passet" är ny och löser ett verkligt problem: i dag vet man inte
+vad man kopierar förrän efteråt.
+
+**Med pågående pass:**
+
+```
+┌──────────────────────────────────┐
+│ Pass                   42 min  ⏱ │
+│  12          4 850        3      │  --text-set
+│  SET         VOLYM KG     ÖVN    │  --text-label
+├──────────────────────────────────┤
+│ ⌨ Skriv i stället — "Bänk 90x5"  │  hopfälld genväg
+├──────────────────────────────────┤
+│ ┌──────────────────────────────┐ │
+│ │ Bänkpress               ⋯    │ │  --text-exercise
+│ │ Set  Förra   Kg   Reps   ✓   │ │  --text-label, EN gång
+│ │  W   60×10   60    10    ✓   │ │  bekräftad: --color-ok-bg
+│ │  1   90×5    90     5    ✓   │ │  40 px
+│ │  2   90×5    90     5    ☐   │ │  48 px, väntar
+│ │  +  Lägg till set             │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  ⏱ 1:12        🏆 PB +2,5 kg     │  timer + PB, chips
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Latsdrag                ⋯    │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  + Lägg till övning              │
+│  ✓ Avsluta pass                  │
+└──────────────────────────────────┘
+```
+
+**Tre beslut i den här skissen:**
+
+**Sammanfattningsraden är ny** (`Set · Volym · Övningar`). Från referens 104719. I dag står
+bara "0 min · 0 set" i en liten rad — volym är appens bästa mått på ett pass och saknas.
+
+**Vilotimern är en chip i flödet, inte ett banderoll-lager.** Hevy gör så, och det löser ett
+problem vi har: timern får inte skymma setraden man just loggat. **Men den ska vara 32 px
+enligt §2** — den är alltså en *stor* chip, inte en liten. Läsbar från en bänk, utan att äta
+en hel rad.
+
+**PB-chip bredvid timern** (11B.8). `--color-pb-text` på `--color-pb-bg`, med trofé och
+utskriven differens. Dyker upp i samma ögonblick setet bockas av — den starkaste
+återkopplingen appen kan ge, och den kostar nästan ingenting eftersom e1RM redan finns.
+
+---
+
+### 3.2 Historik
+
+```
+┌──────────────────────────────────┐
+│ Historik                         │
+│ ┌────────────┬─────────────────┐ │
+│ │   Pass     │    Statistik    │ │  segmenterad
+│ └────────────┴─────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Tisdag 2 aug          58 min │ │
+│ │ Bröst och triceps            │ │  --text-meta
+│ │ 18 set · 5 210 kg · 5 övn    │ │  --color-dim
+│ └──────────────────────────────┘ │
+└──────────────────────────────────┘
+```
+
+**Statistik-segmentet:**
+
+```
+┌──────────────────────────────────┐
+│ ┌──┬──┬──┬──┬──┬────┐            │
+│ │1V│1M│3M│6M│1Å│Allt│            │  tidsperiod
+│ └──┴──┴──┴──┴──┴────┘            │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Volym per muskelgrupp        │ │
+│ │  Bröst   ████████████  8 set │ │
+│ │  Rygg    ██████████   7 set  │ │
+│ │  Ben     ████          3 set │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Bänkpress                    │ │
+│ │  102,5        +4,2%          │ │  --text-set
+│ │  BÄSTA e1RM   8 VECKOR       │ │  --text-label
+│ │   ╱╲    ▁▂▃▄▅▆              │ │  linje + osäkerhetsband
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Kroppsvikt          + Väg in │ │
+│ │  82,4 kg      −0,6 kg        │ │
+│ └──────────────────────────────┘ │
+└──────────────────────────────────┘
+```
+
+> 💡 **Osäkerhetsbandet är inte dekoration.** MacroFactor ritar sin viktkurva med ett skuggat
+> band runt linjen. För oss är det ovanligt välmotiverat: `TASKS.md` 12.7 slår fast att Epley
+> är en **populationsformel** vars fel är *konsekvent åt samma håll* för en given person.
+> e1RM är alltså ett estimat som ser ut som ett mätvärde — och ett band gör osäkerheten
+> synlig i stället för att en exakt siffra ljuger med två decimaler.
+>
+> Detta är ett **förslag**, inte ett beslut: bandets bredd måste ha en grund innan det ritas,
+> annars är det bara dekoration som låtsas vara statistik. Avgörs i 12.7.
+
+---
+
+### 3.3 Övningar
+
+```
+┌──────────────────────────────────┐
+│ Övningar                    + Ny │
+│ ┌──────────────────────────────┐ │
+│ │ 🔍 Sök övning eller alias    │ │  48 px
+│ └──────────────────────────────┘ │
+│                                  │
+│ SENAST ANVÄNDA                   │  --text-label
+│  Bänkpress          102,5 kg  →  │
+│  Latsdrag            75,0 kg  →  │
+│                                  │
+│ BRÖST                            │
+│  Hantelpress         40,0 kg  →  │
+│  Flyes                    –   →  │
+└──────────────────────────────────┘
+```
+
+Siffran till höger är **personbästa i e1RM**, inte senaste vikt — det är det värde som gör
+listan värd att bläddra i. `–` när underlag saknas, aldrig en nolla: en nolla ser ut som ett
+resultat.
+
+Strukturen ärvs från `ExercisePicker` (11A.4) som redan har sök, senast använda överst och
+gruppering per muskelgrupp. **Fliken är samma komponent i en annan ram**, inte en ny.
+
+---
+
+### 3.4 Mer
+
+```
+┌──────────────────────────────────┐
+│ Mer                              │
+│ TRÄNING                          │
+│  Enhet                     kg  → │
+│  Standardvilotid          180 s → │
+│  Ansträngningsskala       RIR  → │
+│ KONTO                            │
+│  adam@…              Synkad ● → │
+│  Exportera data               →  │
+│ APPEN                            │
+│  Version              2026.08.04 │
+│  ▸ Diagnostik                    │  hopfälld
+└──────────────────────────────────┘
+```
+
+Diagnostiken (parsningsstatistik, timerdiagnostik, lagring) hamnar **hopfälld längst ned**.
+Den är byggd för felsökning, inte dagligt bruk — i dag är den allt som finns.
+
+---
+
+### 3.5 Bottenark
+
+`SetAdjustSheet` och `ExercisePicker` behåller sin struktur från 11A. Det som ändras är
+tokens: `--color-surface`, `--space-*`, `--text-set` på hjulens siffror.
+
+**Rullhjulen rörs inte i övrigt.** De är byggda på `scroll-snap` med egen sifferaritmetik och
+10 tester (`src/lib/digits.ts`). Adam har sagt att de inte blev fantastiska, och en egen
+utvärdering mot alternativ ligger som ett separat spår — **inte som en del av designrundan.**
+Att bygga om dem här hade blandat två frågor.
+
+---
+
+### Vad som INTE ingår i §3
+
+- **Ikonuppsättning.** Vi använder unicode och emoji i dag. Ett ikonbibliotek är ett eget
+  beslut med egen storleks- och licensfråga, och det finns inget i 11B som kräver det.
+- **Animationer** (11B.5) — hör till implementationen, inte till formen.
+- **Tomma tillstånd** (11B.6) — skissas när skärmarna byggs, i sitt sammanhang.
+
+### Implementationsordning för steg 4
+
+En skärm per branch och PR, i den här ordningen — mest använd först, så att fel upptäcks där
+de märks mest:
+
+1. **Tokens i `index.css`** (§1 + §2). Ingen visuell ändring i sig, men allt annat bygger på den
+2. **Pass** — setraden, sammanfattningsraden, timer- och PB-chip
+3. **Historik** — passlistan och segmentkontrollen
+4. **Statistik** — nytt segment
+5. **Övningar** — ny flik
+6. **Mer** — omstrukturering av Inställningar
+
+**Navigationen görs datadriven i steg 1**, enligt `SPEC.md` §2b — annars måste `AppShell` och
+`App.tsx` röras vid varje efterföljande steg.
