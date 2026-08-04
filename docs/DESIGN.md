@@ -587,7 +587,22 @@ Att bygga om dem här hade blandat två frågor.
 - **Ikonuppsättning.** Vi använder unicode och emoji i dag. Ett ikonbibliotek är ett eget
   beslut med egen storleks- och licensfråga, och det finns inget i 11B som kräver det.
 - **Animationer** (11B.5) — hör till implementationen, inte till formen.
-- **Tomma tillstånd** (11B.6) — skissas när skärmarna byggs, i sitt sammanhang.
+- **Densitet** (11B.9) — hör till implementationen.
+
+> 🚩 **RÄTTAT 2026-08-04.** Här stod tidigare att **tomma tillstånd** (11B.6) "skissas när
+> skärmarna byggs, i sitt sammanhang" — alltså behandlade som polering. **Det var för svagt,
+> och det kostade oss samma dag.**
+>
+> De tre fel som hittades vid den första visuella granskningen var **alla tomma tillstånd**:
+> startskärmen är en rubrik och en knapp på 550 px svart; en övning utan historik ger tre
+> rader `0 kg × 8`; justeringsarket sköt värdet utanför skärmen.
+>
+> Cole Caccamise formulerar varför: *"vad riktiga appar gör i de delar av flödet man inte
+> tänker på först — tomma tillstånd, laddningstillstånd, feltillstånd, och alla de små
+> besluten som får en app att kännas färdig."*
+>
+> **Tomma tillstånd är inte polering. De är en del av flödet, och ska undersökas före — inte
+> skissas efter.** Se `ai-workbench/tools/mobbin.md`.
 
 ### Implementationsordning för steg 4
 
