@@ -8,6 +8,8 @@ import {
   logSet,
   pendingCount,
   startWorkout,
+  summarizeWorkout,
+  type WorkoutSummary,
 } from '../../db/repo';
 import {
   addExerciseToPlan,
@@ -46,6 +48,24 @@ function elapsed(fromIso: string): string {
   return `${Math.floor(min / 60)} h ${min % 60} min`;
 }
 
+const VECKODAGAR = ['söndag', 'måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag'];
+
+/** "5 övningar · 18 set · tisdag" — vad knappen faktiskt kommer att kopiera. */
+function beskrivPass(s: WorkoutSummary): string {
+  const dag = VECKODAGAR[new Date(s.startedAt).getDay()] ?? '';
+  const delar = [
+    `${s.exerciseCount} ${s.exerciseCount === 1 ? 'övning' : 'övningar'}`,
+    `${s.setCount} set`,
+  ];
+  if (dag) delar.push(dag);
+  return delar.join(' · ');
+}
+
+/** Tusentalsavgränsare — 4 850 läses snabbare än 4850 med svettiga ögon. */
+function formatVolym(kg: number): string {
+  return Math.round(kg).toLocaleString('sv-SE');
+}
+
 export function TodayPage() {
   const [picker, setPicker] = useState<{ mode: 'add' | 'swap'; replacing?: string } | null>(null);
   const [visaFritext, setVisaFritext] = useState(false);
@@ -63,6 +83,22 @@ export function TodayPage() {
     null
   );
   const osynkade = useLiveQuery(() => pendingCount(), [], 0);
+
+  // Sammanfattning av förra passet — driver förhandsvisningen på
+  // kopiera-knappen. null tills den laddats, och knappen klarar det.
+  const förraSammanfattning = useLiveQuery(
+    () => (previousId ? summarizeWorkout(previousId) : Promise.resolve(null)),
+    [previousId],
+    null
+  );
+
+  // Passets egen sammanfattning. Räknas ur planen som redan är laddad i stället
+  // för en extra databasfråga.
+  const sammanfattning = useLiveQuery(
+    () => (workout ? summarizeWorkout(workout.id) : Promise.resolve(null)),
+    [workout?.id],
+    null
+  );
 
   const exerciseMap = new Map(exercises.map((e) => [e.id, e]));
   const exerciseRefs = exercises
@@ -105,18 +141,22 @@ export function TodayPage() {
   if (workout === null) {
     return (
       <section className="space-y-3">
-        <h1 className="text-2xl font-semibold">Pass</h1>
+        <h1 className="text-title font-semibold">Pass</h1>
 
         <button
           type="button"
           onClick={() => void startWorkout()}
-          className="w-full rounded-lg bg-[var(--color-fg)] py-4 text-lg font-semibold text-[var(--color-bg)] active:opacity-80"
+          className="w-full rounded-lg bg-[var(--color-fg)] py-4 text-exercise font-semibold text-[var(--color-bg)] active:opacity-80"
         >
-          Starta pass
+          Starta tomt pass
         </button>
 
         {/* 11A.6 — den vanligaste loggningen som finns ska vara den snabbaste
-            vägen genom appen, inte något man letar reda på. */}
+            vägen genom appen, inte något man letar reda på.
+
+            NYTT 2026-08-05: knappen visar nu VAD som kopieras. Tidigare stod
+            bara "Kopiera förra passet", och man fick veta innehållet först
+            efteråt — alltså när det redan var för sent att välja bort. */}
         {previousId !== null && (
           <button
             type="button"
@@ -126,14 +166,30 @@ export function TodayPage() {
                 await copyWorkoutIntoPlan(w.id, previousId);
               })()
             }
-            className="w-full rounded-lg border border-[var(--color-line)] py-4 text-lg active:bg-[var(--color-surface)]"
+            className="flex w-full flex-col items-start rounded-lg border border-[var(--color-line-strong)] px-4 py-3 text-left active:bg-[var(--color-surface)]"
           >
-            Kopiera förra passet
+            <span className="text-exercise">Kopiera förra passet</span>
+            {förraSammanfattning && (
+              <span className="text-meta text-[var(--color-dim)] tabular-nums">
+                {beskrivPass(förraSammanfattning)}
+              </span>
+            )}
           </button>
         )}
 
+        {/* Tomt tillstånd. Fanns inte alls före 11B — skärmen var en rubrik och
+            en knapp på 550 px svart, vilket inte säger nybörjaren någonting om
+            vad appen är till för. Tomma tillstånd är flöde, inte polering.
+            Se DESIGN.md §3. */}
+        {previousId === null && (
+          <p className="pt-2 text-meta text-[var(--color-dim)]">
+            Starta ett pass och lägg till övningar allt eftersom. Nästa gång kan
+            du kopiera det här passet med ett tryck.
+          </p>
+        )}
+
         {osynkade > 0 && (
-          <p className="text-xs text-[var(--color-dim)]">
+          <p className="text-meta text-[var(--color-dim)]">
             {osynkade} ändringar väntar på synk.
           </p>
         )}
@@ -150,11 +206,37 @@ export function TodayPage() {
   return (
     <section className="space-y-3">
       <header className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold">Pass</h1>
-        <span className="text-sm text-[var(--color-dim)] tabular-nums">
-          {elapsed(workout.startedAt)} · {klaraSet} set
+        <h1 className="text-title font-semibold">Pass</h1>
+        <span className="text-meta text-[var(--color-dim)] tabular-nums">
+          {elapsed(workout.startedAt)}
         </span>
       </header>
+
+      {/* Sammanfattningsraden. Ny i 11B steg 4.2, hämtad från referensbilden i
+          docs/Reference-pics/.
+
+          VOLYM ÄR POÄNGEN. Den är appens bästa mått på hur tungt ett pass var,
+          och den stod tidigare ingenstans — headern visade "0 min · 0 set", där
+          setantalet är det minst intressanta av de tre.
+
+          Mönstret stor siffra + liten etikett kommer från MacroFactor och är
+          rätt för en app där siffran ÄR innehållet. */}
+      <div className="grid grid-cols-3 gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3 text-center">
+        <div>
+          <p className="text-set font-semibold tabular-nums">{klaraSet}</p>
+          <p className="text-label tracking-wider text-[var(--color-dim)] uppercase">Set</p>
+        </div>
+        <div>
+          <p className="text-set font-semibold tabular-nums">
+            {formatVolym(sammanfattning?.volumeKg ?? 0)}
+          </p>
+          <p className="text-label tracking-wider text-[var(--color-dim)] uppercase">Volym kg</p>
+        </div>
+        <div>
+          <p className="text-set font-semibold tabular-nums">{övningar.length}</p>
+          <p className="text-label tracking-wider text-[var(--color-dim)] uppercase">Övningar</p>
+        </div>
+      </div>
 
       <RestTimer />
 

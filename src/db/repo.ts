@@ -8,6 +8,7 @@
  */
 
 import { newId } from '../lib/id';
+import { volumeKg } from '../lib/oneRepMax';
 import { normalizeName } from '../parser/normalize';
 import type { ExerciseRef } from '../parser/types';
 import { CATALOG } from './catalog';
@@ -335,4 +336,43 @@ export async function getLastPerformance(
 /** Antal osända mutationer — driver synkindikatorn i fas 7. */
 export async function pendingCount(database: GymDatabase = db): Promise<number> {
   return database.outbox.where('status').anyOf('pending', 'failed').count();
+}
+
+export interface WorkoutSummary {
+  setCount: number;
+  exerciseCount: number;
+  volumeKg: number;
+  startedAt: string;
+}
+
+/**
+ * Sammanfattning av ett pass. Uppgift 11B steg 4.2.
+ *
+ * Två ställen behöver den, och båda löser samma problem: **att man inte ser vad
+ * något innehåller förrän det är för sent.**
+ *
+ * 1. Passvyns sammanfattningsrad — `Set · Volym · Övningar`. Volym är appens
+ *    bästa mått på ett pass och stod tidigare ingenstans.
+ * 2. Startskärmens "Kopiera förra passet" — i dag vet man inte vad man kopierar
+ *    förrän efteråt.
+ *
+ * Uppvärmningsset räknas INTE i volymen. De är förberedelse, inte arbete, och
+ * att blanda in dem gör siffran obrukbar för jämförelser mellan pass.
+ */
+export async function summarizeWorkout(
+  workoutId: string,
+  database: GymDatabase = db
+): Promise<WorkoutSummary | null> {
+  const workout = await database.workouts.get(workoutId);
+  if (!workout || workout.isDeleted) return null;
+
+  const sets = await getSetsForWorkout(workoutId, database);
+  const arbetsset = sets.filter((s) => !s.isWarmup);
+
+  return {
+    setCount: sets.length,
+    exerciseCount: new Set(sets.map((s) => s.exerciseId)).size,
+    volumeKg: arbetsset.reduce((sum, s) => sum + volumeKg(s.weightKg, s.reps), 0),
+    startedAt: workout.startedAt,
+  };
 }

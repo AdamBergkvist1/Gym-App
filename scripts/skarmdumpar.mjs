@@ -115,7 +115,7 @@ async function main() {
     // tomma tillstånd. Det var precis den vyn som aldrig granskats.
     await sida.goto(URL_BAS);
     await sida.waitForLoadState('networkidle');
-    await tryck('Starta pass');
+    await tryck('Starta (tomt )?pass');
     await foto('4-pass-startat');
 
     if (await tryck('Lägg till övning')) {

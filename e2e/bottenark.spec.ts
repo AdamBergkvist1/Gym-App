@@ -25,7 +25,7 @@ async function öppnaArket(page: import('@playwright/test').Page) {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
 
-  await page.getByRole('button', { name: /Starta pass/i }).click();
+  await page.getByRole('button', { name: /Starta (tomt )?pass/i }).click();
   await page.getByRole('button', { name: /Lägg till övning/i }).click();
   await page.getByRole('button', { name: /press|drag|böj|lyft/i }).first().click();
 

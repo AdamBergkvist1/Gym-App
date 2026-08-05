@@ -21,12 +21,12 @@ export function RestTimer() {
       className={[
         'rounded-lg border p-3 transition-colors',
         expired
-          ? 'border-emerald-500 bg-emerald-500 text-[var(--color-bg)]'
+          ? 'border-[var(--color-ok-solid)] bg-[var(--color-ok-solid)] text-[var(--color-bg)]'
           : 'border-[var(--color-line)] bg-[var(--color-surface)]',
       ].join(' ')}
     >
       <div className="flex items-center gap-3">
-        <span className="text-4xl font-semibold tabular-nums">
+        <span className="text-timer font-semibold tabular-nums">
           {formatRemaining(remaining)}
         </span>
         <span className={expired ? 'text-sm' : 'text-sm text-[var(--color-dim)]'}>
