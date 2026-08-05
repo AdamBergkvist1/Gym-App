@@ -198,7 +198,21 @@ export async function getSetsForWorkout(
   const rows = await database.loggedSets.where('workoutId').equals(workoutId).toArray();
   return rows
     .filter((s) => !s.isDeleted)
-    .sort((a, b) => (a.performedAt < b.performedAt ? -1 : a.performedAt > b.performedAt ? 1 : 0));
+    .sort((a, b) => {
+      if (a.performedAt !== b.performedAt) return a.performedAt < b.performedAt ? -1 : 1;
+      // Tiebreak på id. Utan den returnerade sorteringen 0 för set med samma
+      // tidsstämpel, och då avgjorde Dexies returordning — som går på
+      // primärnyckeln, ett UUID. Ordningen blev alltså SLUMPMÄSSIG.
+      //
+      // Det upptäcktes 2026-08-04 av CI: `context.test.ts` föll där men
+      // passerade lokalt, eftersom en snabbare maskin hinner logga två set inom
+      // samma millisekund. Testet var inte flaxigt — det avslöjade en verklig
+      // odeterminism.
+      //
+      // `logSet` garanterar numera strikt växande tidsstämplar, så nya set kan
+      // inte kollidera. Detta gäller rader som skrevs före den ändringen.
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
 }
 
 export async function logSet(input: LogSetInput, database: GymDatabase = db): Promise<LocalSet> {
@@ -217,7 +231,42 @@ export async function logSet(input: LogSetInput, database: GymDatabase = db): Pr
     .filter((s) => s.exerciseId === input.exerciseId && !s.isDeleted)
     .count();
 
-  const timestamp = now();
+  /**
+   * Tidsstämpeln måste vara STRIKT större än passets senaste set.
+   *
+   * VARFÖR: `now()` har millisekundupplösning, och flera set kan skrivas inom
+   * samma millisekund. Det sker inte när en människa trycker — men det sker
+   * varje gång fritextvägen tolkar "bänk 90x5, 90x5, 90x5" och loopar tre
+   * skrivningar direkt efter varandra.
+   *
+   * Konsekvensen var inte kosmetisk. AI-kontraktet skickar passets set i
+   * ordning, och systemprompten säger att *"en till" syftar på senaste setet i
+   * currentWorkout*. Med kolliderande tidsstämplar var "senaste" slumpmässigt,
+   * så "en till" kunde upprepa fel övning.
+   *
+   * Att skjuta fram med 1 ms är harmlöst för en träningslogg och gör ordningen
+   * korrekt i stället för bara stabil.
+   *
+   * Kapplöpning: två samtidiga anrop kan läsa samma max. JavaScript är
+   * enkeltrådat och båda anropsvägarna (knapptryck och fritextloopen) är
+   * sekventiellt awaitade, så det kan inte inträffa i dag. Skulle skrivningar
+   * någon gång parallelliseras hör beräkningen hemma inne i transaktionen.
+   */
+  const senasteISamePass = await database.loggedSets
+    .where('workoutId')
+    .equals(input.workoutId)
+    .toArray();
+  const senasteTid = senasteISamePass.reduce<string | null>(
+    (max, s) => (max === null || s.performedAt > max ? s.performedAt : max),
+    null
+  );
+
+  const nu = now();
+  const timestamp =
+    senasteTid !== null && nu <= senasteTid
+      ? new Date(new Date(senasteTid).getTime() + 1).toISOString()
+      : nu;
+
   const row: LocalSet = {
     id: newId(),
     workoutId: input.workoutId,

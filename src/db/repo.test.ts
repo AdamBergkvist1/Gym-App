@@ -230,3 +230,29 @@ describe('5.9 skapa egen övning från en parsermiss', () => {
     expect(refs.some((r) => r.normalizedName === 'nackpress')).toBe(true);
   });
 });
+
+describe('ordningen på ett passets set är deterministisk', () => {
+  it('behåller loggningsordningen även när set skrivs i samma millisekund', async () => {
+    // Regression för fyndet 2026-08-04. CI föll på context.test.ts medan samma
+    // test passerade lokalt: en snabbare maskin hinner logga flera set inom
+    // samma millisekund, och då avgjorde Dexies UUID-ordning.
+    //
+    // Loopen härmar fritextvägen, som tolkar "bänk 90x5, 90x5, 90x5" och skriver
+    // tre set direkt efter varandra utan paus.
+    const w = await startWorkout(db);
+    const övningar = (await db.exercises.toArray()).slice(0, 6);
+
+    for (const e of övningar) {
+      await logSet({ workoutId: w.id, exerciseId: e.id, weightKg: 60, reps: 5 }, db);
+    }
+
+    const sets = await getSetsForWorkout(w.id, db);
+    expect(sets.map((s) => s.exerciseId)).toEqual(övningar.map((e) => e.id));
+
+    // Tidsstämplarna ska dessutom vara strikt växande — det är den garantin
+    // som gör ordningen korrekt och inte bara stabil.
+    const tider = sets.map((s) => s.performedAt);
+    expect(tider).toEqual([...tider].sort());
+    expect(new Set(tider).size).toBe(tider.length);
+  });
+});
