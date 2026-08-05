@@ -34,12 +34,16 @@ export function AppShell() {
 
       <UpdatePrompt />
 
+      {/* Flytande pillernavigering, DESIGN.md §0.5.
+          Tidigare en fastsittande list över hela bredden med en textmarkering.
+          Referenserna (Apple Watch, MacroFactor, Lifesum) låter navigeringen
+          flyta indragen från kanterna — det gör att den läser som en kontroll
+          och inte som en kant på skärmen. */}
       <nav
         aria-label="Huvudnavigering"
-        className="border-t border-[var(--color-line)] bg-[var(--color-surface)]
-                   pb-[env(safe-area-inset-bottom)]"
+        className="px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2"
       >
-        <ul className="mx-auto flex max-w-lg">
+        <ul className="mx-auto flex max-w-lg gap-1 rounded-full bg-[var(--color-surface)] p-1.5">
           {TABS.map((tab) => (
             <li key={tab.path} className="flex-1">
               <NavLink
@@ -49,9 +53,9 @@ export function AppShell() {
                 end={tab.path === '/'}
                 className={({ isActive }) =>
                   [
-                    'flex h-16 items-center justify-center text-sm',
+                    'flex h-12 items-center justify-center rounded-full text-meta',
                     isActive
-                      ? 'text-[var(--color-fg)] font-semibold'
+                      ? 'bg-[var(--color-accent)] font-semibold text-[var(--color-bg)]'
                       : 'text-[var(--color-dim)]',
                   ].join(' ')
                 }

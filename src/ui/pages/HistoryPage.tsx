@@ -62,7 +62,7 @@ export function HistoryPage() {
               </span>
             </div>
             {w.workout.endedAt === null && (
-              <span className="text-xs text-emerald-500">Pågår</span>
+              <span className="text-xs text-[var(--color-ok-text)]">Pågår</span>
             )}
             <p className="mt-1 truncate text-sm text-[var(--color-dim)]">
               {w.exerciseIds.map((id) => namn.get(id) ?? 'Okänd').join(' · ') || 'Inga set'}

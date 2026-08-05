@@ -8,21 +8,49 @@
  */
 @theme {
   /* ---------------------------------------------------------------- neutraler
-   * Bakgrunden ändras INTE: den ligger i PWA-manifestet som theme_color och
-   * background_color, så ett byte ändrar även startskärm och statusrad på iOS.
-   * Kontrast mot bg, uppmätt: fg 16,91:1 · dim 5,73:1.
+   * Uppdaterade 2026-08-05 enligt DESIGN.md §0.5. Alla uppmätta mot ren svart.
+   *
+   * REN SVART, inte #0a0a0a: kortsteget går från 1,104:1 till 1,164:1.
+   * Marginellt i siffror — men tillsammans med 16 px radie och en synlig kant
+   * är det skillnaden mellan att kort FINNS och att de flyter ihop med
+   * bakgrunden. På OLED ger ren svart dessutom släckta pixlar, vilket ser
+   * djupare ut och drar mindre ström under ett långt pass.
+   *
+   * PWA-manifestets theme_color och background_color är ändrade i samma commit
+   * — annars blir startskärmen en annan svärta än appen.
    */
-  --color-bg: #0a0a0a;
-  --color-surface: #171717;
-  --color-line: #2e2e2e;
-  --color-fg: #ededed;
-  --color-dim: #8a8a8a;
+  --color-bg: #000000;
+  --color-surface: #16161a;
+  --color-line: #2a2a30;
+  --color-fg: #f5f5f7;   /* 19,29:1 */
+  --color-dim: #8e8e96;  /*  6,46:1 */
 
   /* Kanter som BÄR BETYDELSE — t.ex. en obekräftad setrads tryckyta.
    * WCAG 1.4.11 kräver 3:1 för kanter som behövs för att identifiera en
-   * komponent. Radix gray8, uppmätt 3,15:1. Dekorativa kortramar använder
-   * --color-line och behöver inte nå dit. */
-  --color-line-strong: #606060;
+   * komponent. Uppmätt 3,37:1. Dekorativa kortramar använder --color-line. */
+  --color-line-strong: #606068;
+
+  /* ------------------------------------------------------------------ accent
+   * Appens egen färg. Vald av Adam 2026-08-05 ur tre körbara mockuper.
+   *
+   * VARFÖR DEN SAKNADES OCH VARFÖR DET SPELADE ROLL: färgsystemet i §1 är helt
+   * semantiskt — grönt betyder sparat, gult uppmärksamhet, rött fel. Ingen av
+   * dem är appens färg, och en app utan accentfärg ser billig ut oavsett hur
+   * rätt kontrasterna är. Det var Adams omdöme, och han hade rätt.
+   *
+   * VARFÖR LIME: grönt, gult och rött är upptagna av betydelser. En accent som
+   * krockar med en semantisk färg gör båda otydliga. Lime ligger tillräckligt
+   * långt från vårt gröna #3dd68c för att inte förväxlas.
+   *
+   * VAR DEN ANVÄNDS: i små mättade former — ikonrutor, chips, fyllda bockar,
+   * aktiv flik. ALDRIG som brödtext. Lärdomen kommer från Apple Watch-appen,
+   * som är nästan helt svartvit men känns levande just därför att färgen sitter
+   * i små ytor i stället för i texten. */
+  --color-accent: #bef264;      /* 16,07:1 mot bg. Svart text på den: 16,07:1 */
+  --color-accent-soft: #1e2610; /* yta bakom accentmarkerat innehåll */
+
+  /* Radie. 8 px läste som "formulär", referenserna ligger på 16–20. */
+  --radius-card: 1rem;
 
   /* ------------------------------------------------------- semantiska färger
    * Radix Colors (MIT), mörka skalor. Registrerat i docs/EXTERNT.md.
@@ -74,7 +102,9 @@
    */
   --text-set: 1.5rem;          /* 24px — vikt och reps i setraden */
   --text-timer: 2rem;          /* 32px — vilotimern medan den går */
-  --text-title: 1.375rem;      /* 22px — sidrubrik */
+  --text-title: 1.875rem;      /* 30px — sidrubrik. Höjd från 22 px 2026-08-05:
+                                  referenserna ligger på 30-34 och 22 läste som
+                                  en underrubrik. Se DESIGN.md §0.5. */
   --text-exercise: 1.0625rem;  /* 17px — övningsnamn */
   --text-body: 0.9375rem;      /* 15px — brödtext */
   --text-meta: 0.8125rem;      /* 13px — spökdata, tider, metadata */

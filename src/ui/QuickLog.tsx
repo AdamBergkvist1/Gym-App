@@ -218,7 +218,7 @@ export function QuickLog({
 
       {problem && (
         <div role="alert" className="mt-2">
-          <p className="text-sm text-amber-400">
+          <p className="text-sm text-[var(--color-warn-text)]">
             {REASON_TEXT[problem.reason]}
             {problem.hint !== undefined && (
               <span className="text-[var(--color-dim)]"> ({problem.hint})</span>
@@ -260,9 +260,9 @@ export function QuickLog({
       )}
 
       {draft && (
-        <div className="mt-2 rounded-lg border border-amber-700/60 bg-amber-950/30 p-3">
+        <div className="mt-2 rounded-lg border border-[var(--color-warn-line)] bg-[var(--color-warn-bg)] p-3">
           {draft.fromAi && (
-            <p className="mb-1 text-xs font-semibold text-amber-400">AI-tolkning</p>
+            <p className="mb-1 text-xs font-semibold text-[var(--color-warn-text)]">AI-tolkning</p>
           )}
           <p className="text-sm">
             Är det <strong>{draft.sets[0]!.exerciseName}</strong>, {draft.weight} kg ×{' '}
@@ -271,7 +271,7 @@ export function QuickLog({
           </p>
           {/* Modellens motivering. Härledd data får aldrig se ut som inmatad. */}
           {draft.sets[0]!.reasoning !== undefined && (
-            <p className="mt-1 text-xs text-amber-300">{draft.sets[0]!.reasoning}</p>
+            <p className="mt-1 text-xs text-[var(--color-warn-text)]">{draft.sets[0]!.reasoning}</p>
           )}
           <p className="mt-1 text-xs text-[var(--color-dim)]">
             {draft.fromAi

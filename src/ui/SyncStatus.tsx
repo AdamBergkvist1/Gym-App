@@ -28,9 +28,9 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
 
   const färg =
     status.state === 'error'
-      ? 'text-amber-400'
+      ? 'text-[var(--color-warn-text)]'
       : status.state === 'idle'
-        ? 'text-emerald-500'
+        ? 'text-[var(--color-ok-text)]'
         : 'text-[var(--color-dim)]';
 
   if (compact) {
@@ -60,7 +60,7 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
       </div>
 
       {status.lastError !== null && (
-        <p className="mt-2 text-xs break-words text-amber-400">
+        <p className="mt-2 text-xs break-words text-[var(--color-warn-text)]">
           {status.lastError}
           <span className="block text-[var(--color-dim)]">
             Kön är stoppad tills detta är löst. Inget har gått förlorat — datan ligger kvar
