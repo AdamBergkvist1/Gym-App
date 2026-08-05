@@ -97,7 +97,7 @@ export function SignIn() {
       >
         {busy ? 'Loggar in…' : 'Logga in'}
       </button>
-      {error !== null && <p className="text-sm text-amber-400">{error}</p>}
+      {error !== null && <p className="text-sm text-[var(--color-warn-text)]">{error}</p>}
       <p className="text-xs text-[var(--color-dim)]">
         Inloggning behövs bara för synk. Loggningen fungerar utan.
       </p>

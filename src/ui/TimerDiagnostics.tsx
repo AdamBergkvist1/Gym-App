@@ -44,7 +44,7 @@ export function TimerDiagnostics() {
       </div>
 
       {permission === 'denied' && (
-        <p className="mt-2 text-xs text-amber-400">
+        <p className="mt-2 text-xs text-[var(--color-warn-text)]">
           Notiser är blockerade. Larmet når dig då bara med appen framme. Återställs i
           Inställningar → Notiser på telefonen.
         </p>
@@ -64,7 +64,7 @@ export function TimerDiagnostics() {
               <tr key={e.firedAt} className="border-t border-[var(--color-line)]">
                 <td className="py-1">{e.durationSeconds} s</td>
                 <td
-                  className={`py-1 text-right ${e.driftSeconds > 5 ? 'text-amber-400' : ''}`}
+                  className={`py-1 text-right ${e.driftSeconds > 5 ? 'text-[var(--color-warn-text)]' : ''}`}
                 >
                   {e.driftSeconds > 0 ? '+' : ''}
                   {e.driftSeconds} s

@@ -31,6 +31,88 @@ estetik. Studerade öppna appar listas i `EXTERNT.md`.
 
 ---
 
+## §0.5 Visuell karaktär
+
+> **Detta avsnitt borde ha skrivits FÖRE §1, och att det inte gjordes är briefens allvarligaste
+> fel.** §1 och §2 definierar ett *system* — färgroller, typografisk skala, spacing — med
+> uppmätta kontraster. Allt korrekt. Men ingenstans bestämdes hur appen ska **kännas**.
+>
+> Resultatet syntes så fort appen granskades: Adams omdöme var *"mörk, tråkig, billigt gjord,
+> ingen modern fräsch känsla"*. Han hade rätt, och felet var inte hantverket utan att steget
+> hoppades över. **Ett korrekt system utan karaktär ger ett korrekt tråkigt gränssnitt.**
+
+### Vad referenserna visade
+
+Fem appar i `docs/Reference-pics/`, valda av Adam: **Hevy, MacroFactor, Strava, Apple Watch,
+Lifesum.**
+
+**Apple Watch är den avgörande.** Den är mörk och ser dyr ut — vilket bevisar att mörkt tema
+aldrig var problemet.
+
+| Mekanism | Referenserna | Vi, före 2026-08-05 |
+|---|---|---|
+| **En bestämd accentfärg** | Hevy blå · Strava orange · Lifesum grön · Watch orange | **Ingen alls** |
+| **Färg i små mättade former** | Apple Watch: färgad ikonruta per rad | Ingen |
+| **Stor fet titel** | 30–34 px | 22 px |
+| **Generösa radier** | 16–20 px | 8 px |
+| Etikett + stort värde | Alla fem | ✅ fanns redan |
+
+**Den avgörande insikten:** färgen bor i **små mättade former** — ikonrutor, chips, fyllda
+bockar — inte i texten. Texten förblir vit. Det är därför Apple Watch kan vara nästan helt
+svartvit och ändå kännas levande, medan vår app var enfärgat grå och kändes död.
+
+### Beslutet: lime, vald av Adam 2026-08-05
+
+Tre riktningar togs fram som körbara mockuper och jämfördes visuellt sida vid sida —
+inte som hexkoder i text. Adam valde **lime**.
+
+**Varför inte grönt, gult eller rött som accent:** de är **upptagna av betydelser** — sparat,
+uppmärksamhet, fel. En accentfärg som krockar med en semantisk färg gör båda otydliga. Lime
+ligger tillräckligt långt från vårt gröna `#3dd68c` för att inte förväxlas, och läser som
+"gym" snarare än "wellness".
+
+### Karaktärstokens — alla uppmätta 2026-08-05
+
+| Token | Värde | Kontrast mot bg | Roll |
+|---|---|---|---|
+| `--color-bg` | **`#000000`** | — | Ren svart. **Ändrad från `#0a0a0a`** |
+| `--color-surface` | `#16161a` | 1,16:1 | Kort |
+| `--color-fg` | `#f5f5f7` | **19,29:1** | Text |
+| `--color-dim` | `#8e8e96` | **6,46:1** | Sekundär text |
+| `--color-line` | `#2a2a30` | 1,47:1 | Dekorativ kant |
+| `--color-line-strong` | `#606068` | **3,37:1** | Kant som bär betydelse |
+| **`--color-accent`** | **`#bef264`** | **16,07:1** | Appens färg |
+| `--color-accent-soft` | `#1e2610` | — | Yta bakom accentmarkerat |
+
+Svart text på limeknapp: **16,07:1**. Fyllda accentknappar fungerar utan undantag.
+
+**Varför ren svart och inte `#0a0a0a`:** kortsteget går från 1,104:1 till 1,164:1. Marginellt
+i siffror — men tillsammans med 16 px radie och en synlig kant är det skillnaden mellan att
+kort *finns* och att de flyter ihop med bakgrunden. På OLED ger ren svart dessutom släckta
+pixlar, vilket både ser djupare ut och drar mindre ström under ett långt pass.
+
+**Följd:** PWA-manifestets `theme_color` och `background_color` måste ändras i samma commit,
+annars blir startskärmen och statusraden en annan svärta än appen.
+
+### Formspråk
+
+- **Radie 16 px** på kort och ark (`--radius-card`). Knappar och chips: pillerform.
+- **Ikonruta per övning:** 36 × 36 px, radie 10 px, fylld med accentfärgen. Detta är den
+  enskilt viktigaste ändringen — den ger färg åt en skärm som annars är svartvit.
+- **Navigeringen flyter:** pillerformad, indragen från kanterna, med accentfylld markering av
+  aktiv flik. Inte en fastsittande list över hela bredden.
+- **Timer och PB som chips** överst i passet, inte som lager över innehållet.
+
+### Vad som INTE ändras
+
+Semantikens färger (`ok`, `warn`, `err`, `pb`) står kvar oförändrade från §1 — de är mätta,
+godkända och betyder något. Accenten är ett **tillägg**, inte en omskrivning.
+
+Typografin från §2 står kvar, med ett undantag: **sidrubriken går från 22 till 30 px.**
+Referenserna är samstämmiga och 22 px läser som en underrubrik.
+
+---
+
 ## §1 Färgsystemet
 
 ### Källa och licens

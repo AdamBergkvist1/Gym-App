@@ -52,11 +52,23 @@ export function ExerciseCard({
   const aktivt = planned.sets.find((s) => s.id === justerar);
 
   return (
-    <section className="overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]">
-      <header className="flex items-center gap-2 px-3 py-2">
+    <section className="overflow-hidden rounded-card border border-[var(--color-line)] bg-[var(--color-surface)]">
+      <header className="flex items-center gap-3 px-3 py-3">
+        {/* Accentfylld ikonruta. DESIGN.md §0.5, hämtad från Apple Watch-appen.
+            Det här är den enskilt viktigaste ändringen i hela riktningen: den
+            ger färg åt en skärm som annars är svartvit. Färgen bor i små mättade
+            former, inte i texten. */}
+        <span
+          aria-hidden
+          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-accent)] text-lg"
+        >
+          🏋
+        </span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-semibold">{exercise?.name ?? 'Okänd övning'}</h2>
-          <p className="text-xs text-[var(--color-dim)] tabular-nums">
+          <h2 className="truncate text-exercise font-semibold">
+            {exercise?.name ?? 'Okänd övning'}
+          </h2>
+          <p className="text-meta text-[var(--color-dim)] tabular-nums">
             {klara} av {planned.sets.length} set
             {ghost && ` · sist ${ghost.weightKg} kg × ${ghost.reps}`}
           </p>
@@ -99,7 +111,7 @@ export function ExerciseCard({
               setMeny(false);
               onRemoveExercise();
             }}
-            className="min-h-0 rounded-md border border-[var(--color-line)] px-3 py-1.5 text-sm text-amber-400"
+            className="min-h-0 rounded-md border border-[var(--color-line)] px-3 py-1.5 text-sm text-[var(--color-warn-text)]"
           >
             Ta bort övning
           </button>
