@@ -30,3 +30,5 @@ Thumbs.db
 
 # Skärmdumpar från npm run shots — artefakter, inte källkod.
 skarmdumpar/
+
+# Rå träningsdata. Innehåller personlig viktdata — stannar lokalt.
