@@ -831,6 +831,88 @@ gäller, och uppgiften skrivs om.
 
 ---
 
+## Fas 13 — Import av Adams gamla anteckningar
+
+Designad i en grillningssession 2026-08-07. Beslutet ligger i `PLAN.md` §3.5b, kravet i
+`SPEC.md` §3c, orden i `SPEC.md` §3d.
+
+**Fyra kodändringar blir permanenta. Resten är ett engångsjobb som inte lämnar spår i appen.**
+Fasen är oberoende av 11B och kan köras när som helst, men 13.1 måste vara klar före 13.6.
+
+- [ ] **13.1 Migration: `workouts.is_imported` + `source = 'import'`.** En boolean med
+      `default false`, och `logged_sets.source`-villkoret utökat med `'import'`. Speglas i
+      `src/db/types.ts` och `toWire.ts`. `apply_mutations` i migration 0003 måste kunna
+      skriva fältet, annars går ett importerat pass inte att synka tillbaka.
+      **Klart när:** ett pass med `is_imported = true` kan skrivas, synkas ned och läsas.
+
+- [ ] **13.2 Katalogen: dela `Chins` och `Pullups`.** Knogar bakåt (mot rumpan) = överhand =
+      **Pullups**. Knogar framåt (dit ögonen tittar) = underhand = **Chins**.
+
+      `Chins` behåller sitt UUID (`9f99d443-…`) — annars pekar redan loggade set fel — och får
+      aliasen `chins`, `chin`, `underhandsgrepp`. Ny post `Pullups` får `pullup`, `pull-up`,
+      `pullups`, `överhandsgrepp`. **Aliaset `räck` tas bort helt:** Adam, som är svensk och
+      tränar, kände inte igen ordet. Ett alias som betyder två övningar gör `matchExercise`
+      tvetydig med flit, och den är byggd för att aldrig gissa.
+
+      Ändringen sker på två ställen som måste hållas i takt: migrationen (global katalog) och
+      `src/db/catalog.ts` (klientens spegling med hårdkodade UUID:n).
+      **Klart när:** `matchExercise('pullups')` ger Pullups, `matchExercise('chins')` ger
+      Chins, och `matchExercise('räck')` ger `null`. Tre tester.
+
+- [ ] **13.3 Filter: importerade pass syns inte i passlistan.** `listWorkoutSummaries` i
+      `src/db/history.ts` filtrerar bort pass med `isImported`.
+      **Klart när:** ett test visar att ett importerat pass finns i databasen men inte i
+      listan, medan ett vanligt pass i samma test gör det.
+
+- [ ] **13.4 Filter: importerade set blir aldrig spökdata.** `getLastPerformance` i
+      `src/db/repo.ts` hoppar över set med `source === 'import'`.
+
+      **Varför det spelar roll:** raden `2024 vecka 14: Bänk: 90 kg` var ett 1-repsmax. Utan
+      filtret viskar appen "sist tog du 90 kg × 1" varje gång bänkpress öppnas. Ett rekord är
+      inte ett arbetsset, och spökdatan är ett minnesstöd — inte en utmaning.
+      **Klart när:** ett test där enda tidigare setet är importerat ger `null` från
+      `getLastPerformance`. Funktionen har tre anropare och alla tre ärver filtret.
+
+- [ ] **13.5 Textrad om uppskattade datum ovanför övningsgrafen.** *"7 punkter före maj 2024
+      är importerade från gamla anteckningar — datumen är uppskattade."* Visas bara när
+      övningen faktiskt har importerade set.
+
+      Medvetet **inte** en visuell markering i grafen (ihåliga prickar e.d.): det vore att
+      införa ett nytt visuellt språk innan designbriefen i 11B är klar. Meningen är sann,
+      syns, och kostar ingenting att ta bort när riktig design kommer.
+
+- [ ] **13.6 ENGÅNGS: Adams konto och SQL-filen.** Lämnar inga spår i kodbasen.
+
+      **Ordning:** 1) Adam registrerar sig i appen med sin riktiga e-post — det måste han göra
+      själv, konton och lösenord är inget jag rör. 2) Jag genererar `scripts/import-adam.sql`
+      med hans `user_id` inlagt. 3) Han läser igenom den — 21 set, 17 pass, läsbart i klartext.
+      4) Han kör den i Supabase SQL-editorn, precis som migrationerna. 5) Appen synkar ned den.
+
+      **Fasta UUID:n + `on conflict (id) do nothing`.** Körs filen två gånger händer ingenting
+      andra gången. Rå SQL går utanför `apply_mutations`, så idempotensen (`CLAUDE.md` regel 4)
+      måste byggas in i filen själv.
+
+      **Tolkningsbeslut som ligger i filen:**
+      - Ett syntetiskt pass **per vecka**, inte per rad. Tre veckor har två övningar i sig
+        (v52 2023, v14 2021, v14 2024) och de delar pass. Undantag: de två `V 12`-bänkraderna
+        var olika tillfällen — måndag respektive torsdag.
+      - `Bänk`/`Bänkpress` → Bänkpress. `Squat`/`Squats` → Knäböj. `Sne bänk (första steget
+        upp)` → Lutande bänkpress, **15°**. `pull ups` → Pullups, **0 kg** (appens konvention
+        för kroppsviktsövningar). `Hacksquat + lila gummiband` → Adams egen övning
+        `Hacklyft (med gummiband)`, skapad med `createExercise` — bandet gjorde lyftet
+        *lättare*, så den får inte slås ihop med vanligt hacklyft.
+      - **Utelämnas:** `Höj till 100 kg nästa och reppa` (en plan, inte ett set),
+        `Vikt innan kreatin laddning` (minnesanteckning), och `70 kg * 8 V 3` — Adams bästa
+        siffra på papperet, men han underkände den själv: *"det kändes som att jag fuskade"*.
+        Den ligger kvar i `raw-notes.txt` om han ändrar sig. Alternativet vore att märka den
+        som uppvärmning, vilket hade fungerat gratis eftersom uppvärmningsset redan filtreras
+        ur personbästa — men det vore en osanning i databasen, och osanningar i en databas ser
+        rimliga ut för alltid.
+
+      **Klart när:** Adams bänkkurva 70 → 75 → 80 → 85 → 90 kg syns i appen på hans telefon.
+
+---
+
 ## Fas 12 — Backlog (efter v1)
 
 - [ ] **12.1 Export till JSON och CSV.**
@@ -858,6 +940,45 @@ gäller, och uppgiften skrivs om.
       **Klart när:** e1RM räknas med en personlig parameter när underlaget räcker, och
       faller tillbaka på Epley när det inte gör det — med skillnaden **synlig i UI:t**, så
       att en anpassad siffra aldrig förväxlas med en antagen.
+
+- [ ] **12.8 Kroppsvikt — hela funktionen.** `SPEC.md` §3b säger att kroppsvikt ska sparas,
+      men **ingenting är byggt**: ingen tabell, ingen RLS, ingen lokal lagring, ingen synk,
+      ingen vy. Adam har ~100 rader kroppsvikt i `raw-notes.txt` som väntar på den.
+
+      **Det är ingen import, det är en funktion** — och den har egna oavgjorda frågor som
+      måste grillas innan något byggs: hans rader har **två mätvärden samma dag**
+      (`7 april: 78,3 (77,6 post shit)`), ibland ett tredje (`5 maj kvälls vikt`), och
+      perioderna `Deff 2025` / `Sommar bulk 2026` är ett begrepp appen inte har.
+      **Nästa steg: en egen grillningssession.** Inte kod.
+
+- [ ] **12.9 Import-UI för nya användare.** Klistra in egna anteckningar, låt AI:n tolka, fråga
+      användaren när något är otydligt. Onboarding-värde för **andra** än Adam — han har redan
+      sin data via Fas 13. Uttryckligen låg prioritet: *"we need to focus on getting the most
+      important functions in the app to begin with"*.
+
+- [ ] **12.10 Gradval på lutande bänkpress.** Adam vill vara exakt när han loggar: 15°, 30°,
+      45° som egna övningar — **plus** en generisk `Lutande bänkpress` för den som bara vill
+      logga så. *"Angled bench press is angled bench press for themselves, and they know what
+      they usually do."*
+
+- [ ] **12.11 Beskrivningsfält på egna övningar.** `createExercise` tar bara ett namn, och
+      `exercises` har ingen `description`-kolumn. Adams poäng: hittar man inte sin övning ska
+      man kunna skapa den **med en förklaring** av vad den är — särskilt för utrustning som
+      bara finns på ett visst gym.
+
+- [ ] **12.12 Extravikt på kroppsviktsövningar.** Adam: *"maybe the kg shouldn't even be an
+      option, or perhaps it should be an add-on kg if someone adds 5, 10, 15 kg while
+      hanging."* I dag loggas kroppsviktsövningar som 0 kg, vilket gör ett bälte med 15 kg
+      omöjligt att skilja från ett rent set. Frågan är om vikten ska betyda *tillagd* vikt när
+      övningens utrustning är `kroppsvikt`.
+
+- [ ] **12.13 Genomgång av kodbasens struktur.** Adam 2026-08-07: *"I felt that the codebase
+      was kind of messy. I don't know where things are and how they should work."*
+
+      **Det är inte nödvändigtvis sant att den är rörig** — det kan lika gärna vara att den
+      växt utan att någon skrivit en karta. Uppgiften är därför att **först ta reda på vilket
+      det är**, inte att börja flytta filer. En orienteringskarta över `src/` (vad varje mapp
+      ansvarar för och vad som anropar vad) kan visa sig vara hela åtgärden.
 
 ---
 

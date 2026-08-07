@@ -1,6 +1,56 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-04 (sessionen avslutad)
+**Datum:** 2026-08-07 (sessionen avslutad)
+
+---
+
+## 🆕 2026-08-07 — grillningssession om import av gamla anteckningar
+
+**Ingen kod skrevs.** Sessionen var en grillning i fyra rundor, och resultatet är beslut i
+`SPEC.md` §3c–3d, `PLAN.md` §3.5b och `TASKS.md` Fas 13 + 12.8–12.13. Underlaget var
+`raw-notes.txt` (136 rader) och Adams förhandssvar i `docs/anteckningsformat.md`.
+
+### Vad som avgjordes
+
+**Importerade lyft bor i `logged_sets`, inte i en egen tabell.** Adam lutade först åt en egen
+`historical_lifts`-tabell. Räkningen vände honom: den hade krävt migration, Dexie-tabell,
+tre synkfiler — och att **tre av fem läsfunktioner i `history.ts`** slår ihop två källor för
+all framtid. Vald lösning är `workouts.is_imported` + `source = 'import'` och **två filter**.
+Priset är utskrivet i PLAN §3.5b: syntetiska pass som aldrig ägt rum.
+
+**Årtalen gick att härleda, trots att Adam svarat "vet inte".** V-numren saknar år, men
+`70 kg × 5` är omöjligt när 1RM är 70 kg (2021 v9) och rimligt när det är 85–90 (2022–24).
+Veckorna löper 43 → 52 → 3 → 12, alltså över ett årsskifte. Slutsats: **v43 2023 – v20 2024**,
+bekräftad av Adam. Detta är en **härledning, inte en verifierad uppgift** — den bygger på att
+repprogressionen är monoton, vilket är sannolikt men inte bevisat.
+
+### Fakta som verifierades i koden under sessionen
+
+| Påstående | Var det står |
+| :---- | :---- |
+| Uppvärmningsset filtreras **redan** ur personbästa och graf | `history.ts:111`, `history.ts:131` |
+| `getLastPerformance` är definierad **en** gång, har **tre** anropare | `repo.ts:317` |
+| Synken hämtar från en hårdkodad lista: `workouts`, `logged_sets`, `exercises` | `pull.ts:38` |
+| Egna övningar fungerar redan — `createExercise` är inkopplad | `TodayPage.tsx:253` |
+| `matchExercise` returnerar `null` vid lika poäng, gissar aldrig | `matchExercise.ts:52` |
+| `exercises` saknar `description`-kolumn | `0001_initial_schema.sql:96` |
+| Aliaset `räck` sitter på `Chins` — Adam kände inte igen ordet | `catalog.ts:74` |
+| Ingen tabell, uppgift eller UI för kroppsvikt finns, trots `SPEC.md` §3b | — |
+
+### Två fel jag gjorde och rättade
+
+1. **Greppet bakvänt.** Jag påstod först att "knogarna pekar bakåt" var underhandsgrepp
+   (chins). Det är överhandsgrepp — pull ups. Adams anteckning var rätt hela tiden.
+2. **`70 kg * 8` skulle räknas som rekord.** Jag rekommenderade att importera det. Adam var
+   tydligare i runda 3: han underkände setet själv och är starkare i dag. Raden utelämnas.
+
+### Vad som INTE är gjort
+
+- **Adams konto finns inte i Supabase.** Bara två testkonton. Han måste registrera sig själv
+  innan någon rad kan skrivas — `logged_sets.user_id` refererar `auth.users(id)`.
+- **SQL-filen är inte genererad.** Väntar på kontot och på godkännande av dokumenten.
+- **Ingen av uppgifterna i Fas 13 är påbörjad.** Inga tester körda, inget byggt.
+- **Kroppsvikten är inte designad.** Egen grillningssession, uppgift 12.8.
 
 ---
 

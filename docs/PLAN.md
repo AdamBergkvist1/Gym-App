@@ -475,6 +475,45 @@ Varje mutation bär sitt `mutation_id`; funktionen hoppar över de som redan fin
 enligt regeln, atomär batch (ett pass hamnar aldrig halvt i molnet), och färre rundturer — vilket
 också sparar på gratisnivåns anropskvot.
 
+### 3.5b Importerade lyft — märkta pass, inte en egen tabell. AVGJORD 2026-08-07
+
+Adams gamla anteckningar ska in i appen (SPEC §3c). De är inte pass — de är enstaka
+bästa-set noterade per vecka. Frågan var var de ska bo.
+
+**Alternativet som förkastades: en egen tabell `historical_lifts`.** Det var Adams första
+instinkt och den är intuitivt rätt — datan *är* något annat än ett loggat pass. Men priset
+räknades fram och det var högt: migration med RLS och GRANT, ny Dexie-tabell med
+versionshöjning, `pull.ts` TABLES, `push.ts`, `toWire.ts`, `apply_mutations` i migration
+0003 — och sedan måste **tre av fem läsfunktioner i `history.ts`** (`getExerciseHistory`,
+`getPersonalRecords`, `listTrainedExercises`) slå ihop två källor. Varje framtida
+statistikfunktion ärver den skyldigheten, och den som glömmer den får tyst fel svar.
+
+**Vad vi gör i stället:** importerade set ligger i `logged_sets` som alla andra, i pass
+märkta med `workouts.is_imported`. Personbästa, övningshistorik, e1RM-grafen och all
+framtida statistik får datan **utan en rad ny kod**. Två filter läggs till, och bara två:
+
+1. `listWorkoutSummaries` döljer importerade pass — de är behållare, inte träningar.
+2. `getLastPerformance` hoppar över importerade set — annars blir ett 1-repsmax spökdata.
+   Funktionen är definierad på ett ställe och delas av tre anropare, så det är ett filter.
+
+`logged_sets.source` får värdet `'import'` så att varje set berättar om sig självt även
+utanför sitt pass.
+
+**Priset vi accepterar, utskrivet:** ett `workouts`-rad med `started_at` i mars 2024 som
+aldrig ägt rum. Det är en fabrikation. Motivet är att alternativet fabricerar en hel andra
+datamodell, och en märkt osanning på ett ställe är billigare att leva med än en korrekt
+sanning som varje framtida läsare måste känna till. Flaggan `is_imported` är det som gör
+skillnaden mellan en lögn och en behållare.
+
+**Datumen är uppskattade, och det syns.** V-numren i anteckningarna saknar årtal. Åren
+härleddes ur repprogressionen: `70 kg × 5` är omöjligt när ens 1RM är 70 kg (2021), men
+rimligt när det är 85–90 (2023–24), och veckorna löper 43 → 52 → 3 → 12, alltså över ett
+årsskifte. Slutsats: V-blocket är v43 2023 – v20 2024. Inom veckan valdes **måndag kl. 12**
+— kl. 12 och inte midnatt, eftersom midnatt svensk tid lagras som föregående kväll i UTC och
+en rad då kan glida in i fel vecka. En textrad ovanför grafen talar om att punkterna före maj
+2024 har uppskattade datum. Härledd data får inte se ut som inmatad data — samma princip som
+parsern redan följer.
+
 ### 3.6 Medvetet utelämnat i v1
 
 Skrivs ut för att det ska vara ett beslut och inte en glömska:

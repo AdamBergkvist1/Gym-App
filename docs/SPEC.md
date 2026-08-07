@@ -101,6 +101,78 @@ svar kan AI:n ge på hans frågor senare.
 > som kroppsvikt och kan läggas till med samma motivering — men de är inte beslutade, och ska
 > tas som ett eget beslut när frågan faktiskt kommer.
 
+### 3c. Import av gamla anteckningar
+
+**Tillagd 2026-08-07 efter en grillningssession.** Adam har fyra års träningsanteckningar i
+en anteckningsapp (`raw-notes.txt`). De ska in i appen så att hans progression syns i grafen
+och hans personbästa är sanna från början, i stället för att börja om från noll.
+
+**Detta är två skilda saker, och de ska inte blandas ihop:**
+
+**1. Engångsimporten av Adams egen data (nu).** Ingen kod i appen. En genererad SQL-fil som
+Adam läser igenom och kör i Supabase SQL-editorn, precis som han redan kör migrationer.
+Konfliktlösningen — vilket år en `V 47`-rad hör till, vad "första steget upp" betyder — sker
+i samtal, inte i ett gränssnitt. **21 set fördelade på 17 pass, vecka 9 2021 till vecka 20 2024.**
+
+**2. Ett importflöde i appen (backlog, Fas 12).** Nya användare klistrar in sina egna
+anteckningar och en AI tolkar dem, med återkoppling till användaren när något är otydligt.
+Det är onboarding-värde för andra, inte för Adam — han har redan sin data. **Låg prioritet:
+appen ska vara användbar först.**
+
+**Vad importen aldrig får göra:**
+
+- **Aldrig bli spökdata.** Ett importerat 1-repsmax på 90 kg får inte föreslås som "sist tog
+  du" nästa gång bänkpress öppnas. Ett rekord är inte ett arbetsset.
+- **Aldrig synas som ett riktigt pass.** De importerade passen är behållare, inte träningar
+  som ägt rum. De hör inte hemma i passlistan.
+- **Aldrig låta ett uppskattat datum se exakt ut.** Sju av punkterna har datum vi räknat oss
+  fram till, inte datum som stod någonstans. Det ska framgå där de visas.
+
+**Vad som medvetet inte importeras:** planer om framtida lyft (`Höj till 100 kg nästa`), set
+som Adam själv underkänt, lösryckta minnesanteckningar — och kroppsvikten, som är ett eget
+spår (se 3b) och kräver en funktion som ännu inte finns.
+
+---
+
+## 3d. Ordlista
+
+Begrepp som betyder något bestämt i det här projektet. Allmänna programmeringsbegrepp hör
+inte hit — bara ord där appen har en egen, precis innebörd.
+
+**Set:**
+Ett utfört arbetsset: en övning, en vikt, ett antal repetitioner, vid en tidpunkt.
+_Undvik:_ lyft, rep-serie.
+
+**Pass:**
+En sammanhängande träning med en starttid. Alla set hör till exakt ett pass.
+_Undvik:_ workout, session, träning.
+
+**Spökdata:**
+Vad som lyftes senast i en övning, visat som grå platshållartext vid inmatning. Ett
+minnesstöd, aldrig ett ifyllt värde och aldrig ett förslag på vad du *borde* göra.
+_Undvik:_ autofyll, förslag, ghost.
+
+**Importerat set:**
+Ett set som kommer från Adams gamla anteckningar i stället för från appen. Räknas i
+personbästa, grafer och statistik — men aldrig som spökdata.
+_Undvik:_ historiskt lyft, gammal data.
+
+**Syntetiskt pass:**
+Ett pass som aldrig ägt rum, skapat enbart för att importerade set måste tillhöra ett pass.
+Märkt i databasen och bortfiltrerat ur passlistan.
+_Undvik:_ fejkpass, platshållarpass.
+
+**Uppskattat datum:**
+En tidpunkt vi räknat oss fram till i stället för läst någonstans. Alla V-nummer utan år är
+uppskattade. Ordningen mellan punkterna är tillförlitlig; den exakta dagen är det inte.
+_Undvik:_ gissat datum, ungefärligt datum.
+
+**Variant:**
+En övning som skiljer sig från en annan på ett sätt som påverkar hur tungt den är —
+handgrepp, lutning, gummiband. **En variant är en egen övning i katalogen**, inte ett
+attribut på setet. Pull ups och chins är två övningar, inte en med två grepp.
+_Undvik:_ version, utförande.
+
 ## 4. UI / Designspråk och Inspiration
 - **Vetenskapligt Datafokus (RP Hypertrophy / Dr. Mike Israetel):** Appen ska ta inspiration från RP Hypertrophy-appen gällande vetenskaplig loggning (fokus på RIR, ansträngning och progression). AI-chatten ska användas för att göra inmatningen av denna data snabbare och mindre tungrodd än i RP-appen.
 - **Visuell stil (Jeff Nippard / Boostcamp):** Minimalistiskt, mörkt tema ("dark mode") med rena kontraster. Siffrorna och historiken står i centrum. Absolut inget onödigt fluff eller sociala flöden.
