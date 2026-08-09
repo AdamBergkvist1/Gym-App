@@ -963,17 +963,28 @@ och 13.1 måste vara klar före 13.6.
       ålder duger inte som kvitto på att en *händelse* inträffat. Signatur 3 höll för att
       frånvaro av en rad bara kan orsakas av en radering.
 
-- [ ] **13.1 Migration: `workouts.is_imported` + `source = 'import'`.** En boolean med
+- [x] **13.1 Migration: `workouts.is_imported` + `source = 'import'`.** En boolean med
       `default false`, och `logged_sets.source`-villkoret utökat med `'import'`. Speglas i
       `src/db/types.ts` och `toWire.ts`. `apply_mutations` i migration 0003 måste kunna
       skriva fältet, annars går ett importerat pass inte att synka tillbaka.
       **Klart när:** ett pass med `is_imported = true` kan skrivas, synkas ned och läsas.
 
-      **Status 2026-08-09: klientkoden är klar, migrationen är INTE körd.**
-      `supabase/migrations/0004_import_flag.sql` är skriven men aldrig applicerad — Adam kör
-      den själv. Kryssrutan står därför kvar öppen.
+      **✅ KLAR 2026-08-09. Migrationen körd av Adam och verifierad utifrån.**
+      `supabase/migrations/0004_import_flag.sql` är applicerad på det skarpa projektet.
+      Verifieringsfrågan nedan kördes i SQL-editorn i en egen session och gav:
 
-      **Verifiering utifrån, efter att migrationen körts.** Självkontrollen inuti 0004 kan
+      | Kontroll | Svar |
+      | :---- | :---- |
+      | `workouts.is_imported` | `boolean, nullable=NO, default=false` |
+      | Check-villkor på `logged_sets.source` | **en rad:** `logged_sets_source_check → CHECK ((source = ANY (ARRAY['manual'::text, 'local_parse'::text, 'ai_parse'::text, 'import'::text])))` |
+      | `apply_mutations` skriver `is_imported` | ✅ ja |
+
+      Att det blev **exakt en** rad på andra kontrollen är den avgörande observationen:
+      drop-mönstret träffade det gamla villkoret, och inget förbjudande villkor lever kvar
+      bredvid det nya. Det var det enda som skilde "migrationen tog" från "migrationen såg ut
+      att ta", och det är nu observerat — inte antaget.
+
+      **Verifiering utifrån.** Självkontrollen inuti 0004 kan
       inte bevisa serverläget — den inspekterar tillstånd som skapades av satserna ovanför i
       samma transaktion, så den är ett skydd mot att filen skrivs fel, inget annat. Beviset
       hämtas i stället i en egen session, i SQL-editorn:

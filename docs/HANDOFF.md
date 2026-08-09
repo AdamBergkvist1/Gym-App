@@ -4,6 +4,77 @@
 
 ---
 
+## 🆕 2026-08-09, kväll — 13.1 klar, och tre granskningsrundor på samma diff
+
+**13.1 är byggd, granskad, mergad, pushad och verifierad i skarpt läge.** `main` står på
+`89df08d`. Migration `0004_import_flag.sql` är körd av Adam och kontrollerad utifrån.
+
+### Vad som finns nu
+
+`workouts.is_imported` (boolean, not null, default false) och `'import'` som fjärde värde på
+`logged_sets.source`. Hela vägen: Dexie-typen, upp via `toWire`, ned via `wire`, skrivbar av
+`apply_mutations`. `SET_SOURCES` i `src/db/types.ts` är enda källan för värdemängden på
+klienten och speglar check-villkoret på servern — **de två måste ändras i samma commit.**
+
+**Verifierat i databasen, inte antaget.** Adam körde verifieringsfrågan (den står i
+`TASKS.md` 13.1) i SQL-editorn efter migrationen:
+
+| Kontroll | Svar |
+| :---- | :---- |
+| `workouts.is_imported` | `boolean, nullable=NO, default=false` |
+| Check-villkor på `source` | **exakt en rad**, innehåller `'import'::text` |
+| `apply_mutations` skriver fältet | ✅ ja |
+
+Att det blev **en** rad och inte två är den avgörande observationen: drop-mönstret träffade
+0001:s gamla villkor, och inget förbjudande villkor lever kvar bredvid det nya.
+
+### Tre commits, för att granskningen hittade riktiga fel två gånger
+
+`5a6c25c` funktionen · `62fc67e` efter granskning ett · `89df08d` efter granskning två.
+
+**Granskning ett** (körd inline, inte som två subagenter) missade det som granskning två —
+samma skill körd som föreskrivet, med två kalla parallella agenter — hittade direkt:
+
+1. **Självkontrollen i migrationen kunde bli grön av sin egen kommentar.**
+   `pg_get_functiondef` bevarar kommentarer, och kroppen innehöll raden
+   `-- NYTT I 0004: is_imported`. Sökningen efter `is_imported` hade passerat även om båda de
+   riktiga raderna tagits bort. Kontrollen strippar nu radkommentarer och kräver två exakta
+   kodfragment, ett per skrivväg.
+2. **Självkontrollen kan ändå inte bevisa serverläge**, och kommentaren säger nu det. Allt
+   den inspekterar skapas av satserna ovanför i samma transaktion. Den är ett skydd mot att
+   *filen* skrivs fel. Beviset hämtas utifrån, efteråt — därav verifieringsfrågan.
+3. **PLAN.md §3.1 hade inte uppdaterats** när schemat gjorde det. Regel 1, brutet av mig.
+
+**Lärdomen, som gäller bredare:** en självkontroll som lever i samma transaktion som
+ändringen den kontrollerar bevisar att filen är rätt skriven, inte att databasen är rätt
+ställd. Vill man ha det senare måste man fråga utifrån, i en egen session.
+
+### Ett fel jag gjorde och rättade inom samma commit
+
+Vid avsmalningen av drop-mönstret skrev jag först `source\s+in\s*\(`. **Postgres lagrar inte
+`in`-listan ordagrant** utan skriver om den till `CHECK ((source = ANY (ARRAY[...])))`.
+Mönstret hade matchat noll villkor, släppt inget, och lagt det nya villkoret bredvid det
+gamla — exakt den bugg blocket finns för att undvika. Mönstret täcker nu båda skrivsätten,
+och självkontrollen frågar medvetet brett som ryggtäckning.
+
+### Mätt vid överlämningen (§9-regeln)
+
+| Mått | Värde |
+| :---- | :---- |
+| Tester | **255 gröna**, 21 filer |
+| Bundle | **635,55 kB**, gzip **190,93 kB** |
+| Precache | 9 poster, 648,36 KiB |
+| Rader i `src/` (exkl. tester) | 6 819 |
+| `main` | `89df08d`, pushad till `origin` |
+
+### Kvar i fas 13
+
+13.2 (dela `Chins`/`Pullups`, ta bort aliaset `räck`) är nästa, och är inte längre blockerad.
+**A.1 (egress) är fortfarande outredd** — Adam kollar Usage-vyn per projekt själv, hypotesen
+är att `news-signal-engine` i samma organisation drar trafiken.
+
+---
+
 ## 🆕 2026-08-09 — Adams konto skapat, och en bugg som hittades på kuppen
 
 **Fas 13 påbörjades i fel ände med flit:** 13.6 steg 1 (Adam registrerar sig) är oberoende av
@@ -82,9 +153,10 @@ kilobyte, och 500 MB/dygn kräver storleksordningar fler anrop än fyra använda
 
 ### Vad som INTE är gjort
 
-- **13.1–13.5 är orörda.** 13.1 (`workouts.is_imported`) blockerar hela resten av importen.
-  Kontrollerat i databasen: `workouts` har ännu ingen `is_imported`-kolumn.
-- **SQL-filen `scripts/import-adam.sql` är inte genererad.** Kräver 13.1.
+- ~~**13.1–13.5 är orörda.**~~ **13.1 är klar 2026-08-09 (kvällen)** — se sessionen högst upp.
+  `workouts.is_imported` finns nu i databasen, verifierad utifrån. **13.2–13.5 är orörda**
+  och inte längre blockerade.
+- **SQL-filen `scripts/import-adam.sql` är inte genererad.** Kräver 13.2.
 - **A.1 är inte undersökt** — medvetet, se ovan.
 - **Playwright-webbläsarna är inte installerade** på maskinen. Eget steg, Adams beslut.
 - **`package-lock.json` ligger ändrad i arbetskopian.** Den fanns när sessionen började, är
@@ -512,7 +584,8 @@ en tillfällighet.
 två saker framför den — se den sessionen högst upp:
 
 1. **A.1 — egress.** Free-planens tak är passerat. Usage-vyn per projekt först, ingen kod.
-2. **13.1 — `workouts.is_imported`.** Blockerar 13.2–13.6, alltså hela importen.
+2. ~~**13.1 — `workouts.is_imported`.**~~ **Klar 2026-08-09 (kvällen).** Nästa i fasen är
+   **13.2** — dela `Chins`/`Pullups` och ta bort aliaset `räck`.
 
 Därefter, om designrundan tas upp igen:
 
