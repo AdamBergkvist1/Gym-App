@@ -13,6 +13,7 @@ import { db } from '../db/db';
 import { pendingCount } from '../db/repo';
 import { pushOutbox, type RpcCaller } from './push';
 import { pullChanges, type SelectCaller } from './pull';
+import { reconcileOwner } from './ownership';
 import { getSupabase } from './supabase';
 
 export type SyncState =
@@ -92,6 +93,11 @@ export async function syncNow(): Promise<SyncStatus> {
   setStatus({ state: 'syncing' });
 
   try {
+    // Ägarinvarianten (PLAN.md §2.4). Ligger FÖRE `pushOutbox` med flit: en
+    // osänd post från ett annat konto skulle annars skickas upp under den nya
+    // ägarens JWT och tyst bli hans. Ordningen är säkerhetsegenskapen.
+    await reconcileOwner(data.session.user.id, db);
+
     const push = await pushOutbox(client as unknown as RpcCaller, db);
     const pull = await pullChanges(client as unknown as SelectCaller, db);
 
