@@ -1043,6 +1043,24 @@ och 13.1 måste vara klar före 13.6.
       det är**, inte att börja flytta filer. En orienteringskarta över `src/` (vad varje mapp
       ansvarar för och vad som anropar vad) kan visa sig vara hela åtgärden.
 
+- [ ] **12.14 `META_CATALOG_VERSION` är död kod.** Konstanten `catalogChecksum` deklareras i
+      `src/db/types.ts` men används ingenstans — `grep -rn "META_CATALOG_VERSION\|catalogChecksum" src/`
+      ger bara deklarationen. Hittad 2026-08-09 under arbetet med 13.0, när rensningen behövde
+      veta hur katalogen laddas om.
+
+      **Varför det är värt en rad och inte bara en radering:** namnet antyder en
+      versionsmekanism som inte finns. `ensureCatalog` gör ett ovillkorligt `bulkPut` av hela
+      den hårdkodade katalogen vid varje appstart och konsulterar aldrig någon checksumma.
+      Nästa person som läser `types.ts` drar rimligen slutsatsen att omseedningen är villkorad,
+      och den slutsatsen är fel. En konstant som beskriver något appen inte gör är sämre än
+      ingen konstant alls.
+
+      **Frågan att avgöra först:** är ovillkorlig omseedning vid varje start ett verkligt
+      problem? Är det inte det — och inget tyder på det, det är ett `bulkPut` av ett
+      trettiotal rader — ska konstanten bara bort. Är det det, är det en egen uppgift.
+      **Klart när:** antingen är konstanten borta, eller så finns en uppgift som beskriver
+      vad den skulle användas till.
+
 ---
 
 ## Fas 11A — efterjustering 2026-08-01 (layoutbugg + rullhjul)
