@@ -13,6 +13,42 @@ Nedbrytning av `docs/PLAN.md`. Ordningen är inte godtycklig — se §6 i planen
 
 ---
 
+## 🔥 Akut — drift och kostnad
+
+- [ ] **A.1 Egress-gränsen är passerad, och siffrorna går inte ihop.** Adam 2026-08-09:
+      **5,02 av 5 GB** på Free-planen denna cykel, med enskilda dygn **över 500 MB**.
+      Databasen är 45 MB och appen har fyra användare.
+
+      **Regeln för den här uppgiften: ta reda på vad som genererar trafiken innan något
+      ändras.** Att optimera en synk som kanske inte är boven skulle dölja den verkliga
+      orsaken och konsumera nästa cykels marginal med.
+
+      **Hypotes 1 — det andra projektet. Pröva denna först, den är ett klick.** Organisationen
+      `qfqgeranbxnftnnlkcfo` innehåller **två** projekt: `Gym-App` och `news-signal-engine`.
+      Free-planens kvoter räknas **per organisation, inte per projekt**, så en nyhetsinsamlare
+      som hämtar och lagrar artiklar kan äta upp hela taket utan att Gym-App rört en byte.
+      **Kontroll:** dashboardens Usage-vy, uppdelad per projekt.
+
+      **Hypotes 2 — trasiga hämtningsmarkörer** (Adams förslag): `lastPulledAt:*` fungerar inte
+      och `pull.ts` hämtar hela tabeller vid varje synkrunda. `syncNow` triggas vid appstart,
+      `focus`, `visibilitychange` och 2 s efter varje utkorgsskrivning — under ett pass blir
+      det många rundor.
+
+      **Men aritmetiken talar emot den för Gym-App:s del.** 45 MB är i praktiken en tom
+      Postgres-instans; själva träningsdatan är 10 pass och 25 set, alltså kilobyte. Även en
+      fullständigt trasig markör som hämtade om *allt* vid *varje* runda skulle flytta
+      kilobyte per synk. 500 MB på ett dygn kräver storleksordningar fler anrop än fyra
+      användare rimligen genererar. **Hypotesen ska ändå prövas** — den är billig att mäta och
+      vore ett riktigt fel oavsett trafiken — men den förklarar sannolikt inte siffran.
+
+      **Ordning:** Usage per projekt → Gym-App:s egen egress isolerad → först därefter
+      `pull.ts`. Glöm inte Edge Functions och Realtime; egress är inte bara PostgREST.
+
+      **Klart när:** trafiken är hänförd till en namngiven källa med en siffra intill. Inte
+      en gissning, och ingen kodändring dessförinnan.
+
+---
+
 ## Fas 0 — Mätningar som blockerar design
 
 Dessa kräver ingen kodbas och kan göras nu. De avgör hur fas 6 får byggas.
