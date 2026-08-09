@@ -19,6 +19,7 @@ export function workoutToWire(w: LocalWorkout): Record<string, unknown> {
     ended_at: w.endedAt,
     title: w.title,
     note: w.note,
+    is_imported: w.isImported,
     is_deleted: w.isDeleted,
   };
 }

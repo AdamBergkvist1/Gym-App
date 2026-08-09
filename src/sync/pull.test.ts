@@ -157,3 +157,19 @@ describe('7.9 lokalt vinner över hämtat', () => {
     expect((await db.workouts.get(w.id))?.title).toBe('Serverns version');
   });
 });
+
+describe('13.1 importerade pass överlever hämtningen', () => {
+  it('ett pass med is_imported = true kan hämtas ned och läsas lokalt', async () => {
+    const client = fakeClient({
+      workouts: [
+        { ...serverWorkout('w-imp', '2026-07-30T12:00:00.000Z'), is_imported: true },
+        serverWorkout('w-vanligt', '2026-07-30T12:00:00.000Z'),
+      ],
+    });
+
+    await pullChanges(client, db);
+
+    expect((await db.workouts.get('w-imp'))?.isImported).toBe(true);
+    expect((await db.workouts.get('w-vanligt'))?.isImported).toBe(false);
+  });
+});

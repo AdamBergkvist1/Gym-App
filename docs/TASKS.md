@@ -969,6 +969,23 @@ och 13.1 måste vara klar före 13.6.
       skriva fältet, annars går ett importerat pass inte att synka tillbaka.
       **Klart när:** ett pass med `is_imported = true` kan skrivas, synkas ned och läsas.
 
+      **Status 2026-08-09: klientkoden är klar, migrationen är INTE körd.**
+      `supabase/migrations/0004_import_flagga.sql` är skriven men aldrig applicerad — Adam
+      kör den själv. Kryssrutan står därför kvar öppen: åtta vitest-tester bevisar klientens
+      halva av kontraktet (`toWire`, `wire`, `pullChanges` → Dexie), men serverns halva är
+      obevisad tills migrationen körts.
+
+      **Ändringen ligger i en ny fil 0004, inte i 0003 som uppgiftstexten säger.** 0003 är
+      redan applicerad på det skarpa projektet, och en redigering där hade inte nått
+      databasen. Innehållet är detsamma: `apply_mutations` skrivs om i sin helhet med
+      `is_imported` i `workouts`-grenen.
+
+      **Villkorsnamnet gissas inte.** `logged_sets.source`-villkoret skrevs inline i 0001 och
+      heter det Postgres döpte det till. Ett `drop constraint if exists`
+      på ett gissat namn hade varit tyst verkningslöst och lämnat det gamla villkoret kvar
+      bredvid det nya — fortfarande förbjudande `'import'`, med en grön självkontroll.
+      0004 släpper i stället varje check-villkor på tabellen som nämner `source`.
+
 - [ ] **13.2 Katalogen: dela `Chins` och `Pullups`.** Knogar bakåt (mot rumpan) = överhand =
       **Pullups**. Knogar framåt (dit ögonen tittar) = underhand = **Chins**.
 

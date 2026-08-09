@@ -2,7 +2,16 @@
 
 import type { EffortType } from '../parser/types';
 
-export type SetSource = 'manual' | 'local_parse' | 'ai_parse';
+/**
+ * Källan till ett set. Måste hållas i takt med check-villkoret på
+ * `logged_sets.source` i migrationerna — en klient som skickar upp ett värde
+ * servern inte känner igen fäller hela synkbatchen.
+ *
+ * `'import'` (13.1) betyder Adams gamla anteckningar. Setet är verkligt, men
+ * det är inte loggat i appen och får aldrig bli spökdata (13.4).
+ */
+export const SET_SOURCES = ['manual', 'local_parse', 'ai_parse', 'import'] as const;
+export type SetSource = (typeof SET_SOURCES)[number];
 
 export interface LocalExercise {
   id: string;
@@ -26,6 +35,15 @@ export interface LocalWorkout {
   endedAt: string | null;
   title: string | null;
   note: string | null;
+  /**
+   * Importerat från Adams gamla anteckningar (fas 13), inte loggat i appen.
+   *
+   * Rader som skrevs före 13.1 saknar fältet helt — Dexie migrerar inte
+   * innehåll, bara scheman. Läsvägar måste därför pröva sanningsvärdet
+   * (`!w.isImported`), aldrig `=== false`. Alla sådana rader är loggade i
+   * appen och alltså inte importerade, så tolkningen är korrekt.
+   */
+  isImported: boolean;
   isDeleted: boolean;
   updatedAt: string;
 }

@@ -7,7 +7,13 @@
 
 import { normalizeName } from '../parser/normalize';
 import type { EffortType } from '../parser/types';
-import type { LocalExercise, LocalSet, LocalWorkout, SetSource } from '../db/types';
+import {
+  SET_SOURCES,
+  type LocalExercise,
+  type LocalSet,
+  type LocalWorkout,
+  type SetSource,
+} from '../db/types';
 
 type Row = Record<string, unknown>;
 
@@ -28,6 +34,7 @@ export function workoutFromWire(r: Row): LocalWorkout {
     endedAt: strOrNull(r['ended_at']),
     title: strOrNull(r['title']),
     note: strOrNull(r['note']),
+    isImported: bool(r['is_imported']),
     isDeleted: bool(r['is_deleted']),
     updatedAt: str(r['updated_at']),
   };
@@ -48,9 +55,7 @@ export function setFromWire(r: Row): LocalSet {
     note: strOrNull(r['note']),
     isWarmup: bool(r['is_warmup']),
     performedAt: str(r['performed_at']),
-    source: (['manual', 'local_parse', 'ai_parse'] as const).includes(
-      str(r['source']) as SetSource
-    )
+    source: SET_SOURCES.includes(str(r['source']) as SetSource)
       ? (str(r['source']) as SetSource)
       : 'manual',
     isDeleted: bool(r['is_deleted']),

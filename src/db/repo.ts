@@ -151,6 +151,9 @@ export async function startWorkout(
     endedAt: null,
     title,
     note: null,
+    // Pass som startas i appen är per definition inte importerade. Importen
+    // (13.6) skriver sina rader utan att gå via startWorkout.
+    isImported: false,
     isDeleted: false,
     updatedAt: now(),
   };
