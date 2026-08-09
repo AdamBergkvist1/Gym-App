@@ -256,3 +256,20 @@ describe('ordningen på ett passets set är deterministisk', () => {
     expect(new Set(tider).size).toBe(tider.length);
   });
 });
+
+describe('13.1 importflaggan når utkorgen', () => {
+  it('bär is_imported i utkorgens payload, inte bara i den lokala raden', async () => {
+    const w = await startWorkout(db);
+
+    const entry = (await db.outbox.toArray()).find(
+      (e) => e.table === 'workouts' && e.rowId === w.id
+    )!;
+
+    // Nyckeln måste FINNAS, inte bara vara falsk. Ett fält som tappas på väg
+    // till utkorgen är osynligt lokalt — passet ser rätt ut i appen och blir
+    // fel först på nästa enhet, vilket är exakt den sortens tysta fel som
+    // hela synken är byggd för att undvika.
+    expect(Object.hasOwn(entry.payload, 'is_imported')).toBe(true);
+    expect(entry.payload['is_imported']).toBe(false);
+  });
+});

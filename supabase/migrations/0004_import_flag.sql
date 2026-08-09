@@ -194,6 +194,9 @@ begin
           is_archived       = excluded.is_archived,
           is_deleted        = excluded.is_deleted;
 
+      -- Telemetri för fritextparsningen (0003). `user_id` tas som alltid ur
+      -- JWT:n, aldrig ur payloaden — även en loggrad tillhör en bestämd
+      -- användare.
       when 'ai_parse_log' then
         insert into public.ai_parse_log
           (id, user_id, raw_text, parser, provider, model, parsed, outcome,
@@ -209,6 +212,8 @@ begin
           p->'corrected',
           (p->>'latency_ms')::integer
         )
+        -- Utfallet uppdateras när användaren bestämt sig, så raden skickas två
+        -- gånger: en gång vid försöket och en gång med sitt slutliga utfall.
         on conflict (id) do update set
           outcome    = excluded.outcome,
           corrected  = excluded.corrected,
@@ -234,9 +239,17 @@ grant execute on function public.apply_mutations(jsonb) to authenticated;
 -- ---------- Självkontroll ----------
 -- Kollar de tre ändringarna var för sig. Att funktionen kompilerar säger
 -- ingenting om att kolumnen finns, och tvärtom.
+--
+-- EN KONTROLL FÅR ALDRIG KUNNA BLI GRÖN AV SIN EGEN KOMMENTAR. Första utkastet
+-- av den här filen sökte efter strängen 'is_imported' i funktionsdefinitionen —
+-- och kroppen innehåller raden '-- NYTT I 0004: is_imported'. Kontrollen hade
+-- alltså passerat även om båda de riktiga raderna tagits bort. Därför strippas
+-- radkommentarerna först, och därefter krävs två EXAKTA kodfragment, ett per
+-- skrivväg (insert respektive update).
 do $$
 declare
   kropp text;
+  kod   text;
 begin
   if not exists (
     select 1 from information_schema.columns
@@ -246,16 +259,26 @@ begin
     raise exception 'workouts.is_imported saknas';
   end if;
 
-  -- Frågan är inte "finns vårt villkor" utan "finns något villkor som
-  -- förbjuder import". Räknar därför alla check-villkor om source och kräver
-  -- att exakt ett finns kvar, och att det släpper igenom import.
-  if (
-    select count(*) from pg_constraint
+  -- Två frågor, inte en. Att inget villkor förbjuder import är sant också när
+  -- det inte finns NÅGOT villkor alls — och en source-kolumn utan check vore
+  -- en tyst uppluckring, inte ett godkänt resultat.
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.logged_sets'::regclass
+      and contype = 'c'
+      and pg_get_constraintdef(oid) ilike '%source%'
+      and pg_get_constraintdef(oid) ilike '%import%'
+  ) then
+    raise exception 'logged_sets saknar ett check-villkor på source som tillåter import';
+  end if;
+
+  if exists (
+    select 1 from pg_constraint
     where conrelid = 'public.logged_sets'::regclass
       and contype = 'c'
       and pg_get_constraintdef(oid) ilike '%source%'
       and pg_get_constraintdef(oid) not ilike '%import%'
-  ) > 0 then
+  ) then
     raise exception 'ett äldre check-villkor på logged_sets.source förbjuder fortfarande import';
   end if;
 
@@ -264,8 +287,19 @@ begin
   join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public' and p.proname = 'apply_mutations';
 
-  if kropp is null or position('is_imported' in kropp) = 0 then
-    raise exception 'apply_mutations skriver inte is_imported';
+  if kropp is null then
+    raise exception 'apply_mutations finns inte';
+  end if;
+
+  -- Bort med varje radkommentar. Kvar blir bara kod.
+  kod := regexp_replace(kropp, '--[^\n]*', '', 'g');
+
+  if position('coalesce((p->>''is_imported'')::boolean, false)' in kod) = 0 then
+    raise exception 'apply_mutations INSERTar inte is_imported';
+  end if;
+
+  if position('is_imported = excluded.is_imported' in kod) = 0 then
+    raise exception 'apply_mutations UPPDATERAR inte is_imported vid konflikt';
   end if;
 
   raise notice '--------------------------------------------------';

@@ -970,10 +970,15 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** ett pass med `is_imported = true` kan skrivas, synkas ned och läsas.
 
       **Status 2026-08-09: klientkoden är klar, migrationen är INTE körd.**
-      `supabase/migrations/0004_import_flagga.sql` är skriven men aldrig applicerad — Adam
-      kör den själv. Kryssrutan står därför kvar öppen: åtta vitest-tester bevisar klientens
-      halva av kontraktet (`toWire`, `wire`, `pullChanges` → Dexie), men serverns halva är
-      obevisad tills migrationen körts.
+      `supabase/migrations/0004_import_flag.sql` är skriven men aldrig applicerad — Adam kör
+      den själv. Kryssrutan står därför kvar öppen.
+
+      **Vad som är bevisat, exakt.** Nio vitest-tester täcker tre led: fältet når utkorgens
+      payload (`repo.test.ts`), det översätts rätt åt båda hållen (`toWire`, `wire`), och ett
+      hämtat pass med `is_imported = true` landar läsbart i Dexie (`pullChanges`).
+      **Obevisat:** allt på serversidan. Migrationen har aldrig körts — det finns ingen
+      Postgres på maskinen — så varken kolumnen, det utökade villkoret, `apply_mutations`
+      eller filens egen självkontroll har exekverats en enda gång. De är lästa, inte prövade.
 
       **Ändringen ligger i en ny fil 0004, inte i 0003 som uppgiftstexten säger.** 0003 är
       redan applicerad på det skarpa projektet, och en redigering där hade inte nått
@@ -985,6 +990,15 @@ och 13.1 måste vara klar före 13.6.
       på ett gissat namn hade varit tyst verkningslöst och lämnat det gamla villkoret kvar
       bredvid det nya — fortfarande förbjudande `'import'`, med en grön självkontroll.
       0004 släpper i stället varje check-villkor på tabellen som nämner `source`.
+
+      **En kontroll får inte kunna bli grön av sin egen kommentar.** Första utkastet av 0004
+      sökte efter strängen `is_imported` i `pg_get_functiondef` — som bevarar kommentarer, och
+      kroppen innehåller raden `-- NYTT I 0004: is_imported`. Kontrollen hade passerat även om
+      båda de riktiga raderna tagits bort. Hittad av granskningen, inte av mig. Självkontrollen
+      strippar nu radkommentarer först och kräver därefter två exakta kodfragment, ett per
+      skrivväg. Villkorskontrollen ställer dessutom två frågor i stället för en: *finns ett
+      villkor som tillåter import* och *finns inget kvar som förbjuder det* — den förra saknades,
+      och utan den var en source-kolumn helt utan check ett godkänt resultat.
 
 - [ ] **13.2 Katalogen: dela `Chins` och `Pullups`.** Knogar bakåt (mot rumpan) = överhand =
       **Pullups**. Knogar framåt (dit ögonen tittar) = underhand = **Chins**.
