@@ -876,7 +876,7 @@ Designad i en grillningssession 2026-08-07. Beslutet ligger i `PLAN.md` §3.5b, 
 Fasen är oberoende av 11B och kan köras när som helst. **13.0 går före allt annat i fasen**,
 och 13.1 måste vara klar före 13.6.
 
-- [ ] **13.0 Lokal data måste tillhöra ett konto.** Hittad av Adam 2026-08-09, samma dag som
+- [x] **13.0 Lokal data måste tillhöra ett konto.** Hittad av Adam 2026-08-09, samma dag som
       hans riktiga konto skapades i 13.6 steg 1. Han loggade in på det, och såg testkontots
       10 pass och 21 set ligga kvar — som om de var hans.
 
@@ -937,6 +937,31 @@ och 13.1 måste vara klar före 13.6.
       lokalt loggade pass överlever första inloggningen, rensningsfallen att både rader och
       markörer är borta, och utloggningsfallet att ingenting rörs. Därtill ett test som visar
       att en osänd utkorgspost från ett annat konto aldrig skickas upp.
+
+      **✅ Verifierat i skarpt läge 2026-08-09**, utöver de sju enhetstesterna. Adam körde
+      kedjan för hand mot riktig Supabase: inloggning som `test1` (10 pass syntes,
+      `lastPulledAt:workouts` = `2026-08-06T16:05:04`), utloggning (datan låg kvar, som
+      designat), inloggning som han själv. Efteråt: Historik tom, `userId` omslaget, och
+      **`lastPulledAt:workouts` och `:logged_sets` borta** — den avgörande observationen,
+      eftersom `resetPullCursors` bara anropas inifrån `wipeForeignData`. `bänk 80x5`
+      matchade Bänkpress, alltså överlevde katalogen omseedningen i rensningstransaktionen.
+      Serverkontroll: hans konto innehöll exakt en rad — hans egen — och testkontots 10 pass
+      och 25 set var orörda, utan en enda `updated_at` från den dagen.
+
+      **Rättelse till testplanen: signatur 4 var felformulerad.** Planen sa att
+      `lastPulledAt:exercises` skulle vara *nyhämtad* efter rensningen. Adam observerade att
+      den stod kvar på test1:s gamla värde och ifrågasatte det — med rätta.
+
+      **Orsaken:** markören sätts till högsta `updated_at` bland de hämtade **raderna**
+      (`pull.ts`), inte till klockslaget då hämtningen skedde. Den globala katalogen seedades
+      på servern `2026-07-31T15:40:32` och har inte ändrats sedan. Rensades markören hämtas
+      katalogen om från epok och markören landar på just det värdet; rensades den inte
+      returnerar frågan noll rader och värdet står kvar. **Identiskt observerbart i båda
+      fallen** — signaturen kunde alltså inte skilja dem åt och bevisade ingenting.
+
+      **Lärdomen, som gäller bredare än den här uppgiften:** en markör som speglar *datans*
+      ålder duger inte som kvitto på att en *händelse* inträffat. Signatur 3 höll för att
+      frånvaro av en rad bara kan orsakas av en radering.
 
 - [ ] **13.1 Migration: `workouts.is_imported` + `source = 'import'`.** En boolean med
       `default false`, och `logged_sets.source`-villkoret utökat med `'import'`. Speglas i
