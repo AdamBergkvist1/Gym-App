@@ -973,6 +973,42 @@ och 13.1 måste vara klar före 13.6.
       `supabase/migrations/0004_import_flag.sql` är skriven men aldrig applicerad — Adam kör
       den själv. Kryssrutan står därför kvar öppen.
 
+      **Verifiering utifrån, efter att migrationen körts.** Självkontrollen inuti 0004 kan
+      inte bevisa serverläget — den inspekterar tillstånd som skapades av satserna ovanför i
+      samma transaktion, så den är ett skydd mot att filen skrivs fel, inget annat. Beviset
+      hämtas i stället i en egen session, i SQL-editorn:
+
+      ```sql
+      select 'workouts.is_imported' as kontroll,
+             coalesce((
+               select format('%s, nullable=%s, default=%s', data_type, is_nullable, column_default)
+               from information_schema.columns
+               where table_schema = 'public' and table_name = 'workouts'
+                 and column_name = 'is_imported'
+             ), '❌ SAKNAS') as resultat
+      union all
+      select 'check-villkor på logged_sets.source',
+             coalesce((
+               select string_agg(conname || ' → ' || pg_get_constraintdef(oid), E'\n')
+               from pg_constraint
+               where conrelid = 'public.logged_sets'::regclass and contype = 'c'
+                 and pg_get_constraintdef(oid) ilike '%source%'
+             ), '❌ SAKNAS')
+      union all
+      select 'apply_mutations skriver is_imported',
+             case when (
+               select position('is_imported = excluded.is_imported' in
+                 regexp_replace(pg_get_functiondef(p.oid), '--[^\n]*', '', 'g'))
+               from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+               where n.nspname = 'public' and p.proname = 'apply_mutations'
+             ) > 0 then '✅ ja' else '❌ nej' end;
+      ```
+
+      Rad 2 är den viktiga och ska läsas, inte bara bockas av: den listar **alla**
+      check-villkor på `source`, så ett kvarlämnat gammalt villkor syns som en extra rad.
+      Godkänt är exakt ett villkor, och dess text ska innehålla `'import'::text` — Postgres
+      lagrar `in (...)` som `= ANY (ARRAY[...])`, så det är den formen som visas.
+
       **Vad som är bevisat, exakt.** Nio vitest-tester täcker tre led: fältet når utkorgens
       payload (`repo.test.ts`), det översätts rätt åt båda hållen (`toWire`, `wire`), och ett
       hämtat pass med `is_imported = true` landar läsbart i Dexie (`pullChanges`).

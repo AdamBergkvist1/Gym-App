@@ -39,8 +39,22 @@ alter table public.workouts
 -- vore tyst verkningslöst om Postgres döpt villkoret till något annat, och då
 -- hade det gamla villkoret legat kvar BREDVID det nya och fortsatt förbjuda
 -- 'import' — medan självkontrollen längst ned hittade sitt nya villkor och
--- rapporterade OK. Vi släpper i stället varje check-villkor på tabellen som
--- handlar om source, oavsett vad det heter.
+-- rapporterade OK. Vi släpper i stället utifrån vad villkoret GÖR.
+--
+-- Mönstret är avsiktligt smalare än "nämner source". Ett framtida sammansatt
+-- villkor som råkar nämna source — säg en regel om att importerade set inte
+-- får ha rest_seconds — skulle annars släppas här och aldrig återskapas,
+-- eftersom vi bara lägger tillbaka ett villkor.
+--
+-- OBS hur Postgres LAGRAR villkoret. `check (source in ('a','b'))` skrivs om
+-- till `CHECK ((source = ANY (ARRAY['a'::text, 'b'::text])))`. Ett mönster som
+-- letar efter 'source in (' matchar därför ingenting alls, släpper inget, och
+-- lägger sedan sitt nya villkor BREDVID det gamla — precis den bugg det här
+-- blocket finns för att undvika. Mönstret nedan täcker båda skrivsätten.
+--
+-- Ryggtäckningen är självkontrollen längst ned: den frågar brett, på varje
+-- villkor som nämner source över huvud taget. Missar mönstret här något
+-- avbryter den körningen i stället för att låta två villkor leva sida vid sida.
 do $$
 declare
   c record;
@@ -50,7 +64,7 @@ begin
     from pg_constraint
     where conrelid = 'public.logged_sets'::regclass
       and contype = 'c'
-      and pg_get_constraintdef(oid) ilike '%source%'
+      and pg_get_constraintdef(oid) ~* 'source\s*(=\s*any|in)\s*\('
   loop
     execute format('alter table public.logged_sets drop constraint %I', c.conname);
   end loop;
@@ -237,26 +251,53 @@ grant execute on function public.apply_mutations(jsonb) to authenticated;
 
 
 -- ---------- Självkontroll ----------
--- Kollar de tre ändringarna var för sig. Att funktionen kompilerar säger
--- ingenting om att kolumnen finns, och tvärtom.
+-- VAD DEN HÄR KONTROLLEN ÄR, OCH VAD DEN INTE ÄR.
 --
--- EN KONTROLL FÅR ALDRIG KUNNA BLI GRÖN AV SIN EGEN KOMMENTAR. Första utkastet
--- av den här filen sökte efter strängen 'is_imported' i funktionsdefinitionen —
--- och kroppen innehåller raden '-- NYTT I 0004: is_imported'. Kontrollen hade
--- alltså passerat även om båda de riktiga raderna tagits bort. Därför strippas
--- radkommentarerna först, och därefter krävs två EXAKTA kodfragment, ett per
--- skrivväg (insert respektive update).
+-- Den är ett skydd mot att FILEN skrivs fel — att någon redigerar
+-- apply_mutations och tappar is_imported, eller stavar ett fältnamn galet.
+-- Den kan i praktiken inte bli röd av att databasen är i fel läge, eftersom
+-- allt den inspekterar skapades av satserna ovanför i samma transaktion: hade
+-- `add constraint` fallerat vore körningen redan avbruten, och
+-- `create or replace function` gör per definition kroppen till det som står i
+-- filen. Att den säger OK är alltså inte ett bevis på serverläge.
+--
+-- Vill man ha det beviset frågar man databasen utifrån efteråt, i en egen
+-- session. Frågan står i `docs/TASKS.md` under 13.1.
+--
+-- En kontroll får heller aldrig kunna bli grön av sin egen kommentar. Första
+-- utkastet sökte efter strängen 'is_imported' i funktionsdefinitionen — och
+-- kroppen innehåller raden '-- NYTT I 0004: is_imported'. Den hade passerat
+-- även om båda de riktiga raderna tagits bort. Därför strippas radkommentarerna
+-- först, och därefter krävs två EXAKTA kodfragment, ett per skrivväg.
+-- Matchningen är teckenexakt: ändrad indentering eller versalt COALESCE gör den
+-- röd utan att något gått sönder. Det är avsiktligt — en falsk röd kostar en
+-- minut, en falsk grön kostar en tyst trasig synk.
 do $$
 declare
   kropp text;
   kod   text;
 begin
+  -- Typen och not null prövas, inte bara namnet. En kolumn som redan fanns
+  -- sedan tidigare med fel typ hade annars godkänts av `add column if not
+  -- exists` (som inte gör något) och av en kontroll som bara frågar på namnet.
   if not exists (
     select 1 from information_schema.columns
     where table_schema = 'public' and table_name = 'workouts'
       and column_name = 'is_imported'
+      and data_type = 'boolean'
+      and is_nullable = 'NO'
+      -- Tolerant på formen, sträng på innebörden: Postgres kan rendera
+      -- defaulten som `false` eller `false::boolean` beroende på version, och
+      -- en falsk röd här hade avbrutit hela migrationen i onödan.
+      and column_default ilike '%false%'
   ) then
-    raise exception 'workouts.is_imported saknas';
+    raise exception 'workouts.is_imported saknas eller har fel typ/default: %',
+      coalesce((
+        select format('typ=%s nullable=%s default=%s', data_type, is_nullable, column_default)
+        from information_schema.columns
+        where table_schema = 'public' and table_name = 'workouts'
+          and column_name = 'is_imported'
+      ), 'kolumnen finns inte');
   end if;
 
   -- Två frågor, inte en. Att inget villkor förbjuder import är sant också när

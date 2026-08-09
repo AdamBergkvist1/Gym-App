@@ -366,6 +366,7 @@ tabeller med användardata har `user_id uuid not null references auth.users(id)`
 | `ended_at` | timestamptz null | null = pågående |
 | `title` | text null | |
 | `note` | text null | |
+| `is_imported` | boolean not null default false | Adams gamla anteckningar (§3.5b). Behållare, inte träning — döljs i passlistan |
 
 **`logged_sets`** — kärntabellen.
 
@@ -384,7 +385,7 @@ tabeller med användardata har `user_id uuid not null references auth.users(id)`
 | `note` | text null | "Ont i axeln" |
 | `is_warmup` | boolean not null default false | |
 | `performed_at` | timestamptz not null | exakt tid för setet |
-| `source` | text not null default `'manual'` | `'manual'`, `'local_parse'`, `'ai_parse'` |
+| `source` | text not null default `'manual'` | `'manual'`, `'local_parse'`, `'ai_parse'`, `'import'` |
 
 Att notera i granskningen:
 
@@ -394,6 +395,10 @@ Att notera i granskningen:
 - `weight_kg` är kanonisk. Ingen kolumn får någonsin innehålla en vikt utan känd enhet.
 - `source` finns för att vi ska kunna *mäta* om parsade set skiljer sig från manuellt
   inmatade — till exempel oftare rättas i efterhand.
+- `'import'` (13.1) är inte ett mätvärde utan ett **beteende**: ett importerat set får aldrig
+  bli spökdata (§3.5b). Värdemängden speglas i `SET_SOURCES` i `src/db/types.ts`, och de två
+  listorna måste ändras i samma commit — en klient som skickar upp ett värde servern inte
+  känner igen fäller hela synkbatchen.
 
 **`sync_mutations`** — kvittensbok för idempotens.
 
