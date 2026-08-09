@@ -1,6 +1,103 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-07 (sessionen avslutad)
+**Datum:** 2026-08-09 (sessionen avslutad)
+
+---
+
+## 🆕 2026-08-09 — Adams konto skapat, och en bugg som hittades på kuppen
+
+**Fas 13 påbörjades i fel ände med flit:** 13.6 steg 1 (Adam registrerar sig) är oberoende av
+kodändringarna och kunde göras direkt. Det avslöjade en bugg som blockerade hela importen, och
+sessionen handlade om den. **13.0 är byggd, verifierad och mergad till `main`** (fem commits,
+`e968cfd`–`e2f54c9`, fast-forward).
+
+### 🚩 Buggen: lokal data tillhörde inget konto
+
+Adam loggade in på sitt nya konto och såg **testkontots 10 pass och 21 set** ligga kvar som om
+de var hans. Han ifrågasatte det mot mitt påstående att RLS skulle isolera datan.
+
+**Han hade rätt, jag hade fel.** RLS isolerar servern korrekt — hans `user_id` hade 0 rader.
+Men den lokala Dexie-basen hade **inget ägarbegrepp alls**, och den tittade jag aldrig på
+innan jag uttalade mig.
+
+**Varför det var allvarligt och inte bara skräpigt:** hämtade rader hamnar aldrig i utkorgen,
+så ingenting hade läckt av sig självt. Men rör användaren en enda främmande rad skapas en
+utkorgspost, och den skickas upp under den **nya** ägarens JWT. `apply_mutations` tar ägaren
+ur token och hade skrivit den utan att knota — tyst, utan felkod.
+
+**Åtgärden** är `meta['userId']` + `reconcileOwner()` i `src/sync/ownership.ts`, anropad från
+`syncNow()` **före `pushOutbox`**. Den ordningen är hela säkerhetsegenskapen. Regeln står i
+`PLAN.md` §2.4; den svåra biten är att tomt `userId` betyder två oförenliga saker, och att
+hämtningsmarkören skiljer dem åt.
+
+### Verifierat i skarpt läge, inte bara i vitest
+
+Adam körde kedjan för hand mot riktig Supabase på `localhost:5173` med DevTools öppet:
+
+| Steg | Observerat |
+| :---- | :---- |
+| Inloggad som `test1` | 10 pass, `lastPulledAt:workouts` = `2026-08-06T16:05:04` |
+| Utloggad | Datan låg kvar — **som designat**, utloggning rör aldrig lokal data |
+| Inloggad som Adam | Historik tom, `userId` omslaget, **markörerna för `workouts` och `logged_sets` borta** |
+| `bänk 80x5` | Matchade Bänkpress — katalogen överlevde omseedningen i rensningstransaktionen |
+| Serverkontroll (SQL) | Adams konto: exakt 1 rad, hans egen. test1: 10 pass / 25 set, **ingen `updated_at` från den dagen** |
+
+Att markörerna försvann är den avgörande observationen: `resetPullCursors` anropas bara
+inifrån `wipeForeignData`.
+
+### Fel jag gjorde i den här sessionen
+
+1. **"Ditt nya konto startar tomt — RLS isolerar."** Sagt om servern, men Adam frågade om
+   appen. Jag hade inte läst den lokala lagringen innan jag svarade.
+2. **Signatur 4 i testplanen var felformulerad.** Jag skrev att `lastPulledAt:exercises` skulle
+   vara nyhämtad efter rensningen. Markören sätts till högsta `updated_at` bland **raderna**,
+   inte till hämtningens klockslag — och den globala katalogen har inte ändrats sedan den
+   seedades. Rensad eller ej ger därför **samma värde**, så signaturen bevisade ingenting.
+   Adam upptäckte avvikelsen och begärde förklaringen. Rättelsen ligger i `TASKS.md` 13.0.
+   **Lärdomen:** en markör som speglar *datans* ålder duger inte som kvitto på att en
+   *händelse* inträffat.
+3. **Skrev över `.claude/launch.json`** (bytte `gym-dev` → `gym-app`) helt i onödan. Återställd.
+
+### 🔥 Ny akut uppgift: A.1 — egress-gränsen är passerad
+
+Adam rapporterade **5,02 av 5 GB** på Free-planen, med dygn över 500 MB, mot en databas på
+45 MB och fyra användare. **Ingen undersökning gjord — det var hans uttryckliga instruktion**,
+och uppgiften säger att trafiken ska hänföras innan något ändras.
+
+**Rangordnat i `TASKS.md` A.1:** organisationen `qfqgeranbxnftnnlkcfo` innehåller **två**
+projekt (`Gym-App` och `news-signal-engine`) och Free-planens kvoter räknas **per
+organisation**. Det ska uteslutas först — det är ett klick i Usage-vyn. Hypotesen om trasiga
+hämtningsmarkörer prövas också, men aritmetiken talar emot den: appens faktiska data är
+kilobyte, och 500 MB/dygn kräver storleksordningar fler anrop än fyra användare genererar.
+
+### Mätt vid överlämningen (§9-regeln)
+
+| Mått | Värde |
+| :---- | :---- |
+| Tester | **246 gröna**, 19 filer |
+| Bundle | **635,47 kB**, gzip **190,88 kB** |
+| Precache | 9 poster, 648,28 KiB |
+| Rader i `src/` (exkl. tester) | 6 792 |
+| `main` | `e2f54c9`, pushad till `origin` |
+
+### Vad som INTE är gjort
+
+- **13.1–13.5 är orörda.** 13.1 (`workouts.is_imported`) blockerar hela resten av importen.
+  Kontrollerat i databasen: `workouts` har ännu ingen `is_imported`-kolumn.
+- **SQL-filen `scripts/import-adam.sql` är inte genererad.** Kräver 13.1.
+- **A.1 är inte undersökt** — medvetet, se ovan.
+- **Playwright-webbläsarna är inte installerade** på maskinen. Eget steg, Adams beslut.
+- **`package-lock.json` ligger ändrad i arbetskopian.** Den fanns när sessionen började, är
+  inte min, och lämnades orörd.
+
+### Öppen fråga jag besvarade fel en gång — så här ligger den nu
+
+E2E kan bevisa rensningsvägen **utan credentials** genom att seeda IndexedDB via
+`page.evaluate()` och anropa `reconcileOwner` i riktig webbläsare — värdefullt just för att
+enhetstesterna kör mot `fake-indexeddb`. Vad e2e **inte** kan utan en hemlighet är hela kedjan
+*inloggning → session → synk → RLS*. Beslutet blev: e2e tar invarianten, autentiseringen
+förblir manuell. Ett testkontos lösenord i CI vore en ny secret att förvalta för att slippa
+ett tvåminuterssteg.
 
 ---
 
@@ -411,6 +508,14 @@ en tillfällighet.
 
 ### Nästa session — börja här
 
+**Detta stycke skrevs 2026-08-07 och gäller designrundan (11B).** Sessionen 2026-08-09 lade
+två saker framför den — se den sessionen högst upp:
+
+1. **A.1 — egress.** Free-planens tak är passerat. Usage-vyn per projekt först, ingen kod.
+2. **13.1 — `workouts.is_imported`.** Blockerar 13.2–13.6, alltså hela importen.
+
+Därefter, om designrundan tas upp igen:
+
 1. **3a — färgsystemet.** Fristående, kräver inget från Adam. Enda naturliga startpunkten.
 2. Ställ referensfrågan ovan, så att 3c kan planeras parallellt.
 
@@ -418,10 +523,11 @@ en tillfällighet.
 - Kontrollera att hemskärmsikonen öppnar Pass-vyn. Installerades appen från det raderade
   Vercel-projektet är genvägen död — lägg i så fall till den på nytt från
   `https://adam-gym-app.vercel.app`.
-- **Bestäm om testdatan ska följa med.** Båda kontona i databasen är testkonton; det med
-  6 pass och 12 set är inte Adams riktiga konto. Skapas ett nytt konto följer datan **inte**
-  med — RLS isolerar per `user_id`, vilket är hela poängen. Är det testdata spelar det ingen
-  roll, men beslutet ska tas medvetet och inte upptäckas.
+- ~~**Bestäm om testdatan ska följa med.**~~ **BESVARAD 2026-08-09.** Adam skapade sitt konto
+  och lät testdatan vara. Två rättelser till hur frågan var ställd: siffran var fel — `test1`
+  har **10 pass och 25 set** (21 icke-raderade), inte 6 och 12 — och påståendet att datan
+  "inte följer med" gällde bara servern. **Lokalt följde den med**, vilket var buggen som
+  13.0 löste. Se sessionen 2026-08-09 högst upp.
 
 **Kvarvarande småuppgifter:** 6.9 (sparad vilotid per övning), 7.13 (lata-ladda supabase-js),
 12.7 (personligt anpassat 1RM i stället för Epley), ntfy för vilotimern (adopterad, ej byggd),
