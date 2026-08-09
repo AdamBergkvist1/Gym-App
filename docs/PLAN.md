@@ -132,15 +132,67 @@ UUID:n gör att raden har samma id lokalt som i molnet — grunden för hela ide
 
 | Store | Nycklar / index | Syfte |
 | :---- | :---- | :---- |
-| `exercises` | `id`, `normalized_name`, `*aliases` | Övningskatalog, global + egna. Söks av både UI och parsern. |
-| `workouts` | `id`, `started_at`, `is_deleted` | Pass. |
-| `logged_sets` | `id`, `workout_id`, `[exercise_id+performed_at]`, `performed_at` | Set. Sammansatt index driver spökdatan. |
-| `outbox` | `++seq`, `status`, `mutation_id` | Kö av osända mutationer. `seq` ger FIFO. |
-| `meta` | `key` | Synkmarkörer (`last_pulled_at` per tabell), aktivt pass, timerns sluttid. |
+| `exercises` | `id`, `normalizedName`, `*aliases`, `ownerId` | Övningskatalog, global + egna. Söks av både UI och parsern. |
+| `workouts` | `id`, `startedAt` | Pass. |
+| `loggedSets` | `id`, `workoutId`, `[exerciseId+performedAt]`, `performedAt` | Set. Sammansatt index driver spökdatan. |
+| `outbox` | `++seq`, `status`, `mutationId` | Kö av osända mutationer. `seq` ger FIFO. |
+| `meta` | `key` | Nyckel-värde. Se ägartabellen nedan. |
+| `parseLog` | `id`, `createdAt`, `parser`, `outcome` | Telemetri för fritextparsningen (8.10). Synkas aldrig. |
+| `plans` | `workoutId` | Passets plan (11A). Arbetsyta, inte data. Synkas aldrig. |
+
+**`is_deleted` är inte och kan inte vara ett index.** IndexedDB tillåter inte booleaner som
+nycklar; en tidigare version av den här tabellen listade det ändå, vilket hade gett ett tyst
+trasigt index. Raderade rader filtreras i minnet i stället — gratis vid tusentals rader.
 
 `personal_records` lagras inte. e1RM enligt Epley räknas i klienten vid behov — en
 multiplikation per set. Att materialisera det innan vi mätt att det är långsamt vore att
 bygga före mätning.
+
+#### Ägarinvarianten — lokal data tillhör exakt ett konto
+
+Den lokala basen är **en enda Dexie-bas** (`'gym'`), och raderna bär medvetet inget
+`user_id`: servern tar alltid ägaren ur JWT:n (§2.5), så att duplicera den uppgiften i
+klienten vore att skapa en andra sanning som kan gå isär från den första.
+
+Priset för det valet är att basen inte själv vet vems data den håller. Den kunskapen ligger
+i stället på **ett** ställe — `meta['userId']` — och upprätthålls i övergången:
+
+| Läge vid inloggning | Betyder | Åtgärd |
+| :---- | :---- | :---- |
+| `userId` saknas, **ingen** hämtningsmarkör | Loggat i utloggat läge | **Adoptera** — skriv `userId` |
+| `userId` saknas, **markör finns** | Okänd tidigare ägare | **Rensa**, skriv `userId` |
+| `X → Y` | Kontobyte | **Rensa**, skriv `userId` |
+| `X → X` | Samma konto | Gör ingenting |
+| Utloggning | — | **Rör ingenting** |
+
+**Varför markören avgör.** Ett tomt `userId` betyder två oförenliga saker: *"jag loggade
+innan jag hann logga in"* och *"ett annat konto fyllde basen och lämnade den här"*. Det
+första ska adopteras — appen ska fungera fullt ut utloggad, och den som loggat ett pass före
+första inloggningen får inte förlora det. Det andra ska rensas. `lastPulledAt:*` skiljer dem
+åt utan att gissa: markören sätts bara av hämtningen, alltså bara när någon varit inloggad.
+**En hämtningsmarkör utan ägare betyder att basen fyllts av någon vi inte kan identifiera.**
+
+**Rensning sker vid inloggning, aldrig vid utloggning.** Rensade utloggning skulle osynkad
+offlinedata försvinna i samma sekund som en token gick ut — precis det §2.5 och `auth.ts`
+säger att appen aldrig får göra.
+
+**Vad som rensas, och vad som inte gör det.** `meta` är en blandad nyckel-värde-tabell och
+får inte tömmas rakt av:
+
+| Nyckel / store | Innehåll | Vid kontobyte |
+| :---- | :---- | :---- |
+| `workouts`, `loggedSets`, `exercises`, `plans` | Träningsdata och arbetsyta | **Rensas** |
+| `parseLog` | Fritext som föregående användare skrivit | **Rensas** — annars räknas en annan människas inmatningar in i träffsäkerhetsstatistiken |
+| `outbox` | Osända mutationer | **Rensas** |
+| `meta['lastPulledAt:*']` | Hämtningsmarkörer | **Rensas** — blir de kvar hämtas den nya ägarens äldre rader aldrig ner, och kontot ser tomt ut fast det inte är det |
+| `meta['activeWorkoutId']` | Pekare till ett pass | **Rensas** — pekar annars på en rad som just försvann |
+| `meta['profile']` | `unitPreference`, `defaultEffortScale` | **Rensas** — kontots inställningar, inte enhetens |
+| `meta['restTimer']` | Pågående vilotimer | Lämnas — enhetens tillstånd, inte kontots |
+| `meta['timerDiagnostics']` | Mätlogg för §2.6 | Lämnas — mätdata om telefonen, inte om användaren |
+| `meta['userId']` | Ägaren | Skrivs |
+
+Gränsdragningen är enkel att tillämpa: **rensa det som beskriver användaren, behåll det som
+beskriver enheten.**
 
 ### 2.5 Synkmotorn
 

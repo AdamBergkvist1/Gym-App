@@ -836,8 +836,71 @@ gäller, och uppgiften skrivs om.
 Designad i en grillningssession 2026-08-07. Beslutet ligger i `PLAN.md` §3.5b, kravet i
 `SPEC.md` §3c, orden i `SPEC.md` §3d.
 
-**Fyra kodändringar blir permanenta. Resten är ett engångsjobb som inte lämnar spår i appen.**
-Fasen är oberoende av 11B och kan köras när som helst, men 13.1 måste vara klar före 13.6.
+**Fem kodändringar blir permanenta. Resten är ett engångsjobb som inte lämnar spår i appen.**
+Fasen är oberoende av 11B och kan köras när som helst. **13.0 går före allt annat i fasen**,
+och 13.1 måste vara klar före 13.6.
+
+- [ ] **13.0 Lokal data måste tillhöra ett konto.** Hittad av Adam 2026-08-09, samma dag som
+      hans riktiga konto skapades i 13.6 steg 1. Han loggade in på det, och såg testkontots
+      10 pass och 21 set ligga kvar — som om de var hans.
+
+      **Diagnos (verifierad, inte gissad).** Servern är oskyldig: RLS isolerar korrekt, och
+      `adambergkvist16@gmail.com` hade 0 pass och 0 set medan `test1@gym.se` hade 10 pass och
+      21 icke-raderade set — exakt vad appen visade. Datan låg alltså kvar i telefonens
+      IndexedDB. Tre orsaker, alla i koden:
+
+      1. Den lokala databasen har **inget ägarbegrepp alls**. `db.ts` skapar en enda Dexie-bas
+         vid namn `'gym'`, och `user_id` finns inte på någon rad i `src/db/` — enda träffen är
+         kommentaren i `toWire.ts` som förklarar att fältet utelämnas *med flit* eftersom
+         servern tar ägaren ur JWT:n. Det är rätt för uppladdning, och just därför vet den
+         lokala datan inte vems den är.
+      2. `signOut()` i `src/sync/auth.ts` anropar `client.auth.signOut()` och inget mer.
+      3. Hämtningsmarkörerna `lastPulledAt:*` i `meta` överlever kontobytet.
+
+      **Varför det är allvarligt och inte bara skräpigt.** Hämtade rader hamnar aldrig i
+      utkorgen — `pull.ts` skriver direkt till Dexie — så ingenting hade läckt när buggen
+      hittades. Men rör användaren en enda av de främmande raderna skapas en utkorgspost, och
+      den skickas upp under **den nya** användarens JWT. `apply_mutations` tar ägaren ur token
+      och skriver den utan invändning. Ingen felkod, ingen varning: testdatan blir tyst hans.
+      Spökdatan läser dessutom fel konto under tiden.
+
+      **Regeln.** `meta['userId']` sparas lokalt och jämförs vid varje inloggning:
+
+      | Läge | Betyder | Åtgärd |
+      |---|---|---|
+      | `userId` saknas, **ingen** markör | Loggat i utloggat läge | **Adoptera** |
+      | `userId` saknas, **markör finns** | Okänd tidigare ägare | **Rensa** |
+      | `X → Y` | Kontobyte | **Rensa** |
+      | `X → X` | Samma konto | Gör ingenting |
+      | Utloggning | — | Rör ingenting |
+
+      **Rad två är hela poängen, och den saknades i första utkastet.** Ett tomt `userId`
+      betyder två oförenliga saker: *"jag loggade innan jag hann logga in"* (ska adopteras —
+      det är hela vitsen med att appen fungerar utloggad) och *"ett annat konto fyllde
+      databasen och lämnade den här"* (ska rensas). Markören skiljer dem åt utan att gissa:
+      `lastPulledAt:*` sätts bara av `pull.ts`, alltså bara när någon varit inloggad. En
+      hämtningsmarkör utan ägare betyder att basen fyllts av någon vi inte kan identifiera.
+      Formulerad så är det en invariant som gäller för all framtid — inte ett engångsundantag
+      för en telefon, och den behöver varken versionsflagga eller brytdatum.
+
+      **Rensning sker vid inloggning, aldrig vid utloggning.** Rensade utloggning skulle
+      osynkad offlinedata försvinna i samma sekund som en token gick ut — precis det som
+      `auth.ts` inledande kommentar säger att appen aldrig får göra.
+
+      **Vad som rensas står i `PLAN.md` §2.4** — listan hör hemma där, inte här, eftersom den
+      måste gälla efter att den här uppgiften bockats av. Kort: `workouts`, `loggedSets`,
+      `exercises`, `plans`, `parseLog`, `outbox`, samt `meta`-nycklarna `lastPulledAt:*`,
+      `activeWorkoutId` och `profile`. `restTimer` och `timerDiagnostics` lämnas.
+      **`meta` får alltså inte tömmas rakt av.** `resetPullCursors` finns redan.
+
+      **Avvisat alternativ:** märka varje lokal rad med `userId` och filtrera i varje läsväg.
+      Det vore att bygga flerkontostöd som ingen bett om — appen har en användare, och
+      testkontona är enda anledningen att två identiteter någonsin rört samma telefon.
+
+      **Klart när:** fem tester, ett per rad i tabellen ovan. Adoptionsfallet ska visa att
+      lokalt loggade pass överlever första inloggningen, rensningsfallen att både rader och
+      markörer är borta, och utloggningsfallet att ingenting rörs. Därtill ett test som visar
+      att en osänd utkorgspost från ett annat konto aldrig skickas upp.
 
 - [ ] **13.1 Migration: `workouts.is_imported` + `source = 'import'`.** En boolean med
       `default false`, och `logged_sets.source`-villkoret utökat med `'import'`. Speglas i
