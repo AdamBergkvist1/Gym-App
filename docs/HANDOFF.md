@@ -1,6 +1,80 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-09 (sessionen avslutad)
+**Datum:** 2026-08-10 (sessionen avslutad)
+
+---
+
+## 🆕 2026-08-10 — 13.2 klar i koden, men migrationen är INTE körd
+
+### 🚩 DET FÖRSTA DU BEHÖVER VETA
+
+**`supabase/migrations/0005_chins_pullups.sql` måste köras FÖRE nästa deploy.**
+
+Klienten seedar katalogen ur bygget, så Pullups dyker upp i övningsväljaren så fort appen
+byggs om — oavsett vad servern innehåller. Loggas ett set på den innan migrationen är körd
+fäller främmandenyckeln på `logged_sets.exercise_id`, och `push.ts` klassar det som ett
+permanent fel: posten markeras `failed` och **hela utkorgen blockeras** tills migrationen
+körts och någon tryckt på försök-igen. Ingen data går förlorad, men allt som loggas därefter
+stannar på telefonen.
+
+Filen är avsiktligt ett enda `do`-block, så den kan inte lämna ett halvt utfört tillstånd:
+går självkontrollen röd rullas både Chins-uppdateringen och Pullups-raden tillbaka.
+
+### Vad 13.2 gjorde
+
+Knogar bakåt = överhandsgrepp = **Pullups** (ny post,
+`6b0a5be9-a1db-4373-84cc-5eab1fb0688a`). Knogar framåt = underhandsgrepp = **Chins**, som
+behåller sitt id `9f99d443-…` eftersom redan loggade set pekar på det. Aliaset `räck` är
+borta ur hela katalogen.
+
+Id:t för Pullups står **skrivet** i migrationen, inte genererat. Ett `gen_random_uuid()` hade
+gett servern ett annat id än det klienten bakar in, och synken hade sett två övningar med
+samma namn.
+
+### Mätt mot produktionen, läsande — inte antaget
+
+| Mätning | Svar |
+| :---- | :---- |
+| Läget före | **45 globala rader**, id-summa `4e361bd25fa3726585b88318df886e26` — exakt vad repot påstod |
+| `räck` | låg på **1** rad |
+| Pullups | fanns inte, och inget globalt namn krockade |
+| Arkiverade/raderade globala rader | **0** |
+| Efterläget (simulerat med `union all`, ingen skrivning) | 46 rader, summorna `b4f02d6be…` / `0bdc52d27…` / `ce2e0ee41…` — precis de som nu står i `catalog.ts` |
+
+Migrationens självkontroll kommer alltså att gå igenom. **Obevisat: att den körts.**
+
+### En tredje kontrollsumma tillkom, och den är poängen
+
+Granskningen påpekade att id- och namnsummorna inte hade märkt om en **alias**-array glidit
+isär mellan repo och databas — vilket är exakt vad 13.2 handlar om, och det enda som annars
+märker det är parsern, tyst, genom att sluta hitta en övning som finns.
+`CATALOG_ALIAS_CHECKSUM` kontrolleras nu av både testet och 0005.
+
+**Den är prövad mot buggen:** byter man plats på `chins` och `chin` blir alias-testet rött
+medan id, namn och antal förblir gröna. Ett test som aldrig varit rött bevisar ingenting.
+
+### Känd begränsning, äldre än uppgiften
+
+0005 gäller det **skarpa** projektet, inte en färsk databas. `0001` seedar katalogen utan
+id:n, så en nyuppsatt databas får andra uuid:n än `catalog.ts` bakar in — då hittar `update`
+ingen Chins och summorna kan omöjligt stämma. Filen avbryter, vilket är rätt utfall men inte
+en körbar uppsättningsväg. Problemet bor i `0001`:s seed.
+
+### Mätt vid överlämningen (§9-regeln)
+
+| Mått | Värde |
+| :---- | :---- |
+| Tester | **259 gröna**, 21 filer, plus **30 Playwright** på tre skärmbredder |
+| Bundle | **635,85 kB**, gzip **191,02 kB** |
+| Precache | 9 poster, 648,69 KiB |
+| Rader i `src/` (exkl. tester) | 6 990 |
+| `main` | `d4519c3`, **inte pushad** |
+
+### Kvar i fas 13
+
+**13.3** (filtrera importerade pass ur passlistan) och **13.4** (importerade set blir aldrig
+spökdata) är nästa, och båda är oberoende av att 0005 körts. **A.1 (egress) är fortfarande
+outredd.**
 
 ---
 
@@ -69,7 +143,8 @@ och självkontrollen frågar medvetet brett som ryggtäckning.
 
 ### Kvar i fas 13
 
-13.2 (dela `Chins`/`Pullups`, ta bort aliaset `räck`) är nästa, och är inte längre blockerad.
+~~13.2 (dela `Chins`/`Pullups`, ta bort aliaset `räck`) är nästa~~ — **klar 2026-08-10 i
+koden, men migration 0005 är inte körd.** Se sessionen högst upp.
 **A.1 (egress) är fortfarande outredd** — Adam kollar Usage-vyn per projekt själv, hypotesen
 är att `news-signal-engine` i samma organisation drar trafiken.
 
@@ -154,9 +229,12 @@ kilobyte, och 500 MB/dygn kräver storleksordningar fler anrop än fyra använda
 ### Vad som INTE är gjort
 
 - ~~**13.1–13.5 är orörda.**~~ **13.1 är klar 2026-08-09 (kvällen)** — se sessionen högst upp.
-  `workouts.is_imported` finns nu i databasen, verifierad utifrån. **13.2–13.5 är orörda**
-  och inte längre blockerade.
-- **SQL-filen `scripts/import-adam.sql` är inte genererad.** Kräver 13.2.
+  `workouts.is_imported` finns nu i databasen, verifierad utifrån. ~~**13.2–13.5 är orörda**~~
+  **13.2 är klar 2026-08-10 i koden (migrationen ej körd); 13.3–13.5 är orörda** och inte
+  längre blockerade.
+- **SQL-filen `scripts/import-adam.sql` är inte genererad.** Krävde 13.2, som nu finns i
+  koden — men filen ska referera Pullups id `6b0a5be9-…`, och det id:t finns bara i databasen
+  efter att 0005 körts.
 - **A.1 är inte undersökt** — medvetet, se ovan.
 - **Playwright-webbläsarna är inte installerade** på maskinen. Eget steg, Adams beslut.
 - **`package-lock.json` ligger ändrad i arbetskopian.** Den fanns när sessionen började, är
@@ -203,7 +281,7 @@ repprogressionen är monoton, vilket är sannolikt men inte bevisat.
 | Egna övningar fungerar redan — `createExercise` är inkopplad | `TodayPage.tsx:253` |
 | `matchExercise` returnerar `null` vid lika poäng, gissar aldrig | `matchExercise.ts:52` |
 | `exercises` saknar `description`-kolumn | `0001_initial_schema.sql:96` |
-| Aliaset `räck` sitter på `Chins` — Adam kände inte igen ordet | `catalog.ts:74` |
+| ~~Aliaset `räck` sitter på `Chins`~~ — **borttaget 2026-08-10 i 13.2** | `catalog.ts` |
 | Ingen tabell, uppgift eller UI för kroppsvikt finns, trots `SPEC.md` §3b | — |
 
 ### Två fel jag gjorde och rättade
@@ -584,8 +662,9 @@ en tillfällighet.
 två saker framför den — se den sessionen högst upp:
 
 1. **A.1 — egress.** Free-planens tak är passerat. Usage-vyn per projekt först, ingen kod.
-2. ~~**13.1 — `workouts.is_imported`.**~~ **Klar 2026-08-09 (kvällen).** Nästa i fasen är
-   **13.2** — dela `Chins`/`Pullups` och ta bort aliaset `räck`.
+2. ~~**13.1 — `workouts.is_imported`.**~~ **Klar 2026-08-09 (kvällen).**
+   ~~Nästa i fasen är **13.2**~~ — **även 13.2 är klar 2026-08-10 i koden.** Nästa är **13.3**
+   och **13.4**, de två filtren. Kör **migration 0005** först, se sessionen högst upp.
 
 Därefter, om designrundan tas upp igen:
 
