@@ -1127,7 +1127,7 @@ och 13.1 måste vara klar före 13.6.
       inte en färsk databas. `0001` seedar katalogen utan id:n, så en nyuppsatt databas får
       andra uuid:n än `catalog.ts` bakar in — då hittar `update` ingen Chins och summorna kan
       omöjligt stämma. 0005 avbryter, vilket är rätt utfall men inte en körbar uppsättningsväg.
-      Problemet bor i `0001`:s seed och löses inte här.
+      Problemet bor i `0001`:s seed och löses inte här. **Ligger som 12.15.**
 
       **`collate "C"` i summeringen är inte pynt.** JavaScript-testet sorterar teckenvis;
       Postgres standardkollation kan behandla bindestreck som osynliga. Två sorteringsordningar
@@ -1273,6 +1273,36 @@ och 13.1 måste vara klar före 13.6.
       trettiotal rader — ska konstanten bara bort. Är det det, är det en egen uppgift.
       **Klart när:** antingen är konstanten borta, eller så finns en uppgift som beskriver
       vad den skulle användas till.
+
+- [ ] **12.15 Migrationskedjan går inte att köra på en ren databas.** `0001` seedar den globala
+      katalogen med `insert into public.exercises (owner_id, name, aliases, …)` — **utan id:n**,
+      så Postgres genererar dem. `src/db/catalog.ts` bakar samtidigt in exakt de 46 uuid:n som
+      råkade genereras i det skarpa projektet den 2026-07-31.
+
+      **Följden:** en nyuppsatt databas får 46 andra uuid:n, och då är repot och den databasen
+      oförenliga från första sekunden. Klienten seedar sin katalog ur bygget, servern sin ur
+      migrationen, och synken ser två uppsättningar av samma övningar. Uppdagat 2026-08-10 av
+      granskningen av 13.2, som påpekade att `0005` inte kan gå igenom på en färsk databas:
+      dess `update … where id = '9f99d443-…'` träffar noll rader.
+
+      **Att 0005 avbryter är rätt beteende och ska inte "lagas" genom att mjuka upp den.**
+      Kontrollsummorna gör felet högljutt i stället för tyst, och tyst är det dyra läget —
+      alternativet är 46 dubbletter som ingen upptäcker förrän katalogen är obrukbar.
+      Symptomet sitter i `0001`, inte i `0005`.
+
+      **Varför det är ett riktigt hinder och inte teori.** Utan detta finns ingen väg till en
+      ren databas: inget lokalt utvecklingsläge mot Postgres, ingen Supabase-branch för att
+      pröva en migration innan den körs skarpt, och ingen återställning om produktionen skulle
+      behöva sättas upp på nytt. I dag prövas varje migration i praktiken direkt i skarpt läge,
+      och det är hela skälet till att 0004 och 0005 måste bära så tunga självkontroller.
+
+      **Fixen är liten men rör en applicerad migration.** `0001`:s seed skrivs om till explicita
+      id:n hämtade ur `catalog.ts`, med `on conflict (id) do update`. Den får INTE redigeras på
+      plats — `0001` är redan körd på det skarpa projektet, så en ändring där når aldrig
+      databasen och gör bara filen osann. Ett `0006` som stämmer av befintliga rader, eller en
+      separat seedfil som bara körs på nya databaser, är vägarna att välja mellan.
+      **Klart när:** en tom Postgres kan köra `0001` → `0005` i följd och sluta med gröna
+      kontrollsummor, alltså samma katalog som `catalog.ts` påstår.
 
 ---
 
