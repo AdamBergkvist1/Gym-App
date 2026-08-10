@@ -3,8 +3,8 @@
  *
  * VARFÖR ID:NA ÄR HÅRDKODADE: det här är exakt de rader som ligger i Supabase
  * (`exercises` med `owner_id is null`), hämtade därifrån. Skulle klienten seeda
- * med egna id:n skulle synken i fas 7 se dem som nya rader och skapa 45
- * dubbletter — en tyst datakorruption som ingen upptäcker förrän katalogen är
+ * med egna id:n skulle synken i fas 7 se dem som nya rader och skapa en dubblett
+ * per övning — en tyst datakorruption som ingen upptäcker förrän katalogen är
  * full av dubbelposter.
  *
  * Katalogen ligger i bygget och inte bakom ett nätanrop eftersom appen måste
@@ -23,8 +23,14 @@ export interface CatalogExercise {
   equipment: string;
 }
 
-export const CATALOG_ID_CHECKSUM = '4e361bd25fa3726585b88318df886e26';
-export const CATALOG_NAME_CHECKSUM = '503593620b48c5cdc5dc40bfd78dcc03';
+export const CATALOG_ID_CHECKSUM = 'b4f02d6be5845b47bd3c041257481d2b';
+export const CATALOG_NAME_CHECKSUM = '0bdc52d276994df582e7e868568b9b7d';
+/**
+ * Alias-summan tillkom i 13.2 av samma skäl som uppgiften fanns: id och namn
+ * kan stämma perfekt medan aliasen glidit isär, och då är det bara parsern som
+ * märker det — tyst, genom att sluta hitta en övning som finns.
+ */
+export const CATALOG_ALIAS_CHECKSUM = 'ce2e0ee411574e4a14111d3131b8be0a';
 
 export const CATALOG: CatalogExercise[] = [
   // Axlar
@@ -71,11 +77,14 @@ export const CATALOG: CatalogExercise[] = [
   { id: 'bd91ca81-ba1a-42ae-88c5-a6ea4549162c', name: 'Situps', aliases: ['situps', 'sit-up', 'magböj', 'crunches'], primaryMuscle: 'mage', equipment: 'kroppsvikt' },
 
   // Rygg
-  { id: '9f99d443-53a1-47dd-9509-5bf46fa1322b', name: 'Chins', aliases: ['chins', 'chin', 'pullup', 'pull-up', 'pullups', 'räck'], primaryMuscle: 'rygg', equipment: 'kroppsvikt' },
+  // Chins och Pullups är två övningar, inte en med två grepp (SPEC §5, "Variant").
+  // Chins BEHÅLLER sitt id — redan loggade set pekar på det. Uppgift 13.2.
+  { id: '9f99d443-53a1-47dd-9509-5bf46fa1322b', name: 'Chins', aliases: ['chins', 'chin', 'underhandsgrepp'], primaryMuscle: 'rygg', equipment: 'kroppsvikt' },
   { id: 'b22ff89e-591c-44ca-9c3c-341c7fd9ff72', name: 'Hantelrodd', aliases: ['hantelrodd', 'enarmsrodd', 'dumbbell row', 'db row'], primaryMuscle: 'rygg', equipment: 'hantlar' },
   { id: 'af61f570-da5c-4a00-bb69-6004b7ad3553', name: 'Latsdrag', aliases: ['lats', 'latsdrag', 'lat pulldown', 'pulldown'], primaryMuscle: 'rygg', equipment: 'kabel' },
   { id: 'b0afdf85-e0e7-4adc-a1a7-1f8c747e7d95', name: 'Marklyft', aliases: ['mark', 'marklyft', 'deadlift', 'dl'], primaryMuscle: 'rygg', equipment: 'skivstång' },
   { id: '2104e7cb-4463-4a77-b952-08cc87ac54f4', name: 'Pullover', aliases: ['pullover', 'dumbbell pullover'], primaryMuscle: 'rygg', equipment: 'hantlar' },
+  { id: '6b0a5be9-a1db-4373-84cc-5eab1fb0688a', name: 'Pullups', aliases: ['pullup', 'pull-up', 'pullups', 'överhandsgrepp'], primaryMuscle: 'rygg', equipment: 'kroppsvikt' },
   { id: '119b987b-4d0d-4ccc-9528-453f49ed4b17', name: 'Shrugs', aliases: ['shrugs', 'shrug', 'axelryckningar'], primaryMuscle: 'rygg', equipment: 'hantlar' },
   { id: '6721bfd1-f48e-4e48-bf53-b6011eaa879d', name: 'Sittande kabelrodd', aliases: ['kabelrodd', 'sittande rodd', 'seated row', 'cable row'], primaryMuscle: 'rygg', equipment: 'kabel' },
   { id: '039083d7-6997-430c-97c9-9c87a4300a10', name: 'Skivstångsrodd', aliases: ['rodd', 'stångrodd', 'barbell row', 'bent over row'], primaryMuscle: 'rygg', equipment: 'skivstång' },

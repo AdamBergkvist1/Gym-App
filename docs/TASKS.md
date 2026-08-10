@@ -416,9 +416,9 @@ historiken och går att granska i efterhand.
       skapade utkast, spökdatan syntes, och både det pågående passet och all data överlevde
       att appen stängdes helt.
 
-**Utöver uppgiftslistan:** `src/db/catalog.ts` — de 45 globala övningarna inbakade i bygget,
-med **databasens riktiga id:n**. Hade klienten seedat med egna id:n hade synken i fas 7 sett
-dem som nya rader och skapat 45 dubbletter. Katalogen är transkriberad för hand och verifieras
+**Utöver uppgiftslistan:** `src/db/catalog.ts` — den globala katalogen inbakad i bygget
+(45 övningar då, 46 efter 13.2), med **databasens riktiga id:n**. Hade klienten seedat med
+egna id:n hade synken i fas 7 sett dem som nya rader och skapat en dubblett per övning. Katalogen är transkriberad för hand och verifieras
 av `catalog.test.ts` mot md5-kontrollsummor tagna ur Supabase — ändras katalogen i en framtida
 migration ska summorna uppdateras i samma commit, annars går testet sönder, vilket är precis
 vad det ska göra.
@@ -1062,7 +1062,7 @@ och 13.1 måste vara klar före 13.6.
       villkor som tillåter import* och *finns inget kvar som förbjuder det* — den förra saknades,
       och utan den var en source-kolumn helt utan check ett godkänt resultat.
 
-- [ ] **13.2 Katalogen: dela `Chins` och `Pullups`.** Knogar bakåt (mot rumpan) = överhand =
+- [x] **13.2 Katalogen: dela `Chins` och `Pullups`.** Knogar bakåt (mot rumpan) = överhand =
       **Pullups**. Knogar framåt (dit ögonen tittar) = underhand = **Chins**.
 
       `Chins` behåller sitt UUID (`9f99d443-…`) — annars pekar redan loggade set fel — och får
@@ -1075,6 +1075,65 @@ och 13.1 måste vara klar före 13.6.
       `src/db/catalog.ts` (klientens spegling med hårdkodade UUID:n).
       **Klart när:** `matchExercise('pullups')` ger Pullups, `matchExercise('chins')` ger
       Chins, och `matchExercise('räck')` ger `null`. Tre tester.
+
+      **✅ Byggd 2026-08-10.** `supabase/migrations/0005_chins_pullups.sql` plus katalogen i
+      `src/db/catalog.ts`. Pullups fick id `6b0a5be9-a1db-4373-84cc-5eab1fb0688a`, **skrivet i
+      migrationen och inte genererat** — ett `gen_random_uuid()` hade gett servern ett annat id
+      än det klienten bakar in, och synken hade sett två övningar med samma namn. De tre
+      testerna ligger i `matchExercise.test.ts` och körs mot den **riktiga** katalogen, inte
+      mot fixturen: påståendet som ska hållas är att just våra alias pekar rätt, och en fixtur
+      med påhittade alias hade varit grön oavsett vad katalogen innehöll. Alla tre var röda
+      före ändringen.
+
+      **🚩 MIGRATIONEN ÄR INTE KÖRD. Den måste köras FÖRE nästa deploy.**
+      Klienten seedar katalogen ur bygget, så Pullups dyker upp i väljaren så fort appen
+      byggs om — oavsett servern. Loggas ett set på den innan migrationen är körd fäller
+      främmandenyckeln på `logged_sets.exercise_id`, och `push.ts` klassar det som permanent
+      fel: posten markeras `failed` och **hela utkorgen blockeras** tills migrationen körts och
+      någon tryckt på försök-igen. Ingen data går förlorad, men allt som loggas därefter
+      stannar på telefonen.
+
+      **Vad som är mätt, och vad som inte är det.** Läget före ändringen lästes ur produktionen:
+      **45 globala rader**, id-summa `4e361bd25fa3726585b88318df886e26` — exakt vad repot
+      påstod, alltså var de överens innan. `räck` låg på en rad, Pullups fanns inte och inget
+      namn krockade. Efterläget räknades av **Postgres på ett simulerat läge** (samma fråga med
+      Pullups-raden inlagd via `union all`, utan att skriva något) och gav
+      `b4f02d6be5845b47bd3c041257481d2b` / `0bdc52d276994df582e7e868568b9b7d` — precis
+      kontrollsummorna i `catalog.ts`. Migrationens självkontroll kommer alltså att gå igenom.
+      **Obevisat:** att den faktiskt körts. Inget här ersätter körningen.
+
+      **Självkontrollen i 0005 är starkare än den i 0004, och det är inte en tillfällighet.**
+      0004:s kontroll kunde bara bevisa att filen var rätt skriven — allt den inspekterade
+      skapades av satserna ovanför i samma transaktion. 0005 räknar i stället kontrollsummor
+      över **hela** den globala katalogen, inklusive de 44 rader den inte rör och som fanns före
+      transaktionen. Stämmer de vet vi att repot och databasen är överens om varenda rad, inte
+      bara om de två vi ändrade.
+
+      **En tredje kontrollsumma tillkom: aliasen.** Granskningen påpekade att id- och
+      namnsummorna inte hade märkt om en alias-array glidit isär — vilket är precis vad den här
+      uppgiften handlar om, och det enda som märker det annars är parsern, tyst, genom att sluta
+      hitta en övning som finns. `CATALOG_ALIAS_CHECKSUM` finns nu i `catalog.ts`, kontrolleras
+      av både testet och 0005, och är mätt av Postgres på samma simulerade läge:
+      `ce2e0ee411574e4a14111d3131b8be0a`. **Testet är prövat mot buggen:** byter man plats på
+      `chins` och `chin` blir alias-testet rött medan id, namn och antal förblir gröna.
+
+      **Hela migrationen ligger i ETT `do`-block, till skillnad från 0004.** Ett do-block är en
+      sats, så en röd självkontroll rullar tillbaka varje skrivning blocket hunnit göra. Med
+      satserna löst efter varandra hade en körning i autocommit — psql, inte SQL-editorn —
+      kunnat lämna Pullups inlagd och Chins orörd. Ett halvt utfört kataloggrepp är värre än
+      inget, eftersom nästa körning då startar från ett läge ingen beskrivit.
+
+      **Känd begränsning, och den är äldre än uppgiften:** filen gäller det skarpa projektet,
+      inte en färsk databas. `0001` seedar katalogen utan id:n, så en nyuppsatt databas får
+      andra uuid:n än `catalog.ts` bakar in — då hittar `update` ingen Chins och summorna kan
+      omöjligt stämma. 0005 avbryter, vilket är rätt utfall men inte en körbar uppsättningsväg.
+      Problemet bor i `0001`:s seed och löses inte här.
+
+      **`collate "C"` i summeringen är inte pynt.** JavaScript-testet sorterar teckenvis;
+      Postgres standardkollation kan behandla bindestreck som osynliga. Två sorteringsordningar
+      över samma 46 rader ger två olika md5, och felet hade visat sig som en trasig katalog i
+      stället för en trasig jämförelse. Att de gav samma svar för de 45 gamla raderna
+      kontrollerades — men det är tur, inte en garanti, och det nya id:t hade kunnat bryta den.
 
 - [ ] **13.3 Filter: importerade pass syns inte i passlistan.** `listWorkoutSummaries` i
       `src/db/history.ts` filtrerar bort pass med `isImported`.

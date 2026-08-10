@@ -15,6 +15,7 @@ import {
   startWorkout,
 } from './repo';
 import { isUuidV4 } from '../lib/id';
+import { CATALOG } from './catalog';
 
 const BENK = '38433903-c5f6-41e4-b2e8-4f0587b6d0cf'; // Bänkpress
 const KNABOJ = '1c9ac04d-9226-42d1-a47e-ca9b27530e0b'; // Knäböj
@@ -194,9 +195,13 @@ describe('utkorgen', () => {
 
 describe('katalogen', () => {
   it('seedas och är idempotent', async () => {
-    expect(await db.exercises.count()).toBe(45);
+    // Antalet läses ur katalogen, inte skrivet som siffra: det testet mäter är
+    // att en andra seedning inte skapar dubbletter. Antalet i sig vaktas av
+    // `catalog.test.ts` mot databasens kontrollsumma, och en hårdkodad siffra
+    // här hade bara gjort varje framtida katalogändring till två röda tester.
+    expect(await db.exercises.count()).toBe(CATALOG.length);
     await ensureCatalog(db);
-    expect(await db.exercises.count()).toBe(45);
+    expect(await db.exercises.count()).toBe(CATALOG.length);
   });
 });
 
