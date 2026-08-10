@@ -1085,22 +1085,37 @@ och 13.1 måste vara klar före 13.6.
       med påhittade alias hade varit grön oavsett vad katalogen innehöll. Alla tre var röda
       före ändringen.
 
-      **🚩 MIGRATIONEN ÄR INTE KÖRD. Den måste köras FÖRE nästa deploy.**
-      Klienten seedar katalogen ur bygget, så Pullups dyker upp i väljaren så fort appen
-      byggs om — oavsett servern. Loggas ett set på den innan migrationen är körd fäller
-      främmandenyckeln på `logged_sets.exercise_id`, och `push.ts` klassar det som permanent
-      fel: posten markeras `failed` och **hela utkorgen blockeras** tills migrationen körts och
-      någon tryckt på försök-igen. Ingen data går förlorad, men allt som loggas därefter
-      stannar på telefonen.
+      **✅ MIGRATIONEN ÄR KÖRD OCH VERIFIERAD UTIFRÅN 2026-08-10.** Adam körde `0005` i
+      SQL-editorn, och verifieringsfrågan i en egen session efteråt:
 
-      **Vad som är mätt, och vad som inte är det.** Läget före ändringen lästes ur produktionen:
-      **45 globala rader**, id-summa `4e361bd25fa3726585b88318df886e26` — exakt vad repot
-      påstod, alltså var de överens innan. `räck` låg på en rad, Pullups fanns inte och inget
-      namn krockade. Efterläget räknades av **Postgres på ett simulerat läge** (samma fråga med
-      Pullups-raden inlagd via `union all`, utan att skriva något) och gav
-      `b4f02d6be5845b47bd3c041257481d2b` / `0bdc52d276994df582e7e868568b9b7d` — precis
-      kontrollsummorna i `catalog.ts`. Migrationens självkontroll kommer alltså att gå igenom.
-      **Obevisat:** att den faktiskt körts. Inget här ersätter körningen.
+      | Kontroll | Svar |
+      | :---- | :---- |
+      | Antal globala övningar | **46** |
+      | Pullups | `6b0a5be9-a1db-4373-84cc-5eab1fb0688a` · `{pullup,pull-up,pullups,överhandsgrepp}` |
+      | Chins | `9f99d443-…` **oförändrat id** · `{chins,chin,underhandsgrepp}` |
+      | `räck` i hela katalogen | **0 rader** |
+      | Id-, namn- och alias-summa | alla tre matchar `catalog.ts` |
+
+      Att verifieringen kördes i en **egen session** är poängen: självkontrollen inuti
+      migrationen inspekterar tillstånd som dess egna satser just skapat, så den bevisar att
+      filen är rätt skriven — inte att servern hamnat rätt. De två sista summorna kontrollerades
+      dessutom utifrån efteråt, eftersom Adams fråga bara täckte aliassumman.
+
+      **Läget före ändringen mättes också, innan något skrevs:** 45 rader, id-summa
+      `4e361bd25fa3726585b88318df886e26` — exakt vad repot påstod. Repo och databas var alltså
+      överens redan innan, vilket är förutsättningen för att de ska vara det efteråt.
+
+      **En rättelse till mitt eget skäl.** Jag skrev att Chins måste behålla sitt id för att
+      "redan loggade set pekar på det". Mätt i efterhand: **noll** set pekar på Chins i dag.
+      Beslutet är ändå rätt — importen i 13.6 kommer att skapa historiska Chins-set, och ett
+      id-byte hade då träffat data som fanns. Men skälet var hypotetiskt när det skrevs, och det
+      ska stå som det var: en riktig regel, inte en observation.
+
+      **Risken som fanns fram till körningen, för protokollet:** klienten seedar katalogen ur
+      bygget, så Pullups syns i väljaren så fort appen byggs om — oavsett servern. Hade ett set
+      loggats på den före migrationen hade främmandenyckeln på `logged_sets.exercise_id` fällt,
+      och `push.ts` klassar det som permanent fel: posten markeras `failed` och **hela utkorgen
+      blockeras**. Ordningen migration-före-deploy höll, så det inträffade aldrig.
 
       **Självkontrollen i 0005 är starkare än den i 0004, och det är inte en tillfällighet.**
       0004:s kontroll kunde bara bevisa att filen var rätt skriven — allt den inspekterade

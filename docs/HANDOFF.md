@@ -4,21 +4,14 @@
 
 ---
 
-## 🆕 2026-08-10 — 13.2 klar i koden, men migrationen är INTE körd
+## 🆕 2026-08-10 — 13.2 klar och verifierad i skarpt läge
 
-### 🚩 DET FÖRSTA DU BEHÖVER VETA
+**Migration `0005_chins_pullups.sql` är körd av Adam och kontrollerad utifrån.** Katalogen har
+46 rader, Pullups finns, Chins har kvar sitt id och `räck` är borta ur hela katalogen. Alla
+tre kontrollsummorna matchar `src/db/catalog.ts`.
 
-**`supabase/migrations/0005_chins_pullups.sql` måste köras FÖRE nästa deploy.**
-
-Klienten seedar katalogen ur bygget, så Pullups dyker upp i övningsväljaren så fort appen
-byggs om — oavsett vad servern innehåller. Loggas ett set på den innan migrationen är körd
-fäller främmandenyckeln på `logged_sets.exercise_id`, och `push.ts` klassar det som ett
-permanent fel: posten markeras `failed` och **hela utkorgen blockeras** tills migrationen
-körts och någon tryckt på försök-igen. Ingen data går förlorad, men allt som loggas därefter
-stannar på telefonen.
-
-Filen är avsiktligt ett enda `do`-block, så den kan inte lämna ett halvt utfört tillstånd:
-går självkontrollen röd rullas både Chins-uppdateringen och Pullups-raden tillbaka.
+Filen är avsiktligt ett enda `do`-block, så den kunde inte lämna ett halvt utfört tillstånd:
+hade självkontrollen gått röd hade både Chins-uppdateringen och Pullups-raden rullats tillbaka.
 
 ### Vad 13.2 gjorde
 
@@ -31,17 +24,27 @@ Id:t för Pullups står **skrivet** i migrationen, inte genererat. Ett `gen_rand
 gett servern ett annat id än det klienten bakar in, och synken hade sett två övningar med
 samma namn.
 
-### Mätt mot produktionen, läsande — inte antaget
+### Mätt mot produktionen — före och efter
 
-| Mätning | Svar |
-| :---- | :---- |
-| Läget före | **45 globala rader**, id-summa `4e361bd25fa3726585b88318df886e26` — exakt vad repot påstod |
-| `räck` | låg på **1** rad |
-| Pullups | fanns inte, och inget globalt namn krockade |
-| Arkiverade/raderade globala rader | **0** |
-| Efterläget (simulerat med `union all`, ingen skrivning) | 46 rader, summorna `b4f02d6be…` / `0bdc52d27…` / `ce2e0ee41…` — precis de som nu står i `catalog.ts` |
+| Mätning | Före (läsande) | Efter migrationen |
+| :---- | :---- | :---- |
+| Globala rader | **45** | **46** |
+| Id-summa | `4e361bd2…` — exakt vad repot påstod | `b4f02d6be…` ✅ |
+| Namn-summa | — | `0bdc52d27…` ✅ |
+| Alias-summa | — | `ce2e0ee41…` ✅ |
+| `räck` | låg på **1** rad | **0 rader** |
+| Pullups | fanns inte, inget namn krockade | `6b0a5be9-…`, rätt alias |
+| Chins id | `9f99d443-…` | `9f99d443-…` **oförändrat** |
+| Arkiverade/raderade globala rader | 0 | 0 |
 
-Migrationens självkontroll kommer alltså att gå igenom. **Obevisat: att den körts.**
+**Verifieringen kördes i en egen session**, inte som migrationens självkontroll. Skillnaden är
+hela poängen: självkontrollen inspekterar tillstånd som dess egna satser just skapat, så den
+bevisar att filen är rätt skriven — inte att servern hamnat rätt.
+
+**En rättelse till mitt eget skäl.** Jag skrev att Chins måste behålla sitt id för att "redan
+loggade set pekar på det". Mätt i efterhand: **noll** set pekar på Chins i dag. Beslutet är
+ändå rätt — importen i 13.6 skapar historiska Chins-set, och ett id-byte hade då träffat data
+som fanns. Men skälet var hypotetiskt när det skrevs, och det ska stå som det var.
 
 ### En tredje kontrollsumma tillkom, och den är poängen
 
@@ -58,7 +61,12 @@ medan id, namn och antal förblir gröna. Ett test som aldrig varit rött bevisa
 0005 gäller det **skarpa** projektet, inte en färsk databas. `0001` seedar katalogen utan
 id:n, så en nyuppsatt databas får andra uuid:n än `catalog.ts` bakar in — då hittar `update`
 ingen Chins och summorna kan omöjligt stämma. Filen avbryter, vilket är rätt utfall men inte
-en körbar uppsättningsväg. Problemet bor i `0001`:s seed.
+en körbar uppsättningsväg. Problemet bor i `0001`:s seed och **ligger som uppgift 12.15**.
+
+Adam kallade det ett riktigt hinder, och det stämmer: utan det finns ingen väg till en ren
+databas — inget lokalt Postgres-läge, ingen Supabase-branch att pröva en migration på innan
+den körs skarpt, ingen återuppsättning. Det är hela skälet till att 0004 och 0005 måste bära
+så tunga självkontroller.
 
 ### Mätt vid överlämningen (§9-regeln)
 
@@ -68,13 +76,16 @@ en körbar uppsättningsväg. Problemet bor i `0001`:s seed.
 | Bundle | **635,85 kB**, gzip **191,02 kB** |
 | Precache | 9 poster, 648,69 KiB |
 | Rader i `src/` (exkl. tester) | 6 990 |
-| `main` | `d4519c3`, **inte pushad** |
+| `main` | pushad till `origin` |
+| Migration i databasen | `0005` körd och verifierad utifrån |
 
 ### Kvar i fas 13
 
 **13.3** (filtrera importerade pass ur passlistan) och **13.4** (importerade set blir aldrig
-spökdata) är nästa, och båda är oberoende av att 0005 körts. **A.1 (egress) är fortfarande
-outredd.**
+spökdata) är nästa. Båda är rena klientfilter och kräver ingen migration. Därefter **13.5**
+(textraden om uppskattade datum) och **13.6** (engångsimporten), som nu är obockad-blockerad
+av ingenting — Pullups id `6b0a5be9-…` finns i databasen och kan refereras av
+`scripts/import-adam.sql`. **A.1 (egress) är fortfarande outredd.**
 
 ---
 
@@ -144,7 +155,7 @@ och självkontrollen frågar medvetet brett som ryggtäckning.
 ### Kvar i fas 13
 
 ~~13.2 (dela `Chins`/`Pullups`, ta bort aliaset `räck`) är nästa~~ — **klar 2026-08-10 i
-koden, men migration 0005 är inte körd.** Se sessionen högst upp.
+koden och verifierad i skarpt läge, migration 0005 körd.** Se sessionen högst upp.
 **A.1 (egress) är fortfarande outredd** — Adam kollar Usage-vyn per projekt själv, hypotesen
 är att `news-signal-engine` i samma organisation drar trafiken.
 
@@ -230,11 +241,9 @@ kilobyte, och 500 MB/dygn kräver storleksordningar fler anrop än fyra använda
 
 - ~~**13.1–13.5 är orörda.**~~ **13.1 är klar 2026-08-09 (kvällen)** — se sessionen högst upp.
   `workouts.is_imported` finns nu i databasen, verifierad utifrån. ~~**13.2–13.5 är orörda**~~
-  **13.2 är klar 2026-08-10 i koden (migrationen ej körd); 13.3–13.5 är orörda** och inte
-  längre blockerade.
-- **SQL-filen `scripts/import-adam.sql` är inte genererad.** Krävde 13.2, som nu finns i
-  koden — men filen ska referera Pullups id `6b0a5be9-…`, och det id:t finns bara i databasen
-  efter att 0005 körts.
+  **13.2 är klar och verifierad 2026-08-10; 13.3–13.5 är orörda** och inte längre blockerade.
+- **SQL-filen `scripts/import-adam.sql` är inte genererad.** Krävde 13.2, som nu är klar —
+  Pullups id `6b0a5be9-a1db-4373-84cc-5eab1fb0688a` finns i databasen och kan refereras.
 - **A.1 är inte undersökt** — medvetet, se ovan.
 - **Playwright-webbläsarna är inte installerade** på maskinen. Eget steg, Adams beslut.
 - **`package-lock.json` ligger ändrad i arbetskopian.** Den fanns när sessionen började, är
@@ -663,8 +672,9 @@ två saker framför den — se den sessionen högst upp:
 
 1. **A.1 — egress.** Free-planens tak är passerat. Usage-vyn per projekt först, ingen kod.
 2. ~~**13.1 — `workouts.is_imported`.**~~ **Klar 2026-08-09 (kvällen).**
-   ~~Nästa i fasen är **13.2**~~ — **även 13.2 är klar 2026-08-10 i koden.** Nästa är **13.3**
-   och **13.4**, de två filtren. Kör **migration 0005** först, se sessionen högst upp.
+   ~~Nästa i fasen är **13.2**~~ — **även 13.2 är klar och verifierad 2026-08-10**, migration
+   0005 körd. Nästa är **13.3** och **13.4**, de två filtren. Båda är rena klientfilter och
+   kräver ingen migration.
 
 Därefter, om designrundan tas upp igen:
 

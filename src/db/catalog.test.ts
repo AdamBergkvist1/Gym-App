@@ -32,14 +32,12 @@ import {
  * commit. Går testet sönder betyder det att repot och databasen inte längre
  * är överens — vilket är precis vad det ska fånga.
  *
- * SUMMORNA FÖR 13.2 (46 övningar) ÄR RÄKNADE AV POSTGRES, men på ett
- * SIMULERAT läge: frågorna ovan kördes mot produktionen med Pullups-raden
- * inlagd via `union all` och Chins alias utbytta i ett `case`, utan att skriva
- * något. Det bevisar att serverns aritmetik ger exakt de här tre värdena — men
- * inte att migration 0005 är körd. Det sista ledet vaktar 0005 själv: den
- * räknar samma summor efter sina satser och AVBRYTER om någon skiljer sig.
+ * SUMMORNA FÖR 13.2 (46 övningar) ÄR AVLÄSTA UR DATABASEN efter att migration
+ * `0005_chins_pullups.sql` körts, 2026-08-10. Alla tre stämmer. De räknades
+ * först på ett simulerat läge innan migrationen fanns, och gav då samma värden
+ * — men det är körningen som är beviset, inte förhandsräkningen.
  *
- * Läget före ändringen mättes samtidigt: 45 rader, id-summa
+ * Läget före ändringen mättes också: 45 rader, id-summa
  * 4e361bd25fa3726585b88318df886e26 — alltså exakt det repot påstod. Repo och
  * databas var överens innan, vilket är förutsättningen för att de ska vara
  * det efteråt.
