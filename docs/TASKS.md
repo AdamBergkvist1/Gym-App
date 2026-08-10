@@ -47,6 +47,21 @@ Nedbrytning av `docs/PLAN.md`. Ordningen är inte godtycklig — se §6 i planen
       **Klart när:** trafiken är hänförd till en namngiven källa med en siffra intill. Inte
       en gissning, och ingen kodändring dessförinnan.
 
+      A.1 är avgjord. Usage-vyn per projekt, 2026-08-10:
+
+      Gym-App: 0,001 GB egress
+      news-signal-engine: 5,39 GB egress
+      Organisationens totala: 5,39 GB
+      
+      Hypotes 1 bekräftad — hela egressen kommer från det andra projektet.
+      Hypotes 2 (trasiga lastPulledAt-markörer) är avskriven som förklaring
+      till egressen. Gym-App står för en tusendel.
+      
+      Ersätt A.1-blocket i TASKS.md med en kort avslutad notering: vad som
+      mättes, siffrorna, slutsatsen, och att utredningen flyttar till NSE-repot.
+      Behåll gärna en rad om att markörerna aldrig testades — inte som egress-
+      misstanke, utan som en obekräftad funktion. Bedöm själv om den är värd
+      en backloggspost eller inte.
 ---
 
 ## Fas 0 — Mätningar som blockerar design
