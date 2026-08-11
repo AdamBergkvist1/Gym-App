@@ -1373,7 +1373,7 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** ett pass med uppvärmningsset visar samma volym på startskärmen som i
       historiken, med ett test som skulle fånga en återkommande divergens.
 
-- [ ] **12.17 Radera de sex tomma `index.ts`.** Följer direkt ur 12.13.
+- [x] **12.17 Radera de sex tomma `index.ts`.** Följer direkt ur 12.13.
 
       `src/{db,lib,parser,sync,timer,ui}/index.ts` innehåller alla `export {}` plus en
       kommentar av typen *"Byggs i fas 7"*. Faserna 4, 5, 6 och 7 är byggda. `src/ai/` har
@@ -1396,6 +1396,10 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** de sex filerna är borta och `npm run typecheck && npm test && npm run
       lint && npm run build` är gröna.
+
+      **Verifierat 2026-08-11:** filerna borta, typecheck ren, **259 tester i 21 filer gröna**,
+      lint ren, bygget klart (648,69 kB precache). Noll importrader behövde ändras — vilket
+      var hela poängen med att radera i stället för att fylla.
 
 ---
 
