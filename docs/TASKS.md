@@ -1347,7 +1347,7 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** en tom Postgres kan köra `0001` → `0005` i följd och sluta med gröna
       kontrollsummor, alltså samma katalog som `catalog.ts` påstår.
 
-- [ ] **12.16 Volymen räknas på två sätt, och skärmarna visar olika siffror.** Hittad
+- [x] **12.16 Volymen räknas på två sätt, och skärmarna visar olika siffror.** Hittad
       2026-08-11 av strukturgenomgången i 12.13.
 
       Två interface med **samma namn** `WorkoutSummary` bor i samma mapp:
@@ -1372,6 +1372,39 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** ett pass med uppvärmningsset visar samma volym på startskärmen som i
       historiken, med ett test som skulle fånga en återkommande divergens.
+
+      **Åtgärdad 2026-08-11.** Adam avgjorde riktningen: uppvärmning räknas inte som volym.
+      `history.ts` filtrerar nu `!s.isWarmup` före summeringen, som repo.ts och som de två
+      andra ställena i samma fil. `setCount` räknar fortfarande alla set — de gjordes.
+
+      Testet skrevs först och var rött med **1350 mot 950**; differensen 400 var exakt
+      uppvärmningssetets 40×10. Två tester tillkom: ett för regeln, ett som jämför
+      `listWorkoutSummaries` mot `summarizeWorkout` direkt så att en framtida divergens
+      säger till i CI i stället för på Adams skärm.
+
+      **Verifierat:** 261 tester gröna, typecheck, lint och bygge rena.
+
+      **Kvarstår, upptäckt under arbetet — se 12.18:** en andra divergens som inte har med
+      uppvärmning att göra. `history.ts:94` avrundar volymen till heltal, `repo.ts:378` gör
+      det inte.
+
+- [ ] **12.18 Volymen avrundas på ett ställe men inte det andra.** Läst ur koden 2026-08-11
+      under arbetet med 12.16, inte uppmätt i appen.
+
+      `volumeKg` i `src/lib/oneRepMax.ts` avrundar till en decimal, så ett set på 92,5 kg × 5
+      ger 462,5. Därefter skiljer sig vägarna: `history.ts:94` gör `Math.round(totalVolumeKg)`
+      och visar **463**, medan `repo.ts:378` returnerar summan orörd och visar **462,5**.
+
+      Alltså samma sorts fel som 12.16 — samma pass, två siffror — men med en annan orsak och
+      en mycket mindre effekt. Den syns bara för vikter med halvkilo, och bara som en halv
+      kilos skillnad.
+
+      **Frågan att avgöra först är en produktfråga, inte en kodfråga:** ska passets volym
+      visas med decimal alls? Är svaret nej ska `repo.ts` avrunda likadant; är svaret ja ska
+      `history.ts` sluta avrunda. Båda är en rad.
+
+      **Klart när:** en av de två avrundar som den andra, och regressionstestet i
+      `history.test.ts` använder en halvkilovikt så att det faktiskt täcker påståendet.
 
 - [x] **12.17 Radera de sex tomma `index.ts`.** Följer direkt ur 12.13.
 

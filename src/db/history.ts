@@ -13,7 +13,9 @@ import type { LocalSet, LocalWorkout } from './types';
 
 export interface WorkoutSummary {
   workout: LocalWorkout;
+  /** Alla loggade set, uppvärmning inräknad — de gjordes. */
   setCount: number;
+  /** Bara arbetsset. Uppvärmning är förberedelse, inte arbete. */
   totalVolumeKg: number;
   /** Övningsnamn i den ordning de först dök upp i passet. */
   exerciseIds: string[];
@@ -69,7 +71,13 @@ export async function listWorkoutSummaries(
     const exerciseIds: string[] = [];
     for (const s of rows) if (!exerciseIds.includes(s.exerciseId)) exerciseIds.push(s.exerciseId);
 
-    const totalVolumeKg = rows.reduce((sum, s) => sum + volumeKg(s.weightKg, s.reps), 0);
+    // Uppvärmningsset räknas INTE i volymen — samma regel som `summarizeWorkout`
+    // i repo.ts och som `getExerciseHistory`/`getPersonalRecords` längre ner i den
+    // här filen. De är förberedelse, inte arbete, och att blanda in dem gör siffran
+    // obrukbar för jämförelser mellan pass. Saknades här fram till 12.16, vilket gav
+    // historiken och startskärmen olika volym för samma pass.
+    const arbetsset = rows.filter((s) => !s.isWarmup);
+    const totalVolumeKg = arbetsset.reduce((sum, s) => sum + volumeKg(s.weightKg, s.reps), 0);
     const durationMinutes =
       workout.endedAt === null
         ? null

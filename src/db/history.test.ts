@@ -1,7 +1,14 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type GymDatabase } from './db';
-import { deleteSet, endWorkout, ensureCatalog, logSet, startWorkout } from './repo';
+import {
+  deleteSet,
+  endWorkout,
+  ensureCatalog,
+  logSet,
+  startWorkout,
+  summarizeWorkout,
+} from './repo';
 import {
   getExerciseHistory,
   getPersonalRecords,
@@ -59,6 +66,33 @@ describe('9.1 passhistorik', () => {
     const [s] = await listWorkoutSummaries(50, db);
     expect(s?.setCount).toBe(1);
     expect(s?.totalVolumeKg).toBe(450);
+  });
+
+  it('räknar inte uppvärmningsset i volymen, men räknar dem i setCount', async () => {
+    const w = await startWorkout(db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+
+    const [s] = await listWorkoutSummaries(50, db);
+
+    // Setet gjordes, så det räknas. Men uppvärmning är förberedelse, inte arbete:
+    // 400 kg får inte smyga in i volymen och göra passet ojämförbart med andra.
+    expect(s?.setCount).toBe(2);
+    expect(s?.totalVolumeKg).toBe(450);
+  });
+
+  it('visar samma volym som passvyns sammanfattning — regression för 12.16', async () => {
+    const w = await startWorkout(db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+    await logSet({ workoutId: w.id, exerciseId: KNABOJ, weightKg: 100, reps: 5 }, db);
+
+    const [historik] = await listWorkoutSummaries(50, db);
+    const passvy = await summarizeWorkout(w.id, db);
+
+    // Historiken och startskärmen läser samma pass ur samma tabell. Divergerar de
+    // igen är det den här raden som säger till, inte en användare som undrar.
+    expect(historik?.totalVolumeKg).toBe(passvy?.volumeKg);
   });
 
   it('ger null som längd för ett pågående pass i stället för att gissa', async () => {
