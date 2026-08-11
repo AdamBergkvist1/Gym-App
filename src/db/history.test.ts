@@ -195,6 +195,19 @@ describe('9.2 övningshistorik', () => {
     expect(await getExerciseHistory(BENK, db)).toHaveLength(1);
   });
 
+  it('märker ut vilka punkter som är importerade — underlaget till 13.5', async () => {
+    const w = await startWorkout(db);
+    await logSet(
+      { workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 1, source: 'import' },
+      db
+    );
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 80, reps: 5 }, db);
+
+    // Importerade set ligger kvar i grafen — de gjordes. Det är datumet som är
+    // uppskattat, och det är det textraden talar om.
+    expect((await getExerciseHistory(BENK, db)).map((p) => p.isImported)).toEqual([true, false]);
+  });
+
   it('lämnar e1RM som null när repsen ligger utanför formelns spann', async () => {
     const w = await startWorkout(db);
     await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 30, reps: 25 }, db);

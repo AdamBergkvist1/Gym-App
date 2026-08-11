@@ -1175,13 +1175,28 @@ och 13.1 måste vara klar före 13.6.
       ligger *senare* än ett riktigt hoppas förbi i stället för att stoppa sökningen. De tre
       anroparna (`plan.ts`, `ExerciseCard`, `ManualEntry`) ärver filtret utan ändring.
 
-- [ ] **13.5 Textrad om uppskattade datum ovanför övningsgrafen.** *"7 punkter före maj 2024
+- [x] **13.5 Textrad om uppskattade datum ovanför övningsgrafen.** *"7 punkter före maj 2024
       är importerade från gamla anteckningar — datumen är uppskattade."* Visas bara när
       övningen faktiskt har importerade set.
 
       Medvetet **inte** en visuell markering i grafen (ihåliga prickar e.d.): det vore att
       införa ett nytt visuellt språk innan designbriefen i 11B är klar. Meningen är sann,
       syns, och kostar ingenting att ta bort när riktig design kommer.
+
+      **Gjort 2026-08-11.** Meningen byggs av `importedNotice` i `src/lib/importNotice.ts` —
+      en ren funktion med fem tester, medvetet lagd i `lib/` (nivå 0) och tagande en
+      strukturell typ i stället för att importera `ExercisePoint`, så att skiktningen i
+      ADR 0001 håller. `ExercisePoint` fick ett `isImported`-fält som underlag.
+
+      Två detaljer som kostade eftertanke:
+      - **Gränsmånaden räknas fram**, den står inte i koden: månaden efter den sista
+        importerade punkten, så att en import daterad 4 april ger "före maj 2024".
+        Årsskiftet rullar via `Date.UTC(år, månad + 1, 1)` och har ett eget test.
+      - **Månadsnamnen är utskrivna** i stället för hämtade ur `toLocaleDateString`.
+        Locale-data varierar mellan Node-byggen och webbläsare, och en mening som lyder
+        olika i testet och i telefonen är värre än tolv rader data.
+
+      Singularformen böjs (`1 punkt … är importerad … datumet är uppskattat`).
 
 - [ ] **13.6 ENGÅNGS: Adams konto och SQL-filen.** Lämnar inga spår i kodbasen.
 

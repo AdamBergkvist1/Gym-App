@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useParams } from 'react-router';
+import { importedNotice } from '../../lib/importNotice';
 import { formatWeight } from '../../lib/steps';
 import { db } from '../../db/db';
 import { getExerciseHistory, getPersonalRecords } from '../../db/history';
@@ -47,6 +48,8 @@ export function ExercisePage() {
   }
 
   const e1rmSerie = history.map((p) => p.e1rm).filter((v): v is number => v !== null);
+  // 13.5. null när övningen inte har några importerade set — då står det inget.
+  const importnotis = importedNotice(history);
 
   return (
     <section className="space-y-5">
@@ -90,9 +93,18 @@ export function ExercisePage() {
         </div>
       )}
 
-      {e1rmSerie.length >= 2 && (
-        <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3">
-          <Sparkline values={e1rmSerie} label="e1RM över tid" />
+      {(importnotis || e1rmSerie.length >= 2) && (
+        <div className="space-y-2">
+          {importnotis && (
+            <p className="text-xs text-[var(--color-dim)]">
+              {importnotis}
+            </p>
+          )}
+          {e1rmSerie.length >= 2 && (
+            <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3">
+              <Sparkline values={e1rmSerie} label="e1RM över tid" />
+            </div>
+          )}
         </div>
       )}
 

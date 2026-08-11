@@ -29,6 +29,11 @@ export interface ExercisePoint {
   reps: number;
   /** null när repsen ligger utanför spannet där formeln betyder något. */
   e1rm: number | null;
+  /**
+   * Ur Adams gamla anteckningar (13.1), inte loggat i appen. Punkten är verklig
+   * men datumet är uppskattat ur ett veckonummer — därför textraden i 13.5.
+   */
+  isImported: boolean;
 }
 
 export interface PersonalRecords {
@@ -132,6 +137,7 @@ export async function getExerciseHistory(
       weightKg: s.weightKg,
       reps: s.reps,
       e1rm: epley1RM(s.weightKg, s.reps),
+      isImported: s.source === 'import',
     }));
 }
 
