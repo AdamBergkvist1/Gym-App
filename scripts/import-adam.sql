@@ -10,7 +10,13 @@
 -- MOTTAGARE: adambergkvist16@gmail.com, user_id nedan. Hämtat ur auth.users
 --         2026-08-11, inte antaget.
 --
--- INNEHÅLL: 1 egen övning, 18 syntetiska pass, 21 set.
+-- INNEHÅLL: 1 egen övning, 19 syntetiska pass, 22 set.
+--
+--         21 av seten kommer ur raw-notes.txt. Det 22:a — bänk 95 kg, december
+--         2025 — kom muntligt från Adam 2026-08-11 och lades till EFTER att
+--         filen körts första gången. Se avsnitt 3b. Filens idempotens är därför
+--         inte längre en teoretisk egenskap: den är vad som gör att filen kan
+--         köras om utan att de 21 första seten dubbleras.
 --
 --         Passantalet är 18, inte 17 som det står i SPEC §3c. Skillnaden är
 --         vecka 12 2024: de två `70kg * 4 V 12` / `70kg * 5 V 12`-raderna är
@@ -258,6 +264,39 @@ on conflict (id) do nothing;
 
 
 -- =====================================================================
+-- 3b. TILLÄGG 2026-08-11: bänk 95 kg, december 2025
+-- =====================================================================
+-- KÄLLAN ÄR INTE raw-notes.txt. Leta inte efter raden där — anteckningarna
+-- slutar i maj 2024. Det här är Adam muntligt 2026-08-11: *"jag tog 95 kg i
+-- december 2025"*, med datumet satt till första måndagen i månaden på hans
+-- egen anvisning (*"kör det som vanligt typ"*).
+--
+-- TVÅ ANTAGANDEN, båda värda att säga emot om de är fel:
+--   1. ETT REP. Alla `Bänk: X kg`-rader i anteckningarna utan repsantal är
+--      1-repsmax (fråga 14), och "jag tog 95 kg" är samma skrivsätt. Var det
+--      95 × 3 är kurvan för lågt satt och raden ska ändras.
+--   2. IMPORTERAT, inte manuellt. Setet kom inte in genom appen och datumet är
+--      uppskattat — det är precis definitionen i SPEC §3d. Praktiskt betyder
+--      det att lyftet räknas i personbästa och graf men aldrig blir spökdata,
+--      vilket är rätt för ett max (uppgift 13.4).
+insert into public.workouts
+  (id, user_id, started_at, ended_at, title, note, is_imported, is_deleted)
+values
+  ('9ed98a5e-33f3-4769-bf2c-671827bddb8f', '59d8634e-f2f3-4fc7-bc8d-d0c4b621af2e', '2025-12-01 12:00:00+00', '2025-12-01 12:00:00+00', null, 'Importerat: december 2025. Uppskattat datum — första måndagen i månaden.', true, false)
+on conflict (id) do nothing;
+
+insert into public.logged_sets
+  (id, user_id, workout_id, exercise_id, set_index, weight_kg, reps,
+   effort_type, effort_value, rest_seconds, note, is_warmup, performed_at,
+   source, is_deleted)
+values
+  ('864f33da-bf55-4cf1-8c07-b52b48670393', '59d8634e-f2f3-4fc7-bc8d-d0c4b621af2e', '9ed98a5e-33f3-4769-bf2c-671827bddb8f',
+   '38433903-c5f6-41e4-b2e8-4f0587b6d0cf', 0, 95.00, 1, null, null, null,
+   'Nytt personbästa i bänk. 1-repsmax. Ur minnet, inte ur anteckningarna.', false, '2025-12-01 12:00:00+00', 'import', false)
+on conflict (id) do nothing;
+
+
+-- =====================================================================
 -- 4. Självkontroll
 -- =====================================================================
 -- Vad den bevisar: att raderna FINNS, i rätt antal, med rätt flaggor, och att
@@ -276,16 +315,16 @@ begin
   from public.workouts
   where user_id = adam and is_imported and not is_deleted;
 
-  if antal_pass <> 18 then
-    raise exception 'förväntade 18 importerade pass, hittade %', antal_pass;
+  if antal_pass <> 19 then
+    raise exception 'förväntade 19 importerade pass, hittade %', antal_pass;
   end if;
 
   select count(*) into antal_set
   from public.logged_sets
   where user_id = adam and source = 'import' and not is_deleted;
 
-  if antal_set <> 21 then
-    raise exception 'förväntade 21 importerade set, hittade %', antal_set;
+  if antal_set <> 22 then
+    raise exception 'förväntade 22 importerade set, hittade %', antal_set;
   end if;
 
   -- Acceptanskriteriet i uppgift 13.6, frågat rakt av: bänkens 1-repsmax
@@ -299,8 +338,8 @@ begin
     and reps = 1
     and not is_deleted;
 
-  if kurva <> '70 → 75 → 80 → 85 → 90' then
-    raise exception 'bänkkurvan blev "%", förväntade "70 → 75 → 80 → 85 → 90"', kurva;
+  if kurva <> '70 → 75 → 80 → 85 → 90 → 95' then
+    raise exception 'bänkkurvan blev "%", förväntade "70 → 75 → 80 → 85 → 90 → 95"', kurva;
   end if;
 
   raise notice '--------------------------------------------------';

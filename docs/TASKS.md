@@ -1266,9 +1266,24 @@ och 13.1 måste vara klar före 13.6.
       12 2024 rymmer två tillfällen och alltså två pass — undantaget som står utskrivet
       ovan. SPEC är rättad i samma commit; antalet set är oförändrat 21.
 
-      **Kvar för Adam:** läsa igenom filen, köra den i SQL-editorn, synka appen. Årtalen är
-      en härledning och kan inte bevisas av någon fråga till databasen — det är den enda
-      punkten i filen som vilar på ett resonemang i stället för en mätning.
+      **Steg 3 och 4 gjorda 2026-08-11.** Adam godkände tabellen över de 21 seten och körde
+      filen. Kontrollfrågan svarade `pass 18, antal_set 21, bank_1rm 70 → 75 → 80 → 85 → 90`
+      — hans egen körning, inte min. Fördelningen i databasen efteråt: Bänkpress 11 set,
+      Knäböj 4, Hacklyft (med gummiband) 4, Lutande bänkpress 1, Pullups 1.
+
+      **Sedan utökad till 19 pass och 22 set.** Vid genomläsningen sade Adam att han tagit
+      **95 kg i bänk i december 2025** — det står inte i `raw-notes.txt`, som slutar i maj
+      2024. Datumet sattes till första måndagen i månaden på hans anvisning (*"kör det som
+      vanligt typ"*). Tillägget ligger i avsnitt 3b i SQL-filen, med de två antagandena
+      utskrivna: **ett rep** (samma skrivsätt som anteckningarnas `Bänk: X kg`) och
+      **`source = 'import'`** (kom inte in via appen, uppskattat datum — och ett max ska
+      aldrig bli spökdata). Provkört i `begin … rollback`: 19 pass, 22 set, 12 bänkset,
+      kurvan 70 → 75 → 80 → 85 → 90 → 95.
+
+      **Kvar:** Adam kör om filen (de 21 första seten rörs inte — `on conflict do nothing`)
+      och bekräftar i appen. Årtalen är en härledning och kan inte bevisas av någon fråga
+      till databasen — det är den enda punkten i filen som vilar på ett resonemang i stället
+      för en mätning.
 
 ---
 
