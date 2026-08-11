@@ -163,6 +163,30 @@ describe('5.4 spökdata', () => {
 
     expect((await getLastPerformance(BENK, {}, db))?.id).toBe(riktigt.id);
   });
+
+  // 13.4: raden `2024 vecka 14: Bänk: 90 kg` var ett 1-repsmax. Utan filtret
+  // viskar appen "sist tog du 90 kg × 1" varje gång bänkpress öppnas. Ett rekord
+  // är inte ett arbetsset, och spökdatan är ett minnesstöd — inte en utmaning.
+  it('ger null när enda tidigare setet är importerat — 13.4', async () => {
+    const w = await startWorkout(db);
+    await logSet(
+      { workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 1, source: 'import' },
+      db
+    );
+
+    expect(await getLastPerformance(BENK, {}, db)).toBeNull();
+  });
+
+  it('hoppar förbi det importerade setet till det senaste riktiga', async () => {
+    const w = await startWorkout(db);
+    const riktigt = await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 80, reps: 5 }, db);
+    await logSet(
+      { workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 1, source: 'import' },
+      db
+    );
+
+    expect((await getLastPerformance(BENK, {}, db))?.id).toBe(riktigt.id);
+  });
 });
 
 describe('utkorgen', () => {

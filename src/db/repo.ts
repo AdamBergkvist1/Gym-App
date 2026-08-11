@@ -330,6 +330,10 @@ export async function getLastPerformance(
 
   for (const row of rows) {
     if (row.isDeleted || row.isWarmup) continue;
+    // 13.4: ett importerat set får aldrig bli spökdata. Adams `2024 vecka 14:
+    // Bänk: 90 kg` var ett 1-repsmax, och spökdatan är ett minnesstöd om förra
+    // passet — inte ett rekord att matcha varje gång övningen öppnas.
+    if (row.source === 'import') continue;
     if (options.excludeWorkoutId && row.workoutId === options.excludeWorkoutId) continue;
     return row;
   }

@@ -1161,7 +1161,7 @@ och 13.1 måste vara klar före 13.6.
       lämnat passlistan tom. Ett andra test håller den ordningen på plats — ett importerat
       pass daterat 2099 med `limit = 1`.
 
-- [ ] **13.4 Filter: importerade set blir aldrig spökdata.** `getLastPerformance` i
+- [x] **13.4 Filter: importerade set blir aldrig spökdata.** `getLastPerformance` i
       `src/db/repo.ts` hoppar över set med `source === 'import'`.
 
       **Varför det spelar roll:** raden `2024 vecka 14: Bänk: 90 kg` var ett 1-repsmax. Utan
@@ -1169,6 +1169,11 @@ och 13.1 måste vara klar före 13.6.
       inte ett arbetsset, och spökdatan är ett minnesstöd — inte en utmaning.
       **Klart när:** ett test där enda tidigare setet är importerat ger `null` från
       `getLastPerformance`. Funktionen har tre anropare och alla tre ärver filtret.
+
+      **Gjort 2026-08-11.** En `continue` i den befintliga loopen, bredvid `isDeleted` och
+      `isWarmup`. Två tester: enda setet importerat ger `null`, och ett importerat set som
+      ligger *senare* än ett riktigt hoppas förbi i stället för att stoppa sökningen. De tre
+      anroparna (`plan.ts`, `ExerciseCard`, `ManualEntry`) ärver filtret utan ändring.
 
 - [ ] **13.5 Textrad om uppskattade datum ovanför övningsgrafen.** *"7 punkter före maj 2024
       är importerade från gamla anteckningar — datumen är uppskattade."* Visas bara när
