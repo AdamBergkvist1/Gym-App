@@ -1,11 +1,114 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-11 (sessionen avslutad, den spände över midnatt — 13.2 nedan
-committades sent den 10:e)
+**Datum:** 2026-08-11 (kväll). Två sessioner samma dag — läs sektionen direkt nedan först.
+Sektionen under den, *"strukturfrågan är MÄTT"*, är från förmiddagen och **delvis överspelad**.
 
 ---
 
-## 🆕 2026-08-11 — strukturfrågan är MÄTT, och en ordning är beslutad
+## 🆕 2026-08-11 (kväll) — strukturfrågan AVGJORD, omstruktureringen struken
+
+### Börja här om du ska jobba vidare
+
+Nästa uppgift är **13.3** i `docs/TASKS.md` (rad ~1153). Den och 13.4/13.5 är små filter i
+befintliga filer. Inget hindrar dem, och ingenting behöver läsas om struktur först — den
+frågan är stängd, se nedan.
+
+Arbetsträdet är rent, alla grindar gröna: **264 tester, 30 e2e**, typecheck, lint, bygge.
+
+### Sex commits den här sessionen
+
+| Commit | |
+| :---- | :---- |
+| `4c61b2e` | `/setup-matt-pocock-skills` — `docs/agents/`, `CLAUDE.md` §9, `.scratch/` gitignorerad |
+| `8e89d73` | **12.13 avgjord** + `docs/adr/0001-ingen-omstrukturering-av-src.md` |
+| `f160b33` | **12.17** — de sex tomma `index.ts` raderade |
+| `64798d3` | **12.16** — historiken räknade uppvärmningsset som volym |
+| `6c2cdc7` | **12.18** — volymen visar halvkilot |
+| `52a9014` | **12.19** — `formatWeight` dedupad |
+
+### 🔴 Det viktigaste: omstruktureringen är AVFÖRD, inte uppskjuten
+
+Förmiddagens sektion nedan planerade `/setup-ts-deep-modules` som steg 3 efter 13.3–13.5.
+**Det steget finns inte längre.** 12.13 mätte klart och svaret blev att strukturen inte är
+rörig — den var omappad.
+
+Beroendegrafen över `src/` är **acyklisk och skiktad i fem nivåer**:
+
+```
+nivå 0 (löv)  lib, parser      importerar ingenting utanför sig själva
+nivå 1        db               → parser, lib
+nivå 2        sync, timer      → db, parser
+nivå 3        ai               → sync, db, parser, lib
+nivå 4        ui               → alla ovan
+```
+
+Verifierat genom uttömmande sökning: inga bakåtkanter existerar. Varje funktion i `db/` tar
+dessutom `database: GymDatabase = db` som sista parameter — ett konsekvent genomfört seam som
+gör hela datalagret testbart utan mockning.
+
+**Läs `docs/adr/0001-ingen-omstrukturering-av-src.md` innan du ens överväger att flytta en
+fil.** Förslaget har kommit upp fyra gånger; ADR:n finns för att det inte ska bli en femte.
+Den skriver också ut vad som *skulle* ändra beslutet: en cykel i grafen, eller en mapp som
+växer till två ansvarsområden.
+
+De sex tomma `index.ts` raderades (12.17) i stället för att fyllas. Att fylla dem hade byggt
+barrelfiler som re-exporterar hela mappar — precis det `/setup-ts-deep-modules` själv avråder
+från — och skapat ett seam som ingenting varierar över.
+
+### Två buggar som kartläggningen hittade, båda åtgärdade
+
+**12.16 — volymen räknades på två sätt.** `listWorkoutSummaries` summerade alla set medan
+`summarizeWorkout` filtrerade bort uppvärmning, så samma pass fick olika volym på startskärmen
+och i historiken. Testet skrevs först och var rött med **1350 mot 950** — differensen 400 var
+exakt uppvärmningssetets 40×10. `history.ts` filtrerar nu `!s.isWarmup`. `setCount` räknar
+fortfarande alla set; de gjordes.
+
+**12.18 — volymen avrundades bort halvkilot.** Adams beslut: decimal ska visas, man lägger på
+2,5 kg-skivor. Krävde tre ändringar, inte en — avrundningen skedde i `history.ts` *och* i
+`TodayPage`s egna `formatVolym`, så båda skärmarna visade 463 där sanningen var 462,5. Nu
+delar båda sidorna `formatVolume` i `lib/steps.ts`.
+
+**Verifierat i WebKit på 393 px, inte bara av grindarna:** ett riktigt 92,5-set loggat via
+fritexten ger `462,5` på Idag och `1 set · 462,5 kg` i Historik.
+
+### ⚠️ Kvarstående luckor — läs innan du utökar `ui/`
+
+**`ui/` är 21 källfiler och 0 testfiler.** Det var kandidat 3 i strukturgenomgången, graderad
+`Worth exploring` eftersom den aldrig mättes mot vad de två e2e-specarna faktiskt täcker.
+Sessionen gav den mer tyngd: två gånger fick en webbläsare startas för att bevisa saker ett
+test borde bevisat. `ExercisePage` har varken enhetstest eller e2e — typecheck och bygge hade
+passerat även om sidan slutat rendera.
+
+**`npm run shots` loggar inga set**, så den fotograferar bara tomma tillstånd. Verifieringen
+ovan gjordes med engångsskript som startade dev-servern, loggade via fritextfältet och
+raderades efteråt. Att låta `shots` logga ett 92,5-set och besöka övningssidan är en liten
+uppgift som ingen lagt upp än.
+
+### Verktygslådan som tillkom
+
+`docs/agents/` finns nu — `issue-tracker.md` (issues bor i `.scratch/<feature>/`, gitignorerad;
+`docs/TASKS.md` förblir färdplanen och ska **inte** byggas om till ett ticketregister),
+`triage-labels.md` och `domain.md`. `CLAUDE.md` §9 pekar på dem.
+
+`docs/adr/` finns med sin första post. `CONTEXT.md` finns fortfarande **inte**, och ska inte
+skapas i förväg — den växer fram när `/domain-modeling` faktiskt avgör ett begrepp.
+
+### Föreslagna skills för nästa session
+
+- **`/tdd`** för 13.3 och 13.4 — bådas "Klart när" är formulerade som testfall redan.
+- **`/code-review`** innan 13.5 committas; den läser nu `docs/agents/` på riktigt.
+- **Undvik** `/setup-ts-deep-modules` och `/improve-codebase-architecture` — den första är
+  avförd i ADR 0001, den andra kördes just och rapporten är uttömd.
+
+---
+
+## 🕐 2026-08-11 (förmiddag) — DELVIS ÖVERSPELAD: strukturfrågan är MÄTT, och en ordning är beslutad
+
+> **⚠️ Läs sektionen ovan i stället.** Mätningen här stämmer (sex tomma `index.ts`, noll
+> importer via entry points), men **slutsatsen och den beslutade ordningen gäller inte
+> längre**. Steg 3 — `/setup-ts-deep-modules` — är avfört i `docs/adr/0001`, och den öppna
+> frågan om `src/packages/`-formen längst ned i sektionen är därmed inte längre öppen.
+> Behållen som record över hur beslutet växte fram.
 
 **Ingen kod ändrades i den här delen av sessionen.** Det som finns är en mätning och ett
 beslut om ordningsföljd. Läs det innan du börjar på något av 13.3–13.5.
