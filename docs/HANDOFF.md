@@ -1,6 +1,92 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-10 (sessionen avslutad)
+**Datum:** 2026-08-11 (sessionen avslutad, den spände över midnatt — 13.2 nedan
+committades sent den 10:e)
+
+---
+
+## 🆕 2026-08-11 — strukturfrågan är MÄTT, och en ordning är beslutad
+
+**Ingen kod ändrades i den här delen av sessionen.** Det som finns är en mätning och ett
+beslut om ordningsföljd. Läs det innan du börjar på något av 13.3–13.5.
+
+### Frågan Adam ställde
+
+Om repot borde struktureras om så att Matt Pococks skills fungerar som de är tänkta — och om
+det i så fall ska göras **nu** eller **efter fas 13**. Hans egen misstanke: *"en del filer och
+upplägget i kodbasen är inte byggt på det sättet."*
+
+### Svaret: han har rätt, men gapet är EN sak
+
+Alla sex modulerna under `src/` har en `index.ts`. **Alla sex är tomma:**
+
+```
+src/db/index.ts  →  // Dexie-schema och dataåtkomst. Byggs i fas 5.
+                    export {};
+```
+
+De skrevs i fas 1 som platshållare och fylldes aldrig i. Samtidigt går **minst 66
+korsmodulära importer rakt in i implementationsfiler** — `../db/db` 14 gånger, `../db/repo`
+9, `../parser/types` 9. Antal importer via en entry point: **noll**.
+
+Kommandot som ger siffran igen:
+
+```bash
+grep -rhoE "from '\.\./(ai|db|lib|parser|sync|timer|ui)/[a-zA-Z]+'" src --include=*.ts --include=*.tsx | sort | uniq -c | sort -rn
+```
+
+**Slutsatsen är inte att koden är dålig.** Den är att **ingen modul har ett gränssnitt**, och
+det är precis den axeln `codebase-design` och `setup-ts-deep-modules` arbetar på. Skillsen
+hittar inget att hålla i, eftersom det inte finns någon deklarerad yta att hålla i.
+
+**Ett andra, mycket billigare gap:** `docs/agents/` saknas helt. Det märktes redan under den
+här sessionen — `/code-review` sa själv att `docs/agents/issue-tracker.md` fattades, och
+spec-agenten fick i stället pekas på `TASKS.md` för hand. Den fungerade, men sämre.
+
+### Beslutad ordning — tre delar, inte två
+
+Frågan "nu eller efter 13.xx" har olika svar för olika delar, eftersom de kostar olika mycket.
+
+| # | Vad | När | Rör kod? |
+| :---- | :---- | :---- | :---- |
+| 1 | `/setup-matt-pocock-skills` — `docs/agents/`, `CONTEXT.md`, `docs/adr/`, `## Agent skills` i `CLAUDE.md` | **nu** | nej |
+| 2 | **12.13** orienteringskartan över `src/` | **nu** | nej |
+| 3 | `/setup-ts-deep-modules` — entry points, dependency-cruiser | **efter 13.3–13.5** | varje fil |
+| — | 13.3, 13.4, 13.5 | före 3 | små filter i befintliga filer |
+| — | 13.6 | när som helst | nej, engångsjobb |
+
+**Varför omstruktureringen ligger efter och inte före**, i fallande styrka:
+
+1. **`CLAUDE.md` regel 3 svarar på frågan:** *"En ändring i taget. Blanda aldrig refaktorering
+   med nya funktioner."*
+2. **13.3 och 13.4 ändrar `history.ts` och `repo.ts`** — två av filerna en omstrukturering
+   flyttar. Görs de samtidigt blir varje konflikt tvetydig: var det filtret eller flytten?
+3. **259 tester och 30 E2E är skyddsnätet** som gör en mekanisk omflyttning trygg, och nätet
+   är starkast när inget annat rör sig samtidigt.
+
+Motargumentet — att det går smidigare framöver om strukturen fixas först — väger lätt här:
+13.3 och 13.4 är några rader var i befintliga filer, så friktionen som sparas är nära noll
+medan risken som läggs till är verklig.
+
+**12.13 är förutsättningen för steg 3 och inte bara trevlig.** Uppgiften säger själv *"först
+ta reda på vilket det är, inte att börja flytta filer"* — och man kan inte avgöra vad en entry
+point ska exponera utan att veta vad modulen ansvarar för.
+
+### 🔴 Öppen fråga som måste besvaras i steg 3, inte före
+
+`setup-ts-deep-modules` förväntar sig formen `src/packages/<namn>/` med implementationen i
+`lib/` och testerna i `tests/`. Vårt `src/db/`, `src/parser/` osv. är **samma idé men platt**,
+och testerna ligger bredvid koden i stället för i en undermapp.
+
+Två vägar, och valet är inte självklart:
+
+- **Anpassa konfigurationen till vår form** — mindre rörelse, men vi avviker från skillens
+  förval och får underhålla avvikelsen.
+- **Flytta till deras form** — allt hamnar där skillsen förväntar sig, men det är en stor
+  mekanisk flytt av varje fil och varje test.
+
+Ta inte det beslutet i förbifarten när steg 3 börjar. Det hör hemma efter att kartan i 12.13
+finns.
 
 ---
 
@@ -666,6 +752,10 @@ att två av mina egna försök klippts av på mobilskärm. Referensversionen hå
 en tillfällighet.
 
 ### Nästa session — börja här
+
+> ⚠️ **Detta stycke är överspelat. Den gällande ordningen står i sessionen 2026-08-11 högst
+> upp** — `/setup-matt-pocock-skills`, sedan 12.13, sedan 13.3–13.5, sedan omstruktureringen.
+> Stycket står kvar för att visa hur prioriteringen har flyttat sig.
 
 **Detta stycke skrevs 2026-08-07 och gäller designrundan (11B).** Sessionen 2026-08-09 lade
 två saker framför den — se den sessionen högst upp:
