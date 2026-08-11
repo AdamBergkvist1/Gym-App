@@ -1,11 +1,118 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-11 (kväll). Två sessioner samma dag — läs sektionen direkt nedan först.
-Sektionen under den, *"strukturfrågan är MÄTT"*, är från förmiddagen och **delvis överspelad**.
+**Datum:** 2026-08-11. **Tre sessioner samma dag.** Läs sektionen direkt nedan — den är
+nyast. De två därefter är från kvällen respektive förmiddagen och båda har varningsrutor
+som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-11 (kväll) — strukturfrågan AVGJORD, omstruktureringen struken
+## 🆕 2026-08-11 (tredje sessionen) — Fas 13 klar utom bekräftelsen i appen
+
+### Börja här
+
+Två saker väntar, i den ordningen:
+
+1. **Bekräfta 13.6 i appen.** Adam har kört `scripts/import-adam.sql` en gång (21 set), men
+   **inte** den utökade versionen med bänk 95 kg. Be honom köra om filen och kontrollera i
+   appen. Först då bockas 13.6 av. Detaljerna står under "Vad som återstår i 13.6".
+2. **Grillning inför 11B.** Adams begäran: *"där behövs en stor grill me tror jag"*. Den ska
+   köras **före** referensinsamlingen, inte efter, eftersom den avgör vad referenserna ska
+   leta efter. 11B.0a (informationsarkitekturen) hör till samma grillning.
+
+Arbetsträdet är rent. Grindarna: **274 tester, 30 e2e, typecheck, lint, bygge** — alla
+körda och gröna i den här sessionen, inte antagna.
+
+### Sex commits
+
+| Commit | |
+| :---- | :---- |
+| `3ca313e` | **13.3** — importerade pass filtreras ur passlistan |
+| `7e28633` | **13.4** — importerade set blir aldrig spökdata |
+| `7b99ff0` | **13.5** — textraden om uppskattade datum, `lib/importNotice.ts` |
+| `de5c14b` | **13.6 steg 2** — `scripts/import-adam.sql`, plus 12.20 och skärpt 11B.0b |
+| `c15f4c2` | 12.20 — förbehållet om webbläsarkörning |
+| `2e08456` | **13.6** — bänk 95 kg december 2025 tillagd |
+
+Uppgiftsdetaljerna står i `docs/TASKS.md` under respektive nummer och upprepas inte här.
+
+### Metoden som är värd att återanvända: torrkörning mot riktig databas
+
+`scripts/import-adam.sql` provkördes mot **produktionsdatabasen** inuti
+`begin … rollback` via Supabase-MCP:n, innan Adam sett filen. Det bevisade syntax,
+främmandenycklar, check-villkor och självkontrollen — utan att en enda rad skrevs.
+Kontrollfrågan efteråt visade att kontot fortfarande hade 1 pass och 1 set, alltså bara
+hans egen användning.
+
+Rollbacken verifierades separat först (`begin; create table _probe; rollback;` följt av en
+fråga på att tabellen är borta) i stället för att antas. Gör om det i den ordningen om
+MCP-uppsättningen ändras — att rollback fungerar är en förutsättning, inte en detalj.
+
+### Vad som återstår i 13.6
+
+Filen innehåller nu **19 pass och 22 set**. Adam har kört versionen med 18 pass och 21 set
+och verifierat den med egen SQL-fråga: `pass 18, antal_set 21, bank_1rm 70 → 75 → 80 → 85 → 90`.
+
+Det 22:a setet — **bänk 95 kg, december 2025** — kom muntligt vid genomläsningen och står
+**inte** i `raw-notes.txt`. Två antaganden ligger i filens avsnitt 3b och är inte bekräftade
+av Adam: att det var **ett rep**, och att det ska märkas `source = 'import'`. Han har sett
+båda skrivas ut men inte uttryckligen sagt ja till dem — fråga om det är fel innan något
+byggs vidare på kurvan.
+
+Kvar: kör om filen (idempotent, de 21 första rörs inte), kontrollfrågan ska svara
+`pass 19, antal_set 22, 70 → 75 → 80 → 85 → 90 → 95`, och i appen ska Bänkpress visa
+tyngsta set **95 kg** och raden *"12 punkter före januari 2026 är importerade…"*.
+
+### Verifierat i webbläsare, inte bara av grindarna
+
+Alla tre filtren kördes mot dev-servern med seedad IndexedDB (sju importerade bänkset plus
+ett riktigt), och seedraderna raderades efteråt — verifierat att noll `demo-*`-nycklar fanns
+kvar. De gick aldrig via utkorgen, så ingenting synkades upp.
+
+- Övningssidan visade importnotisen ovanför grafen.
+- Historiken visade `2 pass` — de sju importerade syntes inte.
+- `FÖRRA`-kolumnen för Bänkpress var tom trots ett importerat 90 × 1 i databasen.
+
+**Detta är tredje sessionen i rad där en webbläsare fått startas för hand** för att bevisa
+något ett test borde bevisat. Det är därför 12.20 finns.
+
+### Dokumentändringar som inte är kod
+
+- **`SPEC.md` §3c rättad två gånger**: 17 → 18 pass (vecka 12 2024 är två tillfällen, inte
+  ett), sedan 18 → 19 när 95 kg-raden lades till. Antalet set gick 21 → 22. Siffran 17 var
+  aldrig fel *räknat på veckor* — den räknade bara inte undantaget som redan stod i 13.6.
+- **`TASKS.md` 12.20** — ny uppgift: e2e-täckning för `ui/`. Innehåller resonemanget om
+  varför e2e och inte komponenttester (nya beroenden kräver Adams ja, och `useLiveQuery` mot
+  Dexie gör jsdom-tester till mätningar av en attrapp). Adams förbehåll står inskrivet: e2e
+  ska **inte** ersätta att köra appen i webbläsaren under byggandet.
+- **`TASKS.md` 11B.0b skärpt** med Adams krav: designen får inte se AI-gjord ut, och minst
+  en referens ska ligga utanför träningsappsgenren.
+
+### Två saker att göra annorlunda
+
+1. **Sätt aldrig ```bash runt SQL.** Appen lägger en Run-knapp på shell-block. Adam klistrade
+   in `echo "Kör i Supabase SQL-editorn"` i SQL-editorn och fick ett syntaxfel — rimligt, det
+   såg ut som ett kommando han skulle köra. Instruktioner om *var* något ska köras hör i
+   brödtexten, inte i ett kodblock med fel språkmärkning.
+2. **`/handoff` går inte att anropa som agent.** Skillen är `disable-model-invocation`. Be
+   Adam skriva den; försök inte återskapa den för hand.
+
+### Föreslagna skills för nästa session
+
+- **`/grilling`** — inför 11B. Det är den uttryckliga beställningen, och 11B.0a hör till
+  samma runda.
+- **`/tdd`** för 12.20 om den tas: acceptanskriteriet är formulerat som ett test som ska bli
+  rött av en avsiktligt trasig `ExercisePage`.
+- **Undvik** `/setup-ts-deep-modules` (avförd i `docs/adr/0001`) och
+  `/improve-codebase-architecture` (kördes 2026-08-11 förmiddag, rapporten uttömd).
+
+---
+
+## 🕐 2026-08-11 (kväll) — strukturfrågan AVGJORD, omstruktureringen struken
+
+> **⚠️ Endast stycket "Börja här om du ska jobba vidare" är överspelat.** 13.3–13.5 är
+> gjorda; nästa uppgift är inte 13.3. **Allt annat i sektionen gäller oförändrat** — ADR 0001,
+> beroendegrafen, de två buggarna och luckorna i `ui/`. Rubriken är därför medvetet inte
+> märkt `DELVIS ÖVERSPELAD`: substansen står kvar, det är bara vägvisningen som är gammal.
 
 ### Börja här om du ska jobba vidare
 
@@ -449,7 +556,13 @@ ett tvåminuterssteg.
 
 ---
 
-## 🆕 2026-08-07 — grillningssession om import av gamla anteckningar
+## 🕐 2026-08-07 — DELVIS ÖVERSPELAD: grillningssession om import av gamla anteckningar
+
+> **⚠️ Besluten gäller, men "Vad som INTE är gjort" längst ned är felaktig i sin helhet.**
+> Adams konto finns i `auth.users` sedan 2026-08-09, SQL-filen är genererad och körd, och
+> Fas 13 är klar utom bekräftelsen i appen. Härledningen av årtalen (v41 2023 – v20 2024)
+> står kvar och är fortfarande en härledning, inte en mätning. Antalet pass har dessutom
+> gått från 17 till 19 sedan dess — se den översta sektionen.
 
 **Ingen kod skrevs.** Sessionen var en grillning i fyra rundor, och resultatet är beslut i
 `SPEC.md` §3c–3d, `PLAN.md` §3.5b och `TASKS.md` Fas 13 + 12.8–12.13. Underlaget var
