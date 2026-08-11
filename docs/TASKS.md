@@ -1580,6 +1580,12 @@ och 13.1 måste vara klar före 13.6.
       faktiskt är värda underhållskostnaden — ett e2e-test som ingen litar på är dyrare än
       inget test.
 
+      **Uppgiften ersätter INTE att köra appen i webbläsaren under byggandet.** Adam
+      2026-08-11: *"det ska inte sluta användas"*. De två gör olika saker och båda behövs:
+      att öppna appen och titta är hur man **upptäcker** att något ser fel ut — ett test kan
+      bara kontrollera det någon redan tänkt på. E2E-svitens uppgift är att hålla kvar det
+      som en gång bevisats, så att samma sak inte behöver bevisas för hand en fjärde gång.
+
       **Verifierat 2026-08-11:** filerna borta, typecheck ren, **259 tester i 21 filer gröna**,
       lint ren, bygget klart (648,69 kB precache). Noll importrader behövde ändras — vilket
       var hela poängen med att radera i stället för att fylla.
