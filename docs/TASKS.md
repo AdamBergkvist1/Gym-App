@@ -854,7 +854,29 @@ nuvarande.
       att mina två egna försök klipptes av på mobilskärm. Referensversionen håller. Det är
       inte en tillfällighet — en referens bär beslut någon redan testat mot riktiga
       användare, och den informationen finns inte i en beskrivning.
+
+      **Adams krav 2026-08-11, och det skärper punkt 1:** *"vill även ta inspo för design
+      från nätet och vad som finns så det inte ser AI-gjort och alltför stereotypiskt ut"*.
+
+      Det är inte en smakfråga utan ett acceptanskriterium, och det pekar ut vad steg 1 ska
+      leta efter. En modell som ombeds designa fritt återger medelvärdet av allt den sett:
+      lila gradient, glasmorfism, jämnt rundade kort, ett `emoji`-ikonspråk. Motmedlet är
+      inte att be om "något unikt" — det är att låta konkreta referenser fatta besluten, och
+      att skriva ner **vad** i varje referens som ska tas efter och varför. En referensmapp
+      utan anteckningar är bara bilder.
+
+      Minst en referens ska ligga **utanför** träningsappsgenren, så att briefen inte bara
+      medelvärdar Boostcamp och Hevy. Kandidater värda att titta på: Mobbins arkiv, men
+      också dagböcker, kassaappar och kollektivtrafiksappar — allt som visar täta sifferrader
+      på liten skärm.
+
       **Klart när:** `docs/DESIGN.md` finns och Adam har godkänt den.
+
+      **Att göra först:** en grillning, på Adams begäran samma dag — *"där behövs en stor
+      grill me tror jag"*. Den ska köras före steg 1, inte efter, eftersom den avgör vad
+      referenserna ska leta efter. 11B.0a (informationsarkitekturen) hör till samma
+      grillning: att veta om det finns en femte flik är en förutsättning för att kunna skissa
+      navigationen.
 
 **11B.1–11B.9 nedan är implementation av briefen.** Ingen av dem är ett eget designbeslut
 längre — värdena kommer från `DESIGN.md`. Motsäger en uppgift briefen är det briefen som
@@ -1228,6 +1250,26 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** Adams bänkkurva 70 → 75 → 80 → 85 → 90 kg syns i appen på hans telefon.
 
+      **Läge 2026-08-11: steg 1 och 2 klara, steg 3–5 är Adams.**
+
+      Steg 1 gjordes redan 2026-08-09 — `adambergkvist16@gmail.com` finns i `auth.users`
+      sedan 15:02 UTC den dagen, hämtat ur databasen, inte antaget. Steg 2 är gjort:
+      `scripts/import-adam.sql` är genererad med hans `user_id` inlagt.
+
+      **Filen är provkörd mot den riktiga databasen inuti `begin … rollback`.** Den skrev
+      18 pass, 21 set och 1 egen övning över 5 olika övningar, självkontrollen passerade,
+      och allt rullades tillbaka — kontrollfrågan efteråt visar 1 pass och 1 set på kontot,
+      alltså bara hans egen riktiga användning. Syntax, främmandenycklar och check-villkor
+      är därmed bevisade **utan** att en enda rad skrevs före hans genomläsning.
+
+      **18 pass, inte 17.** `SPEC.md` §3c sade 17, vilket är antalet veckor med data. Vecka
+      12 2024 rymmer två tillfällen och alltså två pass — undantaget som står utskrivet
+      ovan. SPEC är rättad i samma commit; antalet set är oförändrat 21.
+
+      **Kvar för Adam:** läsa igenom filen, köra den i SQL-editorn, synka appen. Årtalen är
+      en härledning och kan inte bevisas av någon fråga till databasen — det är den enda
+      punkten i filen som vilar på ett resonemang i stället för en mätning.
+
 ---
 
 ## Fas 12 — Backlog (efter v1)
@@ -1496,6 +1538,47 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** de sex filerna är borta och `npm run typecheck && npm test && npm run
       lint && npm run build` är gröna.
+
+- [ ] **12.20 `ui/` har noll tester — täck det med e2e, inte med enhetstester.**
+      Upplagd 2026-08-11 på Adams fråga *"vet inte själv alls hur man bygger lämpliga tester
+      för ui"*. Svaret är att det går, men inte på det sätt man först tänker.
+
+      **Problemet är mätt, inte anat.** `src/ui/` är 21 källfiler och 0 testfiler. Tre gånger
+      på tre sessioner (12.19, 12.16/12.18, 13.5) har en webbläsare fått startas för hand för
+      att bevisa något ett test borde bevisat. `ExercisePage` kan sluta rendera helt utan att
+      typecheck, lint eller bygge säger ett ord.
+
+      **Varför e2e och inte enhetstester på komponenterna.** Ett komponenttest hade krävt
+      `@testing-library/react` + `jsdom` i `package.json`, och nya beroenden kräver Adams ja
+      (`CLAUDE.md` §7.3). Viktigare: sidorna läser genom `useLiveQuery` mot Dexie, så ett
+      jsdom-test hade mätt en attrapp av databasen. Playwright finns redan, kör riktig WebKit
+      på 393 px, och `page.evaluate()` kan seeda IndexedDB direkt — mönstret är redan bevisat
+      i projektet (se 13.0-sektionen i `HANDOFF.md`) och användes för hand i 13.5.
+
+      **Det som ska automatiseras är exakt det jag gjorde manuellt 2026-08-11:** seeda sju
+      importerade bänkset plus ett riktigt, öppna `/ovning/<id>`, och läsa av sidan.
+
+      **Vad som är värt att påstå i ett test — och vad som inte är det.** Inga
+      pixeljämförelser och inga skärmdumpsdiffar: de blir röda av en typsnittsuppdatering och
+      lär en att ignorera rött. Testa **text och tal**, alltså det sidan påstår:
+      1. Övningssidan renderar över huvud taget (rubrik = övningens namn).
+      2. Tyngsta set och bästa e1RM visar rätt siffror med decimal — regressionsvakt för 12.18.
+      3. Importnotisen syns när importerade set finns, och **inte** när de saknas (13.5).
+      4. Passlistan visar det vanliga passet men inte det importerade (13.3).
+      5. `FÖRRA`-kolumnen är tom när enda tidigare setet är importerat (13.4).
+      6. Inga konsolfel under hela flödet.
+
+      Punkt 3–5 är de intressanta: de täcker precis de filter som i dag bara har
+      enhetstester på datalagret, och som alltså kan vara rätt i `db/` och ändå fel i UI:t.
+
+      **Klart när:** `e2e/ovningssida.spec.ts` finns, kör grönt i CI, och en avsiktligt
+      trasig `ExercisePage` (t.ex. borttagen importnotis) gör den röd. Noll nya poster i
+      `package.json`.
+
+      **Att göra först:** en grillning. Adam 2026-08-11: *"behövs väl allmänt sen en grill
+      session för varje stor viktig uppgift"*. Frågan att grilla är vilka påståenden ovan som
+      faktiskt är värda underhållskostnaden — ett e2e-test som ingen litar på är dyrare än
+      inget test.
 
       **Verifierat 2026-08-11:** filerna borta, typecheck ren, **259 tester i 21 filer gröna**,
       lint ren, bygget klart (648,69 kB precache). Noll importrader behövde ändras — vilket

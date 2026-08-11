@@ -112,7 +112,12 @@ och hans personbästa är sanna från början, i stället för att börja om fr�
 **1. Engångsimporten av Adams egen data (nu).** Ingen kod i appen. En genererad SQL-fil som
 Adam läser igenom och kör i Supabase SQL-editorn, precis som han redan kör migrationer.
 Konfliktlösningen — vilket år en `V 47`-rad hör till, vad "första steget upp" betyder — sker
-i samtal, inte i ett gränssnitt. **21 set fördelade på 17 pass, vecka 9 2021 till vecka 20 2024.**
+i samtal, inte i ett gränssnitt. **21 set fördelade på 18 pass, vecka 9 2021 till vecka 20 2024.**
+
+> **Rättad 2026-08-11 från 17 till 18 pass.** Siffran 17 kom ur regeln *ett pass per vecka*
+> och räknar de 17 veckor som har data. Vecka 12 2024 innehåller två tillfällen, inte ett
+> (Adams eget svar i `docs/anteckningsformat.md` fråga 13), och två tillfällen är två pass.
+> Antalet set är oförändrat. Verifierat mot den genererade `scripts/import-adam.sql`.
 
 **2. Ett importflöde i appen (backlog, Fas 12).** Nya användare klistrar in sina egna
 anteckningar och en AI tolkar dem, med återkoppling till användaren när något är otydligt.
