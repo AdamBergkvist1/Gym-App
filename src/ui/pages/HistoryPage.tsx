@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router';
+import { formatVolume } from '../../lib/steps';
 import { db } from '../../db/db';
 import { listTrainedExercises, listWorkoutSummaries } from '../../db/history';
 
@@ -57,7 +58,7 @@ export function HistoryPage() {
             <div className="flex items-baseline justify-between gap-3">
               <span className="font-medium">{formatDate(w.workout.startedAt)}</span>
               <span className="text-sm text-[var(--color-dim)] tabular-nums">
-                {w.setCount} set · {w.totalVolumeKg.toLocaleString('sv-SE')} kg
+                {w.setCount} set · {formatVolume(w.totalVolumeKg)} kg
                 {w.durationMinutes !== null && ` · ${w.durationMinutes} min`}
               </span>
             </div>

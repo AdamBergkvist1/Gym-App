@@ -57,3 +57,17 @@ export function parseRepsInput(raw: string): number | null {
 export function formatWeight(kg: number): string {
   return Number.isInteger(kg) ? String(kg) : kg.toFixed(1).replace('.', ',');
 }
+
+/**
+ * Passvolym: 1310 → "1 310" och 462,5 → "462,5". Uppgift 12.18.
+ *
+ * Decimalen är Adams beslut och har ett skäl: man lägger på 2,5 kg-skivor, så
+ * halvkilon är verkliga vikter och inte mätbrus. Att avrunda bort dem gör två
+ * olika pass till samma siffra.
+ *
+ * Skiljer sig från `formatWeight` genom tusentalsavgränsaren — volymer blir
+ * fyrsiffriga direkt, och "1310" är svårläst där "1 310" inte är det.
+ */
+export function formatVolume(kg: number): string {
+  return kg.toLocaleString('sv-SE', { maximumFractionDigits: 1 });
+}

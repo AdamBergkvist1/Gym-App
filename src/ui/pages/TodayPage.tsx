@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { formatVolume } from '../../lib/steps';
 import { db } from '../../db/db';
 import {
   createExercise,
@@ -62,9 +63,6 @@ function beskrivPass(s: WorkoutSummary): string {
 }
 
 /** Tusentalsavgränsare — 4 850 läses snabbare än 4850 med svettiga ögon. */
-function formatVolym(kg: number): string {
-  return Math.round(kg).toLocaleString('sv-SE');
-}
 
 export function TodayPage() {
   const [picker, setPicker] = useState<{ mode: 'add' | 'swap'; replacing?: string } | null>(null);
@@ -228,7 +226,7 @@ export function TodayPage() {
         </div>
         <div>
           <p className="text-set font-semibold tabular-nums">
-            {formatVolym(sammanfattning?.volumeKg ?? 0)}
+            {formatVolume(sammanfattning?.volumeKg ?? 0)}
           </p>
           <p className="text-label tracking-wider text-[var(--color-dim)] uppercase">Volym kg</p>
         </div>

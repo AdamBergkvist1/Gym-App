@@ -91,7 +91,10 @@ export async function listWorkoutSummaries(
     return {
       workout,
       setCount: rows.length,
-      totalVolumeKg: Math.round(totalVolumeKg),
+      // Avrundas INTE. Halvkilon är verkliga vikter (2,5 kg-skivor), och 12.18
+      // avgjorde att de ska synas. `summarizeWorkout` i repo.ts returnerar också
+      // orörd summa — divergerar de igen fångas det av testet i history.test.ts.
+      totalVolumeKg,
       exerciseIds,
       durationMinutes,
     };

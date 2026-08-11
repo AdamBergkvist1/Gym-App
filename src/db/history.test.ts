@@ -84,7 +84,8 @@ describe('9.1 passhistorik', () => {
   it('visar samma volym som passvyns sammanfattning — regression för 12.16', async () => {
     const w = await startWorkout(db);
     await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
-    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+    // 92,5 är avsiktligt: en heltalsvikt hade dolt avrundningsskillnaden i 12.18.
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 92.5, reps: 5 }, db);
     await logSet({ workoutId: w.id, exerciseId: KNABOJ, weightKg: 100, reps: 5 }, db);
 
     const [historik] = await listWorkoutSummaries(50, db);
@@ -93,6 +94,7 @@ describe('9.1 passhistorik', () => {
     // Historiken och startskärmen läser samma pass ur samma tabell. Divergerar de
     // igen är det den här raden som säger till, inte en användare som undrar.
     expect(historik?.totalVolumeKg).toBe(passvy?.volumeKg);
+    expect(historik?.totalVolumeKg).toBe(962.5);
   });
 
   it('ger null som längd för ett pågående pass i stället för att gissa', async () => {

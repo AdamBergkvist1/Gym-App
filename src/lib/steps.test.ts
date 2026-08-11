@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatVolume,
   formatWeight,
   parseRepsInput,
   parseWeightInput,
@@ -75,5 +76,23 @@ describe('viktformatering', () => {
     expect(formatWeight(90)).toBe('90');
     expect(formatWeight(92.5)).toBe('92,5');
     expect(formatWeight(0)).toBe('0');
+  });
+});
+
+describe('volymformatering (12.18)', () => {
+  it('behåller halvkilot i stället för att avrunda bort det', () => {
+    expect(formatVolume(462.5)).toBe('462,5');
+    expect(formatVolume(962.5)).toBe('962,5');
+  });
+
+  it('visar heltal utan efterhängande decimal', () => {
+    expect(formatVolume(1310)).toMatch(/^1.310$/);
+    expect(formatVolume(450)).toBe('450');
+    expect(formatVolume(0)).toBe('0');
+  });
+
+  it('grupperar tusental så att fyrsiffriga volymer går att läsa', () => {
+    // sv-SE använder hårt mellanslag som avgränsare — normaliseras för jämförelsen.
+    expect(formatVolume(12345.5).replace(/\s/g, ' ')).toBe('12 345,5');
   });
 });

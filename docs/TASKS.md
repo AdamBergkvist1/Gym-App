@@ -1388,23 +1388,49 @@ och 13.1 måste vara klar före 13.6.
       uppvärmning att göra. `history.ts:94` avrundar volymen till heltal, `repo.ts:378` gör
       det inte.
 
-- [ ] **12.18 Volymen avrundas på ett ställe men inte det andra.** Läst ur koden 2026-08-11
-      under arbetet med 12.16, inte uppmätt i appen.
+- [x] **12.18 Volymen avrundades bort halvkilot.** Läst ur koden 2026-08-11 under arbetet
+      med 12.16.
 
-      `volumeKg` i `src/lib/oneRepMax.ts` avrundar till en decimal, så ett set på 92,5 kg × 5
-      ger 462,5. Därefter skiljer sig vägarna: `history.ts:94` gör `Math.round(totalVolumeKg)`
-      och visar **463**, medan `repo.ts:378` returnerar summan orörd och visar **462,5**.
+      **Första beskrivningen av den här uppgiften var fel och rättades innan den åtgärdades.**
+      Den påstod att startskärmen visade 462,5 och historiken 463. Så var det inte:
+      `TodayPage` hade en egen `formatVolym` som gjorde `Math.round` vid utskrift, så **båda
+      skärmarna visade 463**. Felet fanns, men avrundningen skedde på två olika ställen —
+      dataskiktet respektive visningsskiktet — och divergensen var därför osynlig. Läxan är
+      att följa siffran hela vägen ut till skärmen innan man beskriver vad användaren ser.
 
-      Alltså samma sorts fel som 12.16 — samma pass, två siffror — men med en annan orsak och
-      en mycket mindre effekt. Den syns bara för vikter med halvkilo, och bara som en halv
-      kilos skillnad.
+      **Adams beslut:** volymen ska ha decimal. Man lägger på 2,5 kg-skivor, så halvkilon är
+      verkliga vikter och inte mätbrus; att avrunda bort dem gör två olika pass till samma
+      siffra.
 
-      **Frågan att avgöra först är en produktfråga, inte en kodfråga:** ska passets volym
-      visas med decimal alls? Är svaret nej ska `repo.ts` avrunda likadant; är svaret ja ska
-      `history.ts` sluta avrunda. Båda är en rad.
+      **Tre ändringar, inte en:**
 
-      **Klart när:** en av de två avrundar som den andra, och regressionstestet i
-      `history.test.ts` använder en halvkilovikt så att det faktiskt täcker påståendet.
+      1. `history.ts` returnerar summan orörd — `Math.round` borta.
+      2. `TodayPage`:s lokala `formatVolym` ersatt av delad `formatVolume` i `lib/steps.ts`.
+      3. `HistoryPage` använder samma formaterare i stället för ett inlinat
+         `toLocaleString`.
+
+      `formatVolume` skiljer sig från `formatWeight` genom tusentalsavgränsaren — volymer blir
+      fyrsiffriga direkt, och `1 310` är läsbart där `1310` inte är det.
+
+      **Personbästa krävde ingen ändring.** `formatWeight` gav redan "92,5" och "101,3".
+
+      **Verifierat 2026-08-11:** regressionstestet använder nu 92,5 kg och låser 962,5;
+      264 tester gröna, **30 e2e gröna** (volymsträngen blev bredare, och
+      `no-horizontal-overflow` passerar ändå — relevant efter 11A.8), typecheck, lint och
+      bygge rena.
+
+- [ ] **12.19 `formatWeight` finns i två exemplar.** Hittad 2026-08-11 under 12.18.
+
+      `src/lib/steps.ts:57` exporterar den, och `src/ui/pages/ExercisePage.tsx:15` har en
+      teckenidentisk lokal kopia som filens fem anropsställen använder i stället. Kopian har
+      inga egna tester; `lib`-versionen har tre.
+
+      **Varför det är värt en rad:** de är identiska i dag, vilket är precis när dubbletter är
+      farligast — nästa ändring av formateringen görs på ett ställe och syns inte på det
+      andra. Övningssidan är dessutom den enda skärm där halvkilon syns oftast.
+
+      **Klart när:** `ExercisePage` importerar från `lib/steps` och den lokala kopian är
+      borta, med grindarna gröna.
 
 - [x] **12.17 Radera de sex tomma `index.ts`.** Följer direkt ur 12.13.
 
