@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useParams } from 'react-router';
+import { formatWeight } from '../../lib/steps';
 import { db } from '../../db/db';
 import { getExerciseHistory, getPersonalRecords } from '../../db/history';
 import { Sparkline } from '../Sparkline';
@@ -11,10 +12,6 @@ import { Sparkline } from '../Sparkline';
  * samma sak: 90×3 är tyngre på stången, men 80×8 är den starkare prestationen.
  * Att slå ihop dem hade dolt just den insikt e1RM finns för att ge.
  */
-
-function formatWeight(kg: number): string {
-  return Number.isInteger(kg) ? String(kg) : kg.toFixed(1).replace('.', ',');
-}
 
 export function ExercisePage() {
   const { id } = useParams<{ id: string }>();

@@ -1419,7 +1419,7 @@ och 13.1 måste vara klar före 13.6.
       `no-horizontal-overflow` passerar ändå — relevant efter 11A.8), typecheck, lint och
       bygge rena.
 
-- [ ] **12.19 `formatWeight` finns i två exemplar.** Hittad 2026-08-11 under 12.18.
+- [x] **12.19 `formatWeight` finns i två exemplar.** Hittad 2026-08-11 under 12.18.
 
       `src/lib/steps.ts:57` exporterar den, och `src/ui/pages/ExercisePage.tsx:15` har en
       teckenidentisk lokal kopia som filens fem anropsställen använder i stället. Kopian har
@@ -1431,6 +1431,21 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** `ExercisePage` importerar från `lib/steps` och den lokala kopian är
       borta, med grindarna gröna.
+
+      **Åtgärdad 2026-08-11.** Kopian borta, importen på plats. En sökning efter
+      `Number.isInteger(kg)` och `toFixed(1).replace` ger nu en enda träff i hela `src/` —
+      `lib/steps.ts:58`.
+
+      **Verifierat i webbläsare, inte bara av grindarna.** `ExercisePage` har varken
+      enhetstester eller e2e-täckning, så typecheck och bygge hade inte fångat en trasig
+      rendering. WebKit på 393 px, med ett riktigt 92,5-set inloggat via fritexten:
+      tyngsta set **92,5 kg × 5**, bästa e1RM **107,9** — decimalerna kommer alltså fram
+      genom den delade formateraren. Inga konsolfel. 264 tester, typecheck, lint och bygge
+      rena.
+
+      **Kvarstående lucka, inte åtgärdad här:** övningssidan är fortfarande otestad. Den
+      ligger under samma paraply som kandidat 3 i strukturgenomgången (`ui/` — 21 källfiler,
+      0 testfiler).
 
 - [x] **12.17 Radera de sex tomma `index.ts`.** Följer direkt ur 12.13.
 
