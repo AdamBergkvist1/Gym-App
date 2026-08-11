@@ -1263,13 +1263,41 @@ och 13.1 måste vara klar före 13.6.
       omöjligt att skilja från ett rent set. Frågan är om vikten ska betyda *tillagd* vikt när
       övningens utrustning är `kroppsvikt`.
 
-- [ ] **12.13 Genomgång av kodbasens struktur.** Adam 2026-08-07: *"I felt that the codebase
+- [x] **12.13 Genomgång av kodbasens struktur.** Adam 2026-08-07: *"I felt that the codebase
       was kind of messy. I don't know where things are and how they should work."*
 
       **Det är inte nödvändigtvis sant att den är rörig** — det kan lika gärna vara att den
       växt utan att någon skrivit en karta. Uppgiften är därför att **först ta reda på vilket
       det är**, inte att börja flytta filer. En orienteringskarta över `src/` (vad varje mapp
       ansvarar för och vad som anropar vad) kan visa sig vara hela åtgärden.
+
+      **Avgjord 2026-08-11: strukturen är inte rörig. Den är omappad.**
+
+      Beroendegrafen över `src/` är **acyklisk** och skiktad i fem nivåer:
+
+      ```
+      nivå 0 (löv)  lib, parser      importerar ingenting utanför sig själva
+      nivå 1        db               → parser, lib
+      nivå 2        sync, timer      → db, parser
+      nivå 3        ai               → sync, db, parser, lib
+      nivå 4        ui               → alla ovan
+      ```
+
+      **Verifierat genom uttömmande sökning, inte stickprov.** Inga bakåtkanter existerar:
+      `db` importerar aldrig sync/ai/ui/timer, `sync` aldrig ai/ui, `ai` aldrig ui, och
+      `lib`/`parser` importerar ingenting alls över mappgräns. Varje funktion i `db/` tar
+      dessutom `database: GymDatabase = db` som sista parameter — ett konsekvent genomfört
+      seam som gör hela datalagret testbart utan mockning.
+
+      **Följd: ingen omstrukturering ska göras.** Det fanns ett stående förslag att bryta upp
+      `src/` i en `src/packages/<namn>/`-layout. Det förslaget har inget problem kvar att
+      lösa och avförs härmed. Se `docs/adr/0001-ingen-omstrukturering-av-src.md`.
+
+      **Vad känslan av rörighet faktiskt kom av:** de sex `index.ts` som deklarerar strukturen
+      är tomma och beskriver byggd kod som ogjord. Det blir uppgift 12.17.
+
+      **Sidofynd som genomgången hittade:** volymen räknas på två sätt (12.16). Den hade inte
+      upptäckts utan kartläggningen.
 
 - [ ] **12.14 `META_CATALOG_VERSION` är död kod.** Konstanten `catalogChecksum` deklareras i
       `src/db/types.ts` men används ingenstans — `grep -rn "META_CATALOG_VERSION\|catalogChecksum" src/`
@@ -1318,6 +1346,56 @@ och 13.1 måste vara klar före 13.6.
       separat seedfil som bara körs på nya databaser, är vägarna att välja mellan.
       **Klart när:** en tom Postgres kan köra `0001` → `0005` i följd och sluta med gröna
       kontrollsummor, alltså samma katalog som `catalog.ts` påstår.
+
+- [ ] **12.16 Volymen räknas på två sätt, och skärmarna visar olika siffror.** Hittad
+      2026-08-11 av strukturgenomgången i 12.13.
+
+      Två interface med **samma namn** `WorkoutSummary` bor i samma mapp:
+
+      | | Fil | Volymen | Konsument |
+      |---|---|---|---|
+      | A | `src/db/repo.ts:344` | `sets.filter(s => !s.isWarmup)` före summering | `TodayPage` |
+      | B | `src/db/history.ts:14` | `rows.reduce(…)` — **ingen** filtrering | `HistoryPage` |
+
+      Båda anropar samma `volumeKg` från `src/lib/oneRepMax.ts`. Skillnaden sitter i
+      filtreringen, och den gör att **samma pass visar olika volym** beroende på skärm.
+
+      **Att det är ett förbiseende och inte ett beslut syns i history.ts själv:** filen
+      filtrerar bort uppvärmningsset på rad 112 (`getExerciseHistory`) och rad 132
+      (`getPersonalRecords`) — men inte på rad 72. Regeln är alltså redan etablerad i filen
+      och tillämpad överallt utom där. `repo.ts:365` motiverar den uttryckligen: *"att blanda
+      in dem gör siffran obrukbar för jämförelser mellan pass."*
+
+      **Riktningen är därför given:** B rättas till A:s regel, inte tvärtom. Namnkrocken bör
+      lösas i samma veva — två typer med samma namn i samma mapp är en navigationsfälla
+      oavsett buggen.
+
+      **Klart när:** ett pass med uppvärmningsset visar samma volym på startskärmen som i
+      historiken, med ett test som skulle fånga en återkommande divergens.
+
+- [ ] **12.17 Radera de sex tomma `index.ts`.** Följer direkt ur 12.13.
+
+      `src/{db,lib,parser,sync,timer,ui}/index.ts` innehåller alla `export {}` plus en
+      kommentar av typen *"Byggs i fas 7"*. Faserna 4, 5, 6 och 7 är byggda. `src/ai/` har
+      aldrig haft någon `index.ts`, vilket säger något om hur underhållna de var.
+
+      **Noll importer i hela `src/` går via en barrel** — verifierat. Inga `tsconfig`-paths,
+      inga Vite-alias. (`from './db'` inuti `src/db/` resolverar till filen `db.ts`, aldrig
+      till `index.ts`.)
+
+      **Varför radera i stället för att fylla dem.** Att fylla dem hade betytt ~60 ändrade
+      importrader utan en enda beteendeändring, och resultatet hade blivit barrelfiler som
+      re-exporterar hela mappen — precis den form `/setup-ts-deep-modules` uttryckligen
+      avråder från. Principen *"en adapter = hypotetiskt seam, två = verkligt"* avgör saken:
+      ingenting varierar över ett `src/db`-barrel, så seamet vore hypotetiskt.
+
+      **Att låta dem ligga är inte ett alternativ.** En tom fil som påstår att fas 7 ska
+      byggas får nästa läsare — människa eller agent — att dra fel slutsats om vad som är
+      gjort. Deletion-testet: de exporterar ingenting och importeras av ingen, så
+      raderingen flyttar ingen komplexitet någonstans.
+
+      **Klart när:** de sex filerna är borta och `npm run typecheck && npm test && npm run
+      lint && npm run build` är gröna.
 
 ---
 
