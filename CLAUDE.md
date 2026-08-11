@@ -15,7 +15,9 @@ YOU MUST följa dessa regler utan undantag:
    - Supabase Row Level Security (RLS) MÅSTE vara aktiverat för alla tabeller.
    - API-nycklar får ALDRIG exponeras i frontend-koden.
    - Alla databasmutationer måste använda Idempotency-nycklar.
-5. **Överlämning:** Innan en session avslutas MÅSTE du uppdatera `HANDOFF.md` med verifierbara fakta. Gissningar eller "bör fungera" är förbjudet.
+5. **Överlämning (åt båda hållen):**
+   - **Vid start:** läs `docs/HANDOFF.md` (översta sektionen) och `docs/TASKS.md` innan du gör något annat. Ingen av dem laddas automatiskt — den här filen gör det, och därför står det här.
+   - **Innan en session avslutas:** MÅSTE du uppdatera `docs/HANDOFF.md` med verifierbara fakta. Gissningar eller "bör fungera" är förbjudet. Kör `/handoff` — den är projektlokal och skriver till rätt fil.
 6. **Kodändringar:** Ange ändringar som exakta Sök-Och-Ersätt-block. Inga radnummer.
 
 ---

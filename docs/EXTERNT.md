@@ -28,6 +28,30 @@ samma commit.
 | Vad | Källa | Licens | Våra filer | Datum |
 |---|---|---|---|---|
 | Färgvärden ur `grayDark`, `greenDark`, `amberDark`, `redDark` | [radix-ui/colors](https://github.com/radix-ui/colors) | **MIT** | `docs/DESIGN.md` §1 → `src/index.css` (fas 11B steg 4) | 2026-08-04 |
+| `handoff`-skillen, i praktiken ordagrant | [mattpocock/skills](https://github.com/mattpocock/skills) | **MIT** | `.claude/skills/handoff/SKILL.md` | 2026-08-11 |
+
+### mattpocock/skills — `handoff`
+
+- **Licens verifierad direkt mot repot**, inte ur sökträffar: `gh api repos/mattpocock/skills`
+  ger `MIT`, och `LICENSE` lyder *"Copyright (c) 2026 Matt Pocock"*. Repot hade 213 621
+  stjärnor och senaste push 2026-08-07 när kopian togs.
+- **Vad som kopierats:** hela `skills/productivity/handoff/SKILL.md`. Originalets brödtext står
+  kvar ordagrant med **ett** undantag — meningen *"Save to the temporary directory of the
+  user's OS - not the current workspace"* är ersatt av en instruktion att skriva till
+  `docs/HANDOFF.md`. Därutöver är två svenska stycken tillagda om var filen ska ligga och vad
+  som räknas som verifierbart.
+- **Varför avvikelsen behövs:** originalet är byggt som en flyktig stafettpinne mellan två
+  agenter i vilket repo som helst. `CLAUDE.md` regel 5 kräver motsatsen — ett versionerat
+  register som överlever `git clone`. Innehållsdisciplinen i skillen (peka på artefakter i
+  stället för att upprepa dem, föreslå skills, redigera bort hemligheter) är däremot precis
+  vad vi vill ha och är oförändrad.
+- **Varför en projektlokal kopia och inte en ändring i `~/.claude/skills/`:** den senare hade
+  ändrat beteendet för alla andra repon på maskinen. Kopian gäller bara det här projektet.
+- **MIT-attribution:** upphovsrättsraden står i filhuvudet på `SKILL.md` *och* här. För
+  kopierad **kod** — till skillnad från de kopierade färgvärdena ovan — hör den hemma på båda
+  ställena.
+- **Avsiktligt minimal diff.** Ju närmare originalet kopian ligger, desto lättare är den att
+  synka om när uppströms ändras. Motstå frestelsen att skriva om den.
 
 ### Radix Colors — detaljer
 
