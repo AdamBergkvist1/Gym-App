@@ -1150,10 +1150,16 @@ och 13.1 måste vara klar före 13.6.
       stället för en trasig jämförelse. Att de gav samma svar för de 45 gamla raderna
       kontrollerades — men det är tur, inte en garanti, och det nya id:t hade kunnat bryta den.
 
-- [ ] **13.3 Filter: importerade pass syns inte i passlistan.** `listWorkoutSummaries` i
+- [x] **13.3 Filter: importerade pass syns inte i passlistan.** `listWorkoutSummaries` i
       `src/db/history.ts` filtrerar bort pass med `isImported`.
       **Klart när:** ett test visar att ett importerat pass finns i databasen men inte i
       listan, medan ett vanligt pass i samma test gör det.
+
+      **Gjort 2026-08-11.** Filtret ligger i samma `.filter()` som `!w.isDeleted` och alltså
+      **före** `slice(0, limit)`. Ordningen är inte kosmetisk: importen lägger 17 pass i
+      databasen, och hade filtret legat efter sliceningen kunde de ha fyllt hela limiten och
+      lämnat passlistan tom. Ett andra test håller den ordningen på plats — ett importerat
+      pass daterat 2099 med `limit = 1`.
 
 - [ ] **13.4 Filter: importerade set blir aldrig spökdata.** `getLastPerformance` i
       `src/db/repo.ts` hoppar över set med `source === 'import'`.

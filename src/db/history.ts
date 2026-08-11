@@ -49,8 +49,12 @@ export async function listWorkoutSummaries(
   limit = 50,
   database: GymDatabase = db
 ): Promise<WorkoutSummary[]> {
+  // Importerade pass (13.3) hör inte hemma i passlistan: de är rader ur Adams
+  // gamla anteckningar, inte pass han genomfört i appen, och deras datum är
+  // uppskattade. Filtret ligger FÖRE slice — annars hade 17 importerade pass
+  // kunnat äta upp hela limiten och lämna listan tom.
   const workouts = (await database.workouts.orderBy('startedAt').reverse().toArray())
-    .filter((w) => !w.isDeleted)
+    .filter((w) => !w.isDeleted && !w.isImported)
     .slice(0, limit);
   if (workouts.length === 0) return [];
 

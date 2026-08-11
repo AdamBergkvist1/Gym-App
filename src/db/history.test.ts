@@ -23,6 +23,39 @@ const KNABOJ = '1c9ac04d-9226-42d1-a47e-ca9b27530e0b';
 let db: GymDatabase;
 let n = 0;
 
+function importeratPass(id: string, startedAt = '2024-04-01T10:00:00.000Z') {
+  return {
+    id,
+    startedAt,
+    endedAt: startedAt,
+    title: null,
+    note: null,
+    isImported: true,
+    isDeleted: false,
+    updatedAt: startedAt,
+  };
+}
+
+function importeratSet(id: string, workoutId: string) {
+  return {
+    id,
+    workoutId,
+    exerciseId: BENK,
+    setIndex: 0,
+    weightKg: 90,
+    reps: 1,
+    effortType: null,
+    effortValue: null,
+    restSeconds: null,
+    note: null,
+    isWarmup: false,
+    performedAt: '2024-04-01T10:00:00.000Z',
+    source: 'import' as const,
+    isDeleted: false,
+    updatedAt: '2024-04-01T10:00:00.000Z',
+  };
+}
+
 beforeEach(async () => {
   db = createTestDb(`hist-test-${++n}-${Date.now()}`);
   await db.open();
@@ -113,6 +146,34 @@ describe('9.1 passhistorik', () => {
     await logSet({ workoutId: w.id, exerciseId: KNABOJ, weightKg: 100, reps: 5 }, db);
     const rader = await getWorkoutSets(w.id, db);
     expect(rader.map((s) => s.exerciseId)).toEqual([BENK, KNABOJ]);
+  });
+});
+
+describe('13.3 importerade pass hör inte hemma i passlistan', () => {
+  it('visar det vanliga passet men inte det importerade', async () => {
+    const vanligt = await startWorkout(db);
+    await logSet({ workoutId: vanligt.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+    await endWorkout(db);
+
+    // Importen (13.6) skriver sina rader via SQL och synken, inte via
+    // startWorkout — därför läggs raden in direkt här.
+    await db.workouts.add(importeratPass('w-importerat'));
+    await db.loggedSets.add(importeratSet('s-importerat', 'w-importerat'));
+
+    const rader = await listWorkoutSummaries(50, db);
+
+    expect(rader.map((r) => r.workout.id)).toEqual([vanligt.id]);
+  });
+
+  it('filtrerar före limiten, så importerade pass inte äter platser i listan', async () => {
+    // Det importerade passet är nyast och hade fyllt hela listan om filtret
+    // låg efter slice(0, limit).
+    await db.workouts.add(importeratPass('w-imp-nytt', '2099-01-01T10:00:00.000Z'));
+    const vanligt = await startWorkout(db);
+
+    const rader = await listWorkoutSummaries(1, db);
+
+    expect(rader.map((r) => r.workout.id)).toEqual([vanligt.id]);
   });
 });
 
