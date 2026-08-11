@@ -137,3 +137,33 @@ Ingen kod skrivs utan att rätt dokument är uppdaterat först (se regel 1).
 
 `docs/DESIGN.md` skrivs som **första steg i fas 11B** och är en förutsättning för den fasen —
 inte en dokumentation av den i efterhand.
+
+---
+
+# 9. Agent skills
+
+Konfiguration för de installerade skills:arna (`/to-tickets`, `/triage`, `/to-spec`,
+`/wayfinder`, `/domain-modeling` m.fl.). De läser `docs/agents/` — inte den här sektionen.
+Sektionen finns för att du ska se var sakerna bor utan att öppna fyra filer.
+
+Detta är **konfiguration, inte ett sjätte dokument**. §8 står oförändrad.
+
+## Issue tracker
+
+Issues bor som markdown-filer under `.scratch/<feature>/` — en gitignorerad, slängbar
+arbetsyta. `docs/TASKS.md` är fortfarande färdplanen och sanningskällan enligt regel 1;
+det som överlever i `.scratch/` promoveras tillbaka dit i samma commit som koden.
+`docs/TASKS.md` ska **inte** byggas om till ett ticketregister.
+Se `docs/agents/issue-tracker.md`.
+
+## Triage labels
+
+De fem standardrollerna med oförändrade namn (`needs-triage`, `needs-info`,
+`ready-for-agent`, `ready-for-human`, `wontfix`). Eftersom issues är filer är etiketten en
+`Status:`-rad överst i filen. Se `docs/agents/triage-labels.md`.
+
+## Domain docs
+
+Single-context: en `CONTEXT.md` och en `docs/adr/` i roten. **Ingen av dem finns ännu, och
+ingen ska skapas i förväg** — de växer fram när `/domain-modeling` faktiskt avgör ett begrepp
+eller ett beslut. Se `docs/agents/domain.md`.

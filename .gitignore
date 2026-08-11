@@ -33,3 +33,7 @@ skarmdumpar/
 
 # Rå träningsdata. Innehåller personlig viktdata — stannar lokalt.
 raw-notes.txt
+
+# Skills-arbetsyta. Se CLAUDE.md §9 — tickets och specar som skapas under arbetet.
+# Slängbar: det som ska överleva promoveras till docs/TASKS.md.
+.scratch/
