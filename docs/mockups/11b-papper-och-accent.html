@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11B.0d steg 1c — pappret och accenten, var för sig</title>
+<style>
+  /* ------------------------------------------------------------------
+     Mockup för 11B.0d, tredje omgången.
+
+     Adam 2026-08-12: "jag gillar nödvändigtvis inte denna färgen som
+     varm botten FAF7F2, finns det andra alternativ för att ha lite
+     varmare... Och istället för grön röd eller svarta knappar, kan man
+     kanske ha andra alternativ. De känns lite för basic."
+
+     ÄNDRINGEN MOT FÖRRA OMGÅNGEN: pappret och accenten visas var för sig.
+     Förra gången varierade bara accenten och pappret låg fast, vilket gjorde
+     att missnöjet med bottnen inte hade någonstans att ta vägen.
+
+     Kontrasterna nedan räknas i webbläsaren när sidan laddas och skrivs ut
+     under varje förslag. Inga siffror är skrivna för hand.
+     ------------------------------------------------------------------ */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #dedad3; color: #17181a;
+         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+         padding: 30px 20px 70px; }
+  .sida { max-width: 1420px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.02em; }
+  h2 { font-size: 19px; font-weight: 700; margin: 40px 0 4px; letter-spacing: -.015em; }
+  .ingress { font-size: 14px; line-height: 1.55; color: #4a463f; max-width: 74ch; margin: 0 0 8px; }
+  .ingress code, .not code { background: #cfcac2; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+  .avsnittstext { font-size: 13.5px; line-height: 1.55; color: #4a463f; max-width: 74ch; margin: 0 0 20px; }
+
+  .galleri { display: flex; gap: 20px; flex-wrap: wrap; }
+  .post { flex: 0 0 auto; }
+  .rubrikrad { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+  .rubrikrad .n { font-size: 15.5px; font-weight: 700; }
+  .rubrikrad .h { font-size: 12px; color: #5f5a52; font-variant-numeric: tabular-nums; }
+
+  .ram { width: 300px; border-radius: 22px; overflow: hidden;
+         box-shadow: 0 1px 2px rgba(60,45,25,.14), 0 8px 24px rgba(60,45,25,.15); }
+  .ram.bred { width: 393px; }
+
+  .not { margin-top: 9px; width: 300px; font-size: 12px; line-height: 1.5; color: #4a463f; }
+  .not.bred { width: 393px; }
+  .matt { font-variant-numeric: tabular-nums; font-size: 11.5px; margin-top: 5px; padding: 6px 9px;
+          border-radius: 6px; background: #fff; color: #3c3830; }
+  .matt.ok { border-left: 3px solid #2F7A55; }
+  .matt.fel { border-left: 3px solid #B4331F; color: #8A2415; font-weight: 600; }
+
+  /* -------- appfragment, gemensamt -------- */
+  .frag { padding: 13px 14px 15px; font-variant-numeric: tabular-nums;
+          background: var(--bg); color: var(--fg); }
+  .topp { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .titel { font-size: 27px; font-weight: 700; letter-spacing: -.025em; }
+  .passtid { font-size: 13px; color: var(--dim); }
+
+  .sammanfattning { display: flex; gap: 8px; margin-bottom: 12px; }
+  .mattruta { flex: 1; padding: 11px 12px; border-radius: 17px; background: var(--yta); box-shadow: var(--skugga); }
+  .mattruta .v { font-size: 23px; font-weight: 690; letter-spacing: -.03em; line-height: 1; }
+  .mattruta .e { font-size: 9.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); margin-top: 5px; }
+
+  .kort { border-radius: 17px; background: var(--yta); box-shadow: var(--skugga); overflow: hidden; margin-bottom: 11px; }
+  .kortrubrik { display: flex; align-items: center; gap: 10px; padding: 11px 12px; }
+  .ikonruta { width: 33px; height: 33px; border-radius: 12px; background: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+  .ikonruta svg { width: 17px; height: 17px; stroke: var(--pa-accent); }
+  .namn2 { font-size: 15px; font-weight: 650; flex: 1; letter-spacing: -.01em; }
+  .mer { color: var(--dim); display: flex; }
+
+  table.set { width: 100%; border-collapse: collapse; }
+  table.set th { font-size: 9px; font-weight: 700; letter-spacing: .085em; text-transform: uppercase;
+                 color: var(--dim); text-align: right; padding: 0 7px 6px; font-variant-numeric: normal; }
+  table.set th:first-child, table.set td:first-child { text-align: left; padding-left: 12px; width: 26px; }
+  table.set th:last-child, table.set td:last-child { text-align: center; width: 46px; padding-right: 10px; }
+  table.set td { font-size: 14px; text-align: right; padding: 0 7px; height: 40px; }
+  table.set tr.klar { background: var(--klar-yta); }
+  table.set tr.klar td { color: var(--klar-text); }
+  td.forra { color: var(--dim); font-size: 12.5px; }
+  td.vikt, td.reps { font-weight: 620; }
+  .setnr { font-size: 11.5px; font-weight: 700; color: var(--dim); }
+  .bock { width: 26px; height: 26px; border-radius: 999px; display: inline-grid; place-items: center; }
+  .bock.fylld { background: var(--ok); }
+  .bock.fylld svg { stroke: var(--pa-ok); }
+  .bock.tom { border: 2px solid var(--kant-stark); }
+  .bock svg { width: 13px; height: 13px; }
+  .laggtill { display: flex; align-items: center; gap: 7px; padding: 10px 12px; font-size: 13px;
+              font-weight: 600; color: var(--accent-text); border-top: 1px solid var(--linje); }
+
+  .chips { display: flex; gap: 8px; margin-bottom: 11px; }
+  .chip { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .chip.timer { background: var(--yta); color: var(--fg); box-shadow: var(--skugga); }
+  .chip.pb { background: var(--pb-yta); color: var(--pb-text); }
+
+  .knapp { display: flex; align-items: center; justify-content: center; gap: 7px; height: 44px;
+           border-radius: 14px; font-size: 14.5px; font-weight: 650; margin-bottom: 8px; }
+  .knapp.sekundar { background: var(--yta); color: var(--fg); box-shadow: var(--skugga); }
+  .knapp.primar { background: var(--accent); color: var(--pa-accent); }
+
+  .nav { display: flex; gap: 3px; padding: 4px; border-radius: 999px; background: var(--yta);
+         box-shadow: var(--skugga); margin-top: 11px; }
+  .navflik { flex: 1; text-align: center; padding: 8px 0 7px; border-radius: 999px; font-size: 10px; font-weight: 600; color: var(--dim); }
+  .navflik svg { width: 16px; height: 16px; display: block; margin: 0 auto 3px; stroke: currentColor; }
+  .navflik.aktiv { background: var(--accent); color: var(--pa-accent); }
+
+  svg.i { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<div class="sida">
+  <h1>11B.0d steg 1c · Pappret och accenten, var för sig</h1>
+  <p class="ingress">
+    Förra omgången höll bottnen fast och varierade bara accenten, så missnöjet med <code>#FAF7F2</code>
+    hade ingenstans att ta vägen. Nu är det två separata val. <b>Kortstrukturen ligger fast</b>: upphöjda
+    kort utan hårda kanter, stora radier, den karaktär du valde i C.
+  </p>
+
+  <h2>1. Pappret</h2>
+  <p class="avsnittstext">
+    Fem bottnar, från nästan vitt till tydligt sandigt. Accenten hålls konstant (mörk bläck) så att
+    du bedömer papperet och ingenting annat. Kortytan följer med bottnen: ju varmare papper, desto
+    varmare vit på korten, annars ser korten kalla ut mot sin egen bakgrund.
+  </p>
+  <div class="galleri" id="papper"></div>
+
+  <h2>2. Accenten</h2>
+  <p class="avsnittstext">
+    Sex kandidater, ingen av dem vanlig grön, röd eller svart. Alla visas på samma papper
+    (<b>Sand</b>, mittenvalet) så att jämförelsen gäller färgen. Accenten syns på fem ställen samtidigt:
+    ikonrutan, primärknappen, aktiv flik, länken "Lägg till set" och personbästachipet.
+    Bocken för sparat är grön i alla sex, eftersom den betydelsen är upptagen.
+  </p>
+  <div class="galleri" id="accent"></div>
+</div>
+
+<template id="mall">
+  <div class="frag">
+    <div class="topp"><div class="titel">Pass</div><div class="passtid">42 min</div></div>
+    <div class="sammanfattning">
+      <div class="mattruta"><div class="v">12</div><div class="e">Set</div></div>
+      <div class="mattruta"><div class="v">4 850</div><div class="e">Volym kg</div></div>
+      <div class="mattruta"><div class="v">3</div><div class="e">Övn</div></div>
+    </div>
+    <div class="kort">
+      <div class="kortrubrik">
+        <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg></div>
+        <div class="namn2">Bänkpress</div>
+        <div class="mer"><svg class="i" viewBox="0 0 24 24" width="16" height="16"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+      </div>
+      <table class="set">
+        <tr><th>Set</th><th>Förra</th><th>Kg</th><th>Reps</th><th></th></tr>
+        <tr class="klar"><td><span class="setnr">1</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+          <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+        <tr><td><span class="setnr">2</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+          <td><span class="bock tom"></span></td></tr>
+      </table>
+      <div class="laggtill"><svg class="i" viewBox="0 0 24 24" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg> Lägg till set</div>
+    </div>
+    <div class="chips">
+      <div class="chip timer">1:12</div>
+      <div class="chip pb">PB +2,5 kg</div>
+    </div>
+    <div class="knapp sekundar">Lägg till övning</div>
+    <div class="knapp primar">Avsluta pass</div>
+    <div class="nav">
+      <div class="navflik aktiv"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg>Pass</div>
+      <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M12 8v5l3 2M3 12a9 9 0 109-9 9 9 0 00-6.5 2.8L3 8"/></svg>Historik</div>
+      <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Övningar</div>
+      <div class="navflik"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/></svg>Mer</div>
+    </div>
+  </div>
+</template>
+
+<script>
+/* ---------- kontrasträkning, WCAG 2.1 ---------- */
+const rgb = h => { h = h.replace('#',''); return [0,2,4].map(i => parseInt(h.slice(i,i+2),16)); };
+const lum = c => { const a = c.map(v => { v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); });
+                   return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2]; };
+const kt = (a,b) => { const l1=lum(rgb(a)), l2=lum(rgb(b));
+                      return +(((Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05))).toFixed(2); };
+
+/* ---------- pappersalternativ ----------
+   yta = kortens vita. Den följer bottnen: ett kallt vitt kort på ett varmt
+   papper ser ut som ett hål, inte som ett upphöjt kort.               */
+const PAPPER = [
+  { id:'kalk',  namn:'Kalk',  bg:'#FCFAF7', yta:'#FFFFFF', ytaSvag:'#F4F0EA', dim:'#6F6960', kantStark:'#C4BCB0', linje:'#F0ECE5',
+    text:'Knappt varm. Läser som vitt papper i dagsljus.' },
+  { id:'havre', namn:'Havre', bg:'#F7F2E9', yta:'#FFFDF9', ytaSvag:'#EFE8DB', dim:'#6E6759', kantStark:'#C3B9A7', linje:'#EDE6DA',
+    text:'Tydligt varm utan att bli gul. Närmast obestruket papper.' },
+  { id:'sand',  namn:'Sand',  bg:'#F2EADC', yta:'#FEFCF8', ytaSvag:'#E9DFCC', dim:'#6B6455', kantStark:'#BEB29C', linje:'#E9E0D1',
+    text:'Sandig. Korten separerar tydligast här, eftersom skillnaden mellan papper och kortvitt är störst.' },
+  { id:'linne', namn:'Linne', bg:'#EBE1CF', yta:'#FDFAF4', ytaSvag:'#E1D5BE', dim:'#655E4E', kantStark:'#B6A98F', linje:'#E2D8C4',
+    text:'Djupare, går mot beige. Störst kontrast mellan papper och kort.' },
+  { id:'lera',  namn:'Lera',  bg:'#E4D9C6', yta:'#FCF8F1', ytaSvag:'#D8CBB3', dim:'#5F5847', kantStark:'#AC9F84', linje:'#DACFB9',
+    text:'Varmast. Här börjar bottnen bli en egen färg i stället för ett papper.' }
+];
+
+/* ---------- accentkandidater ----------
+   Ingen vanlig grön, röd eller svart. Bocken för sparat hålls grön överallt. */
+const ACCENTER = [
+  { id:'petrol', namn:'Petrol',   f:'#0E5E64', text:'#0C5057', pb:'#E0EDEC', pbT:'#0A4A50',
+    om:'Djup blågrön. Sval mot varmt papper, vilket ger spänning i stället för harmoni. Läser som utrustning.' },
+  { id:'oliv',   namn:'Oliv',     f:'#59682C', text:'#4B5825', pb:'#EBEDDC', pbT:'#414D1F',
+    om:'Gulgrön mossa. Släkt med lime som valdes i augusti, men dämpad och jordnära i stället för neon.' },
+  { id:'ockra',  namn:'Ockra',    f:'#8A5A0C', text:'#7A4F09', pb:'#F3E8D2', pbT:'#6B440A',
+    om:'Bränd senap. Varmast av de sex och ligger närmast papperet, så appen blir sammanhållen snarare än kontrastrik.' },
+  { id:'koppar', namn:'Koppar',   f:'#9A5528', text:'#8A4B22', pb:'#F4E5D9', pbT:'#7A4220',
+    om:'Brunorange metall. Släkt med tegelrött men brunare, alltså mindre larm och mer verktyg.' },
+  { id:'plommon',namn:'Plommon',  f:'#6E2F45', text:'#61293C', pb:'#F1E3E7', pbT:'#5A2537',
+    om:'Djup vinröd. Ovanligast av de sex i en träningsapp, vilket är både argumentet för och emot.' },
+  { id:'blackbla',namn:'Bläckblå',f:'#2B4570', text:'#263C63', pb:'#E3E8F1', pbT:'#22375C',
+    om:'Mättad marinblå. Tryggast och mest neutral, men också den som ligger närmast vad varje app har.' }
+];
+
+const mall = document.getElementById('mall');
+
+function bygg(vardar, klasser) {
+  const skarm = document.createElement('div');
+  skarm.className = 'ram' + (klasser || '');
+  const nod = mall.content.cloneNode(true);
+  const frag = nod.querySelector('.frag');
+  for (const [k, v] of Object.entries(vardar)) frag.style.setProperty(k, v);
+  skarm.appendChild(nod);
+  return skarm;
+}
+
+/* ---------- sektion 1: papper ---------- */
+const gPapper = document.getElementById('papper');
+for (const p of PAPPER) {
+  const post = document.createElement('div'); post.className = 'post';
+  post.innerHTML = `<div class="rubrikrad"><span class="n">${p.namn}</span><span class="h">${p.bg}</span></div>`;
+  post.appendChild(bygg({
+    '--bg':p.bg, '--yta':p.yta, '--yta-svag':p.ytaSvag, '--fg':'#1C1917', '--dim':p.dim,
+    '--kant-stark':p.kantStark, '--linje':p.linje,
+    '--skugga':'0 1px 2px rgba(70,52,28,.06), 0 6px 18px rgba(70,52,28,.08)',
+    '--accent':'#26201A', '--pa-accent':'#FDFBF8', '--accent-text':'#3A322A',
+    '--ok':'#2F7A55', '--pa-ok':'#FFFFFF', '--klar-yta':'#F2F6F2', '--klar-text':'#33352E',
+    '--pb-yta':'#F3E9D9', '--pb-text':'#7A5312'
+  }));
+  const dimBotten = kt(p.dim, p.bg), dimKort = kt(p.dim, p.yta), separation = kt(p.yta, p.bg);
+  const ok = dimBotten >= 4.5 && dimKort >= 4.5;
+  post.innerHTML += `<div class="not">${p.text}
+    <div class="matt ${ok ? 'ok' : 'fel'}">sekundärtext ${dimBotten}:1 mot papper · ${dimKort}:1 mot kort
+    ${ok ? '(AA klarat)' : '(UNDER 4,5, faller)'}<br>kort mot papper ${separation}:1 separation</div></div>`;
+  gPapper.appendChild(post);
+}
+
+/* ---------- sektion 2: accent, alla på Sand ---------- */
+const bas = PAPPER.find(p => p.id === 'sand');
+const gAccent = document.getElementById('accent');
+for (const a of ACCENTER) {
+  const post = document.createElement('div'); post.className = 'post';
+  post.innerHTML = `<div class="rubrikrad"><span class="n">${a.namn}</span><span class="h">${a.f}</span></div>`;
+  post.appendChild(bygg({
+    '--bg':bas.bg, '--yta':bas.yta, '--yta-svag':bas.ytaSvag, '--fg':'#1C1917', '--dim':bas.dim,
+    '--kant-stark':bas.kantStark, '--linje':bas.linje,
+    '--skugga':'0 1px 2px rgba(70,52,28,.06), 0 6px 18px rgba(70,52,28,.08)',
+    '--accent':a.f, '--pa-accent':'#FFFFFF', '--accent-text':a.text,
+    '--ok':'#2F7A55', '--pa-ok':'#FFFFFF', '--klar-yta':'#F2F6F2', '--klar-text':'#33352E',
+    '--pb-yta':a.pb, '--pb-text':a.pbT
+  }));
+  const vitPa = kt('#FFFFFF', a.f), lankPa = kt(a.text, bas.yta), pbPa = kt(a.pbT, a.pb), grafik = kt(a.f, bas.bg);
+  const ok = vitPa >= 4.5 && lankPa >= 4.5 && pbPa >= 4.5 && grafik >= 3;
+  post.innerHTML += `<div class="not">${a.om}
+    <div class="matt ${ok ? 'ok' : 'fel'}">vit text på accent ${vitPa}:1 · länk ${lankPa}:1 · PB-chip ${pbPa}:1 · ikonruta ${grafik}:1
+    ${ok ? '(AA klarat)' : '(FALLER)'}</div></div>`;
+  gAccent.appendChild(post);
+}
+</script>
+</body>
+</html>
