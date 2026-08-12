@@ -1958,6 +1958,40 @@ och 13.1 måste vara klar före 13.6.
       ingenting ändrats. En logg eller ett test räcker; det behöver inte bli en optimering.
       **Låg prioritet** — ingenting är trasigt som användaren märker.
 
+- [ ] **12.23 E2E-sviten har aldrig rört produktionsbygget. Ny 2026-08-12 (kväll).**
+      Utbruten ur grillningen av 11B.0e. `playwright.config.ts` startar `npm run dev`. Alla 30
+      testerna kör alltså mot **dev-bygget**, aldrig mot det som hamnar på telefonen.
+
+      **Vad som därmed är osett av varje test vi har:** servicearbetaren, precachen (9 poster,
+      650,90 kB), offline-navigeringen via `navigateFallback`, och minifieringen. Det är
+      samtidigt de delar som är svårast att felsöka när de går sönder, eftersom de bara
+      existerar i produktionsläge.
+
+      **Varför det inte löstes i 11B.0e:** hade sviten behövt köra mot produktionsbygget vore
+      `import.meta.env.DEV` diskvalificerat som byggflagga för såddinsläppet — grenen stryks ju
+      ur just det bygget. Adam bekräftade att dev är enda målet **för nu**, så beslutet står.
+      Ändras det här, läs om 11B.0e:s fallback först.
+
+      **Att göra:** ett andra Playwright-projekt som kör mot `vite preview` med ett litet urval
+      rökprov — appen startar, servicearbetaren registreras, en rutt fungerar offline. **Inte**
+      hela sviten: seedade tester kan inte köra där, vilket är hela poängen ovan.
+      **Klart när:** minst ett test bevisar att produktionsbygget startar och registrerar sin
+      servicearbetare. **Låg prioritet, men inte noll** — hålet är osynligt tills det smäller.
+
+- [ ] **12.24 `jsdom` ligger oanvänt i `package.json`. Ny 2026-08-12 (kväll).**
+      Utbruten ur 12.20:s rättelse 1. `jsdom@^28.0.0` är installerat och används av
+      **ingenting**: `vite.config.ts:63` sätter `environment: 'node'` och ingen fil åsidosätter
+      det. Kontrollerat mot `src/`, `e2e/`, `scripts/` och `playwright.config.ts`.
+
+      **Beslutet i 11B.0e cementerar det.** Sviten kör e2e, inte komponenttester, så jsdom har
+      ingen inbokad användning. Ta bort det.
+
+      ⚠️ **Kontrollera först att inget verktyg drar in det implicit** — `@vitest/coverage-v8`
+      och Vitests egen `environment`-växel refererar jsdom utan att kräva det. Går `npm run
+      test` grönt efter borttagningen är svaret nej.
+      **Klart när:** posten är borta ur `package.json` och alla fem grindarna är gröna.
+      **Litet jobb.**
+
 ---
 
 ## Fas 11A — efterjustering 2026-08-01 (layoutbugg + rullhjul)
