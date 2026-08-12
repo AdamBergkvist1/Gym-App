@@ -177,9 +177,12 @@ inte en kompromiss utan ett krav: sidan mätte Fraunces och den **saknar tabulä
 alltså skulle tal hoppa i sidled när de ändras, vilket 11B.2 förbjuder. Familjen Grotesk och
 Bricolage Grotesque klarade båda testet men valdes bort.
 
-**Att göra innan detta implementeras:** Fraunces ska hämtas som fil enligt §7.3 och registreras
-i `docs/EXTERNT.md`. Mockupen laddar den från Google Fonts, vilket duger för ett val men inte
-för appen: ett externt anrop vid varje sidladdning motsäger offline-first.
+**✅ Klart 2026-08-12 — teckensnittet ligger i repot.**
+`src/assets/fonts/fraunces-var-latin.woff2`, 65,7 kB, latinsk delmängd, axlarna `opsz` 9–144
+och `wght` 400–700 (`SOFT` och `WONK` på förval, precis som i mockuperna). Licenstexten ligger
+bredvid som `OFL.txt` eftersom OFL kräver att den följer med fontfilen, och posten står i
+`docs/EXTERNT.md`. **Kvar till steg 4:** `@font-face` i `src/index.css` och tokenet som pekar
+rubrikerna hit.
 
 ---
 

@@ -982,9 +982,12 @@ nuvarande.
       2. **Fraunces saknar tabulära siffror.** Därför sätter den bara rubriker, och systemets
          typsnitt sätter alla tal. Det är ett krav ur 11B.2, inte en smakfråga.
 
-      **Kvar innan implementation:** Fraunces ska hämtas som fil enligt §7.3 och registreras i
-      `docs/EXTERNT.md`. Mockuperna laddar den från Google Fonts, vilket duger för ett val men
-      inte för appen — ett externt anrop vid varje sidladdning motsäger offline-first.
+      **✅ Fraunces är hämtad som fil 2026-08-12.**
+      `src/assets/fonts/fraunces-var-latin.woff2` (65,7 kB, latin, axlarna `opsz` och `wght`)
+      med `OFL.txt` bredvid sig, registrerad i `docs/EXTERNT.md`. Beroendet av Google Fonts är
+      därmed brutet för appen; mockuperna hämtar den fortfarande över nätet, vilket är rätt —
+      de är beslutsunderlag, inte produktionskod. **`@font-face` är ännu inte skriven**; den
+      hör till steg 4 i `src/index.css`.
 
 - [ ] **11B.0e Testsömmarna bestäms innan skärmarna byggs. Ny 2026-08-12.**
       Lånad från `/to-spec`, som gör en sak våra dokument inte gör: skissar sömmarna **innan**

@@ -29,6 +29,7 @@ samma commit.
 |---|---|---|---|---|
 | Färgvärden ur `grayDark`, `greenDark`, `amberDark`, `redDark` | [radix-ui/colors](https://github.com/radix-ui/colors) | **MIT** | `docs/DESIGN.md` §1 → `src/index.css` (fas 11B steg 4) | 2026-08-04 |
 | `handoff`-skillen, i praktiken ordagrant | [mattpocock/skills](https://github.com/mattpocock/skills) | **MIT** | `.claude/skills/handoff/SKILL.md` | 2026-08-11 |
+| Fraunces, variabel woff2 (latin) + licenstexten | [undercasetype/Fraunces](https://github.com/undercasetype/Fraunces) | **OFL-1.1** | `src/assets/fonts/fraunces-var-latin.woff2`, `src/assets/fonts/OFL.txt` → `src/index.css` (fas 11B steg 4) | 2026-08-12 |
 
 ### mattpocock/skills — `handoff`
 
@@ -69,6 +70,50 @@ samma commit.
 > *värden* i en egen fil är den här posten det som uppfyller villkoret — det är därför
 > registret finns. Skulle vi någon gång kopiera Radix **kod** ska licenstexten in i
 > filhuvudet också.
+
+### Fraunces — rubriktypsnittet
+
+- **Licens verifierad direkt mot repot**, inte ur sökträffar: GitHubs API för
+  `undercasetype/Fraunces` ger `OFL-1.1`, och `OFL.txt` inleds *"Copyright 2018 The Fraunces
+  Project Authors"*. Repot hade 750 stjärnor och senaste push 2026-02-11 när kopian togs.
+- **Ingen Reserved Font Name.** Upphovsrättsraden saknar tillägget *"with Reserved Font Name"*,
+  vilket är den enda OFL-klausul som hade kunnat hindra oss från att subsätta filen och ändå
+  kalla den Fraunces. Vi får alltså både subsätta och behålla namnet.
+- **OFL-attribution ligger i två lager, och båda behövs.** Licensen kräver att licenstexten
+  **följer med själva fontfilen** — därför ligger `OFL.txt` bredvid `.woff2`-filen och inte
+  bara här. Registret ensamt räcker för kopierade *värden* (Radix ovan), men inte för en
+  binär fontfil som distribueras med appen.
+- **Vad som hämtats:** den latinska delmängden av den variabla woff2:an som Google Fonts
+  bygger och serverar (`v38`), samt `OFL.txt` från originalrepot. **67 304 byte** (65,7 kB),
+  `sha256 7234ed86…56e0d783`.
+- **Axlar: `opsz` 9–144 och `wght` 400–700. `SOFT` och `WONK` står kvar på sina förvalsvärden.**
+  Det är exakt vad mockuperna i `docs/mockups/` laddade, alltså är det Adam faktiskt godkände
+  som också hamnar i appen. Att öppna WONK-axeln vore ett nytt designbeslut, inte en teknikalitet.
+- **Delmängd: bara `latin`.** Den täcker U+0000–00FF, alltså å ä ö Å Ä Ö. `latin-ext` och
+  `vietnamese` laddades avsiktligt inte ned — de hade tredubblat filen utan att lägga till ett
+  enda tecken vi skriver.
+- **Varför fil och inte `<link>` mot Google Fonts:** mockuperna hämtar den över nätet, vilket
+  duger för att välja men inte för appen. Ett externt anrop vid varje sidladdning motsäger
+  offline-first, och `vite.config.ts` precachar redan `woff2` via `globPatterns`.
+
+**Verifierat 2026-08-12 i webbläsaren, på vår egen fil** — inte på mockupens Google-kopia.
+Filen bäddades in som data-URI i en testsida så att den lästes på riktigt:
+
+| Kontroll | Utfall |
+|---|---|
+| Fonten laddas och används | ja |
+| `wght`-axeln lever | 400 → 354,08 px, 700 → 382,03 px |
+| `opsz`-axeln lever | opsz 9 → 381,84 px, opsz 144 → 316,19 px |
+| Saknar tabulära siffror | `"111"` 64,88 px mot `"000"` 95,55 px |
+
+Den sista raden är inte ett fel utan **bekräftar 11B.2-fyndet på den fil vi faktiskt ska
+använda**: siffrorna hoppar i sidled, och därför sätter Fraunces bara rubriker medan systemets
+typsnitt sätter alla tal.
+
+⚠️ **Grindarna kördes inte.** Maskinen saknar Node, npm och Python, så
+`npm run test/typecheck/lint/build` ur §7.3 steg 7 gick inte att köra. Ändringen lägger till
+två filer som ännu **inte importeras av någon kod**, så det finns inget att bryta — men
+`@font-face` i `src/index.css` (fas 11B steg 4) måste köras mot grindarna på jobbdatorn.
 
 ---
 
