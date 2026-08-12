@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11B.0d steg 2b — blandningar av Papper och Blad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&display=swap" rel="stylesheet">
+<style>
+  /* ------------------------------------------------------------------
+     11B.0d steg 2b. Adam: gillar Blad (3) bäst men gillar även
+     Papper (2), och vill se blandningar.
+
+     De två skiljer sig på FYRA oberoende axlar. Blandningarna nedan
+     varierar dem en i taget i stället för att gissa fram mellanlägen:
+
+       1. YTA        vitt blad          vs  bara papper
+       2. BREDD      kant till kant     vs  marginaler
+       3. RUBRIK     inuti ytan         vs  på papperet ovanför
+       4. MARKÖR     accentstreck       vs  ingen
+
+     Färgen ligger fast (Bläck, DESIGN.md §0.5) och rörs inte här.
+     ------------------------------------------------------------------ */
+
+  :root {
+    --bg: #F0EBE1; --yta: #FFFFFF; --yta-ton: #F3F4F7; --yta-svag: #E6E4E4;
+    --fg: #1C1917; --dim: #6F6960; --linje: #E3DDD1; --linje-vit: #ECEAE5;
+    --kant-stark: #C4BCB0; --accent: #2B4570; --accent-text: #263C63;
+    --ok: #2F7A55; --klar-yta: #F1F7F4; --pb-yta: #DFE3EA; --pb-text: #263C63;
+    --skugga: 0 1px 2px rgba(60,45,25,.06), 0 6px 18px rgba(60,45,25,.085);
+    --rubrik: 'Fraunces', Georgia, serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #d9d4cb; color: #17181a;
+         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; padding: 30px 20px 70px; }
+  .sida { max-width: 1800px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.02em; }
+  .ingress { font-size: 13.5px; line-height: 1.55; color: #47433c; max-width: 80ch; margin: 0 0 14px; }
+  code { background: #cbc5bb; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+  table.axlar { border-collapse: collapse; font-size: 12.5px; margin: 0 0 22px; background: #fff; border-radius: 8px; overflow: hidden; }
+  table.axlar th, table.axlar td { padding: 7px 12px; text-align: left; border-bottom: 1px solid #e6e2db; }
+  table.axlar th { background: #efece7; font-weight: 700; }
+  table.axlar td:first-child { font-weight: 650; }
+  #fontvarning { display: none; background: #7A2415; color: #fff; padding: 12px 15px; border-radius: 8px;
+                 font-size: 13.5px; margin: 0 0 18px; font-weight: 600; }
+
+  .galleri { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .post { flex: 0 0 auto; width: 393px; }
+  .rubrikrad { margin-bottom: 10px; }
+  .rubrikrad .n { font-size: 16.5px; font-weight: 700; display: block; }
+  .rubrikrad .u { font-size: 12px; color: #57534a; }
+  .telefon { width: 393px; height: 790px; border-radius: 34px; overflow: hidden; position: relative;
+             box-shadow: 0 1px 2px rgba(60,45,25,.15), 0 10px 30px rgba(60,45,25,.18); }
+  .skarm { position: absolute; inset: 0; overflow: hidden; background: var(--bg); color: var(--fg);
+           font-variant-numeric: tabular-nums; }
+  .noter { margin-top: 11px; font-size: 12.5px; line-height: 1.55; color: #43403a; background: #fff;
+           border-radius: 10px; padding: 12px 14px; border-left: 3px solid #8a8377; }
+  .noter b { color: #17181a; }
+  .noter ul { margin: 6px 0 0; padding-left: 16px; }
+  .noter li { margin-bottom: 4px; }
+
+  svg.i { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* -------- gemensamt -------- */
+  .app { padding-top: 16px; padding-bottom: 100px; }
+  .marg { padding-left: 16px; padding-right: 16px; }
+  .topp { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .sidrubrik { font-family: var(--rubrik); font-size: 32px; font-weight: 600; letter-spacing: -.02em; }
+  .passtid { font-size: 13.5px; color: var(--dim); }
+
+  .mattrad { display: flex; margin-bottom: 16px; border-radius: 14px; overflow: hidden;
+             background: var(--yta); box-shadow: var(--skugga); }
+  .matt { flex: 1; padding: 12px 13px; text-align: center; }
+  .matt + .matt { border-left: 1px solid var(--linje-vit); }
+  .matt .v { font-size: 23px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+  .matt .e { font-size: 9px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); margin-top: 5px; }
+
+  .onamn { font-family: var(--rubrik); font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .ometa { font-size: 11.5px; color: var(--dim); margin-top: 1px; }
+  .mer { color: var(--dim); display: flex; }
+  .ohuvud { display: flex; align-items: center; gap: 10px; }
+  .ohuvud .txt { flex: 1; }
+
+  table.set { width: 100%; border-collapse: collapse; }
+  table.set th { font-size: 9px; font-weight: 700; letter-spacing: .085em; text-transform: uppercase;
+                 color: var(--dim); text-align: right; padding: 0 8px 6px; font-variant-numeric: normal; }
+  table.set th:first-child, table.set td:first-child { text-align: left; width: 28px; }
+  table.set th:last-child, table.set td:last-child { text-align: center; width: 48px; }
+  table.set td { font-size: 15px; text-align: right; padding: 0 8px; height: 43px; }
+  td.forra { color: var(--dim); font-size: 12.5px; }
+  td.vikt, td.reps { font-weight: 620; }
+  .setnr { font-size: 11.5px; font-weight: 700; color: var(--dim); }
+  .bock { width: 27px; height: 27px; border-radius: 999px; display: inline-grid; place-items: center; }
+  .bock.fylld { background: var(--ok); }
+  .bock.fylld svg { stroke: #fff; width: 13px; height: 13px; }
+  .bock.tom { border: 2px solid var(--kant-stark); }
+  .laggtill { font-size: 13px; font-weight: 600; color: var(--accent-text); display: flex; align-items: center; gap: 7px; }
+
+  .chips { display: flex; gap: 8px; margin-bottom: 15px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 600; }
+  .chip.timer { background: var(--yta); box-shadow: var(--skugga); }
+  .chip.pb { background: var(--pb-yta); color: var(--pb-text); }
+  .knapp { display: flex; align-items: center; justify-content: center; gap: 7px; height: 47px;
+           border-radius: 15px; font-size: 15px; font-weight: 650; margin-bottom: 9px; }
+  .knapp.sek { background: var(--yta); box-shadow: var(--skugga); }
+  .knapp.pri { background: var(--accent); color: #fff; }
+  .nav { position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex; gap: 3px; padding: 5px;
+         border-radius: 999px; background: #FFFFFFF2; box-shadow: 0 3px 16px rgba(60,45,25,.18); }
+  .navflik { flex: 1; text-align: center; padding: 9px 0 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; color: var(--dim); }
+  .navflik svg { width: 17px; height: 17px; display: block; margin: 0 auto 3px; stroke: currentColor; }
+  .navflik.aktiv { background: var(--accent); color: #fff; }
+
+  /* ===== B1 · Rubrik på papper, rader på blad ===== */
+  .B1 .ovning { margin-bottom: 18px; }
+  .B1 .ohuvud { padding: 0 16px 8px; }
+  .B1 .blad { background: var(--yta); box-shadow: var(--skugga); padding-bottom: 4px; }
+  .B1 .blad table.set th:first-child, .B1 .blad table.set td:first-child { padding-left: 16px; }
+  .B1 .blad table.set th:last-child, .B1 .blad table.set td:last-child { padding-right: 14px; }
+  .B1 tr.klar { background: var(--klar-yta); }
+  .B1 .laggtill { padding: 9px 16px 11px; }
+
+  /* ===== B2 · Papper med markör ===== */
+  .B2 .ovning { margin-bottom: 22px; }
+  .B2 .ohuvud { border-left: 4px solid var(--accent); padding: 1px 0 1px 11px; margin: 0 16px 9px; }
+  .B2 table.set { padding: 0 16px; }
+  .B2 table.set tr { border-bottom: 1px solid var(--linje); }
+  .B2 table.set tr:last-child { border-bottom: none; }
+  .B2 tr.klar td { color: var(--dim); }
+  .B2 .laggtill { padding: 10px 16px 0; }
+
+  /* ===== B3 · Kantlöst papper ===== */
+  .B3 .ovning { margin-bottom: 20px; }
+  .B3 .ohuvud { padding: 0 16px 8px; }
+  .B3 table.set tr { border-bottom: 1px solid var(--linje); }
+  .B3 table.set th:first-child, .B3 table.set td:first-child { padding-left: 16px; }
+  .B3 table.set th:last-child, .B3 table.set td:last-child { padding-right: 14px; }
+  .B3 tr.klar td { color: var(--dim); }
+  .B3 .laggtill { padding: 10px 16px 0; }
+
+  /* ===== B4 · Blad, indraget ===== */
+  .B4 .ovning { margin: 0 16px 14px; border-radius: 18px; overflow: hidden;
+                background: var(--yta); box-shadow: var(--skugga); }
+  .B4 .ohuvud { padding: 12px 14px 9px; }
+  .B4 .brick { width: 10px; height: 34px; border-radius: 5px; background: var(--accent); flex-shrink: 0; }
+  .B4 table.set th:first-child, .B4 table.set td:first-child { padding-left: 14px; }
+  .B4 table.set th:last-child, .B4 table.set td:last-child { padding-right: 12px; }
+  .B4 tr.klar { background: var(--klar-yta); }
+  .B4 .laggtill { padding: 9px 14px 12px; border-top: 1px solid var(--linje-vit); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="sida">
+  <h1>11B.0d steg 2b · Blandningar av Papper och Blad</h1>
+  <p class="ingress">
+    Papper och Blad skiljer sig på <b>fyra oberoende axlar</b>, inte på en. Blandningarna nedan varierar
+    dem en i taget i stället för att gissa fram mellanlägen, så att du kan se vilken axel det faktiskt
+    var du gillade. Färgen ligger fast och rörs inte här.
+  </p>
+  <table class="axlar">
+    <tr><th>Axel</th><th>B1 Rubrik på papper</th><th>B2 Papper med markör</th><th>B3 Kantlöst papper</th><th>B4 Blad, indraget</th></tr>
+    <tr><td>Yta</td><td>vitt blad</td><td>bara papper</td><td>bara papper</td><td>vitt blad</td></tr>
+    <tr><td>Bredd</td><td>kant till kant</td><td>marginaler</td><td>kant till kant</td><td>indraget</td></tr>
+    <tr><td>Rubrik</td><td>på papperet</td><td>på papperet</td><td>på papperet</td><td>inuti ytan</td></tr>
+    <tr><td>Markör</td><td>ingen</td><td>accentstreck</td><td>ingen</td><td>accentbricka</td></tr>
+  </table>
+  <div id="fontvarning"></div>
+  <div class="galleri" id="g"></div>
+</div>
+
+<script>
+const I = {
+  bank:'<path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/>',
+  klocka:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',
+  lista:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+  punkter:'<circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/>',
+  vag:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+  bock:'<path d="M4 12.5l5.5 5.5L20 7"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  hist:'<path d="M12 8v5l3 2M3 12a9 9 0 109-9 9 9 0 00-6.5 2.8L3 8"/>'
+};
+const s = (n, st) => `<svg class="i" viewBox="0 0 24 24"${st ? ` style="${st}"` : ''}>${I[n]}</svg>`;
+
+const RADER = `
+  <tr><th>Set</th><th>Förra</th><th>Kg</th><th>Reps</th><th></th></tr>
+  <tr class="klar"><td><span class="setnr">1</span></td><td class="forra">92,5×5</td><td class="vikt">92,5</td><td class="reps">5</td>
+    <td><span class="bock fylld">${s('bock')}</span></td></tr>
+  <tr class="klar"><td><span class="setnr">2</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+    <td><span class="bock fylld">${s('bock')}</span></td></tr>
+  <tr><td><span class="setnr">3</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+    <td><span class="bock tom"></span></td></tr>`;
+
+const TOPP = `<div class="marg"><div class="topp"><div class="sidrubrik">Pass</div><div class="passtid">42 min</div></div></div>`;
+const MATT = `<div class="marg"><div class="mattrad">
+  <div class="matt"><div class="v">12</div><div class="e">Set</div></div>
+  <div class="matt"><div class="v">4 850</div><div class="e">Volym kg</div></div>
+  <div class="matt"><div class="v">3</div><div class="e">Övn</div></div>
+</div></div>`;
+const CHIPS = `<div class="marg"><div class="chips">
+  <div class="chip timer">${s('klocka','width:14px;height:14px')} 1:12</div>
+  <div class="chip pb">PB +2,5 kg</div></div></div>`;
+const KNAPPAR = `<div class="marg">
+  <div class="knapp sek">${s('plus','width:15px;height:15px')} Lägg till övning</div>
+  <div class="knapp pri">${s('bock','width:15px;height:15px')} Avsluta pass</div></div>`;
+const NAV = `<div class="nav">
+  <div class="navflik aktiv">${s('bank')}Pass</div><div class="navflik">${s('hist')}Historik</div>
+  <div class="navflik">${s('lista')}Övningar</div><div class="navflik">${s('punkter')}Mer</div></div>`;
+
+const huvud = (extra) => `<div class="ohuvud">${extra || ''}<div class="txt">
+  <div class="onamn">Bänkpress</div><div class="ometa">Skivstång · 3 set · 1 385 kg</div></div>
+  <div class="mer">${s('vag','width:18px;height:18px')}</div></div>`;
+const huvud2 = (extra) => `<div class="ohuvud">${extra || ''}<div class="txt">
+  <div class="onamn">Latsdrag</div><div class="ometa">Kabel · inga set än</div></div>
+  <div class="mer">${s('vag','width:18px;height:18px')}</div></div>`;
+
+const B = [
+  { id:'B1', namn:'B1 · Rubrik på papper', under:'Vitt blad kant till kant, rubriken utanför',
+    inner:`<div class="ovning">${huvud()}<div class="blad"><table class="set">${RADER}</table>
+             <div class="laggtill">${s('plus','width:14px;height:14px')} Lägg till set</div></div></div>
+           <div class="ovning">${huvud2()}</div>`,
+    noter:['<b>Etiketten skiljs från datan.</b> Övningens namn hör till papperet, siffrorna till bladet. Det är den tydligaste uppdelningen av de fyra.',
+           '<b>Från Blad:</b> full skärmbredd åt setraderna. <b>Från Papper:</b> rubriken i Fraunces får luft omkring sig.',
+           '<b>Risk:</b> rubriken kan se lös ut, som om den svävar ovanför något den inte hör ihop med.'] },
+
+  { id:'B2', namn:'B2 · Papper med markör', under:'Ingen vit yta alls, accentstreck vid rubriken',
+    inner:`<div class="ovning">${huvud()}<table class="set">${RADER}</table>
+             <div class="laggtill">${s('plus','width:14px;height:14px')} Lägg till set</div></div>
+           <div class="ovning">${huvud2()}</div>`,
+    noter:['<b>Närmast Papper</b>, men med Blads accentstreck flyttat till rubriken i stället för till en yta.',
+           '<b>Strecket gör jobbet som kortkanten gjorde:</b> det säger var en övning börjar, utan att kosta en hel yta.',
+           '<b>Lugnast av de fyra.</b> Hela skärmen är ett papper, och accenten syns bara som fyra tunna streck.'] },
+
+  { id:'B3', namn:'B3 · Kantlöst papper', under:'Inget vitt, men raderna går kant till kant',
+    inner:`<div class="ovning">${huvud()}<table class="set">${RADER}</table>
+             <div class="laggtill">${s('plus','width:14px;height:14px')} Lägg till set</div></div>
+           <div class="ovning">${huvud2()}</div>`,
+    noter:['<b>Papper med Blads bredd.</b> Avdelarna går hela vägen ut, vilket ger raderna maximalt utrymme utan att någon vit yta införs.',
+           '<b>Mest densitet av de fyra</b> (11B.9), och den som rymmer flest set utan att bläddra.',
+           '<b>Risk:</b> utan yta och utan markör vilar all avgränsning på rubriktypsnittet. Vid 25 set kan det bli en vägg.'] },
+
+  { id:'B4', namn:'B4 · Blad, indraget', under:'Vit yta med radie, accentbricka i stället för ikonruta',
+    inner:`<div class="ovning">${huvud('<div class="brick"></div>')}<table class="set">${RADER}</table>
+             <div class="laggtill">${s('plus','width:14px;height:14px')} Lägg till set</div></div>
+           <div class="ovning">${huvud2('<div class="brick"></div>')}</div>`,
+    noter:['<b>Närmast kort igen</b>, men ikonrutan är utbytt mot en smal accentbricka. Ingen ikon, ingen kvadrat.',
+           '<b>Från Blad:</b> accenten som markör. <b>Från Papper:</b> rubrik och meta ligger tillsammans.',
+           '<b>Tydligast avgränsning</b>, men också den som ligger närmast mönstret du kallade basic.'] }
+];
+
+const g = document.getElementById('g');
+for (const b of B) {
+  const post = document.createElement('div'); post.className = 'post';
+  post.innerHTML =
+    `<div class="rubrikrad"><span class="n">${b.namn}</span><span class="u">${b.under}</span></div>` +
+    `<div class="telefon"><div class="skarm ${b.id}"><div class="app">${TOPP}${MATT}` +
+      b.inner.replace('<div class="ovning">' , '<div class="ovning">') +
+      CHIPS + KNAPPAR + `</div>${NAV}</div></div>` +
+    `<div class="noter"><ul>${b.noter.map(n => `<li>${n}</li>`).join('')}</ul></div>`;
+  g.appendChild(post);
+}
+
+/* Fraunces bär karaktären. Laddas den inte blir alla fyra missvisande. */
+document.fonts.ready.then(() => {
+  if (!document.fonts.check('16px "Fraunces"')) {
+    const v = document.getElementById('fontvarning');
+    v.style.display = 'block';
+    v.textContent = 'VARNING: Fraunces laddades inte. Rubrikerna visas i reservfont och jämförelsen blir missvisande. Kräver nätverk.';
+  }
+});
+</script>
+</body>
+</html>
