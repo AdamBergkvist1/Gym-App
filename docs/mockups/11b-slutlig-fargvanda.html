@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11B.0d steg 1d — sista färgvändan, plus typsnitt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400..700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Fraunces:opsz,wght@9..144,400..700&display=swap" rel="stylesheet">
+<style>
+  /* ------------------------------------------------------------------
+     11B.0d, fjärde omgången. Adam: "vi kör en till färg vända sen får
+     jag vara nöjd och välja en och köra på formen."
+
+     Detta är alltså SISTA färgomgången. Därför visas sex FÄRDIGA
+     kombinationer i stället för lösa variabler: papper + accent + svag
+     toning, allt satt ihop, så att valet är ett val och inte tre.
+
+     "Svaga accentgrejer" (Adams ord) är nytt här: kortytorna, genvägen
+     och PB-chipet är svagt tonade i accentfärgen i stället för neutralt
+     vita. Tonerna räknas fram ur accenten, de är inte handplockade.
+
+     TYPSNITTEN i sektion 2 laddas från Google Fonts och kräver nät.
+     Sidan kontrollerar själv att de laddats och varnar synligt om inte,
+     eftersom en tyst reservfont skulle göra jämförelsen meningslös.
+     ------------------------------------------------------------------ */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #dcd8d1; color: #17181a;
+         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+         padding: 30px 20px 70px; }
+  .sida { max-width: 1420px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.02em; }
+  h2 { font-size: 19px; font-weight: 700; margin: 42px 0 4px; letter-spacing: -.015em; }
+  .ingress, .avsnittstext { font-size: 13.5px; line-height: 1.55; color: #48443d; max-width: 76ch; margin: 0 0 18px; }
+  code { background: #cdc8c0; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+  #fontvarning { display: none; background: #7A2415; color: #fff; padding: 12px 15px;
+                 border-radius: 8px; font-size: 13.5px; line-height: 1.5; margin: 0 0 18px; font-weight: 600; }
+  #fontok { background: #fff; border-left: 3px solid #2F7A55; padding: 9px 13px; border-radius: 7px;
+            font-size: 12.5px; margin: 0 0 18px; color: #3c3830; }
+
+  .galleri { display: flex; gap: 20px; flex-wrap: wrap; }
+  .post { flex: 0 0 auto; }
+  .rubrikrad { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+  .rubrikrad .n { font-size: 16px; font-weight: 700; }
+  .rubrikrad .h { font-size: 11.5px; color: #5c574f; font-variant-numeric: tabular-nums; }
+  .ram { width: 330px; border-radius: 22px; overflow: hidden;
+         box-shadow: 0 1px 2px rgba(60,45,25,.14), 0 8px 24px rgba(60,45,25,.16); }
+  .not { margin-top: 9px; width: 330px; font-size: 12px; line-height: 1.5; color: #48443d; }
+  .matt { font-variant-numeric: tabular-nums; font-size: 11px; margin-top: 5px; padding: 6px 9px;
+          border-radius: 6px; background: #fff; color: #3c3830; }
+  .matt.ok { border-left: 3px solid #2F7A55; }
+  .matt.fel { border-left: 3px solid #B4331F; color: #8A2415; font-weight: 700; }
+
+  /* -------- appfragment -------- */
+  .frag { padding: 14px 15px 16px; font-variant-numeric: tabular-nums;
+          background: var(--bg); color: var(--fg); font-family: var(--font, inherit); }
+  .topp { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .titel { font-size: 29px; font-weight: var(--vikt-titel, 700); letter-spacing: -.025em; font-family: var(--font-titel, inherit); }
+  .passtid { font-size: 13px; color: var(--dim); }
+
+  .sammanfattning { display: flex; gap: 8px; margin-bottom: 12px; }
+  .mattruta { flex: 1; padding: 12px 13px; border-radius: 18px; background: var(--yta-ton); box-shadow: var(--skugga); }
+  .mattruta .v { font-size: 24px; font-weight: 690; letter-spacing: -.03em; line-height: 1; }
+  .mattruta .e { font-size: 9.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); margin-top: 5px; }
+
+  .genvag { display: flex; align-items: center; gap: 8px; padding: 11px 13px; margin-bottom: 12px;
+            border-radius: 18px; background: var(--yta-svag); font-size: 12.5px; color: var(--dim); }
+
+  .kort { border-radius: 18px; background: var(--yta); box-shadow: var(--skugga); overflow: hidden; margin-bottom: 11px; }
+  .kortrubrik { display: flex; align-items: center; gap: 10px; padding: 11px 12px; }
+  .ikonruta { width: 34px; height: 34px; border-radius: 12px; background: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+  .ikonruta svg { width: 18px; height: 18px; stroke: var(--pa-accent); }
+  .namn2 { font-size: 15.5px; font-weight: 650; flex: 1; letter-spacing: -.01em; }
+  .mer { color: var(--dim); display: flex; }
+
+  table.set { width: 100%; border-collapse: collapse; }
+  table.set th { font-size: 9px; font-weight: 700; letter-spacing: .085em; text-transform: uppercase;
+                 color: var(--dim); text-align: right; padding: 0 7px 6px; font-variant-numeric: normal; }
+  table.set th:first-child, table.set td:first-child { text-align: left; padding-left: 12px; width: 26px; }
+  table.set th:last-child, table.set td:last-child { text-align: center; width: 46px; padding-right: 10px; }
+  table.set td { font-size: 14.5px; text-align: right; padding: 0 7px; height: 42px; }
+  table.set tr.klar { background: var(--klar-yta); }
+  table.set tr.klar td { color: var(--klar-text); }
+  td.forra { color: var(--dim); font-size: 12.5px; }
+  td.vikt, td.reps { font-weight: 620; }
+  .setnr { font-size: 11.5px; font-weight: 700; color: var(--dim); }
+  .bock { width: 27px; height: 27px; border-radius: 999px; display: inline-grid; place-items: center; }
+  .bock.fylld { background: var(--ok); }
+  .bock.fylld svg { stroke: #fff; }
+  .bock.tom { border: 2px solid var(--kant-stark); }
+  .bock svg { width: 13px; height: 13px; }
+  .laggtill { display: flex; align-items: center; gap: 7px; padding: 10px 12px; font-size: 13px;
+              font-weight: 600; color: var(--accent-text); border-top: 1px solid var(--linje); }
+
+  .chips { display: flex; gap: 8px; margin-bottom: 11px; }
+  .chip { display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .chip.timer { background: var(--yta-ton); color: var(--fg); box-shadow: var(--skugga); }
+  .chip.pb { background: var(--pb-yta); color: var(--pb-text); }
+
+  .knapp { display: flex; align-items: center; justify-content: center; gap: 7px; height: 46px;
+           border-radius: 15px; font-size: 15px; font-weight: 650; margin-bottom: 8px; }
+  .knapp.sekundar { background: var(--yta-ton); color: var(--fg); box-shadow: var(--skugga); }
+  .knapp.primar { background: var(--accent); color: var(--pa-accent); }
+
+  .nav { display: flex; gap: 3px; padding: 4px; border-radius: 999px; background: var(--yta); box-shadow: var(--skugga); margin-top: 11px; }
+  .navflik { flex: 1; text-align: center; padding: 8px 0 7px; border-radius: 999px; font-size: 10px; font-weight: 600; color: var(--dim); }
+  .navflik svg { width: 16px; height: 16px; display: block; margin: 0 auto 3px; stroke: currentColor; }
+  .navflik.aktiv { background: var(--accent); color: var(--pa-accent); }
+
+  svg.i { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<div class="sida">
+  <h1>11B.0d steg 1d · Sista färgvändan, plus typsnitt</h1>
+  <p class="ingress">
+    Sex <b>färdiga</b> kombinationer den här gången, inte lösa variabler: papper, accent och svag toning
+    satta ihop. Nytt sedan förra omgången är den svaga toningen du bad om: kortytorna, genvägen och
+    PB-chipet är inte längre neutralt vita utan svagt tonade i accentfärgen.
+    <b>Tonerna räknas fram ur accenten</b>, de är inte handplockade, så de kan aldrig glida isär från den.
+  </p>
+
+  <div id="fontvarning"></div>
+  <div id="fontok"></div>
+
+  <h2>1. Sex kombinationer</h2>
+  <p class="avsnittstext">Alla i systemets typsnitt, så att sektion 1 handlar om färg och ingenting annat.</p>
+  <div class="galleri" id="kombinationer"></div>
+
+  <h2>2. Typsnittet</h2>
+  <p class="avsnittstext">
+    Samma kombination i alla fyra, bara bokstavsformerna skiljer. Först systemets, alltså det du har i dag
+    och det varje iOS-app har som inte valt något annat. Sedan tre fria alternativ.
+    <b>Titta särskilt på siffrorna</b>, för det är dem appen mest består av.
+  </p>
+  <div class="galleri" id="typsnitt"></div>
+</div>
+
+<template id="mall">
+  <div class="frag">
+    <div class="topp"><div class="titel">Pass</div><div class="passtid">42 min</div></div>
+    <div class="sammanfattning">
+      <div class="mattruta"><div class="v">12</div><div class="e">Set</div></div>
+      <div class="mattruta"><div class="v">4 850</div><div class="e">Volym kg</div></div>
+      <div class="mattruta"><div class="v">3</div><div class="e">Övn</div></div>
+    </div>
+    <div class="genvag">
+      <svg class="i" viewBox="0 0 24 24" width="15" height="15"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M7 14h10M6 10h.01M10 10h.01M14 10h.01M18 10h.01"/></svg>
+      Skriv i stället, "Bänk 90x5"
+    </div>
+    <div class="kort">
+      <div class="kortrubrik">
+        <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg></div>
+        <div class="namn2">Bänkpress</div>
+        <div class="mer"><svg class="i" viewBox="0 0 24 24" width="16" height="16"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+      </div>
+      <table class="set">
+        <tr><th>Set</th><th>Förra</th><th>Kg</th><th>Reps</th><th></th></tr>
+        <tr class="klar"><td><span class="setnr">1</span></td><td class="forra">92,5×5</td><td class="vikt">92,5</td><td class="reps">5</td>
+          <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+        <tr><td><span class="setnr">2</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+          <td><span class="bock tom"></span></td></tr>
+      </table>
+      <div class="laggtill"><svg class="i" viewBox="0 0 24 24" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg> Lägg till set</div>
+    </div>
+    <div class="chips"><div class="chip timer">1:12</div><div class="chip pb">PB +2,5 kg</div></div>
+    <div class="knapp sekundar">Lägg till övning</div>
+    <div class="knapp primar">Avsluta pass</div>
+    <div class="nav">
+      <div class="navflik aktiv"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg>Pass</div>
+      <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M12 8v5l3 2M3 12a9 9 0 109-9 9 9 0 00-6.5 2.8L3 8"/></svg>Historik</div>
+      <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Övningar</div>
+      <div class="navflik"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/></svg>Mer</div>
+    </div>
+  </div>
+</template>
+
+<script>
+/* ---------------- färgverktyg ---------------- */
+const rgb = h => { h = h.replace('#',''); return [0,2,4].map(i => parseInt(h.slice(i,i+2),16)); };
+const hex = c => '#' + c.map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
+const blanda = (a, b, andel) => hex(rgb(a).map((v,i) => v + (rgb(b)[i] - v) * andel));
+const lum = c => { const a = c.map(v => { v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); });
+                   return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2]; };
+const kt = (a,b) => { const l1 = lum(rgb(a)), l2 = lum(rgb(b));
+                      return +(((Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05))).toFixed(2); };
+
+const GRON = '#2F7A55';   /* sparat. Betydelsen är upptagen och rörs inte. */
+
+/* Sex kombinationer. Papper och accent hör ihop, inte bara läggs bredvid. */
+const KOMBOS = [
+  { id:'myr',   namn:'Myr',    papper:'#F2EADC', kortvit:'#FEFCF8', dim:'#6B6455', kant:'#BEB29C', linje:'#E9E0D1',
+    accent:'#0E5E64', accentText:'#0C5057',
+    om:'Sand med petrol. Sval accent mot varmt papper ger spänning i stället för harmoni. Den mest "utrustning" av de sex.' },
+  { id:'mossa', namn:'Mossa',  papper:'#F7F2E9', kortvit:'#FFFDF9', dim:'#6E6759', kant:'#C3B9A7', linje:'#EDE6DA',
+    accent:'#59682C', accentText:'#4B5825',
+    om:'Havre med oliv. Släkt med limen som valdes i augusti, men jordnära i stället för neon. Mest sammanhållen.' },
+  { id:'brand', namn:'Bränd',  papper:'#EBE1CF', kortvit:'#FDFAF4', dim:'#655E4E', kant:'#B6A98F', linje:'#E2D8C4',
+    accent:'#9A5528', accentText:'#8A4B22',
+    om:'Linne med koppar. Varmast och mest analog, närmast Ellie. Papper och accent ligger i samma familj.' },
+  { id:'plommon',namn:'Plommon',papper:'#F2EADC', kortvit:'#FEFCF8', dim:'#6B6455', kant:'#BEB29C', linje:'#E9E0D1',
+    accent:'#6E2F45', accentText:'#61293C',
+    om:'Sand med vinröd. Ovanligast i en träningsapp, vilket är både argumentet för och emot.' },
+  { id:'ockra', namn:'Ockra',  papper:'#E4D9C6', kortvit:'#FCF8F1', dim:'#5F5847', kant:'#AC9F84', linje:'#DACFB9',
+    accent:'#8A5A0C', accentText:'#7A4F09',
+    om:'Lera med bränd senap. Hela skärmen i en enda färgfamilj. Mest karaktär, minst kontrast mellan delarna.' },
+  { id:'black', namn:'Bläck',  papper:'#FCFAF7', kortvit:'#FFFFFF', dim:'#6F6960', kant:'#C4BCB0', linje:'#F0ECE5',
+    accent:'#2B4570', accentText:'#263C63',
+    om:'Kalk med marinblå. Svalast och renast. Tryggast, men också närmast vad varje app redan har.' }
+];
+
+const mall = document.getElementById('mall');
+
+/* Tonerna räknas ur accenten. Andelarna är regeln, inte färgerna. */
+function tokens(k, font, fontTitel) {
+  return {
+    '--bg': k.papper,
+    '--yta': blanda(k.kortvit, k.accent, 0.030),   /* kort: 3 % accent */
+    '--yta-ton': blanda(k.kortvit, k.accent, 0.055),/* mätrutor, chips: 5,5 % */
+    '--yta-svag': blanda(k.papper, k.accent, 0.085),/* genvägen: 8,5 % */
+    '--fg': '#1C1917', '--dim': k.dim, '--kant-stark': k.kant, '--linje': k.linje,
+    '--skugga': '0 1px 2px rgba(70,52,28,.06), 0 6px 18px rgba(70,52,28,.085)',
+    '--accent': k.accent, '--pa-accent': '#FFFFFF', '--accent-text': k.accentText,
+    '--ok': GRON, '--klar-yta': blanda(k.kortvit, GRON, 0.07), '--klar-text': '#33352E',
+    '--pb-yta': blanda(k.kortvit, k.accent, 0.15), '--pb-text': k.accentText,
+    '--font': font || '', '--font-titel': fontTitel || font || ''
+  };
+}
+
+function bygg(t) {
+  const ram = document.createElement('div'); ram.className = 'ram';
+  const nod = mall.content.cloneNode(true);
+  const frag = nod.querySelector('.frag');
+  for (const [n, v] of Object.entries(t)) if (v) frag.style.setProperty(n, v);
+  ram.appendChild(nod);
+  return ram;
+}
+
+function matt(t) {
+  const rader = {
+    'sekundärtext mot kort': kt(t['--dim'], t['--yta']),
+    'vit text på accent':    kt('#FFFFFF', t['--accent']),
+    'länk mot kort':         kt(t['--accent-text'], t['--yta']),
+    'PB-chip':               kt(t['--pb-text'], t['--pb-yta']),
+    'ikonruta mot papper':   kt(t['--accent'], t['--bg'])
+  };
+  const brister = Object.entries(rader).filter(([n, v]) => v < (n.includes('ikonruta') ? 3 : 4.5));
+  return { rader, ok: brister.length === 0, brister };
+}
+
+/* ---------- sektion 1 ---------- */
+const g1 = document.getElementById('kombinationer');
+for (const k of KOMBOS) {
+  const t = tokens(k);
+  const m = matt(t);
+  const post = document.createElement('div'); post.className = 'post';
+  post.innerHTML = `<div class="rubrikrad"><span class="n">${k.namn}</span><span class="h">${k.papper} · ${k.accent}</span></div>`;
+  post.appendChild(bygg(t));
+  post.innerHTML += `<div class="not">${k.om}
+    <div class="matt ${m.ok ? 'ok' : 'fel'}">` +
+      Object.entries(m.rader).map(([n, v]) => `${n} ${v}:1`).join(' · ') +
+      (m.ok ? ' <b>(AA klarat)</b>' : ' <b>(FALLER: ' + m.brister.map(([n]) => n).join(', ') + ')</b>') +
+    `</div></div>`;
+  g1.appendChild(post);
+}
+
+/* ---------- sektion 2: typsnitt ---------- */
+const TYPSNITT = [
+  { namn:'Systemets', stack:'', kalla:'San Francisco på iOS. Det du har i dag.',
+    om:'Ingen fil att ladda, ingen licens, snabbast. Men det är exakt samma bokstäver som varje annan iOS-app använder.' },
+  { namn:'Familjen Grotesk', stack:"'Familjen Grotesk', sans-serif", kalla:'Letters from Sweden · OFL',
+    om:'Svenskt, ritat i Stockholm. Något smalare och mer egensinnigt än systemets, med lite spänst i formerna. Variabel vikt, en enda fil.' },
+  { namn:'Bricolage Grotesque', stack:"'Bricolage Grotesque', sans-serif", kalla:'OFL',
+    om:'Mest karaktär av de tre. Oregelbundna former med flit, vilket är själva poängen. Den som ligger längst från "AI-standard".' },
+  { namn:'Fraunces + system', stack:'', titel:"'Fraunces', serif", kalla:'OFL',
+    om:'Seriff enbart i rubriken, systemets sans i siffrorna. Ger värme där du läser text och behåller kända siffror där du läser tal.' }
+];
+
+const basKombo = KOMBOS.find(k => k.id === 'brand');
+const g2 = document.getElementById('typsnitt');
+for (const f of TYPSNITT) {
+  const t = tokens(basKombo, f.stack, f.titel);
+  const post = document.createElement('div'); post.className = 'post';
+  post.innerHTML = `<div class="rubrikrad"><span class="n">${f.namn}</span><span class="h">${f.kalla}</span></div>`;
+  post.appendChild(bygg(t));
+  post.innerHTML += `<div class="not">${f.om}</div>`;
+  g2.appendChild(post);
+}
+
+/* ---------- kontroll att typsnitten verkligen laddats ----------
+   En tyst reservfont skulle göra hela sektion 2 meningslös, och värre:
+   den skulle se ut att fungera. Därför kontrolleras det och varnas synligt. */
+const VANTADE = ['Familjen Grotesk', 'Bricolage Grotesque', 'Fraunces'];
+document.fonts.ready.then(() => {
+  const saknas = VANTADE.filter(n => !document.fonts.check(`16px "${n}"`));
+  const varning = document.getElementById('fontvarning');
+  const ok = document.getElementById('fontok');
+  if (saknas.length) {
+    varning.style.display = 'block';
+    varning.textContent = 'VARNING: ' + saknas.join(', ') + ' laddades inte. ' +
+      'Sektion 2 visar då systemets typsnitt överallt och jämförelsen betyder ingenting. ' +
+      'Typsnitten hämtas från Google Fonts och kräver nätverk. Öppna sidan med nät och ladda om.';
+    ok.style.display = 'none';
+  } else {
+    /* Tabulära siffror är ett krav (11B.2): talen får inte hoppa i sidled när
+       de ändras. Mäts genom att jämföra bredden på "111" och "000". */
+    const prov = document.createElement('span');
+    prov.style.cssText = 'position:absolute;visibility:hidden;font-size:40px;font-variant-numeric:tabular-nums';
+    document.body.appendChild(prov);
+    const tab = VANTADE.map(n => {
+      prov.style.fontFamily = `"${n}"`;
+      prov.textContent = '111'; const a = prov.getBoundingClientRect().width;
+      prov.textContent = '000'; const b = prov.getBoundingClientRect().width;
+      return { namn: n, klarar: Math.abs(a - b) < 0.5 };
+    });
+    prov.remove();
+    const brister = tab.filter(t => !t.klarar).map(t => t.namn);
+    ok.innerHTML = '<b>Alla tre typsnitten laddade.</b><br>' +
+      'Tabulärkontroll, alltså kravet i 11B.2 att tal inte får hoppa i sidled när de ändras: ' +
+      tab.map(t => t.namn + ' ' + (t.klarar ? 'klarar' : '<b>klarar INTE</b>')).join(' · ') +
+      (brister.length
+        ? '<br><b>Detta är inget fel i förslag 4.</b> ' + brister.join(' och ') +
+          ' används där enbart i rubriken "Pass", som inte innehåller siffror, och systemets typsnitt ' +
+          'sköter alla tal. Att den saknar tabulära siffror är hela skälet att den inte får sätta dem.'
+        : '');
+  }
+});
+</script>
+</body>
+</html>
