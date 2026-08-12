@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11B.0d steg 1b — riktning D, varm kortkaraktär</title>
+<style>
+  /* ------------------------------------------------------------------
+     Mockup för 11B.0d, andra omgången.
+
+     Adam 2026-08-12 efter första omgången: "Jag gillar nog karaktären
+     på kort C mest, men gillar även den mysiga känslan i A att den är
+     varmare liksom. Typ Luna och Ellie viben."
+
+     RIKTNING D = C:s struktur + A:s värme. Att de två går att blanda är
+     inte en kompromiss: Luna och Ellie är båda Chris Raroques appar, så
+     värmen och kortstrukturen kommer redan ur samma formspråk.
+
+     LÅST i alla tre nedan (det är karaktären, och den är vald):
+       varm botten · upphöjda kort utan hårda kanter · stora radier
+       (20 px kort, 13 px ikonruta) · varma neutraler i text och gråtoner
+
+     VARIERAR: enbart accentfärgen, och därmed hur mycket färg appen har.
+     ------------------------------------------------------------------ */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; background: #e7e4df; color: #16181d;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 32px 20px 64px;
+  }
+  .sida { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .ingress { font-size: 14px; line-height: 1.55; color: #4a463f; max-width: 72ch; margin: 0 0 10px; }
+  .ingress code { background: #d6d2cb; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  .last { display: inline-block; font-size: 12.5px; font-weight: 600; background: #fff; border-radius: 6px;
+          padding: 7px 11px; margin: 0 0 26px; border-left: 3px solid #8a8377; color: #3d3a34; }
+
+  .rad { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+  .kolumn { flex: 1 1 393px; min-width: 340px; max-width: 430px; }
+  .etikett { margin-bottom: 12px; }
+  .etikett .namn { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .etikett .kalla { font-size: 12.5px; color: #58534b; margin-top: 2px; }
+
+  .telefon { width: 393px; max-width: 100%; height: 780px; border-radius: 34px; overflow: hidden;
+             box-shadow: 0 1px 2px rgba(60,45,25,.16), 0 12px 34px rgba(60,45,25,.18); position: relative; }
+  .skarm { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; }
+  .skarm::-webkit-scrollbar { width: 0; }
+
+  .noter { margin-top: 14px; font-size: 13px; line-height: 1.6; color: #3d3a34; background: #fff;
+           border-radius: 10px; padding: 14px 16px; border-left: 3px solid #8a8377; }
+  .noter b { color: #16181d; }
+  .noter ul { margin: 8px 0 0; padding-left: 18px; }
+  .noter li { margin-bottom: 5px; }
+
+  /* ---------- Gemensam struktur. Identisk i alla tre. ---------- */
+  .app { min-height: 100%; padding: 14px 16px 96px; font-variant-numeric: tabular-nums; }
+  .topp { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .titel { font-size: 31px; font-weight: 700; letter-spacing: -0.025em; }
+  .passtid { font-size: 14px; color: var(--dim); display: flex; align-items: center; gap: 5px; }
+
+  .sammanfattning { display: flex; gap: 10px; margin-bottom: 14px; }
+  .mattruta { flex: 1; padding: 14px 15px; border-radius: 20px; background: var(--yta); box-shadow: var(--skugga); }
+  .mattruta .varde { font-size: 28px; font-weight: 690; letter-spacing: -0.03em; line-height: 1; }
+  .mattruta .etik { font-size: 10.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); margin-top: 6px; }
+
+  .genvag { display: flex; align-items: center; gap: 9px; width: 100%; padding: 12px 14px; margin-bottom: 14px;
+            border-radius: 20px; background: var(--yta-svag); font-size: 13.5px; color: var(--dim); }
+
+  .ovningskort { border-radius: 20px; background: var(--yta); box-shadow: var(--skugga); margin-bottom: 12px; overflow: hidden; }
+  .kortrubrik { display: flex; align-items: center; gap: 11px; padding: 13px 14px; }
+  .ikonruta { width: 36px; height: 36px; border-radius: 13px; background: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+  .ikonruta svg { width: 19px; height: 19px; stroke: var(--pa-accent); }
+  .ovningsnamn { font-size: 16.5px; font-weight: 650; letter-spacing: -0.01em; flex: 1; }
+  .mer { color: var(--dim); padding: 4px; display: flex; }
+
+  table.set { width: 100%; border-collapse: collapse; }
+  table.set th { font-size: 10px; font-weight: 700; letter-spacing: .085em; text-transform: uppercase;
+                 color: var(--dim); text-align: right; padding: 0 8px 7px; font-variant-numeric: normal; }
+  table.set th:first-child, table.set td:first-child { text-align: left; padding-left: 14px; width: 30px; }
+  table.set th:last-child, table.set td:last-child { text-align: center; width: 52px; padding-right: 12px; }
+  table.set td { font-size: 15.5px; text-align: right; padding: 0 8px; height: 46px; vertical-align: middle; }
+  table.set tr.klar { background: var(--klar-yta); }
+  table.set tr.klar td { color: var(--klar-text); }
+  table.set td.forra { color: var(--dim); font-size: 13.5px; }
+  table.set td.vikt, table.set td.reps { font-weight: 620; }
+  .setnr { font-size: 12.5px; font-weight: 700; color: var(--dim); }
+
+  .bock { width: 30px; height: 30px; border-radius: 999px; display: inline-grid; place-items: center; }
+  .bock.fylld { background: var(--ok); }
+  .bock.fylld svg { stroke: var(--pa-ok); }
+  .bock.tom { border: 2px solid var(--kantfarg-stark); }
+  .bock svg { width: 15px; height: 15px; }
+
+  .laggtill { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 14px;
+              font-weight: 600; color: var(--accent-text); border-top: 1px solid var(--linje); }
+
+  .chips { display: flex; gap: 9px; margin: 4px 0 14px; }
+  .chip { display: flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 999px; font-size: 14.5px; font-weight: 600; }
+  .chip.timer { background: var(--yta); color: var(--fg); box-shadow: var(--skugga); }
+  .chip.pb { background: var(--pb-yta); color: var(--pb-text); }
+  .chip svg { width: 15px; height: 15px; }
+
+  .knapprad { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; }
+  .knapp { display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px;
+           border-radius: 16px; font-size: 15.5px; font-weight: 650; }
+  .knapp.sekundar { background: var(--yta); color: var(--fg); box-shadow: var(--skugga); }
+  .knapp.primar { background: var(--accent); color: var(--pa-accent); }
+
+  .nav { position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex; gap: 3px; padding: 5px;
+         border-radius: 999px; background: var(--nav-yta); box-shadow: 0 3px 16px rgba(60,45,25,.15); }
+  .navflik { flex: 1; text-align: center; padding: 9px 0 8px; border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--dim); }
+  .navflik svg { width: 18px; height: 18px; display: block; margin: 0 auto 3px; stroke: currentColor; }
+  .navflik.aktiv { background: var(--accent); color: var(--pa-accent); }
+
+  svg.i { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* =================================================================
+     GEMENSAM VÄRME. Identisk i D1, D2 och D3.
+     Botten, ytor, neutraler, skuggor och radier kommer härifrån.
+     ================================================================= */
+  .D {
+    --bg: #FAF7F2; --yta: #FFFDFB; --yta-svag: #F3EDE4;
+    --fg: #1C1917; --dim: #736C61;
+    --kantfarg-stark: #C2B9AC; --linje: #F0EAE1;
+    --skugga: 0 1px 2px rgba(70,52,28,.055), 0 6px 18px rgba(70,52,28,.075);
+    --nav-yta: #FFFDFBF5;
+    background: var(--bg); color: var(--fg);
+  }
+
+  /* D1 — djup skogsgrön. Accent och bekräftelse är samma färg. */
+  .D1 { --accent: #1F6B4A; --pa-accent: #FFFFFF; --accent-text: #1A5A3E;
+        --ok: #1F6B4A; --pa-ok: #FFFFFF; --klar-yta: #F1F6F1; --klar-text: #2E332C;
+        --pb-yta: #EAF2EC; --pb-text: #14503A; }
+
+  /* D2 — tegelröd. Accent skild från bekräftelsen, mest färg av de tre. */
+  .D2 { --accent: #A8451F; --pa-accent: #FFFFFF; --accent-text: #933C1A;
+        --ok: #2F7A55; --pa-ok: #FFFFFF; --klar-yta: #F2F6F2; --klar-text: #33352E;
+        --pb-yta: #F7E7DC; --pb-text: #8A3918; }
+
+  /* D3 — bläck. Accenten är nästan svart; färg finns bara där den betyder
+     något (sparat och personbästa). Mest återhållsam, mest Ellie. */
+  .D3 { --accent: #26201A; --pa-accent: #FDFBF8; --accent-text: #3A322A;
+        --ok: #2F7A55; --pa-ok: #FFFFFF; --klar-yta: #F2F6F2; --klar-text: #33352E;
+        --pb-yta: #F3E9D9; --pb-text: #7A5312; }
+</style>
+</head>
+<body>
+<div class="sida">
+
+  <h1>11B.0d steg 1b · Riktning D, varm kortkaraktär</h1>
+  <p class="ingress">
+    <b>C:s struktur med A:s värme.</b> Att de går att blanda är ingen kompromiss: Luna och Ellie är
+    båda Chris Raroques appar, så värmen och kortstrukturen kommer redan ur samma formspråk.
+  </p>
+  <div class="last">
+    LÅST i alla tre: varm botten <code>#FAF7F2</code> · upphöjda kort utan hårda kanter · stora radier
+    (20 px kort, 13 px ikonruta) · varma neutraler. VARIERAR: enbart accentfärgen.
+  </div>
+
+  <div class="rad" id="rad"></div>
+</div>
+
+<template id="mall">
+  <div class="app">
+    <div class="topp">
+      <div class="titel">Pass</div>
+      <div class="passtid">
+        <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg> 42 min
+      </div>
+    </div>
+
+    <div class="sammanfattning">
+      <div class="mattruta"><div class="varde">12</div><div class="etik">Set</div></div>
+      <div class="mattruta"><div class="varde">4 850</div><div class="etik">Volym kg</div></div>
+      <div class="mattruta"><div class="varde">3</div><div class="etik">Övn</div></div>
+    </div>
+
+    <div class="genvag">
+      <svg class="i" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+      Skriv i stället, "Bänk 90x5"
+    </div>
+
+    <div class="ovningskort">
+      <div class="kortrubrik">
+        <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg></div>
+        <div class="ovningsnamn">Bänkpress</div>
+        <div class="mer"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+      </div>
+      <table class="set">
+        <tr><th>Set</th><th>Förra</th><th>Kg</th><th>Reps</th><th></th></tr>
+        <tr class="klar"><td><span class="setnr">W</span></td><td class="forra">60×10</td><td class="vikt">60</td><td class="reps">10</td>
+          <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+        <tr class="klar"><td><span class="setnr">1</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+          <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+        <tr><td><span class="setnr">2</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+          <td><span class="bock tom"></span></td></tr>
+      </table>
+      <div class="laggtill"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Lägg till set</div>
+    </div>
+
+    <div class="chips">
+      <div class="chip timer"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg> 1:12</div>
+      <div class="chip pb"><svg class="i" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3"/></svg> PB +2,5 kg</div>
+    </div>
+
+    <div class="ovningskort">
+      <div class="kortrubrik">
+        <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v9M7 7l5-4 5 4M5 21h14M8 12v9M16 12v9"/></svg></div>
+        <div class="ovningsnamn">Latsdrag</div>
+        <div class="mer"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+      </div>
+    </div>
+
+    <div class="knapprad">
+      <div class="knapp sekundar"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Lägg till övning</div>
+      <div class="knapp primar"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg> Avsluta pass</div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <div class="navflik aktiv"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg>Pass</div>
+    <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M12 8v5l3 2M3 12a9 9 0 109-9 9 9 0 00-6.5 2.8L3 8"/></svg>Historik</div>
+    <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Övningar</div>
+    <div class="navflik"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/></svg>Mer</div>
+  </div>
+</template>
+
+<script>
+const varianter = [
+  { id: 'D1', namn: 'D1 · Varm + skogsgrön', kalla: 'Accenten och bekräftelsen är samma färg',
+    noter: [
+      ['Djupgrön accent <code>#1F6B4A</code> på varm botten.', 'Grönt mot varmt beige läser som lugnt och naturligt, inte som wellness.'],
+      ['Färre färger totalt.', 'Accent och sparat delar färg, så appen har i praktiken två färger: grön och den varma neutralen.'],
+      ['Risken:', 'när allt grönt betyder både "appens färg" och "sparat" blir bekräftelsen mindre tydlig i en lång setlista.']
+    ]},
+  { id: 'D2', namn: 'D2 · Varm + tegelröd', kalla: 'Mest färg av de tre',
+    noter: [
+      ['Tegelröd accent <code>#A8451F</code>.', 'Samma familj som A hade, men mörkad så att vit text på den klarar AA med marginal.'],
+      ['Accent skild från bekräftelsen.', 'Grönt betyder fortfarande enbart sparat, vilket gör bocken entydig.'],
+      ['Varmast av de tre.', 'Rött mot beige är den mest analoga kombinationen, närmast Ellie.']
+    ]},
+  { id: 'D3', namn: 'D3 · Varm + bläck', kalla: 'Mest återhållsam',
+    noter: [
+      ['Accenten är nästan svart <code>#26201A</code>.', 'Ikonrutan och primärknappen blir mörka i stället för färgade.'],
+      ['Färg finns bara där den betyder något.', 'Grönt för sparat, guldbrunt för personbästa. Inget annat är färgat.'],
+      ['Konsekvensen:', 'högst kontrast och lugnast skärm, men appen har ingen egen färg. Det var precis kritiken mot den mörka versionen i §0.5.']
+    ]}
+];
+
+const rad = document.getElementById('rad');
+const mall = document.getElementById('mall');
+
+for (const v of varianter) {
+  const kol = document.createElement('div');
+  kol.className = 'kolumn';
+
+  const et = document.createElement('div');
+  et.className = 'etikett';
+  et.innerHTML = `<div class="namn">${v.namn}</div><div class="kalla">${v.kalla}</div>`;
+  kol.appendChild(et);
+
+  const tel = document.createElement('div');
+  tel.className = 'telefon';
+  const skarm = document.createElement('div');
+  skarm.className = 'skarm D ' + v.id;
+  skarm.appendChild(mall.content.cloneNode(true));
+  tel.appendChild(skarm);
+  kol.appendChild(tel);
+
+  const not = document.createElement('div');
+  not.className = 'noter';
+  not.innerHTML = '<b>Vad som skiljer.</b><ul>' +
+    v.noter.map(([a, b]) => `<li><b>${a}</b> ${b}</li>`).join('') + '</ul>';
+  kol.appendChild(not);
+
+  rad.appendChild(kol);
+}
+</script>
+</body>
+</html>
