@@ -127,7 +127,63 @@ aldrig var problemet.
 bockar — inte i texten. Texten förblir vit. Det är därför Apple Watch kan vara nästan helt
 svartvit och ändå kännas levande, medan vår app var enfärgat grå och kändes död.
 
-### Beslutet: lime, vald av Adam 2026-08-05
+### ✅ BESLUTET SOM GÄLLER: Bläck, valt av Adam 2026-08-12
+
+**Ljust tema. Papper `#F0EBE1`, accent marinblå `#2B4570`, Fraunces i rubriker.**
+Valt ur `docs/mockups/11b-slutlig-fargvanda.html` efter fyra omgångar. Allt nedanför denna
+rubrik som handlar om lime och svart bakgrund är **överspelat** och står kvar enbart som
+historik.
+
+**Adams förbehåll, ordagrant:** *"Kanske är lite tråkigt me bläck men det ser typ ändå bäst
+ut."* Det förbehållet togs på allvar och ledde till ett fynd, se nästa stycke.
+
+#### Papperet fördjupades efter en mätning, inte efter en smakåsikt
+
+Kombinationen som valdes hade papper `#FCFAF7` och svagt tonade kort. **Separationen mellan
+kort och papper mättes till 1,01:1**, alltså i praktiken ingen alls: korten syntes bara tack
+vare sin skugga. Det är en mätbar orsak till att skärmen läste som platt, och den förklarar
+Adams "lite tråkigt" bättre än accentfärgen gör.
+
+**Åtgärd:** korten blev **rent vita** och papperet fördjupades till `#F0EBE1`.
+Separationen steg till **1,19:1**, vilket är exakt samma värde som den varmare kombinationen
+"Bränd" hade. Den accenttoning Adam bad om flyttades till de **sekundära** ytorna, alltså
+mätrutor, genväg och PB-chip, där den inte äter upp kortens separation.
+
+Djupare papper prövades och förkastades på mätning, inte på tycke: vid `#ECE6DA` faller
+sekundärtexten till 4,37:1 och klarar inte AA.
+
+#### Tokens — alla uppmätta 2026-08-12 mot ljus botten
+
+| Token | Värde | Kontrast | Roll |
+|---|---|---|---|
+| `--color-bg` | **`#F0EBE1`** | — | Papperet |
+| `--color-surface` | **`#FFFFFF`** | 1,19:1 mot bg | Kort. Rent vitt för separationens skull |
+| `--color-fg` | `#1C1917` | **16,0:1** | Text |
+| `--color-dim` | `#6F6960` | **4,57:1** | Sekundär text. Golvet, tål ingen ljusare botten |
+| `--color-line` | `#F0ECE5` | — | Dekorativ linje |
+| `--color-line-strong` | `#C4BCB0` | — | Kant som bär betydelse |
+| **`--color-accent`** | **`#2B4570`** | **8,08:1** mot bg | Appens färg |
+| `--color-accent-text` | `#263C63` | **10,5:1** mot kort | Länkfärg |
+| `--color-ok` | `#2F7A55` | 5,2:1 mot vit bock | Sparat. Betydelsen är upptagen |
+
+**Sekundära ytor tonas i accenten, och andelen är regeln:** kort 0 %, mätrutor och chips
+5,5 %, genvägen 8,5 %, PB-chipet 15 %. Tonerna **räknas fram ur accenten** i stället för att
+handplockas, så de kan aldrig glida isär från den om accenten justeras.
+
+#### Typsnitt: Fraunces i rubriker, systemets i allt annat
+
+**Fraunces** (OFL) sätter sidrubriker. **Systemets typsnitt sätter alla siffror**, och det är
+inte en kompromiss utan ett krav: sidan mätte Fraunces och den **saknar tabulära siffror**,
+alltså skulle tal hoppa i sidled när de ändras, vilket 11B.2 förbjuder. Familjen Grotesk och
+Bricolage Grotesque klarade båda testet men valdes bort.
+
+**Att göra innan detta implementeras:** Fraunces ska hämtas som fil enligt §7.3 och registreras
+i `docs/EXTERNT.md`. Mockupen laddar den från Google Fonts, vilket duger för ett val men inte
+för appen: ett externt anrop vid varje sidladdning motsäger offline-first.
+
+---
+
+### ~~Beslutet: lime, vald av Adam 2026-08-05~~ (ÖVERSPELAT, se ovan)
 
 Tre riktningar togs fram som körbara mockuper och jämfördes visuellt sida vid sida —
 inte som hexkoder i text. Adam valde **lime**.
