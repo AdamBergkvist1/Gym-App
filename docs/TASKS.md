@@ -13,55 +13,29 @@ Nedbrytning av `docs/PLAN.md`. Ordningen är inte godtycklig — se §6 i planen
 
 ---
 
-## 🔥 Akut — drift och kostnad
+## ✅ Avslutat — drift och kostnad
 
-- [ ] **A.1 Egress-gränsen är passerad, och siffrorna går inte ihop.** Adam 2026-08-09:
-      **5,02 av 5 GB** på Free-planen denna cykel, med enskilda dygn **över 500 MB**.
-      Databasen är 45 MB och appen har fyra användare.
+- [x] **A.1 Egressen kom aldrig från Gym-App. AVSLUTAD 2026-08-12.**
+      Larmet 2026-08-09 var 5,02 av 5 GB på Free-planen, med enskilda dygn över 500 MB.
+      **Mätt i Usage-vyn per projekt 2026-08-10:**
 
-      **Regeln för den här uppgiften: ta reda på vad som genererar trafiken innan något
-      ändras.** Att optimera en synk som kanske inte är boven skulle dölja den verkliga
-      orsaken och konsumera nästa cykels marginal med.
+      | Projekt | Egress |
+      | :--- | ---: |
+      | `Gym-App` | 0,001 GB |
+      | `news-signal-engine` | 5,39 GB |
+      | **Organisationens totala** | **5,39 GB** |
 
-      **Hypotes 1 — det andra projektet. Pröva denna först, den är ett klick.** Organisationen
-      `qfqgeranbxnftnnlkcfo` innehåller **två** projekt: `Gym-App` och `news-signal-engine`.
-      Free-planens kvoter räknas **per organisation, inte per projekt**, så en nyhetsinsamlare
-      som hämtar och lagrar artiklar kan äta upp hela taket utan att Gym-App rört en byte.
-      **Kontroll:** dashboardens Usage-vy, uppdelad per projekt.
+      Free-planens kvoter räknas per organisation, inte per projekt — därför slog taket
+      trots att Gym-App står för **en tusendel** av trafiken. Hypotesen om trasiga
+      `lastPulledAt`-markörer är avskriven *som förklaring till egressen*; aritmetiken
+      talade emot den från början (10 pass och 25 set är kilobyte, inte gigabyte).
 
-      **Hypotes 2 — trasiga hämtningsmarkörer** (Adams förslag): `lastPulledAt:*` fungerar inte
-      och `pull.ts` hämtar hela tabeller vid varje synkrunda. `syncNow` triggas vid appstart,
-      `focus`, `visibilitychange` och 2 s efter varje utkorgsskrivning — under ett pass blir
-      det många rundor.
+      **Åtgärdat i NSE-repot, inte här.** Adam 2026-08-12: insamlaren drog onödigt mycket
+      och drar mindre nu. Utredningen tillhör det repot. **Kvoten resetas 17 augusti 2026** —
+      till dess är marginalen tunn, men ingenting i Gym-App behöver ändras för det.
 
-      **Men aritmetiken talar emot den för Gym-App:s del.** 45 MB är i praktiken en tom
-      Postgres-instans; själva träningsdatan är 10 pass och 25 set, alltså kilobyte. Även en
-      fullständigt trasig markör som hämtade om *allt* vid *varje* runda skulle flytta
-      kilobyte per synk. 500 MB på ett dygn kräver storleksordningar fler anrop än fyra
-      användare rimligen genererar. **Hypotesen ska ändå prövas** — den är billig att mäta och
-      vore ett riktigt fel oavsett trafiken — men den förklarar sannolikt inte siffran.
-
-      **Ordning:** Usage per projekt → Gym-App:s egen egress isolerad → först därefter
-      `pull.ts`. Glöm inte Edge Functions och Realtime; egress är inte bara PostgREST.
-
-      **Klart när:** trafiken är hänförd till en namngiven källa med en siffra intill. Inte
-      en gissning, och ingen kodändring dessförinnan.
-
-      A.1 är avgjord. Usage-vyn per projekt, 2026-08-10:
-
-      Gym-App: 0,001 GB egress
-      news-signal-engine: 5,39 GB egress
-      Organisationens totala: 5,39 GB
-      
-      Hypotes 1 bekräftad — hela egressen kommer från det andra projektet.
-      Hypotes 2 (trasiga lastPulledAt-markörer) är avskriven som förklaring
-      till egressen. Gym-App står för en tusendel.
-      
-      Ersätt A.1-blocket i TASKS.md med en kort avslutad notering: vad som
-      mättes, siffrorna, slutsatsen, och att utredningen flyttar till NSE-repot.
-      Behåll gärna en rad om att markörerna aldrig testades — inte som egress-
-      misstanke, utan som en obekräftad funktion. Bedöm själv om den är värd
-      en backloggspost eller inte.
+      Markörerna lever vidare som **12.21** nedan — inte som kostnadsmisstanke, utan som
+      en funktion vi aldrig bevisat fungerar.
 ---
 
 ## Fas 0 — Mätningar som blockerar design
@@ -1604,6 +1578,26 @@ och 13.1 måste vara klar före 13.6.
       **Verifierat 2026-08-11:** filerna borta, typecheck ren, **259 tester i 21 filer gröna**,
       lint ren, bygget klart (648,69 kB precache). Noll importrader behövde ändras — vilket
       var hela poängen med att radera i stället för att fylla.
+
+- [ ] **12.21 `lastPulledAt`-markörerna är aldrig bevisade.** Utbruten ur A.1 2026-08-12 när
+      egressutredningen avslutades. **Detta är inte en kostnadsfråga** — mätningen visade att
+      Gym-App står för 0,001 GB, och en trasig markör hade flyttat kilobyte. Posten finns kvar
+      av ett annat skäl: vi vet fortfarande inte om inkrementell hämtning fungerar.
+
+      **Vad som är okänt:** om `lastPulledAt:*` faktiskt sätts och läses, eller om `pull.ts`
+      hämtar hela tabeller vid varje synkrunda. `syncNow` triggas vid appstart, `focus`,
+      `visibilitychange` och 2 s efter varje utkorgsskrivning — under ett pass blir det många
+      rundor. `src/sync/pull.test.ts` har 8 tester, men ingen av dem har verifierats täcka
+      just markörernas livscykel; det är en läsning som återstår, inte ett påstående.
+
+      **Varför det ändå betyder något:** i dag är datamängden så liten att skillnaden är
+      omätbar. Med Adams importerade historik inne (19 pass, 22 set) och fler år loggade
+      växer den. En markör som aldrig fungerat märks först när tabellen blivit stor nog att
+      göra ont — och då är det svårare att felsöka än nu.
+
+      **Klart när:** det står svart på vitt om andra synkrundan hämtar noll rader när
+      ingenting ändrats. En logg eller ett test räcker; det behöver inte bli en optimering.
+      **Låg prioritet** — ingenting är trasigt som användaren märker.
 
 ---
 

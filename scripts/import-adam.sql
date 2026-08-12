@@ -271,14 +271,16 @@ on conflict (id) do nothing;
 -- december 2025"*, med datumet satt till första måndagen i månaden på hans
 -- egen anvisning (*"kör det som vanligt typ"*).
 --
--- TVÅ ANTAGANDEN, båda värda att säga emot om de är fel:
---   1. ETT REP. Alla `Bänk: X kg`-rader i anteckningarna utan repsantal är
---      1-repsmax (fråga 14), och "jag tog 95 kg" är samma skrivsätt. Var det
---      95 × 3 är kurvan för lågt satt och raden ska ändras.
+-- BÅDA ANTAGANDENA BEKRÄFTADE AV ADAM 2026-08-12: *"95 kg bänken var 1 rep och
+-- 1 set. Det var mitt personbästa, och ja den borde väl märkas med import, då
+-- det är det."* De står kvar här som resonemang, inte som öppna frågor:
+--   1. ETT REP, ETT SET. Alla `Bänk: X kg`-rader i anteckningarna utan
+--      repsantal är 1-repsmax (fråga 14), och "jag tog 95 kg" är samma
+--      skrivsätt. Bekräftat.
 --   2. IMPORTERAT, inte manuellt. Setet kom inte in genom appen och datumet är
 --      uppskattat — det är precis definitionen i SPEC §3d. Praktiskt betyder
 --      det att lyftet räknas i personbästa och graf men aldrig blir spökdata,
---      vilket är rätt för ett max (uppgift 13.4).
+--      vilket är rätt för ett max (uppgift 13.4). Bekräftat.
 insert into public.workouts
   (id, user_id, started_at, ended_at, title, note, is_imported, is_deleted)
 values
