@@ -1386,9 +1386,9 @@ och 13.1 måste vara klar före 13.6.
 
       > 12 punkter före januari 2026 är importerade från gamla anteckningar — datumen är uppskattade.
 
-      **Kvar, och bara detta:** Adam öppnar appen på telefonen och ser att Bänkpress visar
-      tyngsta set **95 kg** och notisraden ovan. Servern är bevisad; synken till just hans
-      telefon är det enda som inte går att verifiera härifrån utan hans inloggning.
+      **Bekräftat i appen av Adam 2026-08-12.** Bänkpress visar tyngsta set **95 kg**, och
+      notisraden står ovanför grafen. Därmed är hela kedjan bevisad: SQL-filen → databasen →
+      synken → gränssnittet. **Fas 13 är avslutad i sin helhet.**
 
       **Ordning (historik):** 1) Adam registrerar sig i appen med sin riktiga e-post — det måste
       han göra själv, konton och lösenord är inget jag rör. 2) Jag genererar

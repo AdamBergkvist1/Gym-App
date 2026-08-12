@@ -134,11 +134,25 @@ Node saknades helt. Installerat 2026-08-12 med `winget install OpenJS.NodeJS.LTS
 zippen på nodejs.org med verifierad hash. Playwright **WebKit 26.5** nedladdad separat
 (konfigurationen kör WebKit, inte Chromium, eftersom appen används i iOS Safari).
 
-⚠️ **`preview_start` (Browser-panelen) fungerar inte förrän Claude Code startats om.** PATH är
-permanent uppdaterad i användarmiljön, men den körande processen ärvde sin miljö innan
-ändringen. Playwright fungerar däremot, eftersom den startar sin egen dev-server.
+⚠️ **`preview_start` (Browser-panelen) fungerar fortfarande inte, och att starta om appen
+hjälper inte.** Detta testades 2026-08-12 kl 14: PATH ligger rätt i användarens registry, men
+processens egen PATH saknar den. **Orsaken är att Windows inte uppdaterar miljön i redan
+körande processer, och det gäller även Utforskaren** — som är den som startar appen. Appen
+ärver alltså en miljö från före Node-installationen hur många gånger den än startas om.
+
+**Det som faktiskt löser det:** logga ut och in igen, starta om datorn, eller starta om
+Utforskaren via Aktivitetshanteraren. Först därefter hjälper en omstart av Claude Code.
+
+**Övervägt och medvetet valt bort:** att skriva PATH i `.claude/settings.local.json` (som är
+maskinlokal och gitignorerad). Om variabelinterpolationen inte stöds skulle PATH **ersättas**
+i stället för utökas, vilket slår ut git och PowerShell mitt i arbetet. Inte värt risken.
+
 **Ingen maskinsökväg hårdkodades i `.claude/launch.json`** — den är spårad i git och skulle gå
 sönder på hemmadatorn.
+
+**Under tiden:** prefixa `$env:PATH` med Node-katalogen i varje PowerShell-anrop. Playwright,
+testerna, lint och bygget fungerar då utan problem. Det är bara Browser-panelens egen
+serverstart som inte går.
 
 ### Avslutat i samma session
 
@@ -161,8 +175,9 @@ Notistexten kontrollerades genom att **köra den riktiga funktionen** mot de 12 
 faktiskt ligger i databasen, i ett tillfälligt test som raderades efteråt. Utfall:
 *"12 punkter före januari 2026 är importerade från gamla anteckningar — datumen är uppskattade."*
 
-**Kvar av 13.6, och bara detta:** Adam öppnar appen på telefonen och ser 95 kg plus notisraden.
-Servern är bevisad; synken till hans specifika telefon går inte att verifiera utan hans inloggning.
+**Bekräftat i appen av Adam samma dag: 95 kg syns, och notisraden står ovanför grafen.**
+Hela kedjan är därmed bevisad — SQL-filen, databasen, synken och gränssnittet.
+**Fas 13 är avslutad i sin helhet.**
 
 **Fyndet på köpet:** notistexten innehåller ett **tankstreck**, vilket `DESIGN.md` §0.3
 förbjuder i apptext. Upplagt som **12.22**.
