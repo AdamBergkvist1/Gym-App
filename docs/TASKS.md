@@ -880,12 +880,13 @@ nuvarande.
       Det står i direkt konflikt med förbudslistan i §0.3, och konflikten är Adams beslut att
       lösa åt ikonernas fördel.
 
-      **Sex förekomster, mätta och inte antagna. Notera att de INTE har samma öde** — den
+      **Sju förekomster, mätta och inte antagna. Notera att de INTE har samma öde** — den
       första ersätts inte av en ikon utan tas bort helt:
 
       | Fil | Vad | Vad som ska hända |
       |---|---|---|
       | `src/ui/ExerciseCard.tsx:65` | **🏋** i övningens ikonruta | ⛔ **RADERAS.** Hela `<span>`-rutan går bort och ersätts av accentbrickan (10 × 34 px, ingen symbol). **Leta inte efter en skivstångsikon** |
+      | `src/ui/ExerciseCard.tsx:83` | `⋯` menyknappen | → ikon ur paketet. **Tillagd 2026-08-12** — den saknades i listan, som därför sa sex |
       | `src/ui/SetRow.tsx:136` | `✓` bekräfta-knapp | → ikon ur paketet |
       | `src/ui/ExerciseCard.tsx:140` | `✓` | → ikon ur paketet |
       | `src/ui/SetAdjustSheet.tsx:224` | `✓` uppvärmningsset | → ikon ur paketet |
@@ -904,6 +905,14 @@ nuvarande.
       Övningar, Mer), bock, plus, tillbakapil, menypunkter, klocka för timern, och eventuellt
       tangentbord för fritextgenvägen. Alla finns redan tecknade som egna SVG:er i mockuperna
       under `docs/mockups/`, så formen är prövad.
+
+      ⚠️ **Flikikonerna är nytt arbete, inte ett emoji-byte. Mätt 2026-08-12.**
+      `AppShell.tsx:63` renderar i dag bara `tab.label` som **text** — flikraden har inga ikoner
+      alls att ersätta. Dessutom har `nav.ts` **tre** flikar (Pass, Historik, **Inställningar**),
+      inte fyra: Övningar och Mer byggs först i steg 4.5 och 4.6. Att kopiera in fyra flikikoner
+      här är alltså att förbereda steg 4, medan **själva inkopplingen hör till steg 4** och inte
+      till 0c. Det som gör 0c klar är ikonfilerna, registerposten och att de sju glyferna ovan är
+      borta.
 
       **Tre licensklarade kandidater, kontrollerade 2026-08-12 enligt §7.2:**
 
@@ -938,6 +947,16 @@ nuvarande.
       bär värmen, vilket talar för ett rakt, jämntjockt linjesnitt som inte konkurrerar med
       rubrikerna. Lucide och Tabler är båda sådana; Phosphor har mer karaktär men underhålls
       svalare.
+
+      **Beslutsunderlag byggt 2026-08-12: `docs/mockups/11b-ikoner.html`.** Samma tio ikoner ur
+      Lucide och Tabler, i 11B.0d:s valda design, med Fraunces **inbäddad i filen** — den
+      renderar alltså likadant offline och om fem år, till skillnad från de fem tidigare
+      mockuperna som hämtar typsnittet över nätet. ⏳ **Adam har ännu inte valt paket.**
+
+      **Ett fynd som ändrar Lucides kostnad:** Lucide har **ingen `history`-ikon**, kontrollerat
+      mot repots trees-API och inte antaget. Historik-fliken får då bli `calendar-days` eller
+      `rotate-ccw`. Det förra läser troligen bättre för en logg som visar pass per datum, men det
+      är ett formval och inte en teknikalitet. Tabler har en riktig `history`.
       **Klart när:** de ikoner vi faktiskt använder är kopierade som SVG-filer med ursprung och
       licens i kommentar överst, raden finns i `docs/EXTERNT.md`, och noll emoji återstår i
       `src/ui/`. **Noll nya poster i `package.json`.**

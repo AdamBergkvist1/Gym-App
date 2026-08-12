@@ -30,6 +30,8 @@ samma commit.
 | Färgvärden ur `grayDark`, `greenDark`, `amberDark`, `redDark` | [radix-ui/colors](https://github.com/radix-ui/colors) | **MIT** | `docs/DESIGN.md` §1 → `src/index.css` (fas 11B steg 4) | 2026-08-04 |
 | `handoff`-skillen, i praktiken ordagrant | [mattpocock/skills](https://github.com/mattpocock/skills) | **MIT** | `.claude/skills/handoff/SKILL.md` | 2026-08-11 |
 | Fraunces, variabel woff2 (latin) + licenstexten | [undercasetype/Fraunces](https://github.com/undercasetype/Fraunces) | **OFL-1.1** | `src/assets/fonts/fraunces-var-latin.woff2`, `src/assets/fonts/OFL.txt` → `src/index.css` (fas 11B steg 4) | 2026-08-12 |
+| 12 ikon-SVG:er, inbäddade i beslutsmockupen | [lucide-icons/lucide](https://github.com/lucide-icons/lucide) | **ISC** + **MIT** | `docs/mockups/11b-ikoner.html` | 2026-08-12 |
+| 10 ikon-SVG:er, inbäddade i beslutsmockupen | [tabler/tabler-icons](https://github.com/tabler/tabler-icons) | **MIT** | `docs/mockups/11b-ikoner.html` | 2026-08-12 |
 
 ### mattpocock/skills — `handoff`
 
@@ -114,6 +116,25 @@ typsnitt sätter alla tal.
 `npm run test/typecheck/lint/build` ur §7.3 steg 7 gick inte att köra. Ändringen lägger till
 två filer som ännu **inte importeras av någon kod**, så det finns inget att bryta — men
 `@font-face` i `src/index.css` (fas 11B steg 4) måste köras mot grindarna på jobbdatorn.
+
+### Ikonpaketen — Lucide och Tabler, tills vidare bara i mockupen
+
+- **Läget:** båda paketens SVG-kod ligger inbäddad i `docs/mockups/11b-ikoner.html`, som är
+  beslutsunderlaget för 11B.0c. **Adam har ännu inte valt paket.** När valet är gjort kopieras
+  de valda ikonerna till `src/ui/icons/` med licensrad i filhuvudet, och det förlorande paketet
+  försvinner ur mockupen först när mockupen är överspelad — den ska gå att granska i efterhand.
+- **Licenserna lästa i filen, inte ur sökträffar.** Lucides `LICENSE` innehåller **två**:
+  ISC (*Copyright (c) 2026 Lucide Icons and Contributors*) för Lucides egna, och MIT
+  (*Copyright (c) 2013-present Cole Bemis*) för de Feather-ärvda. Tabler är en enda MIT
+  (*Copyright (c) 2020-2026 Paweł Kuna*).
+- **Vilka av våra Lucide-val som är MIT och inte ISC:** `check`, `plus`, `arrow-left`,
+  `arrow-right` samt `ellipsis` — den sista står i licenslistan under sitt gamla namn
+  `more-horizontal`. Övriga (`dumbbell`, `list`, `timer`, `keyboard`, `rotate-ccw`,
+  `clock-arrow-up`, `calendar-days`) är ISC. **Väljs Lucide måste båda upphovsrättsraderna
+  följa med**, fördelade på rätt filer.
+- **Lucide saknar `history` helt**, verifierat mot repots trees-API. Tabler har den.
+- **Noll nya poster i `package.json`** i båda fallen. Ikonerna kopieras som SVG-filer, inte
+  som beroende — samma "data slår kod" som gäller Radix ovan.
 
 ---
 
