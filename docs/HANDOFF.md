@@ -1,11 +1,128 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-12 (två sessioner samma dag). Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-12 (tre sessioner samma dag). Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-12 (eftermiddag) — Fraunces och ikonerna i hus. Grindarna kunde INTE köras
+## 🆕 2026-08-12 (kväll) — Grindarna gröna. 11B.0e avgjord och sådden bevisad
+
+### Börja här — och läs detta först om du sitter på jobbdatorn
+
+**Nästa uppgift är 12.20: de sex vakterna.** Den kräver att `npm run e2e` körs.
+**Jobbdatorn saknar Node, npm, Python och `gh`** — verifierat i förra sessionen. **Går inte att
+göra där.** Skriver du testkod på jobbet blir den overifierad, vilket är exakt det
+`CLAUDE.md` regel 5 förbjuder att kalla klart.
+
+**Det som DÄREMOT går på jobbdatorn:** läsa och skriva dokument, planera vakternas påståenden,
+granska `e2e/sadd-provning.spec.ts` för hand, eller ta 12.22 (textstädningen) som ren
+redigering — men den kan inte heller stängas utan grindkörning.
+
+⏰ **Ärligast:** 12.20 hör hemma i en hemmasession. Blir det jobbdatorn imorgon, välj
+dokumentarbete och lämna kodningen.
+
+### Vad som gjordes — tre commits, alla pushade till `origin/main`
+
+| Commit | Vad |
+|---|---|
+| `d9ca9d4` | 11B.0e avgjord. 12.20:s falska skäl utbytt, 12.22:s omfång rättat |
+| `afad59a` | 12.23 och 12.24 — två hål grillningen blottade |
+| `05c21b7` | Såddprövningen körd. `e2e/sadd-provning.spec.ts` |
+
+Arbetsträdet var rent vid sessionens slut. `HEAD` = `origin/main` = `05c21b7`, kontrollerat
+efter en färsk `fetch`.
+
+### Grindarna kördes, och de förra sessionens risk höll
+
+Förra sektionen sa *"inget i den här sessionen är verifierat av dem"*. **Nu är det gjort.**
+
+| Grind | Vid sessionens start | Vid sessionens slut |
+|---|---|---|
+| `test` | 274 tester, 22 filer ✅ | oförändrat |
+| `typecheck` | ren ✅ | ren ✅ |
+| `lint` | **0 fel**, 3 varningar | oförändrat |
+| `build` | ✓ 6,68 s | ej omkörd (inga src-ändringar) |
+| `e2e` | 30 passed ✅ | **36 passed** ✅ |
+
+**Risken som pekades ut höll.** `src/ui/icons.tsx` gick genom `tsc` utan anmärkning. Kvar är
+tre `react-refresh/only-export-components`-**varningar** (rad 90, 101, 128) — de rör HMR, inte
+körkod, och lint går grönt.
+
+⚠️ **Fraunces är i repot men INTE inkopplad.** Ingen `@font-face` i `src/index.css` och
+typsnittet syns inte i `dist/`. Det är väntat — det hör till steg 4 — men förra sektionen kan
+läsas som att det vore gjort. Det är det inte.
+
+### 11B.0e är AVGJORD. Hela beslutet står i `TASKS.md`, inte här
+
+Grillad i fyra rundor, godkänd av Adam. **Läs 11B.0e i `docs/TASKS.md`** — beslutstabellen med
+nio rader ligger där. Sammanfattat: två vakter (layout respektive data), e2e som fordon för
+båda, 12.20 skrivs **före** ombyggnaden, alla sex vakterna, `role` + tillgängligt namn som
+selektorer.
+
+**Grillningen välte tre påståenden. Alla tre är rättade i `TASKS.md`:**
+
+1. **Vägskälet var inget vägskäl.** `repo.ts:156` hårdkodar `isImported: false`, och `true` kan
+   bara komma in via synken (`wire.ts:37`). Ett importerat set går alltså **inte** att skapa
+   genom att klicka i appen. Alternativet "seeda genom UI:t" existerade aldrig för punkt 3–5.
+2. **12.20:s bärande skäl mot komponenttester var falskt.** `fake-indexeddb` importeras av nio
+   testfiler och kör riktig Dexie i node — ett komponenttest hade inte mätt någon attrapp.
+   Slutsatsen (e2e) står kvar men på ett annat skäl: layout kräver riktig renderingsmotor.
+3. **12.22 är fyra gånger större än den påstod.** Minst sju strängar till, alla brödtext.
+
+### Såddprövningen: metoden håller, och risken var verklig
+
+`e2e/sadd-provning.spec.ts`, båda påståendena mätta:
+
+| | Utfall |
+|---|---|
+| Sådd rått i IndexedDB → **färsk navigering** → sidan visar raden | ✅ grönt på alla tre bredder, ~4–5 s |
+| Sådd medan sidan **redan är öppen** | ❌ når aldrig fram |
+
+**Fallbacken behövs inte.** Inget såddinsläpp, ingen byggflagga, noll ny kod i appen.
+
+⚠️ **Regeln som måste följa med till 12.20:** varje test **måste** seeda först och navigera
+sedan. `useLiveQuery` ser bara skrivningar genom Dexies eget API. Hoppas det över står sidan
+tom, och felet läser som en trasig läsväg i stället för en utebliven uppdatering.
+
+Test 2 ligger kvar som `test.fail()` i stället för att raderas — påståendet är en mätning av
+systemets beteende, och börjar det plötsligt lyckas blir körningen röd.
+
+**Hjälparna `hämtaÖvning` och `seedaRått` finns redan i filen.** 12.20 börjar inte från noll.
+
+### Två saker om arbetssättet som nästa session bör veta
+
+- **`/handoff` anropades inte som skill.** Den projektlokala i `.claude/skills/handoff/` lästes
+  och följdes för hand, eftersom förra sessionen dokumenterade att den **globala** fyrade i
+  stället. Orsaken är fortfarande outredd. ⏰ Står kvar som öppen fråga.
+- **Adam sa tre gånger att han inte kan bedöma teknisk struktur.** Grillningen ställdes om efter
+  det: tekniska val avgjordes av mig och redovisades, och bara det som var genuint hans — hans
+  data, hans tid, hans prioritering — gick till honom som frågor. **Det fungerade bättre.** Två
+  av hans inlägg ändrade designen: frågan *"finns det några nackdelar"* tvingade fram
+  `useLiveQuery`-risken, och *"testerna får inte ge felaktiga svar"* är skälet till att bara det
+  importerade setet seedas rått.
+
+  Han påpekade också, med rätta, att **haken borde ha stått i förslaget från början** i stället
+  för att grävas fram när han frågade. Lägg fram alternativ med sina nackdelar redan mätta.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/tdd`** | För 12.20. Sömmarna är nu överenskomna och godkända, vilket var villkoret 11B.0e satte. Först nu är den rätt verktyg |
+| **`/code-review`** | `7bd43b5` (ikonerna) är fortfarande ogranskad, och grindarna är nu gröna på den. Lägg `05c21b7` till samma granskning |
+| **`/diagnosing-bugs`** | Bara om något faller. Begär utskriften först — gissa inte |
+
+---
+
+## 2026-08-12 (eftermiddag) — Fraunces och ikonerna i hus. Grindarna kunde INTE köras — DELVIS ÖVERSPELAD
+
+> **⚠️ Tre saker i sektionen nedan gäller inte längre.** **(1)** *"Kör grindarna först. Inget i
+> den här sessionen är verifierat av dem"* — grindarna är körda 2026-08-12 (kväll) och alla var
+> gröna; risken i `src/ui/icons.tsx` höll. **(2)** *"Nästa uppgift: 11B.0e, och den är ett
+> riktigt vägskäl nu"* — 11B.0e är **avgjord**, och vägskälet visade sig ha ett ben som inte
+> ledde någonstans (`repo.ts:156`). **(3)** Uppmaningen att ta om sömvalet från början är
+> utförd. Resten av sektionen — mätningarna av Fraunces, ikonbytet, de tre rättelserna —
+> gäller oförändrat.
 
 ### Börja här
 
