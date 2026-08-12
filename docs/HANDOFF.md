@@ -1,12 +1,112 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-12. Läs sektionen direkt nedan — den är nyast. Sektionerna därefter är från
-2026-08-11 (tre sessioner samma dag) och har varningsrutor som säger vad i dem som inte längre
-gäller.
+**Datum:** 2026-08-12 (två sessioner samma dag). Läs sektionen direkt nedan — den är nyast.
+Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-12 — Grillning inför 11B. Temat vänt till ljust, och 11B visade sig vara halvbyggt
+## 🆕 2026-08-12 (eftermiddag) — Fraunces och ikonerna i hus. Grindarna kunde INTE köras
+
+### Börja här
+
+**Kör grindarna först. Inget i den här sessionen är verifierat av dem.**
+
+```
+git pull && npm run test && npm run typecheck && npm run lint && npm run build && npm run e2e
+```
+
+Sessionen kördes på **jobbdatorn, som saknar Node, npm, Python och `gh`** — verifierat, inte
+antaget: `node --version` ger "not recognized", och `node.exe` finns inte under
+användarprofilen. Adam fortsätter hemma. Fyra commits är pushade till `origin/main`
+(`b47c89d`, `08e8f42`, `7bd43b5`, `e2554b2`) och arbetsträdet var rent vid sessionens slut.
+
+**Riskerna sitter i `7bd43b5`**, den enda commiten med riktig komponentkod. Faller något är
+det troligast typerna i `src/ui/icons.tsx`, som aldrig gått genom `tsc`.
+
+### Vad som gjordes — detaljerna bor i commit-meddelandena, inte här
+
+| Commit | Vad |
+|---|---|
+| `b47c89d` | Fraunces som fil, OFL-1.1, registrerad i `EXTERNT.md` |
+| `08e8f42` | Ikonjämförelsen `docs/mockups/11b-ikoner.html` + rättad kartläggning |
+| `7bd43b5` | **Tabler valt av Adam.** Nio ikoner i `src/ui/icons.tsx`, sex glyfer ersatta |
+| `e2554b2` | 12.20: två påståenden rättade mot repot |
+
+**Fas 11B:s två första blockerare är därmed borta.** Fraunces ligger i
+`src/assets/fonts/fraunces-var-latin.woff2` (67 304 byte, latin, axlarna `opsz` 9–144 och
+`wght` 400–700) med `OFL.txt` bredvid sig, eftersom OFL kräver att licenstexten följer med
+fontfilen och inte bara med registerposten.
+
+### Vad som är verifierat, och exakt hur
+
+- **Fraunces mättes i webbläsaren på vår egen fil**, inte på mockupens Google-kopia: `wght`
+  lever (400 → 354,08 px, 700 → 382,03 px), `opsz` lever (9 → 381,84 px, 144 → 316,19 px), och
+  `"111"` mäter 64,88 px mot `"000"` 95,55 px. Det sista **bekräftar 11B.2-fyndet på den fil
+  som ska användas**: Fraunces saknar tabulära siffror och sätter därför bara rubriker.
+- **Ikonbytet är INTE verifierat av grindarna.** Kontrollerat för hand i stället: det finns
+  **noll komponenttester** (samtliga `*.test.ts` ligger i `db`, `lib`, `parser`, `sync`, `ai`,
+  `timer`), och båda e2e-specarna väljer på roll och tillgängligt namn — inte på `✓`, `←`, `→`
+  eller `⋯`. Det är ett argument för att de håller, **inte ett bevis**. De har inte körts.
+
+### Tre rättelser, och den mellersta är den lärorika
+
+1. **"Tabler ritar tyngre" var fel.** Påståendet byggde på **filstorlek** och presenterades som
+   en mätning. Uppmätt med `getTotalLength()` över varje geometri, vid identisk
+   `stroke-width="2"`, drar Tabler **441 enheter mot Lucides 470** — alltså 6 % *mindre* linje.
+   Skillnaden i filstorlek kommer från metadatakommentaren överst i Tablers filer och den
+   radbrutna attributformateringen. **Proxymått är inte mätningar.**
+2. **12.20 påstod att `jsdom` saknades.** Det ligger redan i `package.json` (`^28.0.0`) och
+   används av ingenting — `vite.config.ts:63` sätter `environment: 'node'` och ingen fil
+   åsidosätter det. ⏰ **Oanvänt beroende, värt en egen städuppgift.**
+3. **12.20 påstod att sådd via `page.evaluate()` var ett bevisat mönster.** Alla fyra
+   `evaluate()`-anropen i `e2e/` är avläsningar — mått, scroll, overflow. `bottenark` såddar
+   genom att **klicka sig genom UI:t**. 13.5 var en handpåläggning mot dev-servern.
+
+### Nästa uppgift: 11B.0e, och den är ett riktigt vägskäl nu
+
+Rättelse 3 ändrade uppgiften. Valet står mellan att **seeda genom UI:t**, som `bottenark`
+redan gör och som kräver noll nya sömmar, och att **bygga ett såddinsläpp** — vilket är en
+skrivväg rakt in i användarens databas och måste gränsas av en byggflagga, annars följer den
+med produktionsbundlen (`CLAUDE.md` regel 4).
+
+**Ett förslag lades fram och ska inte behandlas som avgjort.** Det argumenterade för ett
+såddinsläpp som "enda söm", på en premiss som visade sig oriktig, och avfärdade `data-testid`
+utan att nämna motargumentet: våra tillgängliga namn **är** svensk apptext, och **12.22 är en
+öppen uppgift som ska ändra apptext**. Textkopplade selektorer har alltså en inbokad
+brytpunkt. Ta om beslutet från början.
+
+⏰ **Gör det inte i en tjugominuterslucka.** Det formar hela steg 4, och projektets dyraste
+misstag — lime — var ett grundbeslut fattat snabbt.
+
+### Två saker om verktygen som nästa session bör veta
+
+- **`/handoff` fyrade av den globala skillen**, inte projektets: basmappen blev
+  `~\.claude\skills\handoff`, vars text säger "spara i OS:ets temp-katalog". Det är exakt den
+  mening projektkopian i `.claude/skills/handoff/` bytte ut. Den här filen skrevs enligt
+  **projektets** version, eftersom `CLAUDE.md` regel 5 går före. ⏰ Värt att reda ut varför
+  den projektlokala inte vann.
+- **Webbläsarpanelen fungerar utan dev-server.** `preview_start` med en `file://`-adress
+  renderar en fristående HTML-fil, och skript körs. Det var så både typsnittet och
+  linjelängderna mättes utan Node. Beskärande `zoom` stöds däremot inte.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/grilling`** | **Före** 11B.0e. Sömvalet är ett grundbeslut med ett äkta vägskäl och ett förslag som redan visat sig vila på fel premiss. Det ska motsägas innan något skrivs, inte efteråt |
+| **`/code-review`** | Efter att grindarna körts grönt på `7bd43b5`. Den enda commiten med komponentkod, och den är oreviderad |
+| **`/diagnosing-bugs`** | Bara om grindarna faller. Begär utskriften först — gissa inte |
+| **`/tdd`** | Efter att 0e:s sömmar är beslutade och godkända, inte före. Utan överenskomna sömmar blir varje test en granskningsanmärkning |
+
+---
+
+## 2026-08-12 (förmiddag) — Grillning inför 11B. Temat vänt till ljust, och 11B visade sig vara halvbyggt — DELVIS ÖVERSPELAD
+
+> **⚠️ Punkt 1 och 2 i "Börja här" nedan är utförda 2026-08-12 (eftermiddag).** Fraunces är
+> hämtad som fil och ikonpaketet är valt och inkopplat — se sektionen överst. Punkt 3 (11B.0e)
+> och punkt 4 (`/implement`) står kvar, men **11B.0e:s förutsättningar har ändrats**: två av
+> premisserna i uppgift 12.20 var felaktiga och är rättade. Resten av sektionen — designen,
+> mätningarna, de sex omgångarna — gäller oförändrat.
 
 ### Börja här
 
