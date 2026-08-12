@@ -880,20 +880,30 @@ nuvarande.
       Det står i direkt konflikt med förbudslistan i §0.3, och konflikten är Adams beslut att
       lösa åt ikonernas fördel.
 
-      **Sex förekomster, mätta och inte antagna:**
+      **Sex förekomster, mätta och inte antagna. Notera att de INTE har samma öde** — den
+      första ersätts inte av en ikon utan tas bort helt:
 
-      | Fil | Vad |
-      |---|---|
-      | `src/ui/ExerciseCard.tsx:65` | **🏋** i övningens ikonruta |
-      | `src/ui/SetRow.tsx:136` | `✓` som bekräfta-knapp |
-      | `src/ui/ExerciseCard.tsx:140` | `✓` |
-      | `src/ui/SetAdjustSheet.tsx:224` | `✓` för uppvärmningsset |
-      | `src/ui/pages/ExercisePage.tsx:58` | `←` tillbaka |
-      | `src/ui/pages/HistoryPage.tsx:89` | `→` |
+      | Fil | Vad | Vad som ska hända |
+      |---|---|---|
+      | `src/ui/ExerciseCard.tsx:65` | **🏋** i övningens ikonruta | ⛔ **RADERAS.** Hela `<span>`-rutan går bort och ersätts av accentbrickan (10 × 34 px, ingen symbol). **Leta inte efter en skivstångsikon** |
+      | `src/ui/SetRow.tsx:136` | `✓` bekräfta-knapp | → ikon ur paketet |
+      | `src/ui/ExerciseCard.tsx:140` | `✓` | → ikon ur paketet |
+      | `src/ui/SetAdjustSheet.tsx:224` | `✓` uppvärmningsset | → ikon ur paketet |
+      | `src/ui/pages/ExercisePage.tsx:58` | `←` tillbaka | → ikon ur paketet |
+      | `src/ui/pages/HistoryPage.tsx:89` | `→` | → ikon ur paketet |
 
-      🏋 är den allvarligaste: den sitter i ikonrutan som `DESIGN.md` §0.5 kallar "den enskilt
-      viktigaste ändringen" för att ge appen färg. `✓`, `←` och `→` är teckensnittsglyfer, inte
-      emoji, men de ärver textens tjocklek och ser tillfälliga ut bredvid riktiga ikoner.
+      **Om 🏋 särskilt.** Samma tecken används i dag för **varje** övning oavsett vad den är,
+      vilket är symtomet på att ingen någonsin löst frågan "vilken ikon har en lårcurl". B4
+      gör frågan onödig i stället för att svara på den. Emojin försvinner alltså helt ur appen,
+      men den blir inte en ikon — den blir en färgad stapel utan symbol.
+
+      `✓`, `←` och `→` är teckensnittsglyfer, inte emoji, men de ärver textens tjocklek och ser
+      tillfälliga ut bredvid riktiga ikoner. De fem ersätts av SVG-ikoner.
+
+      **Full lista på vad paketet behöver täcka (~10):** fyra flikikoner (Pass, Historik,
+      Övningar, Mer), bock, plus, tillbakapil, menypunkter, klocka för timern, och eventuellt
+      tangentbord för fritextgenvägen. Alla finns redan tecknade som egna SVG:er i mockuperna
+      under `docs/mockups/`, så formen är prövad.
 
       **Tre licensklarade kandidater, kontrollerade 2026-08-12 enligt §7.2:**
 
