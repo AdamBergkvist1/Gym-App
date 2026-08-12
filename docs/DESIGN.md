@@ -216,14 +216,35 @@ pixlar, vilket både ser djupare ut och drar mindre ström under ett långt pass
 **Följd:** PWA-manifestets `theme_color` och `background_color` måste ändras i samma commit,
 annars blir startskärmen och statusraden en annan svärta än appen.
 
-### Formspråk
+### Formspråk — UPPDATERAT 2026-08-12 efter formvalet
 
-- **Radie 16 px** på kort och ark (`--radius-card`). Knappar och chips: pillerform.
-- **Ikonruta per övning:** 36 × 36 px, radie 10 px, fylld med accentfärgen. Detta är den
-  enskilt viktigaste ändringen — den ger färg åt en skärm som annars är svartvit.
+- **Radie 18 px** på övningsytor och ark (`--radius-card`). Knappar och chips: pillerform.
+  Höjt från 16 px i formvalet.
+- **Accentbricka per övning:** 10 × 34 px, radie 5 px, fylld med accentfärgen, till vänster om
+  övningsnamnet.
 - **Navigeringen flyter:** pillerformad, indragen från kanterna, med accentfylld markering av
   aktiv flik. Inte en fastsittande list över hela bredden.
 - **Timer och PB som chips** överst i passet, inte som lager över innehållet.
+
+> ### 🔄 Ikonrutan är struken. Detta motsäger raden som stod här tidigare
+>
+> Här stod: *"Ikonruta per övning: 36 × 36 px, radie 10 px, fylld med accentfärgen. Detta är den
+> enskilt viktigaste ändringen — den ger färg åt en skärm som annars är svartvit."*
+>
+> **Den raden var rätt när den skrevs och fel nu.** Den skrevs 2026-08-05 för en app med **svart**
+> bakgrund, där en färgad kvadrat per rad var det enda som räddade skärmen från att vara helt
+> svartvit. Ljust tema löser det problemet på annat sätt, och Adam pekade i formvalet ut ikonrutan
+> som en del av det han kallade basic: *"Kort med rundade hörn och en ikonruta till vänster är ett
+> mönster nästan varje modern app använder."*
+>
+> **Ersättaren gör samma jobb billigare.** Accentbrickan är en smal fylld stapel i stället för en
+> kvadrat med en symbol i. Den ger färg åt raden, markerar var en övning börjar, och kräver
+> **ingen ikon per övning** — vilket den gamla lösningen gjorde, och som ingen någonsin löst
+> (🏋 användes för samtliga övningar).
+>
+> **Följd för uppgift 11B.0c:** ikonbehovet krymper. Kvar är navigeringens fyra flikar, bocken,
+> plus, tillbakapil och menypunkterna, alltså omkring tio ikoner totalt. Ingen övningsspecifik
+> ikonuppsättning behövs, och det var den svåra delen.
 
 ### Vad som INTE ändras
 
@@ -579,10 +600,53 @@ Gul bar två betydelser: *"osäkert, bekräfta"* och *"uppvärmning"*. Liftosaur
 värde långt utanför det typiska. Efter detta betyder gul en enda sak, och då betyder den
 något.
 
+### ✅ FORMEN: B4 "Blad, indraget", vald av Adam 2026-08-12
+
+Vald ur `docs/mockups/11b-form-blandningar.html` efter två omgångar. Först tre former (Kort,
+Papper, Blad), där Adam valde Blad men också gillade Papper. Sedan fyra blandningar av de två.
+
+**Varför blandningarna blev fyra och inte två.** Papper och Blad skiljer sig på **fyra
+oberoende axlar**, inte på en. Att blanda dem på känsla hade gett fyra ungefärliga mellanlägen
+där det efteråt vore omöjligt att veta vad som gillades. Axlarna varierades därför en i taget:
+
+| Axel | Papper | Blad | **B4, valt** |
+|---|---|---|---|
+| Yta | bara papper | vitt blad | **vitt blad** |
+| Bredd | marginaler | kant till kant | **indraget** |
+| Rubrik | på papperet | inuti ytan | **inuti ytan** |
+| Markör | ingen | accentstreck | **accentbricka** |
+
+**Vad B4 är.** Övningen är en vit yta med 18 px radie, indragen 16 px från skärmkanterna.
+Överst i ytan ligger övningsnamnet i Fraunces med en metarad under (utrustning, antal set,
+volym), och till vänster om namnet en **accentbricka** på 10 × 34 px. Setraderna följer
+därunder, bekräftade set får `--color-ok-bg`, och "Lägg till set" avslutar ytan under en
+hårfin linje.
+
+**Vad som lånades från vardera.** Från Blad: accenten som markör i stället för som ikonruta.
+Från Papper: att rubrik och metarad hör ihop och ligger tillsammans överst.
+
+**Metaraden är ny och kompenserar något konkret.** När ikonrutan försvann tappade raden sin
+enda visuella hållpunkt utöver namnet. Metaraden ger tillbaka den informationen i text
+(`Skivstång · 3 set · 1 385 kg`) i stället för i en symbol, vilket dessutom säger mer.
+
+**Den ärliga invändningen, som står kvar:** B4 ligger närmast det mönster Adam själv kallade
+basic. Skillnaden mot ett vanligt kort är brickan i stället för ikonrutan, och rubriken i
+Fraunces. Om appen fortfarande känns generisk när den byggts är det **B3 Kantlöst papper** som
+är nästa sak att prova, inte en ny accentfärg. Mockupen ligger kvar för det ändamålet.
+
+---
+
 ### Genomgående mönster
 
-**Kortet.** `--color-surface`, radie 12 px, `--color-line` som ram, `--space-3` inuti,
-`--space-3` mellan kort. Ingen skugga — skuggor på nästan svart är brus.
+> **⚠️ Stycket om kortet nedan är skrivet för mörkt tema och är delvis överspelat.**
+> Radie 12 px gäller inte (18 px), och ramen `--color-line` ersätts av skugga: på ljus botten
+> är skuggor inte brus utan det som får ytan att lyfta. Separationen mellan yta och papper är
+> bara 1,19:1, så skuggan bär avgränsningen. Se §0.5.
+
+**Kortet.** ~~`--color-surface`, radie 12 px, `--color-line` som ram, `--space-3` inuti,
+`--space-3` mellan kort. Ingen skugga — skuggor på nästan svart är brus.~~
+**Gäller nu:** `--color-surface` (rent vitt), radie 18 px, ingen ram, skugga
+`0 1px 2px rgba(60,45,25,.06), 0 6px 18px rgba(60,45,25,.085)`, indragen 16 px från kanterna.
 
 **Sidrubrik.** `--text-title`, och till höger på samma rad en sammanfattning i
 `--text-meta`. Rubriken tar aldrig en egen rad för sig själv; skärmhöjd är dyrare än luft.
@@ -620,7 +684,43 @@ siffran *är* innehållet.
 Raden under "Kopiera förra passet" är ny och löser ett verkligt problem: i dag vet man inte
 vad man kopierar förrän efteråt.
 
-**Med pågående pass:**
+**Med pågående pass. UPPDATERAD 2026-08-12 till B4** — skissen nedan visade tidigare ikonrutan
+och en enkel kortrubrik. Så ser formen inte ut längre:
+
+```
+┌──────────────────────────────────┐
+│ Pass                     42 min  │  Fraunces 32 px
+│ ┌──────────────────────────────┐ │
+│ │   12   │  4 850  │     3     │ │  en yta, tre fält, hårfina
+│ │  SET   │VOLYM KG │    ÖVN    │ │  linjer emellan
+│ └──────────────────────────────┘ │
+│ ┌──────────────────────────────┐ │  vit yta, radie 18,
+│ │ ▍ Bänkpress             ⋯    │ │  indragen 16 px
+│ │ ▍ Skivstång · 3 set · 1385kg │ │  ▍ = accentbricka 10×34
+│ │   Set  Förra   Kg  Reps   ✓  │ │  metarad --text-meta
+│ │    1   92,5×5  92,5   5   ●  │ │  klar: --color-ok-bg
+│ │    2   90×5    90     5   ●  │ │
+│ │    3   90×5    90     5   ○  │ │  48 px, väntar
+│ │ ─────────────────────────────│ │  hårfin linje
+│ │   + Lägg till set            │ │
+│ └──────────────────────────────┘ │
+│  ⏱ 1:12        PB +2,5 kg        │  chips
+│ ┌──────────────────────────────┐ │
+│ │ ▍ Latsdrag              ⋯    │ │
+│ │ ▍ Kabel · inga set än        │ │
+│ └──────────────────────────────┘ │
+│  + Lägg till övning              │
+│  ✓ Avsluta pass                  │  fylld accent
+└──────────────────────────────────┘
+```
+
+**Tre ändringar mot den gamla skissen.** Sammanfattningen blev **en** yta med tre fält i
+stället för tre fristående, vilket ger färre kanter på en skärm som redan har många.
+Ikonrutan är utbytt mot accentbrickan. Övningen fick en **metarad** som bär den information
+ikonrutan aldrig bar.
+
+<details>
+<summary>Den gamla skissen, för jämförelse</summary>
 
 ```
 ┌──────────────────────────────────┐
@@ -649,6 +749,7 @@ vad man kopierar förrän efteråt.
 │  ✓ Avsluta pass                  │
 └──────────────────────────────────┘
 ```
+</details>
 
 **Tre beslut i den här skissen:**
 

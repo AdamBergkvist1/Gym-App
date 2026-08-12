@@ -914,8 +914,20 @@ nuvarande.
       **Noten om Phosphor:** 361 stjärnor gäller tillgångsrepot `phosphor-icons/core`, inte
       organisationens huvudsida, och är inte jämförbart. Underhållet är däremot mätbart svalare.
 
-      **Valet görs INTE förrän karaktärsriktningen är vald** (11B.0d) — ikonstil, alltså rundad
-      mot skarp och tunn mot fet, följer av karaktären och inte tvärtom.
+      **UPPGIFTEN KRYMPTE 2026-08-12 när formen valdes.** B4 ersätter ikonrutan med en
+      accentbricka, alltså en fylld stapel utan symbol i. Det betyder att **ingen
+      övningsspecifik ikonuppsättning behövs** — och det var den svåra delen, den som aldrig
+      lösts (🏋 användes för samtliga övningar oavsett vad de var).
+
+      **Kvar att ersätta: omkring tio ikoner totalt.** Navigeringens fyra flikar, bocken, plus,
+      tillbakapil och menypunkterna. Alla mockuper från 11B.0d använder egna minimala SVG:er för
+      just dessa, så formen är redan prövad och det som återstår är att välja ett paket med
+      konsekvent linjetjocklek.
+
+      **Valet görs nu när karaktären är vald.** Bläck med Fraunces är återhållsam och seriffen
+      bär värmen, vilket talar för ett rakt, jämntjockt linjesnitt som inte konkurrerar med
+      rubrikerna. Lucide och Tabler är båda sådana; Phosphor har mer karaktär men underhålls
+      svalare.
       **Klart när:** de ikoner vi faktiskt använder är kopierade som SVG-filer med ursprung och
       licens i kommentar överst, raden finns i `docs/EXTERNT.md`, och noll emoji återstår i
       `src/ui/`. **Noll nya poster i `package.json`.**
@@ -939,8 +951,30 @@ nuvarande.
       **Leverans:** HTML-filer i `docs/mockups/`, **committade**. De tre riktningarna från
       2026-08-05 finns inte kvar någonstans, så beslutet "Adam valde lime" går inte att granska
       i efterhand. Den förlusten upprepas inte.
-      **Klart när:** Adam har pekat ut en riktning och en layout, och `DESIGN.md` §0.5 och §1
-      är omskrivna med uppmätta värden mot ljus botten.
+
+      ### ✅ KLAR 2026-08-12. Fem mockupfiler, sex omgångar.
+
+      | Fil | Vad den avgjorde |
+      | :--- | :--- |
+      | `11b-riktningar.html` | Tre ljusa karaktärer. Adam: C bäst, men vill ha A:s värme |
+      | `11b-riktning-d.html` | C-struktur med A-värme, tre accenter |
+      | `11b-papper-och-accent.html` | Papper och accent skilda åt, 5 + 6 alternativ |
+      | `11b-slutlig-fargvanda.html` | Sex färdiga kombinationer + typsnitt. **Bläck valt** |
+      | `11b-form-blandningar.html` | Fyra blandningar av Papper och Blad. **B4 valt** |
+
+      **Resultatet:** papper `#F0EBE1`, accent `#2B4570`, Fraunces i rubriker, form B4
+      "Blad, indraget". Allt inskrivet i `DESIGN.md` §0.5, §3 och Formspråk.
+
+      **Två fynd som kom ur mätning, inte ur tycke:**
+      1. Den valda kombinationen hade **1,01:1 separation** mellan kort och papper. Korten
+         syntes bara via skuggan. Papperet fördjupades och korten blev rent vita, vilket gav
+         1,19:1. Det förklarade Adams "lite tråkigt" bättre än accentfärgen gjorde.
+      2. **Fraunces saknar tabulära siffror.** Därför sätter den bara rubriker, och systemets
+         typsnitt sätter alla tal. Det är ett krav ur 11B.2, inte en smakfråga.
+
+      **Kvar innan implementation:** Fraunces ska hämtas som fil enligt §7.3 och registreras i
+      `docs/EXTERNT.md`. Mockuperna laddar den från Google Fonts, vilket duger för ett val men
+      inte för appen — ett externt anrop vid varje sidladdning motsäger offline-first.
 
 - [ ] **11B.0e Testsömmarna bestäms innan skärmarna byggs. Ny 2026-08-12.**
       Lånad från `/to-spec`, som gör en sak våra dokument inte gör: skissar sömmarna **innan**

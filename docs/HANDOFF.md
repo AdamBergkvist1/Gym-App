@@ -10,10 +10,64 @@ gäller.
 
 ### Börja här
 
-1. **Bygg de tre karaktärsriktningarna** som HTML i `docs/mockups/` (uppgift **11B.0d**). Det
-   är nästa konkreta arbete och ingenting annat i 11B får göras före det.
-2. Adam väljer riktning, sedan två layoutförslag i den vunna karaktären.
-3. Först därefter `/implement` mot `DESIGN.md` §3.
+**11B.0d är KLAR.** Designen är vald, mätt och inskriven. Nästa arbete i ordning:
+
+1. **Hämta Fraunces som fil** enligt `CLAUDE.md` §7.3 och registrera i `docs/EXTERNT.md`.
+   Mockuperna laddar den från Google Fonts, vilket duger för ett val men **inte för appen**:
+   ett externt anrop vid varje sidladdning motsäger offline-first. Detta blockerar
+   implementationen, eftersom rubrikerna är Fraunces.
+2. **11B.0c ikonpaketet** — uppgiften krympte till omkring tio ikoner, se nedan.
+3. **11B.0e testsömmarna**, innan skärmarna byggs.
+4. Först därefter `/implement` mot `DESIGN.md` §3, i ordningen som står i
+   "Implementationsordning för steg 4": tokens, Pass, Historik, Statistik, Övningar, Mer.
+
+### Designen som gäller, i en tabell
+
+| | |
+| :--- | :--- |
+| **Papper** | `#F0EBE1` |
+| **Kort** | `#FFFFFF`, radie 18 px, skugga, indraget 16 px |
+| **Accent** | `#2B4570` marinblå |
+| **Rubriker** | Fraunces (OFL) |
+| **Siffror** | systemets typsnitt, **inte** Fraunces |
+| **Form** | B4 "Blad, indraget" — accentbricka 10 × 34 px, ingen ikonruta |
+
+### Sex omgångar, fem mockupfiler, alla committade
+
+`11b-riktningar` → `11b-riktning-d` → `11b-papper-och-accent` → `11b-slutlig-fargvanda`
+→ `11b-form` → `11b-form-blandningar`. Alla ligger i `docs/mockups/` så att varje beslut går
+att granska i efterhand. Det gick **inte** för lime-valet i augusti, vars mockuper är borta.
+
+**Metoden som fungerade:** variera en axel i taget. När Adam gillade två olika former visade
+det sig att de skiljde sig på **fyra oberoende axlar** (yta, bredd, rubrikens plats, markör).
+Att blanda dem på känsla hade gett fyra ungefärliga mellanlägen där ingen efteråt kunde säga
+vad som gillades. Varierade en i taget blev valet entydigt.
+
+### Tre fynd som kom ur mätning, inte ur tycke
+
+1. **Separationen 1,01:1.** Kombinationen Adam valde hade i praktiken ingen skillnad mellan
+   kort och papper; korten syntes bara via skuggan. Det förklarade hans *"kanske är lite
+   tråkigt"* bättre än accentfärgen gjorde. Papperet fördjupades till `#F0EBE1` och korten
+   blev rent vita, vilket gav 1,19:1 — exakt samma värde som den varmare kombination han
+   först drogs till. Djupare papper förkastades: vid `#ECE6DA` faller sekundärtexten till
+   4,37:1 och klarar inte AA.
+2. **Fraunces saknar tabulära siffror.** Mockupen testade det själv genom att jämföra bredden
+   på "111" och "000". Därför sätter Fraunces **bara rubriker**. Det är ett krav ur 11B.2, inte
+   en smakfråga, och det är hela skälet till uppdelningen mellan rubrik- och sifferfont.
+3. **Riktning A föll på AA** i första omgången (sekundärtext 3,88:1 mot kravet 4,5) och
+   mörkades till `#756C5F` innan den skickades. En riktning som faller på projektets eget krav
+   ska inte ställas som ett val.
+
+### Ikonrutan är struken, och det motsäger §0.5 med flit
+
+`DESIGN.md` §0.5 kallade ikonrutan *"den enskilt viktigaste ändringen"*. Den raden var rätt när
+den skrevs för **svart** bakgrund, där en färgad kvadrat per rad var det enda som räddade
+skärmen från att vara svartvit. Ljust tema löser det annorlunda, och Adam pekade ut ikonrutan
+som en del av det han kallade basic.
+
+**Följden är att 11B.0c krympte betydligt:** ingen övningsspecifik ikonuppsättning behövs, och
+det var den svåra delen. Kvar är omkring tio ikoner (fyra flikar, bock, plus, tillbakapil,
+menypunkter). Formen på dem är redan prövad i mockuperna.
 
 **Arbetsträdet var rent vid sessionens slut.** Grindarna kördes **på jobbdatorn** och alla fem
 var gröna: **274 tester, 30 e2e (WebKit), typecheck, lint, bygge**. Inte antaget.
