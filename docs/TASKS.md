@@ -1021,20 +1021,60 @@ nuvarande.
       de är beslutsunderlag, inte produktionskod. **`@font-face` är ännu inte skriven**; den
       hör till steg 4 i `src/index.css`.
 
-- [ ] **11B.0e Testsömmarna bestäms innan skärmarna byggs. Ny 2026-08-12.**
-      Lånad från `/to-spec`, som gör en sak våra dokument inte gör: skissar sömmarna **innan**
-      prosan skrivs och stämmer av dem. Skälet att låna just den biten är att `/tdd` och
-      `/code-review` båda arbetar mot överenskomna sömmar — en söm ingen kommit överens om dyker
-      upp som en granskningsanmärkning.
+- [x] **11B.0e Testsömmarna bestäms innan skärmarna byggs. AVGJORD 2026-08-12 (kväll).**
+      Grillad i sin helhet. Adam godkände beslutstabellen samma kväll. Skälet att sömmarna
+      bestäms först är att `/tdd` och `/code-review` båda arbetar mot överenskomna sömmar —
+      en söm ingen kommit överens om dyker upp som en granskningsanmärkning.
 
-      **Varför `/to-spec` inte körs i sin helhet:** den publicerar specen som ett issue i
-      `.scratch/`, som är gitignorerad och slängbar. Besluten hör hemma i `SPEC.md`, `DESIGN.md`
-      och den här filen, som regel 1 kräver. En tredje kopia i den enda mapp som inte överlever
-      löser inget.
+      **Varför `/to-spec` inte kördes:** den publicerar specen som ett issue i `.scratch/`,
+      som är gitignorerad och slängbar. Besluten hör hemma här, som regel 1 kräver.
 
-      Hör ihop med **12.20** (`ui/` har noll tester). Färre sömmar är bättre; en är idealet.
-      **Klart när:** sömmarna för 11B:s skärmar står skrivna här eller i 12.20, och Adam har
-      sagt ja till dem.
+      ### Grillningen välte tre påståenden. Läs dem innan något byggs
+
+      1. **Vägskälet var inget vägskäl.** `repo.ts:156` sätter `isImported: false` hårdkodat,
+         och `true` kan bara komma in via synken (`wire.ts:37`). **Det går alltså inte att
+         skapa ett importerat set genom att klicka i appen** — importfunktionen finns inte
+         (12.9 är öppen). Punkt 3, 4 och 5 i 12.20, som 12.20 själv kallar *"de intressanta"*,
+         är därmed omöjliga att seeda genom UI:t. Alternativet "seeda genom UI:t" existerar
+         inte för dem.
+      2. **12.20:s bärande skäl mot komponenttester är falskt.** Se rättelsen i 12.20 nedan.
+      3. **12.22 är dubbelt så stor som den påstår.** Se 12.22.
+
+      ### Besluten
+
+      | # | Beslut |
+      |---|---|
+      | 1 | **Två vakter, inte en.** Vakt B = *"skärmen renderar och får plats"*. Vakt A = *"skärmen visar rätt data"* (12.20). De har olika livslängd och olika värde |
+      | 2 | **E2E för båda.** Det bärande skälet är att layout bara kan mätas i en riktig renderingsmotor. **Inte** det skäl som stod i 12.20 |
+      | 3 | **12.20 skrivs FÖRE ombyggnaden.** Går ett text-och-tal-test sönder av en ren omdesign, då ändrade omdesignen beteendet — och det är precis vad man vill få veta |
+      | 4 | **Dev är enda målet.** Att sviten aldrig rört produktionsbygget bryts ut till **12.23** |
+      | 5 | **Alla sex vakterna i 12.20.** Punkt 3 påstår att notisen *syns*, aldrig vad den *lyder* — annars spräcker 12.22 den |
+      | 6 | **Sådd: testet skriver rått i IndexedDB och laddar sedan om sidan.** Noll ny kod i appen. **Bara det importerade setet seedas rått** — det vanliga skapas genom appen, som en riktig användare |
+      | 7 | **Selektorer: `role` + tillgängligt namn.** `data-testid` bara där tillgängligt namn saknas |
+      | 8 | **Vakt B utökas** från tre rutter till fem skärmar, plus ett *"renderar alls"* per skärm |
+      | 9 | **Ordning:** prövning av sådden → 12.20 → vakt B → steg 4 |
+
+      ### Varför bara det importerade setet seedas rått
+
+      Adam under grillningen: *"man måste se till att testerna faktiskt är rätt och inte ger
+      felaktiga svar"*. Rå sådd går förbi `repo.ts` och kan därför skriva en rad appen aldrig
+      hade kunnat skapa. Testet blir då grönt mot data som inte kan existera. **Falskt grönt är
+      värre än rött.** Därför skapas allt som *kan* skapas genom appen, genom appen.
+
+      ### Den öppna risken — prövningen finns för den
+
+      `useLiveQuery` lyssnar på **Dexies** ändringsspårning. En rå IndexedDB-skrivning går förbi
+      Dexie och kanske aldrig når sidan. Motmedlet är att seeda först och **ladda om sidan**
+      sedan, så att sidan läser färskt vid montering i stället för att förlita sig på en
+      liveuppdatering. Så gick handpåläggningen till 2026-08-11.
+
+      ⚠️ **Detta är obevisat i Playwright.** Därför är första jobbet en liten prövning som bara
+      ska svara *"går det?"*. **Faller den: bygg i stället ett såddinsläpp i appen bakom
+      `import.meta.env.DEV`**, och bevisa att det är struket ur produktionsbygget genom att söka
+      igenom den byggda filen. Adam valde det framför att släppa punkt 3–5, eftersom buggarna i
+      13.3–13.5 är av den tysta sorten som visar fel siffror utan att krascha.
+
+      **Klart när:** ✅ uppfyllt — sömmarna står skrivna här och Adam har sagt ja.
 
 **11B.1–11B.9 nedan är implementation av briefen.** Ingen av dem är ett eget designbeslut
 längre — värdena kommer från `DESIGN.md`. Motsäger en uppgift briefen är det briefen som
@@ -1767,11 +1807,19 @@ och 13.1 måste vara klar före 13.6.
       att bevisa något ett test borde bevisat. `ExercisePage` kan sluta rendera helt utan att
       typecheck, lint eller bygge säger ett ord.
 
-      **Varför e2e och inte enhetstester på komponenterna.** Sidorna läser genom `useLiveQuery`
-      mot Dexie, så ett jsdom-test hade mätt en attrapp av databasen i stället för databasen.
-      Det är skälet som bär. Playwright finns redan och kör riktig WebKit på 393 px.
+      **Varför e2e och inte enhetstester på komponenterna. OMSKRIVET 2026-08-12 (kväll) — det
+      gamla skälet var falskt.** Slutsatsen står kvar, men den vilade på ett påstående som inte
+      höll, och ett argument som råkar leda rätt är fortfarande ett dåligt argument.
 
-      ⚠️ **Två påståenden i den här uppgiften var fel. Rättade 2026-08-12 mot repot.**
+      **Det som bär:** vakt B mäter **layout** — får sidan plats på 375 px, sticker något
+      utanför. Layout kan bara mätas i en riktig renderingsmotor. I jsdom har ingenting någon
+      storlek, så varje mått ljuger. Playwright finns redan och kör riktig WebKit på tre
+      mobilbredder. Vakt A hade kunnat köras som komponenttest, men att underhålla två
+      testfordon för att vinna lite fart på halva sviten lönar sig inte — och det hade kostat
+      en post i `package.json`, vilket den här uppgiftens eget "Klart när" förbjuder.
+
+      ⚠️ **TRE påståenden i den här uppgiften var fel. Två rättades 2026-08-12 (dag), det
+      tredje samma kväll under grillningen av 11B.0e.**
 
       1. **`jsdom` saknas inte.** Det ligger redan i `package.json` (`^28.0.0`) — och används
          av ingenting. Kontrollerat mot `src/`, `e2e/`, `scripts/` och `playwright.config`:
@@ -1784,11 +1832,27 @@ och 13.1 måste vara klar före 13.6.
          13.5 var en handpåläggning mot dev-servern (`HANDOFF.md`: *"seedad IndexedDB …
          seedraderna raderades efteråt"*), inte något automatiserat. Tekniken fungerar alltså,
          men det som är prövat i repot är **noll nya sömmar** — inte en.
+      3. **"Ett jsdom-test hade mätt en attrapp av databasen" är fel.** `fake-indexeddb` ligger
+         i `package.json` och importeras av **nio testfiler** (`import 'fake-indexeddb/auto'`),
+         som sedan kör `createTestDb()` från `db.ts:61`. Det är riktig Dexie mot riktig
+         IndexedDB-semantik i node — exakt den stack 274 gröna tester redan står på. Ingen
+         attrapp någonstans. Det enda som saknades för ett komponenttest var
+         `@testing-library/react`, precis som rättelse 1 säger. **Skälet som kallades "det som
+         bär" bar alltså ingenting.** Slutsatsen (e2e) står kvar, men på ett annat skäl — se
+         ovan.
 
-      **Följden för 11B.0e:** valet står mellan att seeda genom UI:t, som `bottenark` redan
-      gör, och att bygga ett såddinsläpp. Det senare är en skrivväg rakt in i användarens
-      databas och måste då gränsas av en byggflagga, annars följer den med
-      produktionsbundlen. Det är ett beslut, inte en formalitet.
+      **Följden för 11B.0e — AVGJORD 2026-08-12 (kväll), se 11B.0e för hela beslutet.**
+      Det påstådda vägskälet visade sig ha ett ben som inte leder någonstans: `repo.ts:156`
+      hårdkodar `isImported: false`, och `true` kan bara komma in via synken (`wire.ts:37`).
+      **Ett importerat set går alltså inte att skapa genom att klicka i appen**, vilket gör
+      punkt 3–5 nedan omöjliga att seeda den vägen. Beslutet blev: **testet skriver rått i
+      IndexedDB och laddar om sidan** — noll ny kod i appen — och **bara det importerade setet**
+      seedas så. Faller prövningen byggs ett såddinsläpp bakom `import.meta.env.DEV`.
+
+      **Selektorer:** `role` + tillgängligt namn, som båda befintliga specar redan använder.
+      `data-testid` bara där tillgängligt namn saknas. 12.22 rör ingen knapptext, bara brödtext,
+      så texten är stabil nog — men **punkt 3 nedan påstår att notisen syns, aldrig dess
+      lydelse**.
 
       **Det som ska automatiseras är exakt det jag gjorde manuellt 2026-08-11:** seeda sju
       importerade bänkset plus ett riktigt, öppna `/ovning/<id>`, och läsa av sidan.
@@ -1799,6 +1863,7 @@ och 13.1 måste vara klar före 13.6.
       1. Övningssidan renderar över huvud taget (rubrik = övningens namn).
       2. Tyngsta set och bästa e1RM visar rätt siffror med decimal — regressionsvakt för 12.18.
       3. Importnotisen syns när importerade set finns, och **inte** när de saknas (13.5).
+         ⚠️ **Påstå att den syns — aldrig vad den lyder.** 12.22 skriver om just den meningen.
       4. Passlistan visar det vanliga passet men inte det importerade (13.3).
       5. `FÖRRA`-kolumnen är tom när enda tidigare setet är importerat (13.4).
       6. Inga konsolfel under hela flödet.
@@ -1810,10 +1875,17 @@ och 13.1 måste vara klar före 13.6.
       trasig `ExercisePage` (t.ex. borttagen importnotis) gör den röd. Noll nya poster i
       `package.json`.
 
-      **Att göra först:** en grillning. Adam 2026-08-11: *"behövs väl allmänt sen en grill
-      session för varje stor viktig uppgift"*. Frågan att grilla är vilka påståenden ovan som
-      faktiskt är värda underhållskostnaden — ett e2e-test som ingen litar på är dyrare än
-      inget test.
+      **Grillningen är gjord 2026-08-12 (kväll)** — den låg som förutsättning här och kördes
+      som en del av 11B.0e. Adam 2026-08-11: *"behövs väl allmänt sen en grill session för varje
+      stor viktig uppgift"*. Frågan var vilka påståenden ovan som är värda underhållskostnaden.
+      **Svaret blev alla sex**, och skälet är att varje rad skyddar en bugg som redan bitit
+      (12.18, 13.3, 13.4, 13.5) — de är ärr, inte gissningar. Marginalkostnaden efter den första
+      är låg, eftersom alla delar samma uppsättning.
+
+      **Att göra först — en prövning, inte hela sviten.** Innan något av de sex skrivs ska det
+      bevisas att sådden fungerar automatiserat: skriv rått i IndexedDB från Playwright, ladda
+      om sidan, och se om `useLiveQuery` visar raden. Faller den, gäller 11B.0e:s fallback och
+      planen tas om innan mer tid går åt. **Prövningen är avsiktligt liten och tidig.**
 
       **Uppgiften ersätter INTE att köra appen i webbläsaren under byggandet.** Adam
       2026-08-11: *"det ska inte sluta användas"*. De två gör olika saker och båda behövs:
@@ -1835,12 +1907,36 @@ och 13.1 måste vara klar före 13.6.
       Regeln skrevs samma dag som strängen upptäcktes, så det är ingen försummelse — men den
       gäller nu och strängen bryter mot den.
 
-      **Att göra:** sök igenom `src/` efter tankstreck i **användarsynliga strängar** (inte i
-      kodkommentarer, där de är fria) och ersätt med komma, punkt eller kolon. `importNotice.ts`
-      har två förekomster, en i varje gren av entals/flertalsfallet, och båda har tester som
-      låser texten — testerna ska ändras i samma commit.
+      ⚠️ **OMFÅNGET VAR FEL. Rättat 2026-08-12 (kväll) under grillningen av 11B.0e.**
+      Uppgiften sa *"`importNotice.ts` har två förekomster"* och kallade sig **litet jobb**.
+      Sökning i `src/**/*.tsx` gav minst sju till i användarsynlig text:
+
+      | Fil | Strängen |
+      |---|---|
+      | `src/ui/QuickLog.tsx:230` | *"fungerar — två tryck totalt."* |
+      | `src/ui/QuickLog.tsx:258` | *"Offline — AI-tolkning kräver nät…"* |
+      | `src/ui/QuickLog.tsx:270` | *"— {n} set"* |
+      | `src/ui/pages/SettingsPage.tsx:93` | *"…på hemskärmen — annars kan…"* |
+      | `src/ui/pages/TodayPage.tsx:268` | *"Skriv i stället — „Bänk 90x5"*" |
+      | `src/ui/SyncStatus.tsx:66` | *"…gått förlorat — datan ligger kvar"* |
+      | `src/ui/ParseStats.tsx:41` | *"{n} försök — för få för en siffra"* |
+
+      ⚠️ **Listan är inte bevisat fullständig.** Kommentarer sållades bort för hand, och bara
+      `.tsx` genomsöktes — `.ts`-filer utöver `importNotice.ts` är inte kontrollerade. Räkna
+      med fler, och gör om sökningen ordentligt när uppgiften körs.
+
+      **Viktigt:** ingen av dem är namnet på en knapp eller flik. Alla är brödtext. Det är
+      skälet till att 11B.0e kunde välja `role` + tillgängligt namn som selektorstrategi utan
+      att bygga in en brytpunkt.
+
+      **Att göra:** sök igenom hela `src/` efter tankstreck i **användarsynliga strängar** (inte
+      i kodkommentarer, där de är fria) och ersätt med komma, punkt eller kolon.
+      `importNotice.ts` har två förekomster, en i varje gren av entals/flertalsfallet, och båda
+      har tester som låser texten — testerna ska ändras i samma commit.
       **Klart när:** noll tankstreck återstår i strängar som renderas, och testerna speglar det.
-      **Litet jobb**, men det hör hemma i 11B eftersom det är samma acceptanskriterium.
+      **Körs efter 12.20**, inte ihop med den: att blanda textstädning i testarbetet bryter mot
+      regel 3 om atomära commits. Ordningen är säker eftersom 12.20:s vakt bara påstår att
+      importnotisen syns, aldrig vad den lyder.
 
 - [ ] **12.21 `lastPulledAt`-markörerna är aldrig bevisade.** Utbruten ur A.1 2026-08-12 när
       egressutredningen avslutades. **Detta är inte en kostnadsfråga** — mätningen visade att
