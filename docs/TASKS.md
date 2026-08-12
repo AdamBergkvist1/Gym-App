@@ -803,26 +803,49 @@ nuvarande.
 > växa är det ett **`SPEC.md`-beslut som måste tas före designbriefen** — inte något som
 > upptäcks halvvägs in i den. Det är uppgift 11B.0a, och den kommer först av allt.
 
-- [ ] **11B.0a Avgör informationsarkitekturen. `SPEC.md`, inte design.**
-      I dag: Pass, Historik, Övning, Inställningar. Frågan som ska besvaras innan något
-      ritas: **är fyra rutter den slutliga formen?** Kandidater att ta ställning till —
-      statistik/volym per muskelgrupp, program och rutiner, kroppsvikt, profil.
+> ### ⚠️ LÄGET 2026-08-12, läs detta innan uppgiftstexterna nedan
+>
+> **Fas 11B är inte ostartad. Den är påbörjad och delvis implementerad**, och texterna nedan
+> var skrivna som om ingenting fanns. Det kostade en halv grillningssession att upptäcka.
+>
+> Vad som faktiskt finns: `SPEC.md` §2b (informationsarkitektur, godkänd 2026-08-03),
+> `docs/DESIGN.md` (702 rader: färgsystem, typografi, skärmskisser för alla fyra flikarna),
+> nio referensbilder i `docs/Reference-pics/`, och två commits av implementationen —
+> `cfb2ca2` (tokens + datadriven navigation) och `6d70223` (setraden + justeringsarket).
+>
+> **Vad grillningen 2026-08-12 ändrade:** temat vändes från mörkt till **ljust som förval**
+> (`SPEC.md` §4), vilket öppnar `DESIGN.md` §0.5 och §1 på nytt. §2 och all kod överlever.
 
-      **Ett nej är ett lika giltigt svar som ett ja**, men det ska vara uttalat. Att upptäcka
-      halvvägs genom designrundan att appen behöver en femte flik betyder att navigationen,
-      typografin och tomma tillstånd designats mot fel form.
-      **Klart när:** `SPEC.md` §2 listar varje skärm appen ska ha i v1, och Adam har godkänt.
+- [x] **11B.0a Informationsarkitekturen. KLAR — `SPEC.md` §2b, godkänd 2026-08-03,
+      omprövad och bekräftad oförändrad 2026-08-12.**
+      Fyra flikar: Pass, Historik (segmenten Pass och Statistik), Övningar, Mer. Program är
+      startval i Pass, inte egen flik. `/ovning/:id` är detaljvy, inte flik.
+
+      **Statistiksegmentets innehåll avgjordes 2026-08-12** och står i `SPEC.md` §2b: set per
+      muskelgrupp och vecka med undertränade grupper synliga, volymkurva (reps × vikt) med
+      justerbart tidsfönster, samt e1RM-trend och personbästa. Det var den sista skärmen vars
+      innehåll ingen bestämt.
+
+      **Kvar i koden, inte i beslutet:** `src/ui/nav.ts` har tre flikar, inte fyra. Övningar
+      och Mer är obyggda och ligger som steg 5 och 6 i `DESIGN.md`.
 
 - [ ] **11B.0b Designbriefen — `docs/DESIGN.md`. INGEN KOD FÖRRÄN GODKÄND.**
       Alla skärmar samtidigt, inklusive bottenark, timer och övningsväljaren.
 
+      **Steg 1, 2 och 4 nedan är gjorda** (referenser ligger i `docs/Reference-pics/`, briefen
+      är skriven). **Steg 3 är delvis ogiltigförklarat** av temabytet 2026-08-12: färgtokens är
+      mätta mot svart bakgrund och måste göras om mot ljus. Typografi, spacing och radier
+      överlever.
+
       Arbetsordningen är hämtad från Chris Raroques flöde och står i
       `ai-workbench/tools/`: **referenser → prototyp → implementation.**
-      1. Samla referenser (Mobbin, Boostcamp, RP Hypertrophy, Jeff Nippard) i
-         `docs/Reference-pics/`.
-      2. Skissa varje skärm mot referenserna. Figma om det behövs, annars bilder.
-      3. Fastställ **tokens**: färg, typografi, spacing, radier, ikonuppsättning.
-      4. Skriv `docs/DESIGN.md` med tokens plus en skiss per skärm.
+      1. ✅ Samla referenser i `docs/Reference-pics/` — nio bilder: Hevy, MacroFactor, Strava,
+         Apple Watch, Lifesum. **Kvar:** Luna och Ellie (Raroque), tillagda i `SPEC.md` §4
+         2026-08-12.
+      2. ✅ Skissa varje skärm mot referenserna — `DESIGN.md` §3.
+      3. 🔴 Fastställ **tokens**: färg (görs om mot ljus botten), typografi ✅, spacing ✅,
+         radier ✅, ikonuppsättning (aldrig gjord, se 11B.0c).
+      4. ✅ Skriv `DESIGN.md` med tokens plus en skiss per skärm.
 
       **Varför referensdrivet och inte fritt:** `11A.12` byggdes från referensbilder efter
       att mina två egna försök klipptes av på mobilskärm. Referensversionen håller. Det är
@@ -852,6 +875,88 @@ nuvarande.
       grillning: att veta om det finns en femte flik är en förutsättning för att kunna skissa
       navigationen.
 
+- [ ] **11B.0c Ikonuppsättning ersätter emoji. Ny 2026-08-12.**
+      `DESIGN.md` §3 undantog uttryckligen ikoner: *"Vi använder unicode och emoji i dag."*
+      Det står i direkt konflikt med förbudslistan i §0.3, och konflikten är Adams beslut att
+      lösa åt ikonernas fördel.
+
+      **Sex förekomster, mätta och inte antagna:**
+
+      | Fil | Vad |
+      |---|---|
+      | `src/ui/ExerciseCard.tsx:65` | **🏋** i övningens ikonruta |
+      | `src/ui/SetRow.tsx:136` | `✓` som bekräfta-knapp |
+      | `src/ui/ExerciseCard.tsx:140` | `✓` |
+      | `src/ui/SetAdjustSheet.tsx:224` | `✓` för uppvärmningsset |
+      | `src/ui/pages/ExercisePage.tsx:58` | `←` tillbaka |
+      | `src/ui/pages/HistoryPage.tsx:89` | `→` |
+
+      🏋 är den allvarligaste: den sitter i ikonrutan som `DESIGN.md` §0.5 kallar "den enskilt
+      viktigaste ändringen" för att ge appen färg. `✓`, `←` och `→` är teckensnittsglyfer, inte
+      emoji, men de ärver textens tjocklek och ser tillfälliga ut bredvid riktiga ikoner.
+
+      **Tre licensklarade kandidater, kontrollerade 2026-08-12 enligt §7.2:**
+
+      | | Lucide | Tabler Icons | Phosphor |
+      |---|---|---|---|
+      | Licens | **ISC** (+MIT för Feather-ärvda) | **MIT** | **MIT** |
+      | Stjärnor | 23 914 | 21 349 | 361 (se not) |
+      | Senaste push | 2026-08-11 | 2026-08-10 | 2026-01-06 |
+      | Transitiva beroenden | 0 | 0 | 0 |
+      | Storlek | ~0,3–0,6 kB per kopierad SVG | dito | dito |
+
+      **Om Lucides `NOASSERTION`:** GitHubs API rapporterar det, vilket enligt §7.2b skulle
+      betyda "fråga Adam". Licensfilen lästes i stället: den innehåller **två** licenser, ISC
+      för Lucides egna och MIT för Feather-ärvda ikoner. Båda fria att kopiera mot att
+      upphovsrättsraden följer med. `NOASSERTION` betyder bara att detektorn inte klarar två
+      licenser i en fil. **Ingen av de tre är blockerad.**
+
+      **Noten om Phosphor:** 361 stjärnor gäller tillgångsrepot `phosphor-icons/core`, inte
+      organisationens huvudsida, och är inte jämförbart. Underhållet är däremot mätbart svalare.
+
+      **Valet görs INTE förrän karaktärsriktningen är vald** (11B.0d) — ikonstil, alltså rundad
+      mot skarp och tunn mot fet, följer av karaktären och inte tvärtom.
+      **Klart när:** de ikoner vi faktiskt använder är kopierade som SVG-filer med ursprung och
+      licens i kommentar överst, raden finns i `docs/EXTERNT.md`, och noll emoji återstår i
+      `src/ui/`. **Noll nya poster i `package.json`.**
+
+- [ ] **11B.0d Välj den ljusa karaktärsriktningen. Ny 2026-08-12. GÖRS FÖRE ALL KOD.**
+      Ersätter det val som gjordes 2026-08-05, då lime valdes mellan tre **mörka** alternativ.
+
+      **Metoden behålls för att den fungerade** — körbara mockuper jämförda på synintryck slår
+      hexkoder i en textfil. **Två steg**, beslutade i grillningen, för att karaktär och layout
+      inte ska bedömas i samma svep:
+
+      1. **Tre karaktärsriktningar på identisk layout.** Varierar färg, radier och typografi.
+         Skärmen är Pass mitt i ett set, samma innehåll i alla tre.
+      2. **Två layoutförslag i den vunna karaktären.** Adam 2026-08-12: *"tycker ändå inte den
+         är så snyggt strukturerad nu"* — layouten är alltså inte låst till dagens.
+
+      **Varför två steg och inte ett:** förra gången valdes lime, och resultatet blev en app
+      Adam tyckte var tråkig. Det är vad som händer när karaktär och layout bedöms samtidigt —
+      man vet inte efteråt vad man faktiskt valde.
+
+      **Leverans:** HTML-filer i `docs/mockups/`, **committade**. De tre riktningarna från
+      2026-08-05 finns inte kvar någonstans, så beslutet "Adam valde lime" går inte att granska
+      i efterhand. Den förlusten upprepas inte.
+      **Klart när:** Adam har pekat ut en riktning och en layout, och `DESIGN.md` §0.5 och §1
+      är omskrivna med uppmätta värden mot ljus botten.
+
+- [ ] **11B.0e Testsömmarna bestäms innan skärmarna byggs. Ny 2026-08-12.**
+      Lånad från `/to-spec`, som gör en sak våra dokument inte gör: skissar sömmarna **innan**
+      prosan skrivs och stämmer av dem. Skälet att låna just den biten är att `/tdd` och
+      `/code-review` båda arbetar mot överenskomna sömmar — en söm ingen kommit överens om dyker
+      upp som en granskningsanmärkning.
+
+      **Varför `/to-spec` inte körs i sin helhet:** den publicerar specen som ett issue i
+      `.scratch/`, som är gitignorerad och slängbar. Besluten hör hemma i `SPEC.md`, `DESIGN.md`
+      och den här filen, som regel 1 kräver. En tredje kopia i den enda mapp som inte överlever
+      löser inget.
+
+      Hör ihop med **12.20** (`ui/` har noll tester). Färre sömmar är bättre; en är idealet.
+      **Klart när:** sömmarna för 11B:s skärmar står skrivna här eller i 12.20, och Adam har
+      sagt ja till dem.
+
 **11B.1–11B.9 nedan är implementation av briefen.** Ingen av dem är ett eget designbeslut
 längre — värdena kommer från `DESIGN.md`. Motsäger en uppgift briefen är det briefen som
 gäller, och uppgiften skrivs om.
@@ -865,8 +970,28 @@ gäller, och uppgiften skrivs om.
 - [ ] **11B.4 Tryckåterkoppling.** Ingen knapp har `:active`-tillstånd. Med svettiga fingrar
       är omedelbar kvittens skillnaden mellan att lita på appen och att trycka igen.
       **Klart när:** varje tryckyta svarar synligt inom en bildruta.
-- [ ] **11B.5 Rörelse med måtta.** Setraden dyker upp abrupt. En kort inanimation gör att ögat
-      hittar den nya raden. **Klart när:** inget övergångsförlopp överstiger ~150 ms.
+- [ ] **11B.5 Rörelse. OMSKRIVEN 2026-08-12 — 150 ms-regeln gällde fel saker.**
+      Setraden dyker upp abrupt. En kort inanimation gör att ögat hittar den nya raden.
+
+      **Varifrån 150 ms kom:** en enda mening i `PLAN.md` (*"Allt över ~150 ms känns långsamt
+      mitt i ett pass"*). Det är ett antagande, inte en mätning, och det skrevs om **setraden**.
+      Sedan generaliserades det till hela appen utan att någon prövade om det borde gälla där.
+
+      **Vad som gäller nu:** snabbt i **Pass**, uttrycksfullare i **Historik** och **Övningar**.
+      Under ett set med skivstången i handen är väntan ren kostnad. När du bläddrar i historiken
+      efteråt är samma 300 ms skillnaden mellan billigt och genomtänkt. Adam vill uttryckligen
+      åt det håll Chris Raroque arbetar.
+
+      **Inget bibliotek behövs.** Det som ger den känslan är CSS: knapp som krymper till ~97 %
+      vid tryck, rad som glider in, färg som tonar. Plattformsprimitiver, noll kilobyte.
+
+      ⚠️ **Haptik går sannolikt inte att få.** Raroques appar är native iOS och kan vibrera; vår
+      är en PWA i iOS Safari, som saknar stöd för Vibration API. Samma familj av begränsningar
+      som redan gjort bakgrundstimern opålitlig (se `src/timer/diagnostics.ts`).
+      **Detta ska verifieras innan något byggs på det**, inte antas åt något håll.
+
+      **Klart när:** Pass håller sig under ~150 ms, Historik och Övningar får röra sig mer, och
+      haptikfrågan är avgjord med ett mätresultat.
 - [ ] **11B.6 Tomma tillstånd.** Första passet är enda tillfället att lära ut fritextsyntaxen,
       och det tillfället används inte i dag.
 - [ ] **11B.7 Färgsemantik som system.** Grönt = sparat, gult = tvetydigt är i dag enstaka val.

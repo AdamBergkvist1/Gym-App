@@ -3,13 +3,26 @@
 Det femte dokumentet (se `CLAUDE.md` §8). Skrivs som **första steg i fas 11B** och är en
 förutsättning för den, inte en dokumentation av den i efterhand.
 
-**Status:**
+**Status — omprövad 2026-08-12 i grillningen inför 11B:**
 
 | Del | Innehåll | Läge |
 |---|---|---|
-| **§1** | Färgsystemet | ✅ **klar 2026-08-04** — väntar på godkännande |
-| **§2** | Typografi och rytm | ✅ **klar 2026-08-04** — väntar på godkännande |
-| **§3** | Skärmskisser | ✅ **klar 2026-08-04** — väntar på godkännande |
+| **§0** | Utgångspunkter | 🔄 **två nya regler 2026-08-12** (levande brief, förbudslistan) |
+| **§0.5** | Visuell karaktär | 🔴 **ÖPPNAD IGEN 2026-08-12** — byggd på svart bakgrund, temat vänt till ljust |
+| **§1** | Färgsystemet | 🔴 **ÖPPNAD IGEN 2026-08-12** — alla värden mätta mot svart |
+| **§2** | Typografi och rytm | ✅ klar 2026-08-04 — **överlever temabytet**, storlekar och rytm är färgoberoende |
+| **§3** | Skärmskisser | 🟡 formen står, men layouten är **inte låst** — se §0 |
+
+> **Varför §0.5 och §1 öppnades igen.** Adam 2026-08-12: *"vill ta det en vända till för det
+> är fortf mörkt och var det bästa jag hittade då bland de alternativ som togs fram. Vill nog
+> göra det korrekt och bättre en gång till."* Lime valdes 2026-08-05 mellan tre **mörka**
+> alternativ, alltså det bästa i ett urval som inte innehöll det han egentligen ville ha.
+> `SPEC.md` §4 är ändrad i samma veva: ljust tema är förval.
+>
+> **Vad som INTE rivs:** §2 i sin helhet, och den kod som byggts mot briefen (`cfb2ca2`
+> tokens och datadriven navigation, `6d70223` setraden och justeringsarket). Setraden löste
+> ett uppmätt problem — raden klipptes av på 375 px — och det problemet är oberoende av
+> bakgrundsfärg.
 
 > **Ingen kod skrivs mot denna fil förrän Adam godkänt respektive del.** `index.css` och
 > komponenterna ändras i fas 11B steg 4, en skärm i taget.
@@ -23,11 +36,64 @@ förutsättning för den, inte en dokumentation av den i efterhand.
 ett argument för att låta bli att bygga det.
 
 **Bruksmiljön styr mer än estetiken.** Appen används stående, svettig, enhänt, mitt i ett set,
-ibland i dålig belysning. Därav de befintliga reglerna som inte omförhandlas här: endast mörkt
-tema, tryckytor minst 48×48 px, setraden är största elementet på skärmen.
+ibland i dålig belysning. Därav de befintliga reglerna som inte omförhandlas här: tryckytor
+minst 48×48 px, setraden är största elementet på skärmen. ~~endast mörkt tema~~ — **struken
+2026-08-12**, se `SPEC.md` §4. Ljust är förval.
 
 **Referenser enligt SPEC §4:** RP Hypertrophy för datafokus, Jeff Nippard och Boostcamp för
-estetik. Studerade öppna appar listas i `EXTERNT.md`.
+estetik, Luna och Ellie av Chris Raroque för ljust tema och rörelse. Studerade öppna appar
+listas i `EXTERNT.md`.
+
+---
+
+### §0.1 Briefen är levande, inte ett kontrakt
+
+**Tillagd 2026-08-12 på Adams begäran.** Den här paragrafen handlar om hur dokumentet ska
+användas över tid, och den saknades helt.
+
+Adams egna ord, som är hela motivet: *"det är kanske bra om man inte fullbordar till en
+specifik design för alltid utan mer eller mindre jobbar sig fram och börjar på något sätt som
+ser bra ut och fungerar bra till att börja med, men vara öppna till att göra ändringar i
+framtiden om man känner att det är mer lämpligt."*
+
+**Regeln:** riktningen är fastställd, värdena är utbytbara. Att ett värde ändras om ett halvår
+är förväntat och inte ett misslyckande. **Men den som ändrar ett värde skriver varför i samma
+commit.** Skillnaden mellan en levande brief och en som tyst blivit osann är just den raden.
+
+### §0.2 Metoden: låna, förstå, anpassa
+
+Också tillagd 2026-08-12, och den formulerar arbetssättet som redan användes utan att stå
+skrivet någonstans.
+
+**Designen uppfinns inte, den lånas från appar som bevisligen fungerar.** Adam är inte
+designer och ska inte behöva vara det. Därför är *"vad gör Hevy, Strava och Ellie, och varför"*
+ett bättre underlag än *"vad tycker Adam om lila"*. Konkret innebär det att **varje val ska gå
+att spåra till en namngiven referens med en skriven motivering** — en referensmapp utan
+anteckningar är bara bilder.
+
+Det är också vad som ersätter designskicklighet: valet står mellan färdiga alternativ som
+bedöms på synintryck, inte mellan hexkoder i en textfil.
+
+### §0.3 Förbudslistan — vad "AI-gjort" betyder konkret
+
+Adams acceptanskriterium 2026-08-11 var *"vill även ta inspo för design från nätet och vad som
+finns så det inte ser AI-gjort och alltför stereotypiskt ut"*. Ett kriterium som inte går att
+underkänna är i praktiken ingen regel, så här är det som en lista. Preciserad av Adam
+2026-08-12.
+
+**Följande får inte förekomma:**
+
+| Förbud | Varför |
+|---|---|
+| **Lila eller mörkblå gradient** | Standardvalet när en modell ombeds designa fritt |
+| **Glasmorfism** (frostat glas, suddig genomskinlighet) | Samma sak, och den läser dåligt i solljus |
+| **Emoji som ikoner** | Ritas av operativsystemet, ser olika ut per plattform, kan inte ärva vår färg. Sex förekomster i dag, se 11B.0c |
+| **Jämnt rundade kort överallt** | När allt har samma radie bär radien ingen information |
+| **Centrerad hjältetext** | Marknadsföringsspråk i en app som ska loggas i |
+| **Tankstreck (—) i apptexten** | Adam 2026-08-12: läser som AI-skriven text. Gäller **det appen skriver till användaren**, inte den här filen eller kodkommentarer |
+
+Listan fångar reflexerna. Det som gör det verkliga arbetet är §0.2: att varje val härleds ur
+en referens.
 
 ---
 

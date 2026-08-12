@@ -1,8 +1,116 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-11. **Tre sessioner samma dag.** Läs sektionen direkt nedan — den är
-nyast. De två därefter är från kvällen respektive förmiddagen och båda har varningsrutor
-som säger vad i dem som inte längre gäller.
+**Datum:** 2026-08-12. Läs sektionen direkt nedan — den är nyast. Sektionerna därefter är från
+2026-08-11 (tre sessioner samma dag) och har varningsrutor som säger vad i dem som inte längre
+gäller.
+
+---
+
+## 🆕 2026-08-12 — Grillning inför 11B. Temat vänt till ljust, och 11B visade sig vara halvbyggt
+
+### Börja här
+
+1. **Bygg de tre karaktärsriktningarna** som HTML i `docs/mockups/` (uppgift **11B.0d**). Det
+   är nästa konkreta arbete och ingenting annat i 11B får göras före det.
+2. Adam väljer riktning, sedan två layoutförslag i den vunna karaktären.
+3. Först därefter `/implement` mot `DESIGN.md` §3.
+
+**Arbetsträdet var rent vid sessionens slut.** Grindarna kördes **på jobbdatorn** och alla fem
+var gröna: **274 tester, 30 e2e (WebKit), typecheck, lint, bygge**. Inte antaget.
+
+### Det största fyndet: 11B var inte ostartad
+
+Grillningen inleddes mot `TASKS.md`, som beskrev 11B.0a och 11B.0b som ofattade beslut. **Båda
+var i praktiken redan gjorda**, och det kostade en halv session att upptäcka:
+
+- `SPEC.md` **§2b** — informationsarkitekturen, godkänd av Adam **2026-08-03**. Fyra flikar.
+- `docs/DESIGN.md` — **702 rader**: färgsystem med uppmätta kontraster, typografi, rytm och
+  skärmskisser för alla fyra flikarna. Skriven 4–5 augusti.
+- `docs/Reference-pics/` — nio referensbilder.
+- `docs/research/Analys av Träningsappar för PWA.md` — 60 kB, med källhänvisad forskning.
+- **Två commits av implementationen**: `cfb2ca2` (tokens, datadriven navigation) och `6d70223`
+  (setraden, justeringsarket).
+
+**Lärdomen, och den är dyrare än den låter:** ett dokument som beskriver ett halvfärdigt arbete
+som ostartat får nästa session att ställa fel frågor. `TASKS.md` 11B har nu en varningsruta
+överst som säger hur det faktiskt ligger till.
+
+### Beslut som ändrar tidigare beslut
+
+**Ljust tema är förval. `SPEC.md` §4 ändrad.** Adam: *"jag vill inte bara ha mörk design…
+tycker vi kan börja med att designa ljusare."* Detta **öppnar `DESIGN.md` §0.5 och §1 på nytt** —
+alla färgvärden där är mätta mot ren svart. Lime `#bef264` överlever inte: 16,07:1 mot svart
+blir ~1,3:1 mot vitt.
+
+**Varför omvalet är rimligt och inte velighet:** lime valdes 2026-08-05 mellan tre **mörka**
+alternativ. Det var bästa valet i ett urval som inte innehöll det Adam egentligen ville ha.
+
+**Mätning som gjorde beslutet billigt:** `src/ui/` innehåller **noll hårdkodade hexvärden och
+noll Tailwind-gråskalor**. Varje färg går redan genom ett semantiskt token, så temabytet är en
+värdeuppsättning i `index.css` och kräver **inga komponentändringar**. Verifierat, inte gissat.
+
+**Vad som INTE rivs:** `DESIGN.md` §2 (typografi och rytm är färgoberoende) och all befintlig
+kod. Setraden löste ett uppmätt problem — avklippning på 375 px — som är oberoende av
+bakgrundsfärg.
+
+### Tre nya uppgifter
+
+| | |
+| :--- | :--- |
+| **11B.0c** | Ikonpaket ersätter emoji. **Sex förekomster mätta**, värst 🏋 i `ExerciseCard.tsx:65`. Lucide, Tabler och Phosphor licenskontrollerade och alla tre klara |
+| **11B.0d** | Välj ljus karaktärsriktning i **två steg**: tre karaktärer på identisk layout, sedan två layouter i den vunna karaktären |
+| **11B.0e** | Testsömmar bestäms före skärmbygget. Lånat från `/to-spec`, hör ihop med 12.20 |
+
+**11B.5 omskriven:** 150 ms-regeln kom från en ensam mening i `PLAN.md` om **setraden** och
+generaliserades felaktigt till hela appen. Nu: snabbt i Pass, uttrycksfullare i Historik och
+Övningar. ⚠️ Haptik saknar troligen stöd i iOS Safari — **ska verifieras, inte antas**.
+
+### Om Lucides licens, som såg ut som ett stopp
+
+GitHubs API rapporterar `NOASSERTION`, vilket enligt `CLAUDE.md` §7.2b betyder "behandla som
+alla rättigheter förbehållna". **Licensfilen lästes i stället för att lita på detektorn:** den
+innehåller två licenser, ISC för Lucides egna ikoner och MIT för Feather-ärvda. Båda fria.
+Detektorn klarar bara inte två licenser i en fil. **Gör om den kontrollen så här nästa gång** —
+`NOASSERTION` är ofta ett detektorfel, men det får aldrig antas utan att filen lästs.
+
+### Miljön på jobbdatorn — och en sak som fortfarande inte fungerar
+
+Node saknades helt. Installerat 2026-08-12 med `winget install OpenJS.NodeJS.LTS --scope user`,
+**utan administratörsrättigheter**: Node **24.19.0**, npm **11.17.0**, från den officiella
+zippen på nodejs.org med verifierad hash. Playwright **WebKit 26.5** nedladdad separat
+(konfigurationen kör WebKit, inte Chromium, eftersom appen används i iOS Safari).
+
+⚠️ **`preview_start` (Browser-panelen) fungerar inte förrän Claude Code startats om.** PATH är
+permanent uppdaterad i användarmiljön, men den körande processen ärvde sin miljö innan
+ändringen. Playwright fungerar däremot, eftersom den startar sin egen dev-server.
+**Ingen maskinsökväg hårdkodades i `.claude/launch.json`** — den är spårad i git och skulle gå
+sönder på hemmadatorn.
+
+### Avslutat i samma session
+
+**A.1 (egressen) är stängd.** Usage-vyn per projekt 2026-08-10: Gym-App **0,001 GB**,
+`news-signal-engine` **5,39 GB**. Free-planen räknar per organisation, inte per projekt. Adam
+har åtgärdat i NSE-repot; **kvoten resetas 17 augusti 2026**. Markörfrågan lever vidare som
+**12.21**, inte som kostnadsmisstanke utan som en obevisad funktion.
+
+**13.6:s två antaganden bekräftade.** Adam 2026-08-12: bänk 95 kg december 2025 var **1 rep,
+1 set, personbästa**, och ska märkas `source = 'import'`. Siffrorna i `scripts/import-adam.sql`
+var redan rätta; bara kommentaren ändrad. **Kvar i 13.6:** Adam har fortfarande inte kört om
+filen. Kontrollfrågan ska svara `pass 19, antal_set 22, 70 → 75 → 80 → 85 → 90 → 95`.
+
+### Två saker att göra annorlunda
+
+1. **Läs `SPEC.md` och `DESIGN.md` innan du grillar om något de redan avgjort.** Jag ställde sex
+   frågor varav två var besvarade sedan en vecka.
+2. **`/to-spec` och `/implement` har `disable-model-invocation: true`** — precis som `/handoff`.
+   Adam måste skriva dem själv. Alla 25 skills ligger i `C:\Users\w961abg\.claude\skills\`.
+
+### Varför `/to-spec` inte används för 11B
+
+Den publicerar specen som ett issue i `.scratch/`, som är **gitignorerad och slängbar**.
+Besluten hör hemma i `SPEC.md`, `DESIGN.md` och `TASKS.md` enligt regel 1. En tredje kopia i den
+enda mapp som inte överlever löser inte det problem specen finns för. **Sömskissen** är däremot
+värd att låna, och den blev 11B.0e.
 
 ---
 

@@ -22,9 +22,14 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 
 ## 2b. Informationsarkitektur — appens skärmar
 
-**Godkänd av Adam 2026-08-03.** Detta är formen fas 11B designar mot. Ändras den ska den
-ändras HÄR först — en femte flik som upptäcks halvvägs in i designrundan betyder att
-navigation, typografi och tomma tillstånd ritats mot fel form.
+**Godkänd av Adam 2026-08-03. Omprövad och bekräftad oförändrad 2026-08-12** i grillningen
+inför 11B, efter att Adam läst hela tabellen igen. Detta är formen fas 11B designar mot.
+Ändras den ska den ändras HÄR först — en femte flik som upptäcks halvvägs in i designrundan
+betyder att navigation, typografi och tomma tillstånd ritats mot fel form.
+
+> Bekräftelsen kom med ett förbehåll som är värt att skriva ut: *"öppen för att ändringar för
+> att finjustera sen i framtiden om man känner för det."* Det är inte samma sak som att formen
+> är oavgjord. Fyra flikar gäller tills något annat beslutas här.
 
 ### Fyra flikar i bottennavigeringen
 
@@ -54,7 +59,24 @@ en tvingande struktur.** Det avgör också datamodellen — program blir mallar 
 pass, aldrig något ett pass måste tillhöra.
 
 **Statistik är ett segment inuti Historik, inte en egen flik.** De är båda "titta bakåt".
-Innehåll: volym per muskelgrupp och vecka, e1RM-trender, personbästa.
+
+**Innehållet avgjort 2026-08-12** (tidigare stod här bara en uppräkning, vilket inte var ett
+beslut). Tre delar, i prioritetsordning, och de två första svarar på olika frågor:
+
+1. **Set per muskelgrupp och vecka, med undertränade grupper synliga.** Svarar på Adams
+   fråga *"om man missar något"*. Måttet är **antal arbetsset**, inte kilo, och veckan är
+   inte godtycklig: `docs/research/` §3 refererar Schoenfeld m.fl. 2019, som visade ett
+   dos-responsförhållande mellan volym och hypertrofi, och konsensus är att arbetsset per
+   muskelgrupp och vecka är den primära drivkraften. Hevy bygger sin vy på just det.
+   **Byggbart i dag:** `primaryMuscle` finns på varje övning i `src/db/catalog.ts` och
+   `primary_muscle`/`secondary_muscles` i schemat sedan migration `0001`. Inget saknas.
+2. **Volymkurva (reps × vikt) med justerbart tidsfönster.** Svarar på "hur mycket jobb gjorde
+   jag". Adam 2026-08-12: *"kanske något längre än bara senaste veckan, eller att man kan
+   anpassa så man kan se volym under kortare och längre tid."* Beräkningen finns redan, med
+   uppvärmningsset borträknade (12.16) och halvkilot bevarat (12.18) — det som saknas är
+   fönstervalet.
+3. **e1RM-trend per övning och personbästa.** Det är den delen som är rolig att titta på nu
+   när fem års bänkhistorik importerats: kurvan 70 → 95 kg.
 
 **Övningar blev en egen flik** trots att den inte fanns i den ursprungliga formen. Skälet:
 både Strong och Hevy har den, och utan den går en övnings historik bara att nå genom att
@@ -190,6 +212,17 @@ _Undvik:_ version, utförande.
 
 ## 4. UI / Designspråk och Inspiration
 - **Vetenskapligt Datafokus (RP Hypertrophy / Dr. Mike Israetel):** Appen ska ta inspiration från RP Hypertrophy-appen gällande vetenskaplig loggning (fokus på RIR, ansträngning och progression). AI-chatten ska användas för att göra inmatningen av denna data snabbare och mindre tungrodd än i RP-appen.
-- **Visuell stil (Jeff Nippard / Boostcamp):** Minimalistiskt, mörkt tema ("dark mode") med rena kontraster. Siffrorna och historiken står i centrum. Absolut inget onödigt fluff eller sociala flöden.
+- **Visuell stil:** Minimalistiskt, rena kontraster. Siffrorna och historiken står i centrum. Absolut inget onödigt fluff eller sociala flöden.
+- **Tema — ÄNDRAT 2026-08-12. Ljust är förval, inte mörkt.** Här stod tidigare "mörkt tema (dark mode)" som en egenskap hos appen, och `DESIGN.md` byggde hela sin palett på ren svart utifrån den raden. Adam vände det i grillningen inför 11B: *"jag vill inte bara ha mörk design. Egentligen vill jag ha alternativ mellan ljusare och mörkare mode. Men tycker vi kan börja med att designa ljusare."*
+
+      **Vad som gäller:** ljust tema byggs först och är förval. Mörkt definieras som en andra
+      värdeuppsättning bakom **samma semantiska tokennamn**, mäts mot WCAG AA, men byggs inte
+      förrän Adam säger till. Att det är möjligt utan att röra komponenterna är verifierat och
+      inte antaget: `src/ui/` innehåller **noll hårdkodade hexvärden och noll Tailwind-gråskalor**
+      (mätt 2026-08-12), så varje färg går redan genom ett token.
+
+      **Detta upphäver `DESIGN.md` §0:s rad om "endast mörkt tema"** och öppnar §0.5 och §1 på nytt.
+      Lime `#bef264` överlever inte bytet: 16,07:1 mot svart blir ~1,3:1 mot vitt.
+- **Referenser (utökade 2026-08-12):** RP Hypertrophy för datafokus. Jeff Nippard och Boostcamp för estetik. Tillagda: **Luna** (budgetapp) och **Ellie** (dagsplanerare) av Chris Raroque — Luna för täta sifferrader på liten skärm, vilket uppfyller kravet i 11B.0b på minst en referens utanför träningsappsgenren, och Ellie för färg, form och rörelse i ljust tema.
 - **Tysta framgångar:** Inga blockernade pop-ups när ett set sparas. En diskret färgförändring eller en liten ikon räcker för att bekräfta att datan sparats ("Success State").
 - **Offline-First:** Användargränssnittet måste uppdateras omedelbart (Optimistic UI) via lokal IndexedDB, oavsett nätverkets status. Skrivningar till databasen sker tyst i bakgrunden.
