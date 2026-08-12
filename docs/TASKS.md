@@ -1061,18 +1061,32 @@ nuvarande.
       hade kunnat skapa. Testet blir då grönt mot data som inte kan existera. **Falskt grönt är
       värre än rött.** Därför skapas allt som *kan* skapas genom appen, genom appen.
 
-      ### Den öppna risken — prövningen finns för den
+      ### Prövningen är KÖRD 2026-08-12 (kväll). Metoden håller — och risken var verklig
 
-      `useLiveQuery` lyssnar på **Dexies** ändringsspårning. En rå IndexedDB-skrivning går förbi
-      Dexie och kanske aldrig når sidan. Motmedlet är att seeda först och **ladda om sidan**
-      sedan, så att sidan läser färskt vid montering i stället för att förlita sig på en
-      liveuppdatering. Så gick handpåläggningen till 2026-08-11.
+      `e2e/sadd-provning.spec.ts`. Två påståenden, båda mätta, inget antaget:
 
-      ⚠️ **Detta är obevisat i Playwright.** Därför är första jobbet en liten prövning som bara
-      ska svara *"går det?"*. **Faller den: bygg i stället ett såddinsläpp i appen bakom
-      `import.meta.env.DEV`**, och bevisa att det är struket ur produktionsbygget genom att söka
-      igenom den byggda filen. Adam valde det framför att släppa punkt 3–5, eftersom buggarna i
-      13.3–13.5 är av den tysta sorten som visar fel siffror utan att krascha.
+      | | Utfall |
+      |---|---|
+      | **Sådd → färsk navigering → sidan visar raden** | ✅ **Grönt på alla tre bredder**, ~4–5 s per körning |
+      | **Sådd medan sidan redan är öppen** | ❌ **Når aldrig fram** |
+
+      **Metoden är därmed godkänd och fallbacken behövs inte.** Inget såddinsläpp byggs, ingen
+      byggflagga, noll ny kod i appen.
+
+      ⚠️ **Men omladdning är ett KRAV, inte en försiktighetsåtgärd.** `useLiveQuery` lyssnar på
+      Dexies egen ändringsspårning och ser bara skrivningar som gått genom Dexies API. Vår går
+      förbi det. Seedar man mot en öppen sida händer ingenting — och felet ser ut som en trasig
+      läsväg i stället för en utebliven uppdatering, vilket är den dyraste sortens vilseledning.
+
+      Det andra testet ligger kvar som `test.fail()` i stället för att raderas: påståendet är en
+      **mätning av hur systemet beter sig**, och börjar det plötsligt lyckas — Dexie byter
+      mekanism, någon lägger till en `BroadcastChannel` — blir körningen röd och vi får veta att
+      antagandet under 12.20 har ändrats.
+
+      **Grindarna efter prövningen:** typecheck ren, lint 0 fel, **e2e 36 passed**. Typecheck
+      fångade förresten ett riktigt fel i prövningen (`waitForFunction` returnerar `null` i
+      typen), vilket är ett litet argument för att den hör hemma i `e2e/` och inte i ett skript
+      vid sidan om.
 
       **Klart när:** ✅ uppfyllt — sömmarna står skrivna här och Adam har sagt ja.
 
@@ -1882,10 +1896,16 @@ och 13.1 måste vara klar före 13.6.
       (12.18, 13.3, 13.4, 13.5) — de är ärr, inte gissningar. Marginalkostnaden efter den första
       är låg, eftersom alla delar samma uppsättning.
 
-      **Att göra först — en prövning, inte hela sviten.** Innan något av de sex skrivs ska det
-      bevisas att sådden fungerar automatiserat: skriv rått i IndexedDB från Playwright, ladda
-      om sidan, och se om `useLiveQuery` visar raden. Faller den, gäller 11B.0e:s fallback och
-      planen tas om innan mer tid går åt. **Prövningen är avsiktligt liten och tidig.**
+      ✅ **Prövningen är gjord 2026-08-12 (kväll) och metoden håller.**
+      `e2e/sadd-provning.spec.ts` bevisar att en rå IndexedDB-skrivning följd av **färsk
+      navigering** syns på sidan, grönt på alla tre bredder. Fallbacken behövs inte — inget
+      såddinsläpp byggs.
+
+      ⚠️ **Regeln som föll ut, och som inte får glömmas när de sex vakterna skrivs:** sådd mot en
+      **öppen** sida når aldrig fram, eftersom `useLiveQuery` bara ser skrivningar genom Dexies
+      API. **Varje test måste alltså seeda först och navigera sedan.** Hoppas det över står
+      sidan tom och felet läser som en trasig läsväg. Det andra testet i prövningsfilen låser
+      fast det beteendet med `test.fail()`. Hela mätningen står i 11B.0e.
 
       **Uppgiften ersätter INTE att köra appen i webbläsaren under byggandet.** Adam
       2026-08-11: *"det ska inte sluta användas"*. De två gör olika saker och båda behövs:
