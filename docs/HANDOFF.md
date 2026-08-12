@@ -147,10 +147,25 @@ sönder på hemmadatorn.
 har åtgärdat i NSE-repot; **kvoten resetas 17 augusti 2026**. Markörfrågan lever vidare som
 **12.21**, inte som kostnadsmisstanke utan som en obevisad funktion.
 
-**13.6:s två antaganden bekräftade.** Adam 2026-08-12: bänk 95 kg december 2025 var **1 rep,
-1 set, personbästa**, och ska märkas `source = 'import'`. Siffrorna i `scripts/import-adam.sql`
-var redan rätta; bara kommentaren ändrad. **Kvar i 13.6:** Adam har fortfarande inte kört om
-filen. Kontrollfrågan ska svara `pass 19, antal_set 22, 70 → 75 → 80 → 85 → 90 → 95`.
+**13.6 är KLAR i databasen, verifierat 2026-08-12.** Kontrollfrågan svarade exakt
+`pass 19, antal_set 22`, kurvan `70 → 75 → 80 → 85 → 90 → 95`. 95 kg-raden stämmer i varje
+fält: `reps 1`, `set_index 0`, `is_warmup false`, `source 'import'`, passet `is_imported`.
+
+> ⚠️ **Den här överlämningen påstod först motsatsen.** Både kvällssektionen 2026-08-11 och den
+> första versionen av den här sektionen sa att Adam inte kört om filen med 95 kg-tillägget.
+> Databasen säger att den är körd. **Fråga databasen innan du påstår något om dess innehåll**,
+> även när ett handoff-dokument säger annat. Det är samma sorts fel som fick 11B att se
+> ostartad ut.
+
+Notistexten kontrollerades genom att **köra den riktiga funktionen** mot de 12 datum som
+faktiskt ligger i databasen, i ett tillfälligt test som raderades efteråt. Utfall:
+*"12 punkter före januari 2026 är importerade från gamla anteckningar — datumen är uppskattade."*
+
+**Kvar av 13.6, och bara detta:** Adam öppnar appen på telefonen och ser 95 kg plus notisraden.
+Servern är bevisad; synken till hans specifika telefon går inte att verifiera utan hans inloggning.
+
+**Fyndet på köpet:** notistexten innehåller ett **tankstreck**, vilket `DESIGN.md` §0.3
+förbjuder i apptext. Upplagt som **12.22**.
 
 ### Två saker att göra annorlunda
 

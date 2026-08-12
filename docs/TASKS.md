@@ -1363,11 +1363,37 @@ och 13.1 måste vara klar före 13.6.
 
       Singularformen böjs (`1 punkt … är importerad … datumet är uppskattat`).
 
-- [ ] **13.6 ENGÅNGS: Adams konto och SQL-filen.** Lämnar inga spår i kodbasen.
+- [x] **13.6 ENGÅNGS: Adams konto och SQL-filen. KLAR i databasen 2026-08-12.**
+      Lämnar inga spår i kodbasen.
 
-      **Ordning:** 1) Adam registrerar sig i appen med sin riktiga e-post — det måste han göra
-      själv, konton och lösenord är inget jag rör. 2) Jag genererar `scripts/import-adam.sql`
-      med hans `user_id` inlagt. 3) Han läser igenom den — 21 set, 17 pass, läsbart i klartext.
+      ### ✅ Verifierat mot produktionsdatabasen 2026-08-12
+
+      Kontrollfrågan svarade **exakt** vad acceptanskriteriet krävde:
+      `pass 19, antal_set 22`, bänkkurvan `70 → 75 → 80 → 85 → 90 → 95`.
+
+      95 kg-raden kontrollerades separat och stämmer med filens avsnitt 3b i varje fält:
+      `reps 1`, `set_index 0`, `is_warmup false`, `source 'import'`, passet `is_imported true`,
+      datum `2025-12-01`.
+
+      **Överlämningen var alltså fel.** Både kvällssektionen 2026-08-11 och toppsektionen
+      2026-08-12 påstod att Adam inte kört om filen med 95 kg-tillägget. Datan säger att den
+      är körd. Lärdomen är billig men värd att skriva ned: **fråga databasen innan du påstår
+      något om dess innehåll**, även när ett handoff-dokument säger något annat.
+
+      **Notistexten kontrollerades genom att köra den riktiga funktionen**, inte genom att
+      resonera fram strängen. De 12 importerade bänkpunkternas datum hämtades ur databasen och
+      matades genom `importedNotice()` i ett tillfälligt test som raderades efteråt. Utfall:
+
+      > 12 punkter före januari 2026 är importerade från gamla anteckningar — datumen är uppskattade.
+
+      **Kvar, och bara detta:** Adam öppnar appen på telefonen och ser att Bänkpress visar
+      tyngsta set **95 kg** och notisraden ovan. Servern är bevisad; synken till just hans
+      telefon är det enda som inte går att verifiera härifrån utan hans inloggning.
+
+      **Ordning (historik):** 1) Adam registrerar sig i appen med sin riktiga e-post — det måste
+      han göra själv, konton och lösenord är inget jag rör. 2) Jag genererar
+      `scripts/import-adam.sql` med hans `user_id` inlagt. 3) Han läser igenom den — 21 set,
+      17 pass, läsbart i klartext.
       4) Han kör den i Supabase SQL-editorn, precis som migrationerna. 5) Appen synkar ned den.
 
       **Fasta UUID:n + `on conflict (id) do nothing`.** Körs filen två gånger händer ingenting
@@ -1747,6 +1773,23 @@ och 13.1 måste vara klar före 13.6.
       **Verifierat 2026-08-11:** filerna borta, typecheck ren, **259 tester i 21 filer gröna**,
       lint ren, bygget klart (648,69 kB precache). Noll importrader behövde ändras — vilket
       var hela poängen med att radera i stället för att fylla.
+
+- [ ] **12.22 Tankstreck i apptexten bryter mot förbudslistan. Ny 2026-08-12.**
+      Hittad vid verifieringen av 13.6. `DESIGN.md` §0.3 förbjuder tankstreck (—) i **det appen
+      skriver till användaren**, på Adams begäran: det läser som AI-skriven text. Men
+      `src/lib/importNotice.ts` producerar just det:
+
+      > 12 punkter före januari 2026 är importerade från gamla anteckningar **—** datumen är uppskattade.
+
+      Regeln skrevs samma dag som strängen upptäcktes, så det är ingen försummelse — men den
+      gäller nu och strängen bryter mot den.
+
+      **Att göra:** sök igenom `src/` efter tankstreck i **användarsynliga strängar** (inte i
+      kodkommentarer, där de är fria) och ersätt med komma, punkt eller kolon. `importNotice.ts`
+      har två förekomster, en i varje gren av entals/flertalsfallet, och båda har tester som
+      låser texten — testerna ska ändras i samma commit.
+      **Klart när:** noll tankstreck återstår i strängar som renderas, och testerna speglar det.
+      **Litet jobb**, men det hör hemma i 11B eftersom det är samma acceptanskriterium.
 
 - [ ] **12.21 `lastPulledAt`-markörerna är aldrig bevisade.** Utbruten ur A.1 2026-08-12 när
       egressutredningen avslutades. **Detta är inte en kostnadsfråga** — mätningen visade att
