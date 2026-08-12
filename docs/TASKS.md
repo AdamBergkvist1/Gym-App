@@ -1767,12 +1767,28 @@ och 13.1 måste vara klar före 13.6.
       att bevisa något ett test borde bevisat. `ExercisePage` kan sluta rendera helt utan att
       typecheck, lint eller bygge säger ett ord.
 
-      **Varför e2e och inte enhetstester på komponenterna.** Ett komponenttest hade krävt
-      `@testing-library/react` + `jsdom` i `package.json`, och nya beroenden kräver Adams ja
-      (`CLAUDE.md` §7.3). Viktigare: sidorna läser genom `useLiveQuery` mot Dexie, så ett
-      jsdom-test hade mätt en attrapp av databasen. Playwright finns redan, kör riktig WebKit
-      på 393 px, och `page.evaluate()` kan seeda IndexedDB direkt — mönstret är redan bevisat
-      i projektet (se 13.0-sektionen i `HANDOFF.md`) och användes för hand i 13.5.
+      **Varför e2e och inte enhetstester på komponenterna.** Sidorna läser genom `useLiveQuery`
+      mot Dexie, så ett jsdom-test hade mätt en attrapp av databasen i stället för databasen.
+      Det är skälet som bär. Playwright finns redan och kör riktig WebKit på 393 px.
+
+      ⚠️ **Två påståenden i den här uppgiften var fel. Rättade 2026-08-12 mot repot.**
+
+      1. **`jsdom` saknas inte.** Det ligger redan i `package.json` (`^28.0.0`) — och används
+         av ingenting. Kontrollerat mot `src/`, `e2e/`, `scripts/` och `playwright.config`:
+         `vite.config.ts:63` sätter `environment: 'node'` och ingen fil åsidosätter det. Det
+         enda beroende ett komponenttest faktiskt hade krävt är `@testing-library/react`.
+         Att jsdom ligger oanvänt är värt en egen städuppgift.
+      2. **Sådd via `page.evaluate()` är inget bevisat mönster i sviten.** Alla fyra
+         `evaluate()`-anropen i `e2e/` är **avläsningar** — mått, scroll, overflow. `bottenark`
+         sätter i stället upp sitt läge genom att **klicka sig genom UI:t**. Det som gjordes i
+         13.5 var en handpåläggning mot dev-servern (`HANDOFF.md`: *"seedad IndexedDB …
+         seedraderna raderades efteråt"*), inte något automatiserat. Tekniken fungerar alltså,
+         men det som är prövat i repot är **noll nya sömmar** — inte en.
+
+      **Följden för 11B.0e:** valet står mellan att seeda genom UI:t, som `bottenark` redan
+      gör, och att bygga ett såddinsläpp. Det senare är en skrivväg rakt in i användarens
+      databas och måste då gränsas av en byggflagga, annars följer den med
+      produktionsbundlen. Det är ett beslut, inte en formalitet.
 
       **Det som ska automatiseras är exakt det jag gjorde manuellt 2026-08-11:** seeda sju
       importerade bänkset plus ett riktigt, öppna `/ovning/<id>`, och läsa av sidan.
