@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11B.0d — tre karaktärsriktningar, ljust tema</title>
+<style>
+  /* ------------------------------------------------------------------
+     Mockup för uppgift 11B.0d. INTE appen, INTE kod som ska återanvändas.
+     Syftet är ett val mellan tre karaktärer, inte en implementation.
+
+     Samma layout i alla tre. Det som varierar är bakgrundstemperatur,
+     kontraststrategi (kant / skugga / fyllning), radieskala, accentfärg
+     och typografisk vikt.
+
+     Ikonerna nedan är egna minimala SVG:er som platshållare. Det riktiga
+     ikonpaketet väljs i 11B.0c, efter att karaktären är vald.
+     ------------------------------------------------------------------ */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #e9eaec;
+    color: #16181d;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 32px 20px 64px;
+  }
+  .sida { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .ingress { font-size: 14px; line-height: 1.55; color: #4a4f57; max-width: 68ch; margin: 0 0 28px; }
+  .ingress code { background: #d8dade; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+
+  .rad { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+  .kolumn { flex: 1 1 393px; min-width: 340px; max-width: 430px; }
+
+  .etikett { margin-bottom: 12px; }
+  .etikett .namn { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .etikett .kalla { font-size: 12.5px; color: #5a6069; margin-top: 2px; }
+
+  /* Telefonramen. 393 px = Adams iPhone 15, samma bredd som e2e-sviten. */
+  .telefon {
+    width: 393px; max-width: 100%; height: 780px;
+    border-radius: 34px; overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,.16), 0 12px 34px rgba(0,0,0,.18);
+    position: relative;
+  }
+  .skarm { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; }
+  .skarm::-webkit-scrollbar { width: 0; }
+
+  .noter {
+    margin-top: 14px; font-size: 13px; line-height: 1.6; color: #3d424a;
+    background: #fff; border-radius: 10px; padding: 14px 16px;
+    border-left: 3px solid #9aa0a8;
+  }
+  .noter b { color: #16181d; }
+  .noter ul { margin: 8px 0 0; padding-left: 18px; }
+  .noter li { margin-bottom: 5px; }
+
+  /* =================================================================
+     GEMENSAM STRUKTUR. Identisk i alla tre, bara tokens skiljer.
+     ================================================================= */
+  .app { min-height: 100%; padding: 14px 16px 96px; font-variant-numeric: tabular-nums; }
+
+  .topp { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .titel { font-size: var(--t-titel); font-weight: var(--v-titel); letter-spacing: -0.025em; }
+  .passtid { font-size: 14px; color: var(--dim); display: flex; align-items: center; gap: 5px; }
+
+  .sammanfattning { display: flex; gap: 10px; margin-bottom: 14px; }
+  .mattruta { flex: 1; padding: var(--p-matt); border-radius: var(--r-kort); background: var(--yta); border: var(--kant); box-shadow: var(--skugga); }
+  .mattruta .varde { font-size: var(--t-stor); font-weight: var(--v-stor); letter-spacing: -0.03em; line-height: 1; }
+  .mattruta .etik { font-size: 10.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); margin-top: 6px; }
+
+  .genvag {
+    display: flex; align-items: center; gap: 9px; width: 100%;
+    padding: 12px 14px; margin-bottom: 14px;
+    border-radius: var(--r-kort); background: var(--yta-svag); border: var(--kant-svag);
+    font-size: 13.5px; color: var(--dim); font-family: inherit; text-align: left;
+  }
+
+  .ovningskort { border-radius: var(--r-kort); background: var(--yta); border: var(--kant); box-shadow: var(--skugga); margin-bottom: 12px; overflow: hidden; }
+  .kortrubrik { display: flex; align-items: center; gap: 11px; padding: 13px 14px; }
+  .ikonruta { width: 36px; height: 36px; border-radius: var(--r-ikon); background: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+  .ikonruta svg { width: 19px; height: 19px; stroke: var(--pa-accent); }
+  .ovningsnamn { font-size: 16.5px; font-weight: 650; letter-spacing: -0.01em; flex: 1; }
+  .mer { color: var(--dim); padding: 4px; display: flex; }
+
+  table.set { width: 100%; border-collapse: collapse; }
+  table.set th {
+    font-size: 10px; font-weight: 700; letter-spacing: .085em; text-transform: uppercase;
+    color: var(--dim); text-align: right; padding: 0 8px 7px; font-variant-numeric: normal;
+  }
+  table.set th:first-child, table.set td:first-child { text-align: left; padding-left: 14px; width: 30px; }
+  table.set th:last-child, table.set td:last-child { text-align: center; width: 52px; padding-right: 12px; }
+  table.set td { font-size: 15.5px; text-align: right; padding: 0 8px; height: 46px; vertical-align: middle; }
+  table.set tr.klar { background: var(--klar-yta); }
+  table.set tr.klar td { color: var(--klar-text); }
+  table.set td.forra { color: var(--dim); font-size: 13.5px; }
+  table.set td.vikt, table.set td.reps { font-weight: 620; }
+  .setnr { font-size: 12.5px; font-weight: 700; color: var(--dim); }
+  .setnr.uppv { color: var(--dim); font-style: normal; }
+
+  .bock { width: 30px; height: 30px; border-radius: var(--r-bock); display: inline-grid; place-items: center; }
+  .bock.fylld { background: var(--ok); }
+  .bock.fylld svg { stroke: var(--pa-ok); }
+  .bock.tom { border: 2px solid var(--kantfarg-stark); }
+  .bock svg { width: 15px; height: 15px; }
+
+  .laggtill { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 14px; font-weight: 600; color: var(--accent-text); border-top: var(--kant-svag-topp); }
+
+  .chips { display: flex; gap: 9px; margin: 4px 0 14px; }
+  .chip { display: flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 999px; font-size: 14.5px; font-weight: 600; }
+  .chip.timer { background: var(--yta); border: var(--kant); color: var(--fg); box-shadow: var(--skugga); }
+  .chip.pb { background: var(--pb-yta); color: var(--pb-text); }
+  .chip svg { width: 15px; height: 15px; }
+
+  .knapprad { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; }
+  .knapp { display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; border-radius: var(--r-knapp); font-size: 15.5px; font-weight: 650; }
+  .knapp.sekundar { background: var(--yta); border: var(--kant); color: var(--fg); box-shadow: var(--skugga); }
+  .knapp.primar { background: var(--accent); color: var(--pa-accent); }
+
+  /* Flytande pillernavigering enligt DESIGN.md §0.5. Inte en fastsittande list. */
+  .nav {
+    position: absolute; left: 16px; right: 16px; bottom: 14px;
+    display: flex; gap: 3px; padding: 5px;
+    border-radius: 999px; background: var(--nav-yta); border: var(--kant);
+    box-shadow: 0 3px 14px rgba(0,0,0,.13);
+  }
+  .navflik { flex: 1; text-align: center; padding: 9px 0 8px; border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--dim); }
+  .navflik svg { width: 18px; height: 18px; display: block; margin: 0 auto 3px; stroke: currentColor; }
+  .navflik.aktiv { background: var(--accent); color: var(--pa-accent); }
+
+  svg.i { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* =================================================================
+     RIKTNING A — "Anteckningsblock". Referens: Ellie (Raroque).
+     Varm pappersbotten, mjuka skuggor i stället för kanter, generösa
+     radier, tegelröd accent. Karaktären är vänlig och analog.
+     ================================================================= */
+  .A {
+    --bg: #FBF8F3; --yta: #FFFFFF; --yta-svag: #F4EFE7;
+    /* --dim var #857C6F och föll på WCAG AA: 3,88:1 mot botten där kravet
+       (11B.7) är 4,5. Mörkad till #756C5F = 4,87:1 mot botten, 5,16:1 mot
+       kortytan. Uppmätt 2026-08-12, inte uppskattat. */
+    --fg: #1D1A16; --dim: #756C5F;
+    --kantfarg-stark: #C9BFB0;
+    --kant: 1px solid #EDE5D9; --kant-svag: 1px solid #E5DBCC; --kant-svag-topp: 1px solid #F0E9DE;
+    --skugga: 0 1px 2px rgba(80,60,30,.05), 0 2px 8px rgba(80,60,30,.045);
+    --accent: #C0522A; --pa-accent: #FFFFFF; --accent-text: #A8461F;
+    --ok: #2F7A55; --pa-ok: #FFFFFF; --klar-yta: #F3F7F3; --klar-text: #38423A;
+    --pb-yta: #F6E6DC; --pb-text: #8F3C1B;
+    --nav-yta: #FFFFFFEE;
+    --r-kort: 16px; --r-ikon: 11px; --r-knapp: 14px; --r-bock: 9px;
+    --t-titel: 30px; --v-titel: 700; --t-stor: 27px; --v-stor: 680; --p-matt: 13px 14px;
+    background: var(--bg); color: var(--fg);
+  }
+
+  /* =================================================================
+     RIKTNING B — "Mätinstrument". Referens: MacroFactor + Strava.
+     Sval ljusgrå botten, synliga 1px-kanter i stället för skuggor,
+     stramare radier, tät layout, siffrorna störst av allt.
+     ================================================================= */
+  .B {
+    --bg: #F2F4F6; --yta: #FFFFFF; --yta-svag: #E9ECEF;
+    --fg: #0C1116; --dim: #616B75;
+    --kantfarg-stark: #A9B2BB;
+    --kant: 1px solid #D3D9DE; --kant-svag: 1px solid #D3D9DE; --kant-svag-topp: 1px solid #E3E7EB;
+    --skugga: none;
+    --accent: #0B5FBF; --pa-accent: #FFFFFF; --accent-text: #0A5099;
+    --ok: #1B7F4B; --pa-ok: #FFFFFF; --klar-yta: #EDF4EF; --klar-text: #26303A;
+    --pb-yta: #E4EDF9; --pb-text: #0A4B95;
+    --nav-yta: #FFFFFFF2;
+    --r-kort: 9px; --r-ikon: 7px; --r-knapp: 9px; --r-bock: 6px;
+    --t-titel: 28px; --v-titel: 750; --t-stor: 30px; --v-stor: 730; --p-matt: 11px 13px;
+    background: var(--bg); color: var(--fg);
+  }
+
+  /* =================================================================
+     RIKTNING C — "Kort". Referens: Luna (Raroque) + Lifesum.
+     Ren vit sida, upphöjda kort med mjuk skugga, stora radier,
+     mättad grön accent i fyllda former. Luftigast av de tre.
+     ================================================================= */
+  .C {
+    --bg: #FFFFFF; --yta: #FFFFFF; --yta-svag: #F5F6F7;
+    --fg: #111214; --dim: #6E747C;
+    --kantfarg-stark: #B4BAC1;
+    --kant: 1px solid #ECEDEF; --kant-svag: 1px solid #ECEDEF; --kant-svag-topp: 1px solid #F1F2F4;
+    --skugga: 0 1px 2px rgba(16,20,26,.05), 0 6px 18px rgba(16,20,26,.07);
+    --accent: #12694A; --pa-accent: #FFFFFF; --accent-text: #0F5A3F;
+    --ok: #12694A; --pa-ok: #FFFFFF; --klar-yta: #F1F7F4; --klar-text: #2A332E;
+    --pb-yta: #E7F3ED; --pb-text: #0D5137;
+    --nav-yta: #FFFFFFF7;
+    --r-kort: 20px; --r-ikon: 13px; --r-knapp: 16px; --r-bock: 999px;
+    --t-titel: 31px; --v-titel: 700; --t-stor: 28px; --v-stor: 690; --p-matt: 14px 15px;
+    background: var(--bg); color: var(--fg);
+  }
+</style>
+</head>
+<body>
+<div class="sida">
+
+  <h1>11B.0d · Tre karaktärsriktningar, ljust tema</h1>
+  <p class="ingress">
+    Samma skärm i alla tre: <b>Pass mitt i ett set</b>. Innehållet är identiskt med flit, så att
+    valet gäller karaktär och inte layout. Layouten väljs i steg 2, efter det här valet.
+    Bredden är 393 px, alltså Adams iPhone 15 och samma bredd som e2e-sviten mäter mot.
+    Ikonerna är egna platshållare; det riktiga paketet väljs i <code>11B.0c</code> när karaktären
+    är vald, eftersom ikonstil följer av karaktären.
+  </p>
+
+  <div class="rad">
+
+    <!-- ===================== A ===================== -->
+    <div class="kolumn">
+      <div class="etikett">
+        <div class="namn">A · Anteckningsblock</div>
+        <div class="kalla">Referens: Ellie (Chris Raroque)</div>
+      </div>
+      <div class="telefon"><div class="skarm A"><div class="app">
+
+        <div class="topp">
+          <div class="titel">Pass</div>
+          <div class="passtid">
+            <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+            42 min
+          </div>
+        </div>
+
+        <div class="sammanfattning">
+          <div class="mattruta"><div class="varde">12</div><div class="etik">Set</div></div>
+          <div class="mattruta"><div class="varde">4 850</div><div class="etik">Volym kg</div></div>
+          <div class="mattruta"><div class="varde">3</div><div class="etik">Övn</div></div>
+        </div>
+
+        <div class="genvag">
+          <svg class="i" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+          Skriv i stället, "Bänk 90x5"
+        </div>
+
+        <div class="ovningskort">
+          <div class="kortrubrik">
+            <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg></div>
+            <div class="ovningsnamn">Bänkpress</div>
+            <div class="mer"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+          </div>
+          <table class="set">
+            <tr><th>Set</th><th>Förra</th><th>Kg</th><th>Reps</th><th></th></tr>
+            <tr class="klar"><td><span class="setnr uppv">W</span></td><td class="forra">60×10</td><td class="vikt">60</td><td class="reps">10</td>
+              <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+            <tr class="klar"><td><span class="setnr">1</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+              <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+            <tr><td><span class="setnr">2</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+              <td><span class="bock tom"></span></td></tr>
+          </table>
+          <div class="laggtill">
+            <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Lägg till set
+          </div>
+        </div>
+
+        <div class="chips">
+          <div class="chip timer">
+            <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg> 1:12
+          </div>
+          <div class="chip pb">
+            <svg class="i" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3"/></svg> PB +2,5 kg
+          </div>
+        </div>
+
+        <div class="ovningskort">
+          <div class="kortrubrik">
+            <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v9M7 7l5-4 5 4M5 21h14M8 12v9M16 12v9"/></svg></div>
+            <div class="ovningsnamn">Latsdrag</div>
+            <div class="mer"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+          </div>
+        </div>
+
+        <div class="knapprad">
+          <div class="knapp sekundar"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Lägg till övning</div>
+          <div class="knapp primar"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg> Avsluta pass</div>
+        </div>
+
+      </div>
+      <div class="nav">
+        <div class="navflik aktiv"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg>Pass</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M12 8v5l3 2M3 12a9 9 0 109-9 9 9 0 00-6.5 2.8L3 8"/></svg>Historik</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Övningar</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/></svg>Mer</div>
+      </div>
+      </div>
+      <div class="noter">
+        <b>Vad som lånas, och varför.</b>
+        <ul>
+          <li><b>Varm pappersbotten</b> <code>#FBF8F3</code> i stället för vitt. Ellie använder det för att skärmen ska kännas som ett block man skriver i, inte som ett formulär.</li>
+          <li><b>Skuggor i stället för kanter.</b> Korten lyfts från sidan, vilket ger djup utan streck.</li>
+          <li><b>Tegelröd accent</b> <code>#C0522A</code>. Varm, läser som verktyg och inte som wellness, och krockar inte med grönt för sparat.</li>
+          <li><b>Generösa radier</b> (16 px kort, 11 px ikonruta). Vänlig karaktär.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===================== B ===================== -->
+    <div class="kolumn">
+      <div class="etikett">
+        <div class="namn">B · Mätinstrument</div>
+        <div class="kalla">Referens: MacroFactor + Strava</div>
+      </div>
+      <div class="telefon"><div class="skarm B"><div class="app">
+
+        <div class="topp">
+          <div class="titel">Pass</div>
+          <div class="passtid">
+            <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+            42 min
+          </div>
+        </div>
+
+        <div class="sammanfattning">
+          <div class="mattruta"><div class="varde">12</div><div class="etik">Set</div></div>
+          <div class="mattruta"><div class="varde">4 850</div><div class="etik">Volym kg</div></div>
+          <div class="mattruta"><div class="varde">3</div><div class="etik">Övn</div></div>
+        </div>
+
+        <div class="genvag">
+          <svg class="i" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+          Skriv i stället, "Bänk 90x5"
+        </div>
+
+        <div class="ovningskort">
+          <div class="kortrubrik">
+            <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg></div>
+            <div class="ovningsnamn">Bänkpress</div>
+            <div class="mer"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+          </div>
+          <table class="set">
+            <tr><th>Set</th><th>Förra</th><th>Kg</th><th>Reps</th><th></th></tr>
+            <tr class="klar"><td><span class="setnr uppv">W</span></td><td class="forra">60×10</td><td class="vikt">60</td><td class="reps">10</td>
+              <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+            <tr class="klar"><td><span class="setnr">1</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+              <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+            <tr><td><span class="setnr">2</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+              <td><span class="bock tom"></span></td></tr>
+          </table>
+          <div class="laggtill">
+            <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Lägg till set
+          </div>
+        </div>
+
+        <div class="chips">
+          <div class="chip timer">
+            <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg> 1:12
+          </div>
+          <div class="chip pb">
+            <svg class="i" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3"/></svg> PB +2,5 kg
+          </div>
+        </div>
+
+        <div class="ovningskort">
+          <div class="kortrubrik">
+            <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v9M7 7l5-4 5 4M5 21h14M8 12v9M16 12v9"/></svg></div>
+            <div class="ovningsnamn">Latsdrag</div>
+            <div class="mer"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+          </div>
+        </div>
+
+        <div class="knapprad">
+          <div class="knapp sekundar"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Lägg till övning</div>
+          <div class="knapp primar"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg> Avsluta pass</div>
+        </div>
+
+      </div>
+      <div class="nav">
+        <div class="navflik aktiv"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg>Pass</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M12 8v5l3 2M3 12a9 9 0 109-9 9 9 0 00-6.5 2.8L3 8"/></svg>Historik</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Övningar</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/></svg>Mer</div>
+      </div>
+      </div>
+      <div class="noter">
+        <b>Vad som lånas, och varför.</b>
+        <ul>
+          <li><b>Sval ljusgrå botten</b> <code>#F2F4F6</code> med vita kort. MacroFactors sätt att låta datan se uppmätt ut.</li>
+          <li><b>Kanter i stället för skuggor.</b> Strama 1 px-linjer, ingen upphöjning. Billigare att rendera och läser som ett instrument.</li>
+          <li><b>Siffran är störst av allt</b> (30 px mot titelns 28). Den enda riktningen där talen slår rubriken.</li>
+          <li><b>Stram radie</b> (9 px). Tätast av de tre, mest innehåll per skärmhöjd.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===================== C ===================== -->
+    <div class="kolumn">
+      <div class="etikett">
+        <div class="namn">C · Kort</div>
+        <div class="kalla">Referens: Luna (Chris Raroque) + Lifesum</div>
+      </div>
+      <div class="telefon"><div class="skarm C"><div class="app">
+
+        <div class="topp">
+          <div class="titel">Pass</div>
+          <div class="passtid">
+            <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+            42 min
+          </div>
+        </div>
+
+        <div class="sammanfattning">
+          <div class="mattruta"><div class="varde">12</div><div class="etik">Set</div></div>
+          <div class="mattruta"><div class="varde">4 850</div><div class="etik">Volym kg</div></div>
+          <div class="mattruta"><div class="varde">3</div><div class="etik">Övn</div></div>
+        </div>
+
+        <div class="genvag">
+          <svg class="i" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+          Skriv i stället, "Bänk 90x5"
+        </div>
+
+        <div class="ovningskort">
+          <div class="kortrubrik">
+            <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg></div>
+            <div class="ovningsnamn">Bänkpress</div>
+            <div class="mer"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+          </div>
+          <table class="set">
+            <tr><th>Set</th><th>Förra</th><th>Kg</th><th>Reps</th><th></th></tr>
+            <tr class="klar"><td><span class="setnr uppv">W</span></td><td class="forra">60×10</td><td class="vikt">60</td><td class="reps">10</td>
+              <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+            <tr class="klar"><td><span class="setnr">1</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+              <td><span class="bock fylld"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span></td></tr>
+            <tr><td><span class="setnr">2</span></td><td class="forra">90×5</td><td class="vikt">90</td><td class="reps">5</td>
+              <td><span class="bock tom"></span></td></tr>
+          </table>
+          <div class="laggtill">
+            <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Lägg till set
+          </div>
+        </div>
+
+        <div class="chips">
+          <div class="chip timer">
+            <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg> 1:12
+          </div>
+          <div class="chip pb">
+            <svg class="i" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3"/></svg> PB +2,5 kg
+          </div>
+        </div>
+
+        <div class="ovningskort">
+          <div class="kortrubrik">
+            <div class="ikonruta"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v9M7 7l5-4 5 4M5 21h14M8 12v9M16 12v9"/></svg></div>
+            <div class="ovningsnamn">Latsdrag</div>
+            <div class="mer"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></div>
+          </div>
+        </div>
+
+        <div class="knapprad">
+          <div class="knapp sekundar"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Lägg till övning</div>
+          <div class="knapp primar"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg> Avsluta pass</div>
+        </div>
+
+      </div>
+      <div class="nav">
+        <div class="navflik aktiv"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/></svg>Pass</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M12 8v5l3 2M3 12a9 9 0 109-9 9 9 0 00-6.5 2.8L3 8"/></svg>Historik</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Övningar</div>
+        <div class="navflik"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/></svg>Mer</div>
+      </div>
+      </div>
+      <div class="noter">
+        <b>Vad som lånas, och varför.</b>
+        <ul>
+          <li><b>Ren vit sida</b> med vita kort som skiljs av mjuk skugga, inte av färg. Lunas grepp för att en sifferrik skärm ska kännas lugn.</li>
+          <li><b>Djupgrön accent</b> <code>#12694A</code>. Samma färg som sparat, medvetet: i den här riktningen är accenten och bekräftelsen samma sak, vilket ger färre färger totalt.</li>
+          <li><b>Stora radier</b> (20 px kort, rund bock). Luftigast av de tre.</li>
+          <li><b>Kostnaden:</b> minst innehåll per skärmhöjd. Ett pass med 25 set kräver mest bläddring här.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
