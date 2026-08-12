@@ -1,4 +1,5 @@
 import { formatWeight } from '../lib/steps';
+import { IkonBock } from './icons';
 import type { PlannedSet } from '../db/plan';
 
 /**
@@ -133,7 +134,7 @@ export function SetRow({ index, set, ghost, onOpenAdjust, onConfirm, onUnconfirm
             : 'border border-[var(--color-line-strong)] text-[var(--color-dim)] active:opacity-60',
         ].join(' ')}
       >
-        ✓
+        <IkonBock className="size-6" />
       </button>
     </li>
   );

@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { formatVolume } from '../../lib/steps';
 import { db } from '../../db/db';
 import { listTrainedExercises, listWorkoutSummaries } from '../../db/history';
+import { IkonPilHöger } from '../icons';
 
 /**
  * Passhistorik och övningslista. Uppgift 9.1.
@@ -85,8 +86,9 @@ export function HistoryPage() {
                   className="flex items-center justify-between bg-[var(--color-surface)] px-3 py-2"
                 >
                   <span>{namn.get(t.exerciseId) ?? 'Okänd övning'}</span>
-                  <span className="text-sm text-[var(--color-dim)] tabular-nums">
-                    {t.setCount} set →
+                  <span className="flex items-center gap-1 text-sm text-[var(--color-dim)] tabular-nums">
+                    {t.setCount} set
+                    <IkonPilHöger className="size-4" />
                   </span>
                 </Link>
               </li>

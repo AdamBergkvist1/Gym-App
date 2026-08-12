@@ -854,9 +854,13 @@ unicode: "ea95"
     <li><b>Lucide saknar <code>history</code> helt.</b> Kontrollerat mot repots trees-API, inte
       antaget. Historik-fliken ovan visar därför <code>rotate-ccw</code>, som är en pil i cirkel
       utan urtavla. Tabler har en riktig <code>history</code> med klockvisare.</li>
-    <li><b>Tabler ritar tyngre.</b> Båda paketen har nominellt <code>stroke-width="2"</code> på
-      24×24, men Tabler använder fler och längre streck per ikon — filerna är 30–60 % större,
-      vilket syns direkt i strippen överst.</li>
+    <li><b>Tabler ritar INTE tyngre. Rättat 2026-08-12.</b> Den här punkten sa först motsatsen,
+      och den byggde på filstorlek — ett mått som inte säger något om hur mycket bläck en ikon
+      lägger på skärmen. Uppmätt med <code>getTotalLength()</code> på varje geometri, vid
+      identisk <code>stroke-width="2"</code>, drar Tabler <b>441 enheter mot Lucides 470</b>,
+      alltså <b>6 % mindre linje</b>. Att Tablers filer är större beror på en
+      metadatakommentar överst i varje fil (taggar, kategori, version) och på att attributen
+      står radbrutna — inte på fler streck.</li>
     <li><b>Lucides licens är två licenser.</b> <code>check</code>, <code>plus</code>,
       <code>arrow-left</code>, <code>arrow-right</code> och <code>ellipsis</code> är
       Feather-ärvda och alltså MIT (Cole Bemis). Resten är ISC (Lucide Contributors). Båda

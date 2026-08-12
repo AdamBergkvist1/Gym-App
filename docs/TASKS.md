@@ -951,12 +951,25 @@ nuvarande.
       **Beslutsunderlag byggt 2026-08-12: `docs/mockups/11b-ikoner.html`.** Samma tio ikoner ur
       Lucide och Tabler, i 11B.0d:s valda design, med Fraunces **inbäddad i filen** — den
       renderar alltså likadant offline och om fem år, till skillnad från de fem tidigare
-      mockuperna som hämtar typsnittet över nätet. ⏳ **Adam har ännu inte valt paket.**
+      mockuperna som hämtar typsnittet över nätet.
 
-      **Ett fynd som ändrar Lucides kostnad:** Lucide har **ingen `history`-ikon**, kontrollerat
-      mot repots trees-API och inte antaget. Historik-fliken får då bli `calendar-days` eller
-      `rotate-ccw`. Det förra läser troligen bättre för en logg som visar pass per datum, men det
-      är ett formval och inte en teknikalitet. Tabler har en riktig `history`.
+      ### ✅ Tabler valt av Adam 2026-08-12. Nio ikoner i `src/ui/icons.tsx`
+
+      Nio `d`-strängar kopierade som JSX med MIT-raden i filhuvudet, noll nya beroenden.
+      **Sex av de sju glyferna är borta.** Kvar: 🏋 i `ExerciseCard.tsx:66`, som inte kan
+      raderas förrän B4:s accentbricka finns — den hör till steg 4, inte hit.
+
+      **Två fynd ur mätning:**
+      1. **Lucide har ingen `history`-ikon**, kontrollerat mot repots trees-API. Spelar inte
+         längre roll för valet, men står kvar för att slippa utreda igen.
+      2. **"Tabler ritar tyngre" var fel och är rättat.** Påståendet byggde på filstorlek.
+         Uppmätt linjelängd vid identisk `stroke-width` ger Tabler **441 enheter mot Lucides
+         470** — 6 % *mindre* linje. Se `docs/EXTERNT.md`.
+
+      ⚠️ **Grindarna är INTE körda på den här ändringen.** Maskinen saknar Node. Kontrollerat
+      för hand i stället: inga komponenttester finns (samtliga `*.test.ts` ligger i `db`, `lib`,
+      `parser`, `sync`, `ai`, `timer`), och båda e2e-specarna väljer på roll och tillgängligt
+      namn — inte på `✓`, `←`, `→` eller `⋯`. **Adam kör grindarna hemma.**
       **Klart när:** de ikoner vi faktiskt använder är kopierade som SVG-filer med ursprung och
       licens i kommentar överst, raden finns i `docs/EXTERNT.md`, och noll emoji återstår i
       `src/ui/`. **Noll nya poster i `package.json`.**

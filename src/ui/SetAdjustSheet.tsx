@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ScrollPicker } from './ScrollPicker';
+import { IkonBock } from './icons';
 import {
   DIGIT_VALUES,
   HALF_VALUES,
@@ -221,7 +222,7 @@ export function SetAdjustSheet({
                   : 'border-[var(--color-line-strong)]',
               ].join(' ')}
             >
-              {isWarmup ? '✓' : ''}
+              {isWarmup ? <IkonBock className="size-3.5" /> : null}
             </span>
             Uppvärmningsset
           </button>

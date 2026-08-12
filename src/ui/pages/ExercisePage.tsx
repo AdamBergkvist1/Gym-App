@@ -5,6 +5,7 @@ import { formatWeight } from '../../lib/steps';
 import { db } from '../../db/db';
 import { getExerciseHistory, getPersonalRecords } from '../../db/history';
 import { Sparkline } from '../Sparkline';
+import { IkonPilVänster } from '../icons';
 
 /**
  * En övning över tid: personbästa, e1RM-trend och alla set. Uppgift 9.2, 9.4, 9.5.
@@ -54,8 +55,14 @@ export function ExercisePage() {
   return (
     <section className="space-y-5">
       <div>
-        <Link to="/historik" className="text-sm text-[var(--color-dim)]">
-          ← Historik
+        {/* `inline-flex`, inte `flex`: med `flex` hade länken tagit hela radens
+            bredd och gett en tryckyta långt utanför texten. */}
+        <Link
+          to="/historik"
+          className="inline-flex items-center gap-1 text-sm text-[var(--color-dim)]"
+        >
+          <IkonPilVänster className="size-4" />
+          Historik
         </Link>
         <h1 className="mt-1 text-2xl font-semibold">{exercise.name}</h1>
         <p className="text-sm text-[var(--color-dim)]">

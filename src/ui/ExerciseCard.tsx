@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { SetRow, SET_GRID } from './SetRow';
 import { SetAdjustSheet } from './SetAdjustSheet';
+import { IkonBock, IkonPrickar } from './icons';
 import { getLastPerformance } from '../db/repo';
 import type { PlannedExercise } from '../db/plan';
 import type { LocalExercise } from '../db/types';
@@ -78,9 +79,9 @@ export function ExerciseCard({
           onClick={() => setMeny((v) => !v)}
           aria-label={`Fler val för ${exercise?.name ?? 'övningen'}`}
           aria-expanded={meny}
-          className="h-12 w-10 min-h-0 shrink-0 text-[var(--color-dim)]"
+          className="flex h-12 w-10 min-h-0 shrink-0 items-center justify-center text-[var(--color-dim)]"
         >
-          ⋯
+          <IkonPrickar className="size-5" />
         </button>
       </header>
 
@@ -137,7 +138,11 @@ export function ExerciseCard({
         <span className="text-center text-[0.65rem] tracking-wide text-[var(--color-dim)] uppercase">
           Reps
         </span>
-        <span className="text-center text-[0.65rem] text-[var(--color-dim)]">✓</span>
+        {/* Kolumnhuvudet, inte en knapp. `mx-auto` för att Tailwinds preflight
+            gör svg till `display: block`, och då centrerar inte `text-center`. */}
+        <span className="text-[var(--color-dim)]">
+          <IkonBock className="mx-auto size-3" />
+        </span>
       </div>
 
       <ul>

@@ -30,8 +30,8 @@ samma commit.
 | Färgvärden ur `grayDark`, `greenDark`, `amberDark`, `redDark` | [radix-ui/colors](https://github.com/radix-ui/colors) | **MIT** | `docs/DESIGN.md` §1 → `src/index.css` (fas 11B steg 4) | 2026-08-04 |
 | `handoff`-skillen, i praktiken ordagrant | [mattpocock/skills](https://github.com/mattpocock/skills) | **MIT** | `.claude/skills/handoff/SKILL.md` | 2026-08-11 |
 | Fraunces, variabel woff2 (latin) + licenstexten | [undercasetype/Fraunces](https://github.com/undercasetype/Fraunces) | **OFL-1.1** | `src/assets/fonts/fraunces-var-latin.woff2`, `src/assets/fonts/OFL.txt` → `src/index.css` (fas 11B steg 4) | 2026-08-12 |
-| 12 ikon-SVG:er, inbäddade i beslutsmockupen | [lucide-icons/lucide](https://github.com/lucide-icons/lucide) | **ISC** + **MIT** | `docs/mockups/11b-ikoner.html` | 2026-08-12 |
-| 10 ikon-SVG:er, inbäddade i beslutsmockupen | [tabler/tabler-icons](https://github.com/tabler/tabler-icons) | **MIT** | `docs/mockups/11b-ikoner.html` | 2026-08-12 |
+| 12 ikon-SVG:er, **bara** i beslutsmockupen | [lucide-icons/lucide](https://github.com/lucide-icons/lucide) | **ISC** + **MIT** | `docs/mockups/11b-ikoner.html` | 2026-08-12 |
+| 9 ikoners `d`-strängar. **Valt paket** | [tabler/tabler-icons](https://github.com/tabler/tabler-icons) | **MIT** | `src/ui/icons.tsx`, `docs/mockups/11b-ikoner.html` | 2026-08-12 |
 
 ### mattpocock/skills — `handoff`
 
@@ -117,24 +117,34 @@ typsnitt sätter alla tal.
 två filer som ännu **inte importeras av någon kod**, så det finns inget att bryta — men
 `@font-face` i `src/index.css` (fas 11B steg 4) måste köras mot grindarna på jobbdatorn.
 
-### Ikonpaketen — Lucide och Tabler, tills vidare bara i mockupen
+### Ikonerna — Tabler valt av Adam 2026-08-12
 
-- **Läget:** båda paketens SVG-kod ligger inbäddad i `docs/mockups/11b-ikoner.html`, som är
-  beslutsunderlaget för 11B.0c. **Adam har ännu inte valt paket.** När valet är gjort kopieras
-  de valda ikonerna till `src/ui/icons/` med licensrad i filhuvudet, och det förlorande paketet
-  försvinner ur mockupen först när mockupen är överspelad — den ska gå att granska i efterhand.
-- **Licenserna lästa i filen, inte ur sökträffar.** Lucides `LICENSE` innehåller **två**:
-  ISC (*Copyright (c) 2026 Lucide Icons and Contributors*) för Lucides egna, och MIT
-  (*Copyright (c) 2013-present Cole Bemis*) för de Feather-ärvda. Tabler är en enda MIT
-  (*Copyright (c) 2020-2026 Paweł Kuna*).
-- **Vilka av våra Lucide-val som är MIT och inte ISC:** `check`, `plus`, `arrow-left`,
-  `arrow-right` samt `ellipsis` — den sista står i licenslistan under sitt gamla namn
-  `more-horizontal`. Övriga (`dumbbell`, `list`, `timer`, `keyboard`, `rotate-ccw`,
-  `clock-arrow-up`, `calendar-days`) är ISC. **Väljs Lucide måste båda upphovsrättsraderna
-  följa med**, fördelade på rätt filer.
-- **Lucide saknar `history` helt**, verifierat mot repots trees-API. Tabler har den.
-- **Noll nya poster i `package.json`** i båda fallen. Ikonerna kopieras som SVG-filer, inte
-  som beroende — samma "data slår kod" som gäller Radix ovan.
+- **Licensen läst i filen, inte ur sökträffar:** Tablers `LICENSE` är en enda MIT,
+  *Copyright (c) 2020-2026 Paweł Kuna*. Raden står i filhuvudet på `src/ui/icons.tsx` **och**
+  här. För kopierad **kod** hör den hemma på båda ställena — till skillnad från Radix färgvärden
+  ovan, där registret ensamt räcker.
+- **Vad som kopierats: nio `d`-strängar.** `check`, `plus`, `arrow-left`, `arrow-right`,
+  `dots`, `barbell`, `history`, `list`, `stopwatch`. Ingen SVG-fil, inget npm-paket, ingen
+  byggkedja. **Bundlen växer med under 2 kB.**
+- **Vad som INTE kopierats:** ramen runt strecken — `viewBox`, `stroke-width`, ändavslut,
+  `aria-hidden` och TypeScript-typerna — är vår, skriven enligt §7.3 steg 6.
+- **Varför JSX och inte `.svg`-filer:** att importera SVG som komponenter kräver
+  `vite-plugin-svgr`, och 11B.0c förbjuder nya poster i `package.json`. De två
+  acceptanskriterierna stod alltså mot varandra; det som väger tyngst är noll nya beroenden.
+- **Noll nya poster i `package.json`.** "Data slår kod" ur §7.1, samma linje som Radix.
+
+**Lucide ligger kvar i mockupen och ska inte städas bort.** `docs/mockups/11b-ikoner.html` bär
+båda paketens SVG-kod, för att beslutet ska gå att granska i efterhand. Det var precis det som
+inte gick för lime-valet. Lucides villkor gäller alltså fortfarande oss, och de är två licenser:
+ISC (*Copyright (c) 2026 Lucide Icons and Contributors*) för dess egna ikoner, MIT
+(*Copyright (c) 2013-present Cole Bemis*) för de Feather-ärvda.
+
+**Ett mätfel som rättades samma dag, och det är värt att minnas metodmässigt.** Mockupen
+påstod först att *"Tabler ritar tyngre"*. Det byggde på **filstorlek**, som inte säger något om
+hur mycket bläck en ikon lägger på skärmen. Uppmätt med `getTotalLength()` över varje geometri,
+vid identisk `stroke-width="2"`, drar Tabler **441 enheter mot Lucides 470** — alltså 6 %
+*mindre* linje. Storleksskillnaden i filerna kommer från metadatakommentaren överst och den
+radbrutna attributformateringen. **Proxymått är inte mätningar.**
 
 ---
 
