@@ -38,8 +38,12 @@ i Windows, vilket var hela poängen på en arbetsgivares maskin.
 
 ### Vad som gjordes — tio commits, INGEN pushad
 
-⚠️ **`origin/main` ligger kvar på `b7cb126`.** Alla tio commits nedan är bara lokala.
-`HEAD` = `4b59905`. Arbetsträdet rent.
+✅ **Allt är pushat.** `HEAD` = `origin/main` = `61459b9`, kontrollerat efter en färsk `fetch`
+vid sessionens slut. Arbetsträdet rent.
+
+Tabellen nedan listar de tio commits som utgör själva arbetet. Därefter följde fyra
+dokumentcommits: `836371a` (granskningen noterad), `1b7b09a` (den här överlämningen) och
+`c341080` + `61459b9` (städning av kvarlämnade 🆕-markörer i den här filen).
 
 | Commit | Vad |
 |---|---|
