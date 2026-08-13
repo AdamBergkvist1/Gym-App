@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import type { LocalSet } from '../src/db/types';
+import type { LocalSet, LocalWorkout } from '../src/db/types';
 
 /**
  * Delade hjälpare för e2e-sviten.
@@ -59,16 +59,27 @@ export const IMPORTERAT_SET: SåddSet = {
   updatedAt: '2024-04-04T10:00:00.000Z',
 };
 
+export interface Övning {
+  id: string;
+  name: string;
+}
+
 /**
- * Väntar tills appen hunnit seeda övningskatalogen och returnerar en övnings id.
+ * Väntar tills appen hunnit seeda övningskatalogen och returnerar de `antal`
+ * första övningarna.
  *
- * Läser ur databasen i stället för att hårdkoda ett id: katalogen är seedad av
- * `bootstrap.ts` och dess id:n är inte vårt att bestämma.
+ * Läser ur databasen i stället för att hårdkoda id:n: katalogen är seedad av
+ * `bootstrap.ts` och dess id:n är inte våra att bestämma.
+ *
+ * ⚠️ **`antal` är ett KRAV, inte en önskan.** Väntan löser inte ut förrän så
+ * många rader finns. Hade den nöjt sig med färre kunde ett test som behöver två
+ * övningar ha fått en enda och fallit på en `undefined` långt senare, med ett
+ * felmeddelande som pekar åt fel håll.
  */
-export async function hämtaÖvning(page: Page): Promise<{ id: string; name: string }> {
+export async function hämtaÖvningar(page: Page, antal = 1): Promise<Övning[]> {
   const handtag = await page.waitForFunction(
-    () =>
-      new Promise<{ id: string; name: string } | null>((resolve) => {
+    (antal) =>
+      new Promise<Array<{ id: string; name: string }> | null>((resolve) => {
         const öppna = indexedDB.open('gym');
         öppna.onerror = () => resolve(null);
         öppna.onsuccess = () => {
@@ -86,20 +97,30 @@ export async function hämtaÖvning(page: Page): Promise<{ id: string; name: str
           begäran.onsuccess = () => {
             const rader = begäran.result as Array<{ id: string; name: string }>;
             db.close();
-            resolve(rader.length > 0 ? { id: rader[0]!.id, name: rader[0]!.name } : null);
+            resolve(
+              rader.length >= antal
+                ? rader.slice(0, antal).map((r) => ({ id: r.id, name: r.name }))
+                : null
+            );
           };
         };
       }),
-    null,
+    antal,
     { timeout: 15_000 }
   );
 
-  const övning = await handtag.jsonValue();
+  const övningar = await handtag.jsonValue();
   // `waitForFunction` löser först ut på ett sanningsenligt värde, så null kan
   // inte nås här. Kontrollen finns för typerna — och ger ett begripligt fel i
   // stället för ett kryptiskt om Playwrights beteende någon gång ändras.
-  if (!övning) throw new Error('övningskatalogen seedades aldrig');
-  return övning;
+  if (!övningar) throw new Error('övningskatalogen seedades aldrig');
+  return övningar;
+}
+
+/** Bekvämlighet för de tester som bara behöver en övning. */
+export async function hämtaÖvning(page: Page): Promise<Övning> {
+  const [övning] = await hämtaÖvningar(page, 1);
+  return övning!;
 }
 
 /**
@@ -142,5 +163,63 @@ export async function seedaRått(
         };
       }),
     { exerciseId, mall: { ...IMPORTERAT_SET, ...överskrivning } }
+  );
+}
+
+/**
+ * Ett pass loggat i appen. Mallen som `seedaPassRått` skriver om inget annat sägs.
+ *
+ * `isImported: false` är default med flit: det importerade passet är undantaget
+ * och ska behöva skrivas ut vid anropet, så att det syns i testet vilket av två
+ * pass som är vilket.
+ */
+const PASS_MALL: LocalWorkout = {
+  id: 'sadd-pass-1',
+  startedAt: '2024-07-01T17:00:00.000Z',
+  endedAt: '2024-07-01T18:00:00.000Z',
+  title: null,
+  note: null,
+  isImported: false,
+  isDeleted: false,
+  updatedAt: '2024-07-01T18:00:00.000Z',
+};
+
+/**
+ * Skriver ett pass rått i `workouts`, förbi Dexie. Returnerar true vid lyckad
+ * skrivning — och **returvärdet måste assertas**, av exakt samma skäl som står
+ * över `seedaRått`.
+ *
+ * VARFÖR DEN BEHÖVS: `IMPORTERAT_SET` är föräldralöst med flit (12.27). Det
+ * duger för `getExerciseHistory`, som aldrig slår upp passet, men vakt 4 mäter
+ * `listWorkoutSummaries` — och den läser `workouts`-tabellen. Utan ett riktigt
+ * seedat pass hade vakten mätt en tom lista och gått grön av fel skäl.
+ *
+ * `isImported: true` kan inte skapas genom appen (samma sak som `source:
+ * 'import'` på ett set), så rått är enda vägen.
+ */
+export async function seedaPassRått(
+  page: Page,
+  överskrivning: Partial<LocalWorkout> = {}
+): Promise<boolean> {
+  return await page.evaluate(
+    (pass) =>
+      new Promise<boolean>((resolve) => {
+        const öppna = indexedDB.open('gym');
+        öppna.onerror = () => resolve(false);
+        öppna.onsuccess = () => {
+          const db = öppna.result;
+          const tx = db.transaction('workouts', 'readwrite');
+          tx.objectStore('workouts').put(pass);
+          tx.oncomplete = () => {
+            db.close();
+            resolve(true);
+          };
+          tx.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+        };
+      }),
+    { ...PASS_MALL, ...överskrivning }
   );
 }
