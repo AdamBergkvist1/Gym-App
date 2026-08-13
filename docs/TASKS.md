@@ -2066,7 +2066,7 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** posten är borta ur `package.json` och alla fem grindarna är gröna.
       **Litet jobb.**
 
-- [ ] **12.25 `test.fail()` i såddprövningen täcker sin egen uppsättning. Ny 2026-08-13.**
+- [x] **12.25 `test.fail()` i såddprövningen täcker sin egen uppsättning. Ny 2026-08-13. KLAR samma dag.**
       Funnen av `/code-review` (Spec-axeln) på commit `05c21b7`. **Det allvarligaste fyndet i
       granskningen.**
 
@@ -2088,11 +2088,32 @@ och 13.1 måste vara klar före 13.6.
       fortfarande. Det är det **omvända** som inte gör det: att grönt betyder att mätningen
       faktiskt utfördes.
 
-      **Att göra:** flytta uppsättningen (rad 145–150) utanför det förväntat-röda området.
-      Antingen till en `beforeEach`, eller genom att dela testet så att `test.fail()` bara
-      omsluter den sista `expect`-raden.
-      **Klart när:** en avsiktligt trasig uppsättning gör testet **rött**, inte grönt.
-      Grindarna gröna.
+      ✅ **LÖST 2026-08-13, men inte på det sätt uppgiften först föreslog.**
+
+      Förslaget här löd *"flytta uppsättningen till en `beforeEach`, eller dela testet så att
+      `test.fail()` bara omsluter den sista `expect`-raden"*. **Båda vägarna bygger på ett
+      felaktigt antagande:** `test.fail()` går inte att rikta mot en rad. Den markerar hela
+      testet som förväntat rött oavsett var i kroppen den står, och ett fel i en `beforeEach`
+      räknas fortfarande som att testet föll. Att flytta annoteringen hade inte löst något.
+
+      **Det som gjordes i stället: påståendet vändes.** Uteblivenhet var vad vi faktiskt mätte,
+      alltså är det uteblivenhet som påstås. `test.fail()` är borta och testet är ett vanligt
+      grönt test. Båda egenskaperna gäller nu:
+
+      - Går uppsättningen sönder blir testet **rött**, som vilket test som helst.
+      - Börjar liveuppdateringen plötsligt fungera dyker notisen upp, `toHaveCount(0)` faller,
+        och körningen blir röd. Exakt det larm `test.fail()` var till för.
+
+      En **fast väntan på 3 s** lades in före mätningen, och den är motiverad i filen: ett
+      negativt påstående går inte att bevisa med `expect`:s automatiska omförsök, eftersom
+      `toHaveCount(0)` lyckas direkt vid noll träffar och därmed hade gått grönt i samma
+      ögonblick som sådden — långt innan en eventuell uppdatering hunnit fram.
+
+      **Verifierat 2026-08-13, inte antaget.** Uppsättningen sabbades med flit (rubriknamnet
+      byttes mot en sträng som inte finns). Testet blev **rött**, `1 failed`, genom alla tre
+      omförsöken. Med den gamla `test.fail()` hade samma sabotage rapporterats som förväntat
+      fel och räknats som grönt. Därefter återställt, och grindarna körda: typecheck ren,
+      lint 0 fel, **e2e 36 passed**.
 
 - [ ] **12.26 Såddprövningens selektor motsäger sin egen kommentar. Ny 2026-08-13.**
       Funnen av `/code-review` (Spec-axeln). `e2e/sadd-provning.spec.ts:120-121`:

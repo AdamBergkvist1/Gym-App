@@ -122,26 +122,34 @@ test('1. sådd följt av navigering syns på sidan', async ({ page }) => {
 });
 
 /**
- * MÄTT 2026-08-12: detta test FALLER, och det är svaret vi ville ha.
+ * MÄTT 2026-08-12: en rå IndexedDB-skrivning når **inte** en öppen sida.
+ * `useLiveQuery` lyssnar på Dexies egen ändringsspårning, och den ser bara
+ * skrivningar som gått genom Dexies API. Vår går förbi det.
  *
- * En rå IndexedDB-skrivning når **inte** en öppen sida. `useLiveQuery` lyssnar
- * på Dexies egen ändringsspårning, och den ser bara skrivningar som gått genom
- * Dexies API. Vår går förbi det.
+ * OMSKRIVET 2026-08-13 (uppgift 12.25). Testet använde tidigare `test.fail()`.
+ * Det var fel verktyg, och `/code-review` hittade varför: `test.fail()` gäller
+ * **hela testkroppen**, inte den rad man riktar den mot. Uppsättningen låg
+ * därmed innanför det förväntat röda området, och gick uppsättningen sönder —
+ * sidan renderade inte, övningen hittades inte — rapporterades testet ändå som
+ * förväntat rött, alltså grönt i sviten. Mätningen kunde bli "grön" av skäl som
+ * inte hade ett dugg med liveuppdatering att göra, vilket är det enda den
+ * påstår sig mäta.
  *
- * Därför är `test.fail()` och inte en borttagning: påståendet är en **mätning av
- * hur systemet faktiskt beter sig**, och den ska fortsätta gälla. Börjar testet
- * plötsligt lyckas — Dexie byter spårningsmekanism, eller någon lägger till en
- * BroadcastChannel — blir körningen röd och vi får veta att antagandet under
- * 12.20 har ändrats.
+ * LÖSNINGEN är att vända påståendet i stället för att flytta annoteringen.
+ * Uteblivenhet är vad vi faktiskt mätte, så det är uteblivenhet vi påstår. Testet
+ * är nu ett vanligt grönt test, och **båda** egenskaperna gäller:
+ *
+ *   - går uppsättningen sönder → rött, som vilket test som helst.
+ *   - börjar liveuppdateringen plötsligt fungera — Dexie byter spårnings-
+ *     mekanism, eller någon lägger till en BroadcastChannel → notisen dyker upp,
+ *     `toHaveCount(0)` faller, och vi får veta att antagandet under 12.20 har
+ *     ändrats. Exakt det larm `test.fail()` var tänkt att ge.
  *
  * FÖLJDEN FÖR 12.20: omladdning eller färsk navigering efter sådd är ett KRAV,
  * inte en försiktighetsåtgärd. Hoppar man över det står sidan tom och felet ser
  * ut som en trasig läsväg i stället för en utebliven uppdatering.
  */
 test('2. sådd medan sidan är öppen når INTE fram — mätt, inte antaget', async ({ page }) => {
-  // Måste stå i testkroppen. På filnivå gäller den ALLA test i filen.
-  test.fail();
-
   await page.goto('/');
   const övning = await hämtaÖvning(page);
 
@@ -151,5 +159,12 @@ test('2. sådd medan sidan är öppen når INTE fram — mätt, inte antaget', a
 
   await seedaRått(page, övning.id);
 
-  await expect(page.getByText(/importerad/i)).toBeVisible({ timeout: 5_000 });
+  // Fast väntan, och den är motiverad: ett negativt påstående går inte att
+  // bevisa med `expect`:s automatiska omförsök. `toHaveCount(0)` lyckas direkt
+  // vid noll träffar och hade alltså gått grönt i samma ögonblick som sådden,
+  // långt innan en eventuell liveuppdatering hunnit fram. Vi måste ge
+  // uppdateringen tid att INTE komma innan frånvaron betyder något.
+  await page.waitForTimeout(3_000);
+
+  await expect(page.getByText(/importerad/i)).toHaveCount(0);
 });
