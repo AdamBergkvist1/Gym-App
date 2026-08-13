@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { hämtaÖvning, seedaPassRått, seedaRått } from './hjalpare';
+import {
+  avslutaPass,
+  fångaKonsolfel,
+  hämtaÖvning,
+  loggaSetGenomAppen,
+  läggTillÖvning,
+  seedaPassRått,
+  seedaRått,
+  startaPass,
+} from './hjalpare';
 
 /**
  * VAKT 4 över historiksidan. Uppgift 12.20, punkt 4.
@@ -12,69 +21,79 @@ import { hämtaÖvning, seedaPassRått, seedaRått } from './hjalpare';
  * ⚠️ **EGEN FIL, INTE `ovningssida.spec.ts`.** 12.20:s "Klart när" namnger en
  * fil, men vakterna mäter tre skärmar. Beslutet i uppgiften är att varje vakt
  * bor i en fil som heter efter den skärm den mäter — annars ljuger filnamnet.
- *
- * ⚠️ **SEEDA FÖRST, NAVIGERA SEDAN.** Se filhuvudet i `hjalpare.ts`.
  */
 
 test('4. passlistan visar det loggade passet men inte det importerade', async ({ page }) => {
+  // Punkt 6 gäller hela flödet, inte bara övningssidan. Lyssnarna först av allt.
+  const konsolfel = fångaKonsolfel(page);
+
   await page.goto('/');
   const övning = await hämtaÖvning(page);
 
-  // Två pass, identiska så när som på `isImported`. Att de i övrigt liknar
-  // varandra är poängen: skiljer utfallet dem åt kan det bara vara flaggan som
-  // gjorde det.
-  const loggatPassSkrevs = await seedaPassRått(page, {
-    id: 'vakt-4-loggat-pass',
-    startedAt: '2024-07-01T17:00:00.000Z',
-    endedAt: '2024-07-01T18:00:00.000Z',
-  });
-  const importeratPassSkrevs = await seedaPassRått(page, {
+  // ⚠️ **DET VANLIGA PASSET SKAPAS GENOM APPEN — BESLUT 6 I 11B.0e:** *"Bara
+  // det importerade setet seedas rått — det vanliga skapas genom appen, som en
+  // riktig användare."*
+  //
+  // En tidigare version av det här testet seedade båda passen rått, och
+  // `/code-review` underkände det 2026-08-13 med rätta: då kommer
+  // `isImported: false` ur testets egen fixtur i stället för ur `startWorkout`.
+  // Skulle appens skrivväg någon gång börja sätta fel flagga hade vakten stått
+  // grön medan passlistan i verkligheten tappat alla pass. Vakten hade mätt sig
+  // själv. Nu går det loggade passet hela vägen genom `repo.ts`.
+  await startaPass(page);
+  await läggTillÖvning(page, övning.name);
+  const loggat = await loggaSetGenomAppen(page, övning.name);
+  await avslutaPass(page);
+
+  // Det importerade passet MÅSTE däremot seedas rått: `isImported: true` går
+  // inte att sätta via UI:t. Det är precis undantaget beslut 6 pekar ut.
+  await seedaPassRått(page, {
     id: 'vakt-4-importerat-pass',
     startedAt: '2024-07-02T17:00:00.000Z',
     endedAt: '2024-07-02T18:00:00.000Z',
     isImported: true,
   });
-
-  // VOLYMERNA ÄR VALDA FÖR ATT KUNNA SÄRSKILJAS I EN TEXTSÖKNING, och de är
-  // handräknade (`vikt × reps`) i stället för hämtade ur `volumeKg`:
-  //   100 × 5 = 500   (det loggade passet)
-  //    60 × 3 = 180   (det importerade)
-  // Tresiffriga med flit — fyrsiffriga tal får tusentalsavgränsare av
-  // `formatVolume` (`sv-SE`), och då hade söksträngen behövt känna till
-  // lokalens blanksteg för att träffa.
-  const loggatSetSkrevs = await seedaRått(page, övning.id, {
-    id: 'vakt-4-loggat-set',
-    workoutId: 'vakt-4-loggat-pass',
-    source: 'manual',
-    weightKg: 100,
-    reps: 5,
-    performedAt: '2024-07-01T17:30:00.000Z',
-  });
-  const importeratSetSkrevs = await seedaRått(page, övning.id, {
+  await seedaRått(page, övning.id, {
     id: 'vakt-4-importerat-set',
     workoutId: 'vakt-4-importerat-pass',
     weightKg: 60,
-    reps: 3,
+    reps: 4,
     performedAt: '2024-07-02T17:30:00.000Z',
   });
 
-  expect(
-    loggatPassSkrevs && importeratPassSkrevs && loggatSetSkrevs && importeratSetSkrevs,
-    'alla fyra råa skrivningarna ska lyckas'
-  ).toBe(true);
-
+  // Seeda först, navigera sedan. Se filhuvudet i `hjalpare.ts`.
   await page.goto('/historik');
 
-  // ⚠️ ANKRINGEN FÖRST, NEGATIONEN SEDAN — samma lärdom som vakt 3b i
-  // `ovningssida.spec.ts`. `HistoryPage` har TRE oberoende `useLiveQuery`, och
-  // passlistans startvärde är `[]`. Hade `listWorkoutSummaries` hängt eller
-  // kastat hade sidan visat tomma tillståndet, och en ensam negation ("det
-  // importerade passet syns inte") hade gått grön utan att mäta ett dugg.
-  //
-  // Därför bevisas det loggade passet FÖRST. Syns dess volym har frågan
-  // bevisligen löst ut och levererat rader, och först då betyder frånvaron av
-  // det andra passet något.
-  await expect(page.getByRole('listitem').filter({ hasText: '500' })).toBeVisible();
+  // VOLYMERNA ÄR TESTETS SKILJELINJE, och de är handräknade (`vikt × reps`) i
+  // stället för hämtade ur `volumeKg` — ett test som räknar sitt facit med
+  // samma kod det granskar kan aldrig säga emot den:
+  //   10 × 8 = 80    (det app-loggade passet)
+  //   60 × 4 = 240   (det importerade)
+  const loggadVolym = loggat.vikt * loggat.reps;
+  expect(loggadVolym, 'handräknad volym ska stämma med det som loggades').toBe(80);
 
-  await expect(page.getByRole('listitem').filter({ hasText: '180' })).toHaveCount(0);
+  // ⚠️ **PASSLISTAN AVGRÄNSAS PÅ NAMN, INTE PÅ TEXTSÖKNING I HELA SIDAN.**
+  // Sidan har två `ul` med `listitem` — passen och övningslistan längre ner.
+  const passlistan = page.getByRole('list', { name: 'Pass' });
+
+  // ANKRINGEN FÖRST, NEGATIONEN SEDAN — samma lärdom som vakt 3b.
+  // `HistoryPage` har tre oberoende `useLiveQuery`, och passlistans startvärde
+  // är `[]`. Hade `listWorkoutSummaries` hängt eller kastat hade sidan visat
+  // tomma tillståndet, och en ensam negation gått grön utan att mäta ett dugg.
+  await expect(passlistan.getByRole('listitem').filter({ hasText: `${loggadVolym} kg` })).toBeVisible();
+
+  // ⚠️ **NEGATIONEN RÄKNAS, DEN SÖKS INTE.** En tidigare version letade efter
+  // volymtexten och gick bet på att `hasText` matchar delsträngar: `180 kg`
+  // innehåller `80 kg`, så ankaret träffade BÅDA raderna och föll på strict
+  // mode i stället för på sitt påstående. Sabotageprövningen avslöjade det
+  // 2026-08-13 — och att bara byta talen hade lämnat samma fälla åt nästa
+  // person som rör siffrorna.
+  //
+  // Antalet rader är en identitet och inte en textmatchning: läcker det
+  // importerade passet in blir det två, oavsett vilka volymer någon råkar
+  // välja i framtiden.
+  await expect(passlistan.getByRole('listitem')).toHaveCount(1);
+  await expect(passlistan).not.toContainText('240 kg');
+
+  expect(konsolfel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
 });

@@ -57,22 +57,20 @@ test('2. tyngsta set och bästa e1RM visar rätt siffror med decimal', async ({ 
   await page.goto('/');
   const övning = await hämtaÖvning(page);
 
-  const tyngstSkrevs = await seedaRått(page, övning.id, {
+  await seedaRått(page, övning.id, {
     id: 'vakt-2-tyngsta-setet',
     source: 'manual',
     weightKg: 92.5,
     reps: 3,
     performedAt: '2024-05-01T10:00:00.000Z',
   });
-  const starkastSkrevs = await seedaRått(page, övning.id, {
+  await seedaRått(page, övning.id, {
     id: 'vakt-2-basta-e1rm',
     source: 'manual',
     weightKg: 82.5,
     reps: 8,
     performedAt: '2024-05-02T10:00:00.000Z',
   });
-  expect(tyngstSkrevs && starkastSkrevs, 'båda råa skrivningarna ska lyckas').toBe(true);
-
   await page.goto(`/ovning/${övning.id}`);
 
   const tyngsta = page.getByRole('group', { name: 'Tyngsta set' });
@@ -114,20 +112,18 @@ test('6. inga konsolfel under flödet', async ({ page }) => {
   await page.goto('/');
   const övning = await hämtaÖvning(page);
 
-  const första = await seedaRått(page, övning.id, {
+  await seedaRått(page, övning.id, {
     id: 'vakt-6-set-1',
     weightKg: 80,
     reps: 5,
     performedAt: '2024-06-01T10:00:00.000Z',
   });
-  const andra = await seedaRått(page, övning.id, {
+  await seedaRått(page, övning.id, {
     id: 'vakt-6-set-2',
     weightKg: 85,
     reps: 5,
     performedAt: '2024-06-08T10:00:00.000Z',
   });
-  expect(första && andra, 'båda råa skrivningarna ska lyckas').toBe(true);
-
   await page.goto(`/ovning/${övning.id}`);
 
   // Vänta in att sidan faktiskt monterat allt innan felen räknas. Utan det kunde
@@ -145,8 +141,7 @@ test('3a. importnotisen syns när övningen har importerade set', async ({ page 
   await page.goto('/');
   const övning = await hämtaÖvning(page);
 
-  const skrevs = await seedaRått(page, övning.id);
-  expect(skrevs, 'den råa IndexedDB-skrivningen ska lyckas').toBe(true);
+  await seedaRått(page, övning.id);
 
   await page.goto(`/ovning/${övning.id}`);
 
@@ -161,13 +156,12 @@ test('3b. importnotisen syns INTE när övningen saknar importerade set', async 
 
   // Ett VANLIGT set, inte ett importerat. Att seeda något alls är hela poängen —
   // se ankringen nedan.
-  const skrevs = await seedaRått(page, övning.id, {
+  await seedaRått(page, övning.id, {
     id: 'vakt-3b-vanligt-set',
     source: 'manual',
     weightKg: 123.5,
     reps: 7,
   });
-  expect(skrevs, 'den råa IndexedDB-skrivningen ska lyckas').toBe(true);
 
   await page.goto(`/ovning/${övning.id}`);
 

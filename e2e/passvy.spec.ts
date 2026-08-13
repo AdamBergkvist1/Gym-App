@@ -1,5 +1,15 @@
-import { test, expect, type Page } from '@playwright/test';
-import { hämtaÖvningar, seedaRått } from './hjalpare';
+import { test, expect } from '@playwright/test';
+import {
+  avslutaPass,
+  fångaKonsolfel,
+  hämtaÖvning,
+  hämtaÖvningar,
+  loggaSetGenomAppen,
+  läggTillÖvning,
+  seedaRått,
+  setlista,
+  startaPass,
+} from './hjalpare';
 
 /**
  * VAKT 5 över passvyn. Uppgift 12.20, punkt 5.
@@ -24,88 +34,46 @@ import { hämtaÖvningar, seedaRått } from './hjalpare';
  * användare.** Bara det importerade setet seedas rått, eftersom `source:
  * 'import'` inte går att skapa via UI:t (`repo.ts:156` hårdkodar
  * `isImported: false`). Blandfallet var oprövat före den här filen.
- */
-
-/** Sidan har två knappar med snarlik text; den här är den på tomma passvyn. */
-async function startaPass(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Starta tomt pass' }).click();
-}
-
-async function läggTillÖvning(page: Page, namn: string): Promise<void> {
-  await page.getByRole('button', { name: '+ Lägg till övning' }).click();
-  const väljaren = page.getByRole('dialog', { name: 'Lägg till övning' });
-  await väljaren.getByRole('searchbox').fill(namn);
-  // Exakt textträff på övningsnamnet, inte på knappens tillgängliga namn:
-  // knappen heter "<namn> <muskelgrupp>", och en prefixmatchning hade kunnat
-  // träffa fel rad när två övningar delar början av sitt namn. Spannet ligger
-  // inuti knappen, så klicket når fram.
-  await väljaren.getByText(namn, { exact: true }).click();
-  await expect(väljaren).toHaveCount(0);
-}
-
-/**
- * Loggar ett riktigt set genom UI:t: justera vikten, bocka av raden.
  *
- * VIKTEN STEGAS I STÄLLET FÖR ATT SKRIVAS. `+2,5` fyra gånger ger 10 kg — och
- * mellansteget assertas innan raden bockas av, så att testet aldrig loggar en
- * vikt det inte vet vad den blev. Utan den kontrollen hade en ändring i
- * `stepWeight` gjort testet grönt mot fel siffra.
+ * ⚠️ **`workouts` SEEDAS INTE HÄR, TROTS VAD 12.20 LÄNGE PÅSTOD.**
+ * `getLastPerformance` läser bara `loggedSets` (`repo.ts:325`) och slår aldrig
+ * upp passet. Passen i den här filen finns för att `excludeWorkoutId` ska ha
+ * något att utesluta — och de skapas genom appen, inte som fixtur.
  */
-async function loggaSetGenomAppen(page: Page, övningsnamn: string): Promise<void> {
-  await page.getByRole('button', { name: /^Vikt inte angiven för set 1/ }).click();
 
-  const arket = page.getByRole('dialog', { name: `Justera set 1, ${övningsnamn}` });
-  for (let i = 0; i < 4; i++) await arket.getByRole('button', { name: '+2,5' }).click();
-  // `Klar`, inte `Stäng`. Den senare finns också och heter rätt, men den är
-  // bakgrundsytan bakom arket (`absolute inset-0`) — tryck-utanför-för-att-
-  // stänga, gjord nåbar för skärmläsare. Själva arket ligger ovanpå och tar
-  // klicket, precis som det ska. `Klar` är knappen en användare trycker på.
-  await arket.getByRole('button', { name: 'Klar' }).click();
-  await expect(arket).toHaveCount(0);
-
-  await expect(page.getByRole('button', { name: /^Vikt 10 kilo för set 1/ })).toBeVisible();
-  await page.getByRole('button', { name: 'Klarmarkera set 1' }).click();
-  await expect(page.getByRole('button', { name: 'Ångra set 1' })).toBeVisible();
-}
-
-/** Setraderna för en övning. Namnet sattes i `ExerciseCard` för just det här. */
-function setlista(page: Page, övningsnamn: string) {
-  return page.getByRole('list', { name: `Set för ${övningsnamn}` });
-}
-
-function förstaFörraCellen(page: Page, övningsnamn: string) {
+function förstaFörraCellen(page: Parameters<typeof setlista>[0], övningsnamn: string) {
   return setlista(page, övningsnamn).getByTestId('setrad-forra').first();
 }
 
 test('5a. FÖRRA är tom när enda tidigare setet är importerat', async ({ page }) => {
+  const konsolfel = fångaKonsolfel(page);
+
   await page.goto('/');
   // TVÅ övningar, och den andra är inte dekoration — se ankringen längst ner.
-  const [medBaraImport, medRiktigHistorik] = await hämtaÖvningar(page, 2);
-  const importerad = medBaraImport!;
-  const riktig = medRiktigHistorik!;
+  const [importerad, riktig] = await hämtaÖvningar(page, 2);
 
-  const skrevs = await seedaRått(page, importerad.id, {
+  await seedaRått(page, importerad!.id, {
     id: 'vakt-5a-importerat-set',
     weightKg: 82.5,
     reps: 5,
   });
-  expect(skrevs, 'den råa IndexedDB-skrivningen ska lyckas').toBe(true);
 
+  // Seeda först, navigera sedan. Se filhuvudet i `hjalpare.ts`.
   await page.goto('/');
 
   // Pass 1 ger `riktig` en historik som appen själv skapat. `importerad` får
   // ingen — dess enda set är det seedade.
   await startaPass(page);
-  await läggTillÖvning(page, riktig.name);
-  await loggaSetGenomAppen(page, riktig.name);
-  await page.getByRole('button', { name: 'Avsluta pass' }).click();
+  await läggTillÖvning(page, riktig!.name);
+  const loggat = await loggaSetGenomAppen(page, riktig!.name);
+  await avslutaPass(page);
 
   // Pass 2 är där mätningen sker: spökdatan utesluter alltid det pågående
   // passet (`excludeWorkoutId`), så setet ovan måste ligga i ett avslutat pass
   // för att kunna bli spökdata över huvud taget.
   await startaPass(page);
-  await läggTillÖvning(page, importerad.name);
-  await läggTillÖvning(page, riktig.name);
+  await läggTillÖvning(page, importerad!.name);
+  await läggTillÖvning(page, riktig!.name);
 
   // ⚠️ ANKRINGEN. `Förra`-cellen drivs av en `useLiveQuery` med startvärdet
   // `null`, och en tom cell ser likadan ut oavsett om frågan svarade "inget"
@@ -114,25 +82,32 @@ test('5a. FÖRRA är tom när enda tidigare setet är importerat', async ({ page
   // Därför står en övning med KÄND historik bredvid, renderad av samma
   // komponent i samma ögonblick. Visar den sin spökdata har visningsvägen
   // bevisligen löst ut — och först då betyder den tomma cellen något.
-  await expect(förstaFörraCellen(page, riktig.name)).toHaveText(/10\s*×\s*8/);
+  await expect(förstaFörraCellen(page, riktig!.name)).toHaveText(
+    new RegExp(`${loggat.vikt}\\s*×\\s*${loggat.reps}`)
+  );
 
   // Visningsvägen: kolumnen är tom.
-  await expect(förstaFörraCellen(page, importerad.name)).toHaveText('');
+  await expect(förstaFörraCellen(page, importerad!.name)).toHaveText('');
 
   // Planvägen: raderna förifylldes aldrig, alltså står vikten som ej angiven.
   // `82,5` får inte ha läckt in någonstans i kortet.
   await expect(
-    setlista(page, importerad.name).getByRole('button', { name: /^Vikt inte angiven för set 1/ })
+    setlista(page, importerad!.name).getByRole('button', {
+      name: /^Vikt inte angiven för set 1/,
+    })
   ).toBeVisible();
-  await expect(setlista(page, importerad.name)).not.toContainText('82,5');
+  await expect(setlista(page, importerad!.name)).not.toContainText('82,5');
+
+  expect(konsolfel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
 });
 
 test('5b. blandat: spökdatan blir det app-loggade setet, aldrig det importerade', async ({
   page,
 }) => {
+  const konsolfel = fångaKonsolfel(page);
+
   await page.goto('/');
-  const [övning] = await hämtaÖvningar(page, 1);
-  const den = övning!;
+  const övning = await hämtaÖvning(page);
 
   // ⚠️ **ORDNINGEN ÄR INTE GODTYCKLIG: det app-loggade setet skapas FÖRST, det
   // importerade seedas efteråt.** Tvärtom hade testet blivit rött av sabotage —
@@ -142,9 +117,9 @@ test('5b. blandat: spökdatan blir det app-loggade setet, aldrig det importerade
   // det mätt sitt eget påstående, och felmeddelandet hade pekat på en hjälpare
   // i stället för på spökdatan. Prövat 2026-08-13, just så blev det.
   await startaPass(page);
-  await läggTillÖvning(page, den.name);
-  await loggaSetGenomAppen(page, den.name);
-  await page.getByRole('button', { name: 'Avsluta pass' }).click();
+  await läggTillÖvning(page, övning.name);
+  const loggat = await loggaSetGenomAppen(page, övning.name);
+  await avslutaPass(page);
 
   // ⚠️ **DATUMET ÄR HELA TESTET.** Ligger det importerade setet FÖRE det
   // app-loggade vinner det app-loggade ändå, av ren sortering — och då hade
@@ -152,14 +127,13 @@ test('5b. blandat: spökdatan blir det app-loggade setet, aldrig det importerade
   // Genom att lägga det en timme FRAM i tiden är sorteringen emot oss, och det
   // enda som kan hålla det borta är filtret i `getLastPerformance`.
   const senareÄnAllaAppLoggade = new Date(Date.now() + 3_600_000).toISOString();
-  const skrevs = await seedaRått(page, den.id, {
+  await seedaRått(page, övning.id, {
     id: 'vakt-5b-importerat-set',
     weightKg: 82.5,
     reps: 5,
     performedAt: senareÄnAllaAppLoggade,
     updatedAt: senareÄnAllaAppLoggade,
   });
-  expect(skrevs, 'den råa IndexedDB-skrivningen ska lyckas').toBe(true);
 
   // Seeda först, navigera sedan — regeln gäller varje rå skrivning för sig,
   // inte bara den första i filen. Utan den här omladdningen ser den öppna sidan
@@ -167,13 +141,19 @@ test('5b. blandat: spökdatan blir det app-loggade setet, aldrig det importerade
   await page.goto('/');
 
   await startaPass(page);
-  await läggTillÖvning(page, den.name);
+  await läggTillÖvning(page, övning.name);
 
-  // Både påståendet och dess ankare i samma rad: syns `10 × 8` har frågan löst
-  // ut OCH valt rätt set. Här behövs ingen granne som kontroll.
-  await expect(förstaFörraCellen(page, den.name)).toHaveText(/10\s*×\s*8/);
-  await expect(setlista(page, den.name)).not.toContainText('82,5');
+  // Både påståendet och dess ankare i samma rad: syns det app-loggade setets
+  // tal har frågan löst ut OCH valt rätt set. Här behövs ingen granne.
+  await expect(förstaFörraCellen(page, övning.name)).toHaveText(
+    new RegExp(`${loggat.vikt}\\s*×\\s*${loggat.reps}`)
+  );
+  await expect(setlista(page, övning.name)).not.toContainText('82,5');
 
   // Planvägen ska ha förifyllt ur samma set.
-  await expect(page.getByRole('button', { name: /^Vikt 10 kilo för set 1/ })).toBeVisible();
+  await expect(
+    setlista(page, övning.name).getByRole('button', { name: /^Vikt 10 kilo för set 1/ })
+  ).toBeVisible();
+
+  expect(konsolfel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
 });

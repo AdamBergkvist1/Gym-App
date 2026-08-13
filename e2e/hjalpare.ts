@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import type { LocalSet, LocalWorkout } from '../src/db/types';
 
 /**
@@ -124,13 +124,53 @@ export async function hämtaÖvning(page: Page): Promise<Övning> {
 }
 
 /**
- * Skriver setet rått i `loggedSets`, förbi Dexie. Returnerar true vid lyckad skrivning.
+ * Skriver en rad rått i angiven tabell, förbi Dexie. **Kastar** om skrivningen
+ * misslyckas.
  *
- * ⚠️ **Returvärdet MÅSTE assertas av anroparen.** Kastas det bort kan skrivningen
- * misslyckas tyst, och testet går grönt mot en databas som aldrig fick sin rad —
- * alltså grönt av ett skäl som inte har med det påstådda att göra. Det är samma
- * klass av fel som uppgift 12.25 handlade om, och `/code-review` hittade det här
- * 2026-08-13 i test 2 i `sadd-provning.spec.ts`.
+ * ⚠️ **DEN KASTAR MED FLIT, OCH DET ÄR EN RÄTTELSE.** Funktionen returnerade
+ * tidigare `boolean`, med en docblock som sa att anroparen *måste* komma ihåg
+ * att asserta värdet. Den regeln glömdes — `/code-review` hittade 2026-08-13 en
+ * kastad retur i `sadd-provning.spec.ts`, timmar efter att samma sak lagats på
+ * ett annat ställe. En regel som måste minnas är ingen regel; strukturen ska
+ * göra felet omöjligt i stället. Går skrivningen fel faller testet nu på
+ * skrivningen, med en text som säger var det small.
+ *
+ * Ingen version anges vid `open`: då öppnas databasen som den är, och vi kan
+ * aldrig råka trigga en uppgradering som krockar med Dexies eget schema.
+ */
+async function skrivRått(page: Page, tabell: string, rad: object): Promise<void> {
+  const fel = await page.evaluate(
+    ({ tabell, rad }) =>
+      new Promise<string | null>((resolve) => {
+        const öppna = indexedDB.open('gym');
+        öppna.onerror = () => resolve(`kunde inte öppna databasen: ${öppna.error?.message ?? ''}`);
+        öppna.onsuccess = () => {
+          const db = öppna.result;
+          if (!db.objectStoreNames.contains(tabell)) {
+            db.close();
+            resolve(`tabellen "${tabell}" finns inte`);
+            return;
+          }
+          const tx = db.transaction(tabell, 'readwrite');
+          tx.objectStore(tabell).put(rad);
+          tx.oncomplete = () => {
+            db.close();
+            resolve(null);
+          };
+          tx.onerror = () => {
+            db.close();
+            resolve(`skrivningen mot "${tabell}" avvisades: ${tx.error?.message ?? ''}`);
+          };
+        };
+      }),
+    { tabell, rad }
+  );
+
+  if (fel !== null) throw new Error(`rå sådd misslyckades — ${fel}`);
+}
+
+/**
+ * Seedar ett set rått i `loggedSets`. Kastar om skrivningen misslyckas.
  *
  * `överskrivning` finns för att vakt 3b behöver seeda ett **icke**-importerat set:
  * negationen "ingen notis" måste ankras i ett positivt utfall ur samma fråga, annars
@@ -140,30 +180,8 @@ export async function seedaRått(
   page: Page,
   exerciseId: string,
   överskrivning: Partial<SåddSet> = {}
-): Promise<boolean> {
-  return await page.evaluate(
-    ({ exerciseId, mall }) =>
-      new Promise<boolean>((resolve) => {
-        // Ingen version anges: då öppnas databasen som den är, och vi kan aldrig
-        // råka trigga en uppgradering som krockar med Dexies eget schema.
-        const öppna = indexedDB.open('gym');
-        öppna.onerror = () => resolve(false);
-        öppna.onsuccess = () => {
-          const db = öppna.result;
-          const tx = db.transaction('loggedSets', 'readwrite');
-          tx.objectStore('loggedSets').put({ ...mall, exerciseId });
-          tx.oncomplete = () => {
-            db.close();
-            resolve(true);
-          };
-          tx.onerror = () => {
-            db.close();
-            resolve(false);
-          };
-        };
-      }),
-    { exerciseId, mall: { ...IMPORTERAT_SET, ...överskrivning } }
-  );
+): Promise<void> {
+  await skrivRått(page, 'loggedSets', { ...IMPORTERAT_SET, ...överskrivning, exerciseId });
 }
 
 /**
@@ -185,41 +203,111 @@ const PASS_MALL: LocalWorkout = {
 };
 
 /**
- * Skriver ett pass rått i `workouts`, förbi Dexie. Returnerar true vid lyckad
- * skrivning — och **returvärdet måste assertas**, av exakt samma skäl som står
- * över `seedaRått`.
+ * Seedar ett pass rått i `workouts`. Kastar om skrivningen misslyckas.
  *
  * VARFÖR DEN BEHÖVS: `IMPORTERAT_SET` är föräldralöst med flit (12.27). Det
  * duger för `getExerciseHistory`, som aldrig slår upp passet, men vakt 4 mäter
- * `listWorkoutSummaries` — och den läser `workouts`-tabellen. Utan ett riktigt
- * seedat pass hade vakten mätt en tom lista och gått grön av fel skäl.
+ * `listWorkoutSummaries` — och den läser `workouts`-tabellen.
  *
- * `isImported: true` kan inte skapas genom appen (samma sak som `source:
- * 'import'` på ett set), så rått är enda vägen.
+ * ⚠️ **BARA FÖR IMPORTERADE PASS.** Beslut 6 i 11B.0e: *"Bara det importerade
+ * setet seedas rått — det vanliga skapas genom appen, som en riktig
+ * användare."* `isImported: true` går inte att sätta via UI:t (`repo.ts:156`
+ * hårdkodar `false`, och `true` kan bara komma in via synken), så rått är enda
+ * vägen dit. Ett **vanligt** pass ska i stället startas med `startaPass`.
+ * Annars mäter vakten sin egen fixtur i stället för appens skrivväg: skulle
+ * `startWorkout` någon gång börja sätta fel flagga hade testet stått grönt
+ * medan appen var trasig. `/code-review` hittade precis det 2026-08-13.
  */
 export async function seedaPassRått(
   page: Page,
   överskrivning: Partial<LocalWorkout> = {}
-): Promise<boolean> {
-  return await page.evaluate(
-    (pass) =>
-      new Promise<boolean>((resolve) => {
-        const öppna = indexedDB.open('gym');
-        öppna.onerror = () => resolve(false);
-        öppna.onsuccess = () => {
-          const db = öppna.result;
-          const tx = db.transaction('workouts', 'readwrite');
-          tx.objectStore('workouts').put(pass);
-          tx.oncomplete = () => {
-            db.close();
-            resolve(true);
-          };
-          tx.onerror = () => {
-            db.close();
-            resolve(false);
-          };
-        };
-      }),
-    { ...PASS_MALL, ...överskrivning }
-  );
+): Promise<void> {
+  await skrivRått(page, 'workouts', { ...PASS_MALL, ...överskrivning });
+}
+
+/* ------------------------------------------------------------------ *
+ * Vägen genom appen — beslut 6:s "som en riktig användare"            *
+ * ------------------------------------------------------------------ */
+
+/** Startar ett tomt pass från passvyn. */
+export async function startaPass(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Starta tomt pass' }).click();
+}
+
+/** Avslutar det pågående passet. */
+export async function avslutaPass(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Avsluta pass' }).click();
+  await expect(page.getByRole('button', { name: 'Starta tomt pass' })).toBeVisible();
+}
+
+export async function läggTillÖvning(page: Page, namn: string): Promise<void> {
+  await page.getByRole('button', { name: '+ Lägg till övning' }).click();
+  const väljaren = page.getByRole('dialog', { name: 'Lägg till övning' });
+  await väljaren.getByRole('searchbox').fill(namn);
+  // Exakt textträff på övningsnamnet, inte på knappens tillgängliga namn:
+  // knappen heter "<namn> <muskelgrupp>", och en prefixmatchning hade kunnat
+  // träffa fel rad när två övningar delar början av sitt namn. Spannet ligger
+  // inuti knappen, så klicket når fram.
+  await väljaren.getByText(namn, { exact: true }).click();
+  await expect(väljaren).toHaveCount(0);
+}
+
+/** Setraderna för en övning. Namnet sattes i `ExerciseCard` för just det här. */
+export function setlista(page: Page, övningsnamn: string) {
+  return page.getByRole('list', { name: `Set för ${övningsnamn}` });
+}
+
+/**
+ * Loggar ett riktigt set genom UI:t: justera vikten, bocka av raden.
+ * Returnerar vikten som loggades, så att anroparen slipper upprepa talet.
+ *
+ * VIKTEN STEGAS I STÄLLET FÖR ATT SKRIVAS. `+2,5` fyra gånger ger 10 kg — och
+ * mellansteget assertas innan raden bockas av, så att testet aldrig loggar en
+ * vikt det inte vet vad den blev. Utan den kontrollen hade en ändring i
+ * `stepWeight` gjort testet grönt mot fel siffra.
+ *
+ * Reps lämnas på förvalet 8, som `plan.ts` sätter på en tom rad.
+ */
+export async function loggaSetGenomAppen(
+  page: Page,
+  övningsnamn: string
+): Promise<{ vikt: number; reps: number }> {
+  const raderna = setlista(page, övningsnamn);
+  await raderna.getByRole('button', { name: /^Vikt inte angiven för set 1/ }).click();
+
+  const arket = page.getByRole('dialog', { name: `Justera set 1, ${övningsnamn}` });
+  for (let i = 0; i < 4; i++) await arket.getByRole('button', { name: '+2,5' }).click();
+  // `Klar`, inte `Stäng`. Den senare finns också och heter rätt, men den är
+  // bakgrundsytan bakom arket (`absolute inset-0`) — tryck-utanför-för-att-
+  // stänga, gjord nåbar för skärmläsare. Själva arket ligger ovanpå och tar
+  // klicket, precis som det ska. `Klar` är knappen en användare trycker på.
+  await arket.getByRole('button', { name: 'Klar' }).click();
+  await expect(arket).toHaveCount(0);
+
+  await expect(raderna.getByRole('button', { name: /^Vikt 10 kilo för set 1/ })).toBeVisible();
+  await raderna.getByRole('button', { name: 'Klarmarkera set 1' }).click();
+  await expect(raderna.getByRole('button', { name: 'Ångra set 1' })).toBeVisible();
+
+  return { vikt: 10, reps: 8 };
+}
+
+/**
+ * Kopplar lyssnare för konsolfel och returnerar listan de fylls i.
+ *
+ * ⚠️ **TVÅ LYSSNARE, OCH SABOTAGET BEVISADE VARFÖR.** Ett okastat undantag dök
+ * upp **bara** som `pageerror`, aldrig som `console.error` (vakt 6, 2026-08-13).
+ * Hade vakten lyssnat på det ena men inte det andra hade den felklassen
+ * passerat tyst — och en vakt som ser grön ut utan att kunna larma är värre än
+ * ingen vakt.
+ *
+ * ⚠️ **MÅSTE ANROPAS FÖRE FÖRSTA `goto`.** Ett fel som hinner uppstå innan dess
+ * fångas aldrig, och listan hade varit tom utan att någon märkt det.
+ */
+export function fångaKonsolfel(page: Page): string[] {
+  const fel: string[] = [];
+  page.on('console', (meddelande) => {
+    if (meddelande.type() === 'error') fel.push(`console.error: ${meddelande.text()}`);
+  });
+  page.on('pageerror', (undantag) => fel.push(`okastat fel: ${undantag.message}`));
+  return fel;
 }

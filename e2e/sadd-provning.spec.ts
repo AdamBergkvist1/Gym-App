@@ -22,8 +22,7 @@ test('1. sådd följt av navigering syns på sidan', async ({ page }) => {
   await page.goto('/');
   const övning = await hämtaÖvning(page);
 
-  const skrevs = await seedaRått(page, övning.id);
-  expect(skrevs, 'den råa IndexedDB-skrivningen ska lyckas').toBe(true);
+  await seedaRått(page, övning.id);
 
   // Färsk navigering: sidan monteras om och useLiveQuery gör sin FÖRSTA läsning.
   // Ingen liveuppdatering behövs, vilket är hela poängen med metoden.
@@ -75,8 +74,7 @@ test('2. sådd medan sidan är öppen når INTE fram — mätt, inte antaget', a
   // 2026-08-13, funnet av `/code-review` — kunde den råa skrivningen misslyckas
   // tyst. Notisen hade då aldrig kunnat dyka upp, och testet gått grönt utan att
   // ha mätt liveuppdatering över huvud taget. Exakt samma klass av fel som 12.25.
-  const skrevs = await seedaRått(page, övning.id);
-  expect(skrevs, 'den råa IndexedDB-skrivningen ska lyckas').toBe(true);
+  await seedaRått(page, övning.id);
 
   // Fast väntan, och den är motiverad: ett negativt påstående går inte att
   // bevisa med `expect`:s automatiska omförsök. `toHaveCount(0)` lyckas direkt
