@@ -89,13 +89,20 @@ fel anledning, och då försvinner det verkliga kravet ur synfältet.
 
 ### Om arbetssättet
 
-**Node hämtas portabelt varje session** (~2 min): zip från `nodejs.org/dist/latest-v22.x/`,
-SHA256 mot `SHASUMS256.txt`, uppackning i skrapkatalogen, `$env:PATH` satt i *varje* anrop.
-Gjordes igen i dag och stämde. Inget lämnas kvar på arbetsgivarens maskin.
+⚠️ **KOLLA VILKEN MASKIN DU SITTER PÅ INNAN DU GÖR NÅGOT AV DETTA.** Sessionen 2026-08-13
+avslutades på jobbdatorn, och nästa var planerad till hemdatorn. Råden nedan gäller **bara den
+maskin som saknar Node** — kör `node --version` först. Svarar den med ett versionsnummer är hela
+stycket irrelevant, och att följa det ändå är bortkastade minuter.
+
+**På en maskin utan Node hämtas den portabelt** (~2 min): zip från
+`nodejs.org/dist/latest-v22.x/`, SHA256 mot `SHASUMS256.txt`, uppackning i skrapkatalogen,
+`$env:PATH` satt i *varje* anrop eftersom den inte överlever mellan PowerShell-anrop. Gjordes
+igen i dag och stämde. Inget lämnas kvar på arbetsgivarens maskin, vilket är hela poängen där.
+**På hemdatorn görs ingenting av detta** — där är `npm run …` bara att köra.
 
 ⚠️ **PowerShell-fällan som kostade två omtag:** en here-string (`@'…'@`) med **dubbla
 citattecken** i texten bröts sönder och `git commit` tolkade orden som sökvägar. Undvik `"` helt
-i commitmeddelanden här.
+i commitmeddelanden. Gäller PowerShell, alltså båda Windows-maskinerna — inte ett Bash-skal.
 
 ### Suggested skills
 
