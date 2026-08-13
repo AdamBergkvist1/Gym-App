@@ -1,11 +1,126 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-12 (tre sessioner samma dag). Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-13. Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-12 (kväll) — Grindarna gröna. 11B.0e avgjord och sådden bevisad
+## 🆕 2026-08-13 — Jobbdatorn duger. Övningssidan färdigbevakad, fyra av sex vakter klara
+
+### Börja här
+
+**Nästa uppgift är vakt 4 och 5 i 12.20.** Statustabellen med alla sex vakterna ligger i
+`docs/TASKS.md` under 12.20 — läs den, inte den här filen, för detaljerna.
+
+⚠️ **Adam har begärt en `/code-review` av alla sex vakterna när de är skrivna.** Den är alltså
+inte gjord ännu och ska inte glömmas. Vakt 1–3 och 6 har redan granskats en gång var (se
+nedan), men helheten är inte sedd.
+
+### Det viktigaste resultatet: jobbdatorn kan köra allt
+
+Förra sektionens råd — *"12.20 hör hemma i en hemmasession"* — var fel, och det kostade
+troligen en dags planering. **Alla fem grindarna kördes gröna på jobbdatorn**, e2e inräknat.
+
+Skälet är att allt tungt redan låg på maskinen: `node_modules` komplett (18 230 filer, 0,2 GB,
+93 verktyg i `.bin`) och Playwrights WebKit-binär cachad i `%LOCALAPPDATA%\ms-playwright`.
+**Det enda som saknades var Node-körningen.**
+
+Så här hämtas den — Adam godkände tillvägagångssättet, ingen installation, inget
+administratörskonto:
+
+1. Hämta `node-vXX-win-x64.zip` från `https://nodejs.org/dist/latest-v22.x/` (~34 MB).
+2. **Verifiera SHA256 mot `SHASUMS256.txt` i samma katalog.** Gjordes 2026-08-13 och stämde.
+3. Packa upp i skrapkatalogen, lägg `...\node-vXX-win-x64` först i `$env:PATH`.
+4. **`$env:PATH` överlever inte mellan PowerShell-anrop** — sätt den i *varje* kommando.
+
+Skrapkatalogen städas, så nedladdningen görs om varje ny session (~2 min). Inget lämnas kvar
+i Windows, vilket var hela poängen på en arbetsgivares maskin.
+
+### Vad som gjordes — tio commits, INGEN pushad
+
+⚠️ **`origin/main` ligger kvar på `b7cb126`.** Alla tio commits nedan är bara lokala.
+`HEAD` = `4b59905`. Arbetsträdet rent.
+
+| Commit | Vad |
+|---|---|
+| `709293f` | 12.22-inventeringen stängd, 14 strängar avgjorda |
+| `4a68210` | Granskningsfynden ur `7bd43b5`/`05c21b7` som 12.25–12.29 |
+| `20fef91` | **12.25 löst** |
+| `b2ba6cd` | `e2e/hjalpare.ts` utbruten (ren refaktorering) |
+| `1b7cd54` | 12.20 vakt 1 och 3, `role="note"` |
+| `a211815` | Tre hål ur andra granskningen + **12.27 löst** |
+| `f247a91` | **12.26 löst** |
+| `a6697dd` | `TASKS.md`/`HANDOFF.md` synkade med koden |
+| `5e2eb3d` | 12.20 **vakt 2** |
+| `4b59905` | 12.20 **vakt 6**. Övningssidan färdigbevakad |
+
+### Grindarna — siffror från körningar, inte uppskattningar
+
+| Grind | Utfall vid sessionens slut |
+|---|---|
+| `typecheck` | ren |
+| `lint` | **0 fel**, 3 kända `react-refresh`-varningar i `icons.tsx` |
+| `test` | **274 passed** i 22 filer |
+| `build` | klart, precache 9 poster, 651,07 KiB |
+| `e2e` | **51 passed** (36 vid sessionens start) |
+
+### Lärdomen som återkom tre gånger: gröna tester som inte mäter något
+
+Det här är sessionens viktigaste tekniska fynd, och det dök upp i tre skilda skepnader:
+
+1. **`test.fail()` täckte hela testkroppen**, alltså även uppsättningen (12.25).
+2. **Vakt 3b var ankrad i fel query.** Sidan har två oberoende `useLiveQuery` — rubriken ur
+   `db.exercises.get`, notisen ur `getExerciseHistory` med startvärde `[]`. Rubriken bevisade
+   ingenting om historikfrågan.
+3. **Vakt 6 behövde två lyssnare.** Ett okastat undantag dök upp **bara** som `pageerror`,
+   aldrig som `console.error`.
+
+⚠️ **Motmedlet är obligatoriskt för vakt 4 och 5:** skriv vakten, sabba sedan koden med flit
+och **kontrollera att den blir röd**. Varje vakt hittills är prövad så, och sabotagen står
+listade per vakt i `TASKS.md`. En vakt som ser grön ut utan att kunna larma är värre än ingen.
+
+### Två fällor som väntar på vakt 4 och 5
+
+1. **`IMPORTERAT_SET` duger inte.** Dess `workoutId` pekar på ett pass som aldrig skapas.
+   Ofarligt för `getExerciseHistory`, som aldrig slår upp passet — men vakt 4 (13.3,
+   `listWorkoutSummaries`) och vakt 5 (13.4, `getLastPerformance`) går via `workouts` och
+   kräver ett **riktigt seedat pass**. Villkoret står i `e2e/hjalpare.ts` (12.27).
+2. **Blandfallet är oprövat.** Beslut 6 i 11B.0e kräver att det vanliga setet skapas **genom
+   appen, som en riktig användare**. Ingen vakt gör det ännu. Det avgörs i vakt 5.
+
+### Om arbetssättet
+
+**Två `/code-review` kördes, och båda hittade verkliga fel** — den andra hittade ett fel jag
+själv infört samma dag (returvärdet från `seedaRått` kastades bort i test 2, timmar efter att
+jag lagat exakt samma sak i test 1). Granskningen är inte en formalitet i det här projektet.
+
+**Tekniska frågor ska inte gå till Adam.** Han sa igen att det blir för tekniskt. Två frågor
+lades fram som hans beslut och var det inte — de avgjordes och redovisades i stället, vilket
+fungerade. Frågor går till honom bara när de rör hans data, hans tid eller hans prioritering.
+Beslutet att packa upp Node på arbetsgivarens maskin var en sådan, och den frågan var rätt.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/tdd`** | För vakt 4 och 5. Sömmarna är beslutade i 11B.0e, och slingan sitter — röd först, sedan minsta möjliga kod, sedan sabotage |
+| **`/code-review`** | **Begärd av Adam när alla sex vakterna är skrivna.** Fixpunkt `b7cb126` täcker hela arbetet |
+| **`/diagnosing-bugs`** | Bara om något faller. Begär utskriften först — gissa inte |
+
+---
+
+## 2026-08-12 (kväll) — Grindarna gröna. 11B.0e avgjord och sådden bevisad — DELVIS ÖVERSPELAD
+
+> **⚠️ Två saker i sektionen nedan gäller inte längre.**
+>
+> **(1) Hela stycket "Börja här — och läs detta först om du sitter på jobbdatorn" är
+> motbevisat.** Påståendet *"Går inte att göra där"* och rådet *"12.20 hör hemma i en
+> hemmasession"* byggde på en halv undersökning: verktygen saknades, men **beroendena och
+> Playwrights webbläsarbinär låg redan på disk**. Hela 12.20:s första fyra vakter byggdes på
+> jobbdatorn 2026-08-13 med alla fem grindarna gröna. Se sektionen överst.
+>
+> **(2) Test 2 i `sadd-provning.spec.ts` använder inte längre `test.fail()`** — se den
+> flaggade rutan längre ner i sektionen, och uppgift 12.25.
 
 ### Börja här — och läs detta först om du sitter på jobbdatorn
 
