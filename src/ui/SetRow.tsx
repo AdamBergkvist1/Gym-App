@@ -86,8 +86,18 @@ export function SetRow({ index, set, ghost, onOpenAdjust, onConfirm, onUnconfirm
       </span>
 
       {/* Förra — spökdatan som jämförelse. Saknas den visas ingenting alls:
-          ett centrerat streck i en bred kolumn läste sig som ett fel. */}
-      <span className="truncate text-center text-meta text-[var(--color-dim)] tabular-nums">
+          ett centrerat streck i en bred kolumn läste sig som ett fel.
+
+          `data-testid` finns för att vakt 5 i 12.20 mäter just den här cellen —
+          att den är TOM när enda tidigare setet är importerat (13.4). Beslut 7
+          väljer `role` + tillgängligt namn, med `data-testid` som undantag där
+          tillgängligt namn saknas, och det gör det här: cellen är en naken span
+          vars innehåll ibland är tomma strängen. Att ge den ett aria-label vore
+          att uppfinna en etikett för skärmläsare som ingen bett om. */}
+      <span
+        data-testid="setrad-forra"
+        className="truncate text-center text-meta text-[var(--color-dim)] tabular-nums"
+      >
         {ghost ? `${formatWeight(ghost.weightKg)} × ${ghost.reps}` : ''}
       </span>
 

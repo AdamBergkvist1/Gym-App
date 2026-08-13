@@ -145,7 +145,11 @@ export function ExerciseCard({
         </span>
       </div>
 
-      <ul>
+      {/* Namnet på listan gör två saker på en gång: en skärmläsare säger vilken
+          övnings set den står i, och vakt 5 i 12.20 får ett fäste att avgränsa
+          mot när passet innehåller flera övningar. Utan det träffar en sökning
+          efter en setrad alla kort på skärmen. */}
+      <ul aria-label={`Set för ${exercise?.name ?? 'okänd övning'}`}>
         {planned.sets.map((s, i) => (
           <SetRow
             key={s.id}
