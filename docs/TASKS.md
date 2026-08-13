@@ -1914,22 +1914,35 @@ och 13.1 måste vara klar före 13.6.
       fast det beteendet — sedan 12.25 med ett vänt påstående i stället för `test.fail()`.
       Hela mätningen står i 11B.0e.
 
-      📍 **STATUS 2026-08-13: tre av sex vakter är byggda.** `e2e/ovningssida.spec.ts` finns
-      och kör grönt på alla tre bredder (e2e-sviten: 48 tester). Rutan är fortfarande `- [ ]`
+      📍 **STATUS 2026-08-13: fyra av sex vakter är byggda.** `e2e/ovningssida.spec.ts` finns
+      och kör grönt på alla tre bredder (e2e-sviten: 51 tester). Rutan är fortfarande `- [ ]`
       eftersom uppgiften inte är klar.
 
-      **Varje vakt är sabotageprövad, inte bara sedd grön.** Vakt 2 fångade en återinförd
-      12.18-regression (`formatWeight` avrundade → `92,5` blev `93`). Vakt 3b fångade en notis
-      som alltid visas. Det är det enda som skiljer en vakt från en rad som råkar vara grön.
+      **Varje vakt är sabotageprövad, inte bara sedd grön.** Det är det enda som skiljer en
+      vakt från en rad som råkar vara grön:
+
+      | Vakt | Sabotaget som gjorde den röd |
+      |---|---|
+      | 2 | `formatWeight` ändrad till att avrunda — `92,5` blev `93`, alltså 12.18 igen |
+      | 3b | Notisen tvingad att alltid visas |
+      | 6 | Ett `console.error`, och separat ett okastat undantag i en `setTimeout` |
+
+      ⚠️ **Vakt 6 krävde TVÅ lyssnare, och sabotaget bevisade varför.** Det okastade undantaget
+      dök upp **bara** som `pageerror`, aldrig som `console.error`. Hade vakten lyssnat på det
+      ena men inte det andra hade den felklassen passerat tyst — och en vakt som ser grön ut
+      utan att kunna larma är värre än ingen vakt.
 
       | Vakt | Skärm | Läge |
       |---|---|---|
       | 1 — sidan renderar, rubrik = övningens namn | Övningssidan | ✅ |
       | 2 — tyngsta set och bästa e1RM med decimal | Övningssidan | ✅ |
       | 3 — importnotisen syns / syns inte (3a och 3b) | Övningssidan | ✅ |
-      | 6 — inga konsolfel under flödet | Övningssidan | kvar |
+      | 6 — inga konsolfel under flödet | Övningssidan | ✅ |
       | 4 — passlistan (13.3) | **Historiksidan** | kvar |
       | 5 — `FÖRRA`-kolumnen (13.4) | **Idag-sidan** | kvar |
+
+      **Övningssidan är därmed färdigbevakad.** Kvar är bara de två vakterna som ligger på
+      andra skärmar, och de kräver båda ett riktigt seedat `workouts`-pass (se varningen nedan).
 
       ⚠️ **"Klart när" här namnger EN fil, men vakterna mäter TRE skärmar.** 13.3 sitter i
       `listWorkoutSummaries` (passlistan) och 13.4 i `getLastPerformance` (spökdatan) — ingen

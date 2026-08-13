@@ -85,6 +85,62 @@ test('2. tyngsta set och bästa e1RM visar rätt siffror med decimal', async ({ 
   await expect(bästaE1rm).toContainText('82,5');
 });
 
+/**
+ * VAKT 6: inga konsolfel under flödet.
+ *
+ * Den billigaste vakten som finns och den enda som fångar fel ingen tänkt på. De
+ * andra fem kontrollerar sådant någon redan formulerat; den här fångar det som
+ * skriker i konsolen medan sidan ändå råkar se rätt ut — trasiga React-nycklar,
+ * misslyckade hämtningar, `act`-varningar som blivit fel, kastade löften.
+ *
+ * TVÅ set seedas med flit. Sparkline renderas först vid två e1RM-punkter
+ * (`ExercisePage`: `e1rmSerie.length >= 2`), och en graf som ritar SVG är precis
+ * den sortens kod som klagar i konsolen utan att synas. Med ett enda set hade halva
+ * sidan aldrig monterats.
+ *
+ * Lyssnarna MÅSTE kopplas före första `goto`. Ett fel som hinner uppstå innan dess
+ * fångas aldrig, och vakten hade varit tom utan att någon märkt det.
+ */
+test('6. inga konsolfel under flödet', async ({ page }) => {
+  const fel: string[] = [];
+  page.on('console', (meddelande) => {
+    if (meddelande.type() === 'error') fel.push(`console.error: ${meddelande.text()}`);
+  });
+  // `pageerror` är inte samma sak som en `console.error`: det är ett okastat
+  // undantag som nådde ända ut. Utan den här raden hade en krasch i en
+  // händelsehanterare kunnat passera tyst.
+  page.on('pageerror', (undantag) => fel.push(`okastat fel: ${undantag.message}`));
+
+  await page.goto('/');
+  const övning = await hämtaÖvning(page);
+
+  const första = await seedaRått(page, övning.id, {
+    id: 'vakt-6-set-1',
+    weightKg: 80,
+    reps: 5,
+    performedAt: '2024-06-01T10:00:00.000Z',
+  });
+  const andra = await seedaRått(page, övning.id, {
+    id: 'vakt-6-set-2',
+    weightKg: 85,
+    reps: 5,
+    performedAt: '2024-06-08T10:00:00.000Z',
+  });
+  expect(första && andra, 'båda råa skrivningarna ska lyckas').toBe(true);
+
+  await page.goto(`/ovning/${övning.id}`);
+
+  // Vänta in att sidan faktiskt monterat allt innan felen räknas. Utan det kunde
+  // testet hinna läsa av en tom lista medan renderingen fortfarande pågick — grönt
+  // av otålighet, inte av frånvaro av fel.
+  await expect(page.getByRole('heading', { name: övning.name, level: 1 })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Tyngsta set' })).toBeVisible();
+  await expect(page.getByRole('note', { name: 'Om datans ursprung' })).toBeVisible();
+  await expect(page.getByRole('listitem').filter({ hasText: /85/ })).toBeVisible();
+
+  expect(fel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
+});
+
 test('3a. importnotisen syns när övningen har importerade set', async ({ page }) => {
   await page.goto('/');
   const övning = await hämtaÖvning(page);
