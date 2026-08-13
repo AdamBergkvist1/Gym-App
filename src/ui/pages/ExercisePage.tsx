@@ -103,12 +103,23 @@ export function ExercisePage() {
       {(importnotis || e1rmSerie.length >= 2) && (
         <div className="space-y-2">
           {importnotis && (
-            // `role="note"` ger vakten i `ovningssida.spec.ts` något att haka i som
-            // INTE är lydelsen. 12.22 skriver om just den här meningen, och ett test
-            // som matchat på texten hade gått sönder av en ren textstädning.
-            // Beslut 5 och 7 i 11B.0e. Rollen är också ärlig mot innehållet: det är
-            // en sidoupplysning om datan, inte en varning och inte en statusrad.
-            <p role="note" className="text-xs text-[var(--color-dim)]">
+            // `role="note"` + `aria-label` ger vakten i `ovningssida.spec.ts` något
+            // att haka i som INTE är lydelsen. 12.22 skriver om just den här
+            // meningen, och ett test som matchat på texten hade gått sönder av en ren
+            // textstädning. Rollen är också ärlig mot innehållet: det är en
+            // sidoupplysning om datan, inte en varning och inte en statusrad.
+            //
+            // ⚠️ **Etiketten måste vara namnet på vad raden HANDLAR om, aldrig en
+            // upprepning av vad den säger.** `role="note"` ärver inget tillgängligt
+            // namn från sitt innehåll, så utan den här raden uppfyller selektorn bara
+            // halva beslut 7 i 11B.0e (`role` + tillgängligt namn) — vilket
+            // `/code-review` påpekade 2026-08-13. Skriv aldrig om etiketten när
+            // meningen skrivs om; det är hela poängen att de kan röra sig isär.
+            <p
+              role="note"
+              aria-label="Om datans ursprung"
+              className="text-xs text-[var(--color-dim)]"
+            >
               {importnotis}
             </p>
           )}

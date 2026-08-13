@@ -32,7 +32,7 @@ test('1. sådd följt av navigering syns på sidan', async ({ page }) => {
   await expect(page.getByRole('heading', { name: övning.name })).toBeVisible();
 
   // Påstår att notisen SYNS, aldrig vad den lyder — 12.22 skriver om meningen.
-  await expect(page.getByText(/importerad/i)).toBeVisible();
+  await expect(page.getByRole('note', { name: 'Om datans ursprung' })).toBeVisible();
 });
 
 /**
@@ -69,7 +69,7 @@ test('2. sådd medan sidan är öppen når INTE fram — mätt, inte antaget', a
 
   await page.goto(`/ovning/${övning.id}`);
   await expect(page.getByRole('heading', { name: övning.name })).toBeVisible();
-  await expect(page.getByText(/importerad/i)).toHaveCount(0);
+  await expect(page.getByRole('note', { name: 'Om datans ursprung' })).toHaveCount(0);
 
   // Returvärdet MÅSTE assertas. Kastades det bort — vilket det gjorde fram till
   // 2026-08-13, funnet av `/code-review` — kunde den råa skrivningen misslyckas
@@ -85,5 +85,5 @@ test('2. sådd medan sidan är öppen når INTE fram — mätt, inte antaget', a
   // uppdateringen tid att INTE komma innan frånvaron betyder något.
   await page.waitForTimeout(3_000);
 
-  await expect(page.getByText(/importerad/i)).toHaveCount(0);
+  await expect(page.getByRole('note', { name: 'Om datans ursprung' })).toHaveCount(0);
 });

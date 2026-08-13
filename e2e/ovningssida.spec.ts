@@ -44,7 +44,7 @@ test('3a. importnotisen syns när övningen har importerade set', async ({ page 
 
   // Påstår att notisen FINNS, aldrig vad den lyder. Rollen är hela poängen:
   // `getByText(/importerad/i)` hade låst lydelsen, vilket beslut 5 förbjuder.
-  await expect(page.getByRole('note')).toBeVisible();
+  await expect(page.getByRole('note', { name: 'Om datans ursprung' })).toBeVisible();
 });
 
 test('3b. importnotisen syns INTE när övningen saknar importerade set', async ({ page }) => {
@@ -81,5 +81,5 @@ test('3b. importnotisen syns INTE när övningen saknar importerade set', async 
   // kan finnas om `getExerciseHistory` faktiskt returnerade en punkt.
   await expect(page.getByRole('listitem').filter({ hasText: /123[,.]5/ })).toBeVisible();
 
-  await expect(page.getByRole('note')).toHaveCount(0);
+  await expect(page.getByRole('note', { name: 'Om datans ursprung' })).toHaveCount(0);
 });
