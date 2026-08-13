@@ -84,6 +84,11 @@ selektorer.
 sedan. `useLiveQuery` ser bara skrivningar genom Dexies eget API. Hoppas det över står sidan
 tom, och felet läser som en trasig läsväg i stället för en utebliven uppdatering.
 
+⚠️ **ÖVERSPELAT 2026-08-13 (uppgift 12.25). `test.fail()` finns inte längre i filen.**
+Larmet gäller fortfarande men bärs av ett vänt påstående i ett vanligt grönt test.
+`test.fail()` täckte hela testkroppen, alltså även uppsättningen: gick uppsättningen sönder
+rapporterades testet ändå som förväntat rött, alltså grönt i sviten. Se 12.25 i `TASKS.md`.
+
 Test 2 ligger kvar som `test.fail()` i stället för att raderas — påståendet är en mätning av
 systemets beteende, och börjar det plötsligt lyckas blir körningen röd.
 

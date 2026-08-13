@@ -1078,6 +1078,12 @@ nuvarande.
       förbi det. Seedar man mot en öppen sida händer ingenting — och felet ser ut som en trasig
       läsväg i stället för en utebliven uppdatering, vilket är den dyraste sortens vilseledning.
 
+      ⚠️ **ÖVERSPELAT 2026-08-13 av uppgift 12.25: `test.fail()` finns inte längre i filen.**
+      Larmet nedan gäller fortfarande, men bärs numera av ett vänt påstående
+      (`toHaveCount(0)` efter en fast väntan) i ett vanligt grönt test. Skälet står i 12.25:
+      `test.fail()` täckte hela testkroppen, alltså även uppsättningen, och gjorde mätningen
+      opålitlig i den ena riktningen. Läs stycket nedan som *avsikten*, inte som konstruktionen.
+
       Det andra testet ligger kvar som `test.fail()` i stället för att raderas: påståendet är en
       **mätning av hur systemet beter sig**, och börjar det plötsligt lyckas — Dexie byter
       mekanism, någon lägger till en `BroadcastChannel` — blir körningen röd och vi får veta att
@@ -1905,7 +1911,31 @@ och 13.1 måste vara klar före 13.6.
       **öppen** sida når aldrig fram, eftersom `useLiveQuery` bara ser skrivningar genom Dexies
       API. **Varje test måste alltså seeda först och navigera sedan.** Hoppas det över står
       sidan tom och felet läser som en trasig läsväg. Det andra testet i prövningsfilen låser
-      fast det beteendet med `test.fail()`. Hela mätningen står i 11B.0e.
+      fast det beteendet — sedan 12.25 med ett vänt påstående i stället för `test.fail()`.
+      Hela mätningen står i 11B.0e.
+
+      📍 **STATUS 2026-08-13: två av sex vakter är byggda.** `e2e/ovningssida.spec.ts` finns
+      och kör grönt på alla tre bredder. Rutan är fortfarande `- [ ]` eftersom uppgiften inte
+      är klar.
+
+      | Vakt | Skärm | Läge |
+      |---|---|---|
+      | 1 — sidan renderar, rubrik = övningens namn | Övningssidan | ✅ |
+      | 3 — importnotisen syns / syns inte (3a och 3b) | Övningssidan | ✅ |
+      | 2 — tyngsta set och bästa e1RM med decimal | Övningssidan | kvar |
+      | 6 — inga konsolfel under flödet | Övningssidan | kvar |
+      | 4 — passlistan (13.3) | **Historiksidan** | kvar |
+      | 5 — `FÖRRA`-kolumnen (13.4) | **Idag-sidan** | kvar |
+
+      ⚠️ **"Klart när" här namnger EN fil, men vakterna mäter TRE skärmar.** 13.3 sitter i
+      `listWorkoutSummaries` (passlistan) och 13.4 i `getLastPerformance` (spökdatan) — ingen
+      av dem ligger på övningssidan. **Beslut:** alla sex byggs som beslut 5 kräver, men i
+      filer som heter efter den skärm de mäter. Uppgiften förblir 12.20.
+
+      ⚠️ **Vakt 4 och 5 kan INTE använda `IMPORTERAT_SET` som den ser ut.** Konstanten är
+      medvetet föräldralös — dess `workoutId` pekar på ett pass som aldrig skapas. Ofarligt för
+      `getExerciseHistory`, som aldrig slår upp passet, men vakt 4 och 5 går via `workouts` och
+      kräver ett riktigt seedat pass. Villkoret står utskrivet i `e2e/hjalpare.ts` (12.27).
 
       **Uppgiften ersätter INTE att köra appen i webbläsaren under byggandet.** Adam
       2026-08-11: *"det ska inte sluta användas"*. De två gör olika saker och båda behövs:
@@ -2115,7 +2145,7 @@ och 13.1 måste vara klar före 13.6.
       fel och räknats som grönt. Därefter återställt, och grindarna körda: typecheck ren,
       lint 0 fel, **e2e 36 passed**.
 
-- [ ] **12.26 Såddprövningens selektor motsäger sin egen kommentar. Ny 2026-08-13.**
+- [x] **12.26 Såddprövningens selektor motsäger sin egen kommentar. Ny 2026-08-13. KLAR samma dag.**
       Funnen av `/code-review` (Spec-axeln). `e2e/sadd-provning.spec.ts:120-121`:
 
       ```
@@ -2135,11 +2165,25 @@ och 13.1 måste vara klar före 13.6.
       tillgängligt namn. `data-testid` bara där tillgängligt namn saknas"*. `getByText` är
       varken det ena eller det andra.
 
-      **Att göra:** ge importnotisen en roll eller ett tillgängligt namn att haka i, och byt
-      selektorn. **Gäller även de sex vakterna i 12.20** — samma misstag får inte byggas in sex
-      gånger till. Skrivs 12.20 först, lös det där och rätta prövningsfilen i samma svep.
+      ✅ **LÖST 2026-08-13, i två steg — och det första steget räckte inte.**
 
-- [ ] **12.27 Såddraden pekar på ett pass som aldrig skapas. Ny 2026-08-13.**
+      Steg 1 (`1b7cd54`) gav notisen `role="note"`. Commiten märktes `(12.26)`, vilket
+      **överdrev vad som gjorts**: `/code-review` visade samma dag att `role="note"` **inte
+      ärver något tillgängligt namn från sitt innehåll**. Beslut 7 kräver *"`role` +
+      tillgängligt namn"*, så selektorn uppfyllde bara halva beslutet — och prövningsfilen var
+      inte rättad alls, trots att uppgiften sa *"i samma svep"*.
+
+      Steg 2 (`f247a91`) stängde båda hålen. Noten har nu
+      `aria-label="Om datans ursprung"` — **namnet på vad raden handlar om, aldrig en
+      upprepning av vad den säger.** De två ska kunna röra sig isär; det är hela poängen.
+      Alla tre `getByText(/importerad/i)` i `sadd-provning.spec.ts` är utbytta mot
+      `getByRole('note', { name: 'Om datans ursprung' })`.
+
+      **Följden:** 12.22 kan nu skriva om importnotisens mening utan att ett enda test går
+      sönder. Det var kravet bakom beslut 5.
+      **Verifierat:** typecheck ren, 274 tester, bygget klart, e2e 45 passed.
+
+- [x] **12.27 Såddraden pekar på ett pass som aldrig skapas. Ny 2026-08-13. KLAR samma dag.**
       Funnen av `/code-review` (Spec-axeln). `e2e/sadd-provning.spec.ts:22` sätter
       `workoutId = 'provning-pass-1'` — ett pass som aldrig läggs in i `workouts`.
       `getExerciseHistory` (`src/db/history.ts:121`) slår aldrig upp passet, så det passerar
@@ -2153,9 +2197,19 @@ och 13.1 måste vara klar före 13.6.
       en riktig användare"*, men prövningen skapar aldrig något genom appen. Slutsatsen
       *"fallbacken behövs inte"* bär för den väg som mättes — en sida, en rad — men är inte ett
       generellt godkännande av sådden för alla sex vakterna.
-      **Att göra:** antingen seeda ett riktigt `workouts`-pass, eller skriv ut i filen att raden
-      medvetet är föräldralös och varför det är säkert här. **Avgörs när 12.20 skrivs**, då
-      blandfallet ändå måste lösas.
+      ✅ **LÖST 2026-08-13 med uppgiftens andra alternativ: villkoret är utskrivet.**
+      Det står i `e2e/hjalpare.ts` ovanför `IMPORTERAT_SET`, alltså på det ställe varje
+      framtida anropare läser — inte i ett test som råkar äga konstanten.
+
+      **Vad villkoret säger:** föräldralösheten är ofarlig **här och bara här**, eftersom
+      `getExerciseHistory` (`src/db/history.ts:121`) läser på `[exerciseId+performedAt]` och
+      aldrig slår upp passet. **Men den duger inte för vakt 4 och 5**, som går via `workouts` —
+      då måste ett riktigt pass seedas. Det står utskrivet i filen så att nästa session inte
+      återupptäcker fällan genom att gå i den.
+
+      ⚠️ **Blandfallet är fortfarande oprövat.** Beslut 6 säger *"det vanliga skapas genom
+      appen, som en riktig användare"*, och ingen vakt gör det ännu. Det avgörs när vakt 5
+      byggs, som är den enda som faktiskt kräver ett pågående pass.
 
 - [ ] **12.28 Emojiräkningen i 11B.0c är fel: åtta, inte sju. Ny 2026-08-13.**
       Funnen av `/code-review` (Spec-axeln), oberoende bekräftad mot repot samma dag.
