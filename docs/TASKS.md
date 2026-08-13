@@ -1818,7 +1818,7 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** de sex filerna är borta och `npm run typecheck && npm test && npm run
       lint && npm run build` är gröna.
 
-- [ ] **12.20 `ui/` har noll tester — täck det med e2e, inte med enhetstester.**
+- [x] **12.20 `ui/` har noll tester — täck det med e2e, inte med enhetstester. KLAR 2026-08-13 (kväll).**
       Upplagd 2026-08-11 på Adams fråga *"vet inte själv alls hur man bygger lämpliga tester
       för ui"*. Svaret är att det går, men inte på det sätt man först tänker.
 
@@ -1914,9 +1914,10 @@ och 13.1 måste vara klar före 13.6.
       fast det beteendet — sedan 12.25 med ett vänt påstående i stället för `test.fail()`.
       Hela mätningen står i 11B.0e.
 
-      📍 **STATUS 2026-08-13: fyra av sex vakter är byggda.** `e2e/ovningssida.spec.ts` finns
-      och kör grönt på alla tre bredder (e2e-sviten: 51 tester). Rutan är fortfarande `- [ ]`
-      eftersom uppgiften inte är klar.
+      ✅ **STATUS 2026-08-13 (kväll): alla sex vakterna är byggda och granskade.** Sviten kör
+      **60 tester** gröna på alla tre bredder (51 vid dagens början). Vakterna bor i tre filer:
+      `e2e/ovningssida.spec.ts` (1, 2, 3a, 3b, 6), `e2e/historiksida.spec.ts` (4) och
+      `e2e/passvy.spec.ts` (5a, 5b).
 
       **Varje vakt är sabotageprövad, inte bara sedd grön.** Det är det enda som skiljer en
       vakt från en rad som råkar vara grön:
@@ -1925,7 +1926,16 @@ och 13.1 måste vara klar före 13.6.
       |---|---|
       | 2 | `formatWeight` ändrad till att avrunda — `92,5` blev `93`, alltså 12.18 igen |
       | 3b | Notisen tvingad att alltid visas |
+      | 4 | `!w.isImported` borttaget ur `listWorkoutSummaries` → `Expected 1, Received 2` |
+      | 5a, 5b | `source === 'import'`-filtret borttaget ur `getLastPerformance` → `Förra` visade `82,5 × 5` i stället för det app-loggade setet |
       | 6 | Ett `console.error`, och separat ett okastat undantag i en `setTimeout` |
+
+      ⚠️ **SABOTAGET AVSLÖJADE ETT FEL I VAKT 4 SJÄLV, och det är lärdomen värd att behålla.**
+      Vakten föll först på sitt **ankare** i stället för på sin negation: Playwrights `hasText`
+      matchar **delsträngar**, och `180 kg` innehåller `80 kg`. Ankaret träffade båda raderna
+      och dog på strict mode. Att bara byta siffror hade lämnat fällan kvar åt nästa person —
+      negationen räknar därför **rader i passlistan** i stället för att söka text. Ett antal är
+      en identitet; en delsträng är en gissning.
 
       ⚠️ **Vakt 6 krävde TVÅ lyssnare, och sabotaget bevisade varför.** Det okastade undantaget
       dök upp **bara** som `pageerror`, aldrig som `console.error`. Hade vakten lyssnat på det
@@ -1937,28 +1947,56 @@ och 13.1 måste vara klar före 13.6.
       | 1 — sidan renderar, rubrik = övningens namn | Övningssidan | ✅ |
       | 2 — tyngsta set och bästa e1RM med decimal | Övningssidan | ✅ |
       | 3 — importnotisen syns / syns inte (3a och 3b) | Övningssidan | ✅ |
-      | 6 — inga konsolfel under flödet | Övningssidan | ✅ |
-      | 4 — passlistan (13.3) | **Historiksidan** | kvar |
-      | 5 — `FÖRRA`-kolumnen (13.4) | **Idag-sidan** | kvar |
+      | 6 — inga konsolfel under flödet | Alla tre skärmarna | ✅ |
+      | 4 — passlistan (13.3) | **Historiksidan** | ✅ |
+      | 5 — `FÖRRA`-kolumnen (13.4) | **Passvyn** | ✅ |
 
-      **Övningssidan är därmed färdigbevakad.** Kvar är bara de två vakterna som ligger på
-      andra skärmar, och de kräver båda ett riktigt seedat `workouts`-pass (se varningen nedan).
+      **Punkt 6 täcker numera alla tre skärmarna**, inte bara övningssidan. Spec-granskningen
+      påpekade att *"inga konsolfel under hela flödet"* mätte en tredjedel av flödet — och
+      passvyns flöde är det tyngsta UI:t i hela sviten.
 
-      📌 **Adam har begärt en `/code-review` av alla sex vakterna när de är skrivna**
-      (2026-08-13). Vakt 1–3 och 6 är granskade var för sig under byggandet, men **helheten är
-      inte sedd** — och de två granskningar som körts i dag hittade båda verkliga fel, varav ett
-      infört samma dag. Uppgiften är inte klar förrän den granskningen är gjord.
-      Fixpunkt: `b7cb126` täcker hela arbetet.
+      **Vakt 5 mäter TVÅ oberoende kodvägar.** Både `addExerciseToPlan` (`plan.ts:88`, som
+      förifyller setraderna) och `ExerciseCard` (`ExerciseCard.tsx:46`, som driver
+      `Förra`-cellen) läser `getLastPerformance` genom var sin fråga. Mäts bara den ena kan den
+      andra tappa filtret utan att någon grind säger ett ord.
+
+      ✅ **`/code-review` av alla sex vakterna är GJORD 2026-08-13 (kväll)**, som Adam begärde,
+      med fixpunkt `b7cb126`. Båda axlarna hittade verkliga fel, och båda flaggade oberoende av
+      varandra samma svaghet i vakt 4:s ankare — vilket är det starkaste skäl som finns att tro
+      på ett fynd. Åtgärdat i `622f1be`:
+
+      | Fynd | Åtgärd |
+      |---|---|
+      | **Vakt 4 bröt mot beslut 6** — seedade det vanliga passet rått | Passet skapas nu genom appen. `isImported: false` kom förut ur testets egen fixtur, så vakten mätte sig själv |
+      | Vakt 4:s ankare var en delsträngsmatchning | Negationen räknar rader i stället. Se sabotagerutan ovan |
+      | `seedaRått` krävde att anroparen kom ihåg att asserta returvärdet | Kastar nu i stället. Regeln var redan glömd en gång |
+      | `seedaRått`/`seedaPassRått` delade IndexedDB-skalet ordagrant | Utbrutet till `skrivRått` |
+      | Punkt 6 täckte bara en av tre skärmar | Konsolvakt tillagd i vakt 4, 5a och 5b |
+
+      **Kvarstående fynd är utbrutna till egna uppgifter:** 12.30 (vakt 2, 3b och 6 bryter också
+      mot beslut 6), 12.31 (`IMPORTERAT_SET` är felnamngiven) och 12.32 (sökningen enligt §7.1
+      gjordes aldrig före `hjalpare.ts`).
 
       ⚠️ **"Klart när" här namnger EN fil, men vakterna mäter TRE skärmar.** 13.3 sitter i
       `listWorkoutSummaries` (passlistan) och 13.4 i `getLastPerformance` (spökdatan) — ingen
       av dem ligger på övningssidan. **Beslut:** alla sex byggs som beslut 5 kräver, men i
       filer som heter efter den skärm de mäter. Uppgiften förblir 12.20.
 
-      ⚠️ **Vakt 4 och 5 kan INTE använda `IMPORTERAT_SET` som den ser ut.** Konstanten är
-      medvetet föräldralös — dess `workoutId` pekar på ett pass som aldrig skapas. Ofarligt för
-      `getExerciseHistory`, som aldrig slår upp passet, men vakt 4 och 5 går via `workouts` och
-      kräver ett riktigt seedat pass. Villkoret står utskrivet i `e2e/hjalpare.ts` (12.27).
+      ⚠️ **RÄTTAD 2026-08-13 (kväll) — den här varningen var fel om vakt 5.** Den löd tidigare
+      att *"vakt 4 och 5 går via `workouts` och kräver ett riktigt seedat pass"*. Halva
+      påståendet höll inte, och spec-granskningen hittade det:
+
+      - **Vakt 4: stämmer.** `listWorkoutSummaries` (`history.ts:61`) läser `workouts`-tabellen,
+        så `IMPORTERAT_SET` ensamt duger inte — ett importerat pass måste seedas.
+      - **Vakt 5: stämmer INTE.** `getLastPerformance` (`repo.ts:325`) läser **bara**
+        `loggedSets` och slår aldrig upp passet. Vakt 5 seedar inget pass alls. Passen den
+        använder finns för att `excludeWorkoutId` ska ha något att utesluta, och de **skapas
+        genom appen**, inte som fixtur.
+
+      Skillnaden spelar roll: ett dokument som anger fel skäl får nästa agent att tro att kravet
+      är uppfyllt av fel anledning, och då försvinner det verkliga kravet ur synfältet.
+      Konstanten själv är fortfarande medvetet föräldralös (12.27), och villkoret står utskrivet
+      i `e2e/hjalpare.ts`.
 
       **Uppgiften ersätter INTE att köra appen i webbläsaren under byggandet.** Adam
       2026-08-11: *"det ska inte sluta användas"*. De två gör olika saker och båda behövs:
@@ -2266,6 +2304,52 @@ och 13.1 måste vara klar före 13.6.
       4. **Regel 3** — `7bd43b5` blandade ikonbytet med en rättelse av
          `docs/mockups/11b-ikoner.html`. Redan skedd, inget att åtgärda. Noterad så att
          mönstret inte upprepas.
+
+- [ ] **12.30 Vakt 2, 3b och 6 bryter mot beslut 6. Ny 2026-08-13 (kväll).**
+      Utbruten ur `/code-review` av 12.20. Beslut 6 i 11B.0e: *"Bara det importerade setet
+      seedas rått — det vanliga skapas genom appen, som en riktig användare."*
+
+      **De tre vakterna på övningssidan seedar sina vanliga set rått** med
+      `source: 'manual'`. Vakt 4 gjorde det också tills granskningen fångade det; vakt 5 har
+      följt beslutet från början.
+
+      **Varför det spelar roll, och varför det ändå inte är brådskande:** en rå skrivning går
+      förbi `repo.ts`, så vakten mäter sin egen fixtur i stället för appens skrivväg. Ändras
+      det som skrivs vid en riktig loggning fortsätter vakten stå grön. Men de tre vakternas
+      påståenden rör **avläsning** (rubrik, tyngsta set, importnotisen), inte skrivvägen, så
+      exponeringen är mindre än vakt 4:s var — där var flaggan `isImported` själva
+      skiljelinjen.
+
+      **Hindret som fanns finns inte längre.** `e2e/hjalpare.ts` har numera `startaPass`,
+      `läggTillÖvning` och `loggaSetGenomAppen`, prövade av vakt 4 och 5.
+      **Klart när:** de tre vakterna skapar sina vanliga set genom appen, och var och en är
+      sabotageprövad om efteråt. **Låg prioritet.**
+
+- [ ] **12.31 `IMPORTERAT_SET` heter inte längre vad den är. Ny 2026-08-13 (kväll).**
+      Utbruten ur `/code-review` av 12.20. Konstanten i `e2e/hjalpare.ts` är i praktiken
+      **standardmallen** som `seedaRått` skriver om inget annat sägs — flera vakter skriver
+      över `source` till `'manual'` och får då ett helt vanligt set ur något som heter
+      `IMPORTERAT_SET`. Grannen `PASS_MALL` namnger sig rätt.
+
+      Att förvalet *är* ett importerat set är avsiktligt och ska stå kvar; det är namnet som
+      ljuger om räckvidden. **Klart när:** konstanten heter något som täcker båda användningarna
+      (`SET_MALL`, med förvalet dokumenterat i docblocken). **Låg prioritet, ren omdöpning.**
+
+- [ ] **12.32 §7.1-sökningen gjordes aldrig före `e2e/hjalpare.ts`. Ny 2026-08-13 (kväll).**
+      Utbruten ur `/code-review` av 12.20. §7.1: *"Att söka efter befintliga lösningar är ett
+      standardsteg i varje ny funktion … Att inte ha letat är aldrig ett godtagbart skäl."*
+      Ingen sökning redovisades, varken i diffen, `TASKS.md` eller `EXTERNT.md`.
+
+      **Motargumentet som faktiskt bär, men som ska prövas och inte antas:** §7.1:s egen
+      motvikt säger att en plattformsprimitiv slår ett bibliotek som gör samma sak, och att
+      40 egna rader slår 200 kB i bundlen. `skrivRått` är rå IndexedDB — en plattformsprimitiv
+      — och 12.20:s eget *"Klart när"* förbjuder nya poster i `package.json`. Slutsatsen
+      *blir* med all sannolikhet "inget som passar", men **den slutsatsen är inte dragen än**,
+      och ett argument som råkar leda rätt är fortfarande ett dåligt argument (samma fel som
+      12.20:s egen rättelse 3 handlade om).
+
+      **Klart när:** en riktig sökning är gjord och redovisad — även om svaret blir "inget som
+      passar". **Låg prioritet**, men den ska inte tyst skrivas av.
 
 ---
 
