@@ -2066,6 +2066,109 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** posten är borta ur `package.json` och alla fem grindarna är gröna.
       **Litet jobb.**
 
+- [ ] **12.25 `test.fail()` i såddprövningen täcker sin egen uppsättning. Ny 2026-08-13.**
+      Funnen av `/code-review` (Spec-axeln) på commit `05c21b7`. **Det allvarligaste fyndet i
+      granskningen.**
+
+      `test.fail()` står på rad 143 i `e2e/sadd-provning.spec.ts` och gäller **hela
+      testkroppen**. Raderna 148–150 är uppsättning, inte mätning:
+
+      ```
+      await page.goto(`/ovning/${övning.id}`);
+      await expect(page.getByRole('heading', { name: övning.name })).toBeVisible();
+      await expect(page.getByText(/importerad/i)).toHaveCount(0);
+      ```
+
+      **Följden:** går uppsättningen sönder — sidan renderar inte, övningen hittas inte —
+      rapporteras testet fortfarande som *förväntat rött*, alltså grönt i sviten. Testet kan
+      alltså vara "grönt" av skäl som inte har ett dugg med liveuppdatering att göra, vilket är
+      det enda det påstår sig mäta.
+
+      Påståendet i 11B.0e — *"börjar det plötsligt lyckas blir körningen röd"* — håller
+      fortfarande. Det är det **omvända** som inte gör det: att grönt betyder att mätningen
+      faktiskt utfördes.
+
+      **Att göra:** flytta uppsättningen (rad 145–150) utanför det förväntat-röda området.
+      Antingen till en `beforeEach`, eller genom att dela testet så att `test.fail()` bara
+      omsluter den sista `expect`-raden.
+      **Klart när:** en avsiktligt trasig uppsättning gör testet **rött**, inte grönt.
+      Grindarna gröna.
+
+- [ ] **12.26 Såddprövningens selektor motsäger sin egen kommentar. Ny 2026-08-13.**
+      Funnen av `/code-review` (Spec-axeln). `e2e/sadd-provning.spec.ts:120-121`:
+
+      ```
+      // Påstår att notisen SYNS, aldrig vad den lyder — 12.22 skriver om meningen.
+      await expect(page.getByText(/importerad/i)).toBeVisible();
+      ```
+
+      Kommentaren säger att raden inte rör lydelsen. `getByText` matchar **på just lydelsen**.
+      Kommentaren beskriver alltså inte koden.
+
+      ⚠️ **Granskaren påstod att 12.22 fäller testet. Det stämmer inte som 12.22 är avgränsad
+      i dag** — inventeringen 2026-08-13 visar att bara tankstrecket byts och att ordet
+      *"importerad"* överlever i båda grenarna av `importNotice.ts:66-67`. **Risken är latent,
+      inte akut.** Skrivs meningen om på riktigt någon gång faller testet tyst.
+
+      **Det som däremot är ett brott i dag:** beslut 7 i 11B.0e säger *"Selektorer: `role` +
+      tillgängligt namn. `data-testid` bara där tillgängligt namn saknas"*. `getByText` är
+      varken det ena eller det andra.
+
+      **Att göra:** ge importnotisen en roll eller ett tillgängligt namn att haka i, och byt
+      selektorn. **Gäller även de sex vakterna i 12.20** — samma misstag får inte byggas in sex
+      gånger till. Skrivs 12.20 först, lös det där och rätta prövningsfilen i samma svep.
+
+- [ ] **12.27 Såddraden pekar på ett pass som aldrig skapas. Ny 2026-08-13.**
+      Funnen av `/code-review` (Spec-axeln). `e2e/sadd-provning.spec.ts:22` sätter
+      `workoutId = 'provning-pass-1'` — ett pass som aldrig läggs in i `workouts`.
+      `getExerciseHistory` (`src/db/history.ts:121`) slår aldrig upp passet, så det passerar
+      tyst.
+
+      **Det är precis vad 11B.0e varnade för** i avsnittet *"Varför bara det importerade setet
+      seedas rått"*: *"Rå sådd går förbi `repo.ts` och kan därför skriva en rad appen aldrig
+      hade kunnat skapa. Testet blir då grönt mot data som inte kan existera."*
+
+      Dessutom är **blandfallet oprövat**: beslut 6 säger *"det vanliga skapas genom appen, som
+      en riktig användare"*, men prövningen skapar aldrig något genom appen. Slutsatsen
+      *"fallbacken behövs inte"* bär för den väg som mättes — en sida, en rad — men är inte ett
+      generellt godkännande av sådden för alla sex vakterna.
+      **Att göra:** antingen seeda ett riktigt `workouts`-pass, eller skriv ut i filen att raden
+      medvetet är föräldralös och varför det är säkert här. **Avgörs när 12.20 skrivs**, då
+      blandfallet ändå måste lösas.
+
+- [ ] **12.28 Emojiräkningen i 11B.0c är fel: åtta, inte sju. Ny 2026-08-13.**
+      Funnen av `/code-review` (Spec-axeln), oberoende bekräftad mot repot samma dag.
+      11B.0c:s rubrik lyder *"Sju förekomster, mätta och inte antagna"*. Det är **åtta**:
+      **⌨ i `src/ui/pages/TodayPage.tsx:268`** saknas i tabellen.
+
+      Uppgiftens egen paketlista nämner *"eventuellt tangentbord för fritextgenvägen"*, så
+      behovet var känt — men ingen `IkonTangentbord` finns i `src/ui/icons.tsx`. **Sex av åtta
+      glyfer är bytta, inte sex av sju.** 🏋 i `ExerciseCard.tsx:66` är sedan tidigare en
+      dokumenterad senareläggning till steg 4.
+
+      ⚠️ `docs/DESIGN.md:90` säger i sin tur *"Sex förekomster i dag"*. Tre dokument, tre
+      siffror, och verkligheten är en fjärde. **Rätta alla tre.**
+      **Att göra:** lägg till `IkonTangentbord`, byt ⌨, och rätta siffran i 11B.0c och
+      `DESIGN.md`. Litet jobb, men det får inte glömmas — *"noll emoji återstår i `src/ui/`"*
+      går annars aldrig att stänga ärligt.
+
+- [ ] **12.29 Småfynd ur granskningen 2026-08-13. Låg prioritet.**
+      Standards-axeln gav fyra bedömningsfrågor, ingen hård överträdelse. Härkomstregistret,
+      licensraden i filhuvudet, §0.3 och ADR 0001 var alla uppfyllda.
+
+      1. **48×48 px** — `src/ui/ExerciseCard.tsx:82` har `h-12 w-10` (48×40) på menyknappen.
+         Diffen i `7bd43b5` redigerade exakt den raden men lämnade bredden.
+      2. **Fem oanvända ikonexporter** — `IkonPlus`, `IkonSkivstång`, `IkonHistorik`,
+         `IkonLista`, `IkonTidtagare`. `DESIGN.md` sanktionerar förberedelse av flikikoner, men
+         `src/ui/nav.ts` har **tre** flikar, inte fyra. `IkonLista` och `IkonTidtagare` saknar
+         alltså dokumenterad mottagare. Behåll om steg 4 tar dem, radera annars.
+      3. **Samma preflight-omväg löst på tre sätt** — `svg { display: block }` hanteras med
+         `mx-auto` (`ExerciseCard.tsx:141`), `inline-flex` (`ExercisePage.tsx:58`) och `flex`
+         (`HistoryPage.tsx:89`). Formen kunde bo i `Ikon` självt.
+      4. **Regel 3** — `7bd43b5` blandade ikonbytet med en rättelse av
+         `docs/mockups/11b-ikoner.html`. Redan skedd, inget att åtgärda. Noterad så att
+         mönstret inte upprepas.
+
 ---
 
 ## Fas 11A — efterjustering 2026-08-01 (layoutbugg + rullhjul)
