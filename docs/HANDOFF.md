@@ -829,7 +829,7 @@ finns.
 
 ---
 
-## 🆕 2026-08-10 — 13.2 klar och verifierad i skarpt läge
+## 2026-08-10 — 13.2 klar och verifierad i skarpt läge
 
 **Migration `0005_chins_pullups.sql` är körd av Adam och kontrollerad utifrån.** Katalogen har
 46 rader, Pullups finns, Chins har kvar sitt id och `räck` är borta ur hela katalogen. Alla
@@ -914,7 +914,7 @@ av ingenting — Pullups id `6b0a5be9-…` finns i databasen och kan refereras a
 
 ---
 
-## 🆕 2026-08-09, kväll — 13.1 klar, och tre granskningsrundor på samma diff
+## 2026-08-09, kväll — 13.1 klar, och tre granskningsrundor på samma diff
 
 **13.1 är byggd, granskad, mergad, pushad och verifierad i skarpt läge.** `main` står på
 `89df08d`. Migration `0004_import_flag.sql` är körd av Adam och kontrollerad utifrån.
@@ -986,7 +986,7 @@ koden och verifierad i skarpt läge, migration 0005 körd.** Se sessionen högst
 
 ---
 
-## 🆕 2026-08-09 — Adams konto skapat, och en bugg som hittades på kuppen
+## 2026-08-09 — Adams konto skapat, och en bugg som hittades på kuppen
 
 **Fas 13 påbörjades i fel ände med flit:** 13.6 steg 1 (Adam registrerar sig) är oberoende av
 kodändringarna och kunde göras direkt. Det avslöjade en bugg som blockerade hela importen, och
@@ -1141,7 +1141,7 @@ repprogressionen är monoton, vilket är sannolikt men inte bevisat.
 
 ---
 
-## 🆕 2026-08-04 — designrundan påbörjad, och appen sågs för första gången
+## 2026-08-04 — designrundan påbörjad, och appen sågs för första gången
 
 ### Steg 4.1 klart: CI, tokens, en källa för navigationen
 
