@@ -535,7 +535,7 @@ värd att låna, och den blev 11B.0e.
 
 ---
 
-## 🆕 2026-08-11 (tredje sessionen) — Fas 13 klar utom bekräftelsen i appen
+## 2026-08-11 (tredje sessionen) — Fas 13 klar utom bekräftelsen i appen
 
 ### Börja här
 
