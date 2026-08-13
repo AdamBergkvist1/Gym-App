@@ -17,7 +17,8 @@ YOU MUST följa dessa regler utan undantag:
    - Alla databasmutationer måste använda Idempotency-nycklar.
 5. **Överlämning (åt båda hållen):**
    - **Vid start:** läs `docs/HANDOFF.md` (översta sektionen) och `docs/TASKS.md` innan du gör något annat. Ingen av dem laddas automatiskt — den här filen gör det, och därför står det här.
-   - **Innan en session avslutas:** MÅSTE du uppdatera `docs/HANDOFF.md` med verifierbara fakta. Gissningar eller "bör fungera" är förbjudet. Kör `/handoff` — den är projektlokal och skriver till rätt fil.
+   - **Innan en session avslutas:** MÅSTE du uppdatera `docs/HANDOFF.md` med verifierbara fakta. Gissningar eller "bör fungera" är förbjudet. **Läs `.claude/skills/handoff/SKILL.md` och följ den** — där står formkraven: nyast överst, radera aldrig äldre sektioner, flagga motsagda sektioner som `DELVIS ÖVERSPELAD`, egen commit. Detta gäller oavsett hur Adam ber om det: `/handoff`, "gör en handoff", eller inget alls vid sessionsslut.
+   - ⚠️ **`/handoff` laddar INTE den filen.** Kommandot träffar användarnivåns kopia (`~/.claude/skills/handoff`, märkt `(user)` i menyn) — Matt Pococks original, vars text säger att dokumentet ska sparas i OS:ets temp-katalog. **Den anvisningen gäller inte här.** En temp-fil överlever inte `git clone`, och nästa session har ingen anledning att leta efter den. Projektfilen vinner alltid. Skillfilerna delar namn, och namnkrocken vinns av användarnivån — verifierat 2026-08-12.
 6. **Kodändringar:** Ange ändringar som exakta Sök-Och-Ersätt-block. Inga radnummer.
 
 ---
