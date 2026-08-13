@@ -1914,15 +1914,19 @@ och 13.1 måste vara klar före 13.6.
       fast det beteendet — sedan 12.25 med ett vänt påstående i stället för `test.fail()`.
       Hela mätningen står i 11B.0e.
 
-      📍 **STATUS 2026-08-13: två av sex vakter är byggda.** `e2e/ovningssida.spec.ts` finns
-      och kör grönt på alla tre bredder. Rutan är fortfarande `- [ ]` eftersom uppgiften inte
-      är klar.
+      📍 **STATUS 2026-08-13: tre av sex vakter är byggda.** `e2e/ovningssida.spec.ts` finns
+      och kör grönt på alla tre bredder (e2e-sviten: 48 tester). Rutan är fortfarande `- [ ]`
+      eftersom uppgiften inte är klar.
+
+      **Varje vakt är sabotageprövad, inte bara sedd grön.** Vakt 2 fångade en återinförd
+      12.18-regression (`formatWeight` avrundade → `92,5` blev `93`). Vakt 3b fångade en notis
+      som alltid visas. Det är det enda som skiljer en vakt från en rad som råkar vara grön.
 
       | Vakt | Skärm | Läge |
       |---|---|---|
       | 1 — sidan renderar, rubrik = övningens namn | Övningssidan | ✅ |
+      | 2 — tyngsta set och bästa e1RM med decimal | Övningssidan | ✅ |
       | 3 — importnotisen syns / syns inte (3a och 3b) | Övningssidan | ✅ |
-      | 2 — tyngsta set och bästa e1RM med decimal | Övningssidan | kvar |
       | 6 — inga konsolfel under flödet | Övningssidan | kvar |
       | 4 — passlistan (13.3) | **Historiksidan** | kvar |
       | 5 — `FÖRRA`-kolumnen (13.4) | **Idag-sidan** | kvar |

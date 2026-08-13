@@ -72,8 +72,22 @@ export function ExercisePage() {
 
       {pb && (pb.heaviest || pb.bestE1rm) && (
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3">
-            <p className="text-xs text-[var(--color-dim)]">Tyngsta set</p>
+          {/* `role="group"` + `aria-labelledby` ger vakt 2 i `ovningssida.spec.ts` ett
+              sätt att peka på RÄTT kort. Utan det hade testet fått matcha på siffran
+              lösryckt, och 92,5 dyker upp på flera ställen på sidan — vakten hade
+              inte kunnat skilja på om talet stod under rätt rubrik.
+
+              `aria-labelledby` och inte `aria-label`: rubriken står redan som synlig
+              text, och två kopior av samma sträng driver isär. Nu är det bokstavligen
+              samma sträng som både syns och namnger gruppen. */}
+          <div
+            role="group"
+            aria-labelledby="pb-tyngsta"
+            className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3"
+          >
+            <p id="pb-tyngsta" className="text-xs text-[var(--color-dim)]">
+              Tyngsta set
+            </p>
             <p className="text-2xl font-semibold tabular-nums">
               {pb.heaviest ? formatWeight(pb.heaviest.weightKg) : '–'}
               <span className="text-sm text-[var(--color-dim)]"> kg</span>
@@ -85,8 +99,14 @@ export function ExercisePage() {
             )}
           </div>
 
-          <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3">
-            <p className="text-xs text-[var(--color-dim)]">Bästa e1RM</p>
+          <div
+            role="group"
+            aria-labelledby="pb-basta-e1rm"
+            className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3"
+          >
+            <p id="pb-basta-e1rm" className="text-xs text-[var(--color-dim)]">
+              Bästa e1RM
+            </p>
             <p className="text-2xl font-semibold tabular-nums">
               {pb.bestE1rm ? formatWeight(pb.bestE1rm.e1rm) : '–'}
               <span className="text-sm text-[var(--color-dim)]"> kg</span>

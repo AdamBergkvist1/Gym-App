@@ -33,6 +33,58 @@ test('1. övningssidan renderar — rubriken är övningens namn', async ({ page
   await expect(page.getByRole('heading', { name: övning.name, level: 1 })).toBeVisible();
 });
 
+/**
+ * REGRESSIONSVAKT FÖR 12.18: halvkilon får inte avrundas bort.
+ *
+ * Adams beslut, med skäl: man lägger på 2,5 kg-skivor, så halvkilon är verkliga
+ * vikter och inte mätbrus. Avrundas de blir två olika pass samma siffra.
+ *
+ * De två setet är valda så att **tyngsta set och bästa e1RM blir OLIKA set** — det
+ * är hela poängen med att visa dem var för sig (`ExercisePage` docblock: *"90×3 är
+ * tyngre på stången, men 80×8 är den starkare prestationen"*). Ett test där samma
+ * set vinner båda hade inte kunnat upptäcka att korten byter plats.
+ *
+ * DE VÄNTADE TALEN ÄR HANDRÄKNADE ur Epley (`vikt × (1 + reps/30)`, avrundat till
+ * en decimal), inte hämtade genom att anropa `epley1RM`. Ett test som räknar fram
+ * sitt facit på samma sätt som koden kan aldrig säga emot koden:
+ *
+ *   92,5 × 3  →  92,5 × 33/30 = 101,75  →  101,8
+ *   82,5 × 8  →  82,5 × 38/30 = 104,5   →  104,5
+ *
+ * Alltså: tyngst = 92,5 (första setet), bästa e1RM = 104,5 (andra setet).
+ */
+test('2. tyngsta set och bästa e1RM visar rätt siffror med decimal', async ({ page }) => {
+  await page.goto('/');
+  const övning = await hämtaÖvning(page);
+
+  const tyngstSkrevs = await seedaRått(page, övning.id, {
+    id: 'vakt-2-tyngsta-setet',
+    source: 'manual',
+    weightKg: 92.5,
+    reps: 3,
+    performedAt: '2024-05-01T10:00:00.000Z',
+  });
+  const starkastSkrevs = await seedaRått(page, övning.id, {
+    id: 'vakt-2-basta-e1rm',
+    source: 'manual',
+    weightKg: 82.5,
+    reps: 8,
+    performedAt: '2024-05-02T10:00:00.000Z',
+  });
+  expect(tyngstSkrevs && starkastSkrevs, 'båda råa skrivningarna ska lyckas').toBe(true);
+
+  await page.goto(`/ovning/${övning.id}`);
+
+  const tyngsta = page.getByRole('group', { name: 'Tyngsta set' });
+  await expect(tyngsta).toContainText('92,5');
+  await expect(tyngsta).toContainText('3 reps');
+
+  const bästaE1rm = page.getByRole('group', { name: 'Bästa e1RM' });
+  await expect(bästaE1rm).toContainText('104,5');
+  // Härledningen ska stå kvar: e1RM utan sitt ursprungsset är ett tal utan historia.
+  await expect(bästaE1rm).toContainText('82,5');
+});
+
 test('3a. importnotisen syns när övningen har importerade set', async ({ page }) => {
   await page.goto('/');
   const övning = await hämtaÖvning(page);
