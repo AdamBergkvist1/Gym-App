@@ -50,7 +50,10 @@ export function HistoryPage() {
         </p>
       </div>
 
-      <ul className="space-y-2">
+      {/* Namnet skiljer passlistan från övningslistan längre ner — båda är
+          `ul` med `listitem`, och utan namn går de inte att hålla isär vare sig
+          för en skärmläsare eller för vakt 4 i 12.20. */}
+      <ul aria-label="Pass" className="space-y-2">
         {workouts.map((w) => (
           <li
             key={w.workout.id}
@@ -78,7 +81,10 @@ export function HistoryPage() {
           <h2 className="mb-2 text-xs font-semibold tracking-wider text-[var(--color-dim)] uppercase">
             Övningar
           </h2>
-          <ul className="overflow-hidden rounded-lg border border-[var(--color-line)]">
+          <ul
+            aria-label="Övningar"
+            className="overflow-hidden rounded-lg border border-[var(--color-line)]"
+          >
             {trained.map((t) => (
               <li key={t.exerciseId} className="border-b border-[var(--color-line)] last:border-b-0">
                 <Link
