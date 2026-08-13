@@ -2335,7 +2335,8 @@ och 13.1 måste vara klar före 13.6.
       ljuger om räckvidden. **Klart när:** konstanten heter något som täcker båda användningarna
       (`SET_MALL`, med förvalet dokumenterat i docblocken). **Låg prioritet, ren omdöpning.**
 
-- [ ] **12.32 §7.1-sökningen gjordes aldrig före `e2e/hjalpare.ts`. Ny 2026-08-13 (kväll).**
+- [x] **12.32 §7.1-sökningen gjordes aldrig före `e2e/hjalpare.ts`. Ny 2026-08-13 (kväll).
+      KLAR 2026-08-13.**
       Utbruten ur `/code-review` av 12.20. §7.1: *"Att söka efter befintliga lösningar är ett
       standardsteg i varje ny funktion … Att inte ha letat är aldrig ett godtagbart skäl."*
       Ingen sökning redovisades, varken i diffen, `TASKS.md` eller `EXTERNT.md`.
@@ -2350,6 +2351,54 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** en riktig sökning är gjord och redovisad — även om svaret blir "inget som
       passar". **Låg prioritet**, men den ska inte tyst skrivas av.
+
+      ✅ **SÖKNINGEN ÄR GJORD OCH REDOVISAD** i `docs/EXTERNT.md` under *Övervägt och
+      uppskjutet* → *"Hjälpare för e2e-sviten"*. Fyra kandidater med licens, stjärnor, senaste
+      commit och beroenden. **Inget infört, noll nya poster i `package.json`.**
+
+      ⚠️ **Och slutsatsen "inget som passar" blev bara delvis rätt — vilket är hela skälet
+      till att uppgiften inte fick skrivas av tyst.** Sökningen förutspåddes ge noll. På sådden
+      gjorde den det, av två skäl som nu är nedskrivna: `playwright-indexeddb` går inte att
+      belägga licensmässigt (npm säger MIT, repot har ingen `LICENSE`-fil → §7.2b stoppar den),
+      och `dexie-export-import` arbetar genom Dexies API som inte är nåbar från `page.evaluate`.
+
+      **Men på det tredje ansvaret fanns en riktig träff.** `fångaKonsolfel` duplicerar
+      Playwrights inbyggda `page.consoleMessages()` och `page.pageErrors()`. Utbrutet till
+      **12.33**. Uppgiften betalade alltså för sig, tvärtemot vad den själv gissade.
+
+- [ ] **12.33 `fångaKonsolfel` duplicerar en plattformsprimitiv. Ny 2026-08-13 (kväll).**
+      Utbruten ur 12.32:s sökning. `e2e/hjalpare.ts:316` bygger för hand det Playwright numera
+      har inbyggt:
+
+      | Vår kod | Inbyggt | Sedan |
+      |---|---|---|
+      | `page.on('console', …)` filtrerad på `type() === 'error'` | `page.consoleMessages({ filter })` | 1.56 |
+      | `page.on('pageerror', …)` | `page.pageErrors()` | 1.56 |
+
+      **Verifierat i typerna för den version vi kör**, inte ur sökträffar:
+      `node_modules/playwright-core@1.62.1/types/types.d.ts:2361` respektive `:3933`. Även
+      `clearConsoleMessages()` och `clearPageErrors()` finns (`:2206`, `:2213`).
+
+      **Vinsten är inte färre rader — den är att en fälla försvinner.** Hjälparens docblock
+      varnar i dag: *"MÅSTE ANROPAS FÖRE FÖRSTA `goto`. Ett fel som hinner uppstå innan dess
+      fångas aldrig, och listan hade varit tom utan att någon märkt det."* De inbyggda
+      metoderna är **retroaktiva** — upp till 200 senaste — så anropsordningen slutar spela
+      roll. Det är samma resonemang som `skrivRått`-rättelsen 2026-08-13: *en regel som måste
+      minnas är ingen regel; strukturen ska göra felet omöjligt i stället.*
+
+      ⚠️ **`filter`-valet är inte kosmetiskt och ska avgöras, inte glidas förbi.**
+      `consoleMessages()` tar `'all' | 'since-navigation'`. Vakt 6 mäter en sida efter dess
+      `goto`, men hjälparen används av fler. Fel val ger antingen missade fel eller läckage
+      mellan navigeringar. Skriv ut vilket som valdes och varför.
+
+      **Klart när:** `fångaKonsolfel` är antingen borttagen till förmån för de inbyggda
+      anropen, eller kvar som tunn omslagsfunktion **utan** ordningskravet i docblocken — och
+      **vakt 6 är sabotageprövad om**. Vakten ändras här, och 12.20:s lärdom gäller: *att en
+      vakt blir röd räcker inte, den ska bli röd på rätt rad.* Läs felmeddelandet under
+      sabotaget; pekar det på hjälparen eller uppsättningen är påståendet oprövat.
+
+      **Låg prioritet.** Nuvarande kod är korrekt så länge ordningsregeln följs — detta är
+      härdning, inte en bugg.
 
 ---
 

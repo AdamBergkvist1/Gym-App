@@ -211,3 +211,51 @@ acceptabelt.
 - **Status:** **valdes bort** till förmån för Radix Colors. Bredare (spacing, typografi,
   skuggor) men Tailwind 4 ger oss redan det. Radix löser det vi faktiskt saknar: garanterade
   kontraststeg.
+
+### Hjälpare för e2e-sviten — sökningen §7.1 kräver, gjord i efterhand (uppgift 12.32)
+
+**Status: inget infört. Noll nya poster i `package.json`.** Sökningen gjordes 2026-08-13,
+efter att `e2e/hjalpare.ts` redan var skriven — vilket är fel ordning och hela skälet till att
+12.32 fanns. Den redovisas här så att nästa person slipper utreda om igen.
+
+`e2e/hjalpare.ts` har fyra ansvar. Tre är sökbara; det fjärde — `startaPass`,
+`läggTillÖvning`, `loggaSetGenomAppen` — är sidobjekt mot vårt eget gränssnitt och kan per
+definition inte finnas färdigt någonstans. Det söktes därför inte på.
+
+| Kandidat | Licens | ⭐ | Senaste commit | Beroenden | Utfall |
+|---|---|---|---|---|---|
+| [`playwright-indexeddb`](https://www.npmjs.com/package/playwright-indexeddb) (vrknetha) | ⛔ **oklar** | 7 | 2024-11-28 | inga (10,5 kB) | **Stoppad på licensen** |
+| [TapaiBalazs/playwright-indexeddb](https://github.com/TapaiBalazs/playwright-indexeddb) | MIT | **0** | 2026-03-13 | — | Personligt projekt |
+| [`dexie-export-import`](https://github.com/dexie/dexie-export-import) | Apache-2.0 | — | 4.4.0 | **inga** | Fel verktyg |
+| [`@seontechnologies/playwright-utils`](https://github.com/seontechnologies/playwright-utils) | Apache-2.0 | 108 | 2026-08-10 | peer: `@playwright/test` | Saknar det vi sökte |
+
+**⛔ `playwright-indexeddb` — licensen går inte att belägga, och det avgjorde saken innan
+passformen ens diskuterades.** npm-paketets `package.json` säger `MIT`, men GitHub-repot
+`vrknetha/playwright-indexeddb` har **ingen `LICENSE`-fil** (`gh api …/license` ger 404) och
+npm-posten saknar `repository`-fält, så kopplingen mellan paketet och repot vilar på namnet.
+§7.2b: en licens som inte går att verifiera behandlas som *alla rättigheter förbehållna*.
+Att `package.json` påstår MIT räcker inte — det är ett fält vem som helst kan skriva, inte
+en licenstext med en upphovsrättsinnehavare. Utöver det: 1.0.0 aldrig uppdaterad sedan
+2024-11-28.
+
+**`dexie-export-import` var den enda seriösa kandidaten, och den föll på arkitekturen.**
+Apache-2.0, noll beroenden och samma major som vår `dexie ^4.4.4` — allt rätt på papperet.
+Men den arbetar **genom Dexies API**, och vår sådd körs i sidkontexten via `page.evaluate`
+där Dexie bara finns inbyggd i appens bundle, inte exponerad på `window`. Att nå den hade
+krävt en testkrok i produktionskoden. Dessutom importerar den hela databaser, inte enstaka
+rader.
+
+**Slutsatsen §7.1:s egen motvikt pekar på:** `skrivRått` är rå IndexedDB, alltså en
+plattformsprimitiv, och en sådan slår ett bibliotek som gör samma sak. Playwrights inbyggda
+`storageState({ indexedDB: true })` (finns sedan 1.51, vi kör 1.62.1) övervägdes också men är
+en **ögonblicksbild att spara och återanvända**, inte "skriv en rad" — att bygga sådden på den
+hade bytt 30 rader läsbar IndexedDB mot en ogenomskinlig incheckad fixtur.
+
+> ⚠️ **Men sökningen var inte en formalitet, och det är poängen med den här posten.**
+> Den hittade **en riktig träff på det tredje ansvaret**: `fångaKonsolfel` duplicerar
+> `page.consoleMessages()` och `page.pageErrors()`, inbyggda i Playwright sedan **1.56** och
+> verifierade i typerna för den version vi faktiskt kör (`playwright-core@1.62.1`,
+> `types.d.ts:2361` och `:3933`). De är **retroaktiva** — returnerar upp till 200 senaste — så
+> hjälparens dokumenterade fälla *"MÅSTE ANROPAS FÖRE FÖRSTA `goto`"* upphör att finnas.
+> Utbrutet till **uppgift 12.33**. Hade sökningen gjorts i rätt ordning hade den koden aldrig
+> skrivits.
