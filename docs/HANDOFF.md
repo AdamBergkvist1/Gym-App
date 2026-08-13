@@ -7,18 +7,13 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ## 🆕 2026-08-13 (natt) — 12.32 KLAR. Sökningen hittade något, tvärtemot vad den gissade
 
-### ⛔ LÄS DETTA FÖRST: en commit ligger opushad, och du byter dator
+### ✅ Pushat. Börja med `git pull`
 
-`a6b1da9` finns **bara på hemdatorn**. Sessionen avslutades innan Adam hann ta ställning till
-push, och nästa session är planerad till den andra maskinen. **Blir den inte pushad börjar
-morgondagen med en `main` som saknar 12.32**, och arbetet görs troligen om.
+`25e88e9..33aace6` gick till `origin/main` vid sessionens slut, och `git status -sb` svarade
+`## main...origin/main` utan `ahead`. **Allt nedan finns alltså på den andra maskinen** —
+hämta det med `git pull` innan du gör något annat.
 
-```bash
-git push origin main
-```
-
-Är det redan gjort när du läser detta säger `git status -sb` *"up to date"* — då är raden
-avklarad och du kan gå vidare.
+Båda commitsen rör bara `docs/`, så pullen kan inte krocka med kod du har lokalt.
 
 ### Börja här
 
