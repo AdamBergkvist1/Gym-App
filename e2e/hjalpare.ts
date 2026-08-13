@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import type { LocalSet } from '../src/db/types';
 
 /**
  * Delade hjälpare för e2e-sviten.
@@ -16,8 +17,32 @@ import type { Page } from '@playwright/test';
  * ligger som test 2 i `sadd-provning.spec.ts`.
  */
 
-/** Ett importerat set. `source: 'import'` är det enda som inte går att skapa genom appen. */
-export const IMPORTERAT_SET = {
+/**
+ * Såddraden minus `exerciseId`, som fylls i vid anropet eftersom katalogens id:n
+ * inte är våra att bestämma.
+ *
+ * Typen är bunden till appens riktiga `LocalSet` med flit. Konstanten låg tidigare
+ * som `as const` och var därmed bara sig själv — ändrades schemat kunde sådden ha
+ * fortsatt skriva en form appen inte längre läser, utan att någon grind sa ett ord.
+ * Nu bryter `npm run typecheck` i stället, vilket är hela poängen med en grind.
+ */
+type SåddSet = Omit<LocalSet, 'exerciseId'>;
+
+/**
+ * Ett importerat set. `source: 'import'` är det enda som inte går att skapa genom
+ * appen: `repo.ts:156` hårdkodar `isImported: false` och `true` kan bara komma in
+ * via synken (`wire.ts:37`). Därför seedas just det rått.
+ *
+ * ⚠️ **`workoutId` pekar med flykt på ett pass som aldrig skapas** (uppgift 12.27).
+ * Raden är alltså föräldralös, och det är en rad appen själv aldrig hade kunnat
+ * skapa. Det är säkert **här** och bara här: `getExerciseHistory`
+ * (`src/db/history.ts:121`) läser på `[exerciseId+performedAt]` och slår aldrig upp
+ * passet, så föräldralösheten kan inte påverka utfallet. Skulle någon vakt börja
+ * mäta något som går via `workouts` — passlistan, spökdatan — **duger inte den här
+ * konstanten**, och då måste ett riktigt pass seedas. Vakt 4 och 5 i 12.20 är
+ * precis sådana. Detta är villkoret 12.27 bad om att få nedskrivet.
+ */
+export const IMPORTERAT_SET: SåddSet = {
   id: 'provning-set-1',
   workoutId: 'provning-pass-1',
   setIndex: 0,
@@ -32,7 +57,7 @@ export const IMPORTERAT_SET = {
   source: 'import',
   isDeleted: false,
   updatedAt: '2024-04-04T10:00:00.000Z',
-} as const;
+};
 
 /**
  * Väntar tills appen hunnit seeda övningskatalogen och returnerar en övnings id.
@@ -77,8 +102,24 @@ export async function hämtaÖvning(page: Page): Promise<{ id: string; name: str
   return övning;
 }
 
-/** Skriver setet rått i `loggedSets`, förbi Dexie. Returnerar true vid lyckad skrivning. */
-export async function seedaRått(page: Page, exerciseId: string): Promise<boolean> {
+/**
+ * Skriver setet rått i `loggedSets`, förbi Dexie. Returnerar true vid lyckad skrivning.
+ *
+ * ⚠️ **Returvärdet MÅSTE assertas av anroparen.** Kastas det bort kan skrivningen
+ * misslyckas tyst, och testet går grönt mot en databas som aldrig fick sin rad —
+ * alltså grönt av ett skäl som inte har med det påstådda att göra. Det är samma
+ * klass av fel som uppgift 12.25 handlade om, och `/code-review` hittade det här
+ * 2026-08-13 i test 2 i `sadd-provning.spec.ts`.
+ *
+ * `överskrivning` finns för att vakt 3b behöver seeda ett **icke**-importerat set:
+ * negationen "ingen notis" måste ankras i ett positivt utfall ur samma fråga, annars
+ * går den grön även när `getExerciseHistory` aldrig löses ut.
+ */
+export async function seedaRått(
+  page: Page,
+  exerciseId: string,
+  överskrivning: Partial<SåddSet> = {}
+): Promise<boolean> {
   return await page.evaluate(
     ({ exerciseId, mall }) =>
       new Promise<boolean>((resolve) => {
@@ -100,6 +141,6 @@ export async function seedaRått(page: Page, exerciseId: string): Promise<boolea
           };
         };
       }),
-    { exerciseId, mall: IMPORTERAT_SET }
+    { exerciseId, mall: { ...IMPORTERAT_SET, ...överskrivning } }
   );
 }

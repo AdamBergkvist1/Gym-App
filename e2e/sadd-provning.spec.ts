@@ -71,7 +71,12 @@ test('2. sådd medan sidan är öppen når INTE fram — mätt, inte antaget', a
   await expect(page.getByRole('heading', { name: övning.name })).toBeVisible();
   await expect(page.getByText(/importerad/i)).toHaveCount(0);
 
-  await seedaRått(page, övning.id);
+  // Returvärdet MÅSTE assertas. Kastades det bort — vilket det gjorde fram till
+  // 2026-08-13, funnet av `/code-review` — kunde den råa skrivningen misslyckas
+  // tyst. Notisen hade då aldrig kunnat dyka upp, och testet gått grönt utan att
+  // ha mätt liveuppdatering över huvud taget. Exakt samma klass av fel som 12.25.
+  const skrevs = await seedaRått(page, övning.id);
+  expect(skrevs, 'den råa IndexedDB-skrivningen ska lyckas').toBe(true);
 
   // Fast väntan, och den är motiverad: ett negativt påstående går inte att
   // bevisa med `expect`:s automatiska omförsök. `toHaveCount(0)` lyckas direkt
