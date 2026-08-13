@@ -1929,31 +1929,85 @@ och 13.1 måste vara klar före 13.6.
 
       ⚠️ **OMFÅNGET VAR FEL. Rättat 2026-08-12 (kväll) under grillningen av 11B.0e.**
       Uppgiften sa *"`importNotice.ts` har två förekomster"* och kallade sig **litet jobb**.
-      Sökning i `src/**/*.tsx` gav minst sju till i användarsynlig text:
+      Sökning i `src/**/*.tsx` gav minst sju till i användarsynlig text.
 
-      | Fil | Strängen |
-      |---|---|
-      | `src/ui/QuickLog.tsx:230` | *"fungerar — två tryck totalt."* |
-      | `src/ui/QuickLog.tsx:258` | *"Offline — AI-tolkning kräver nät…"* |
-      | `src/ui/QuickLog.tsx:270` | *"— {n} set"* |
-      | `src/ui/pages/SettingsPage.tsx:93` | *"…på hemskärmen — annars kan…"* |
-      | `src/ui/pages/TodayPage.tsx:268` | *"Skriv i stället — „Bänk 90x5"*" |
-      | `src/ui/SyncStatus.tsx:66` | *"…gått förlorat — datan ligger kvar"* |
-      | `src/ui/ParseStats.tsx:41` | *"{n} försök — för få för en siffra"* |
+      ✅ **INVENTERINGEN ÄR GJORD OCH STÄNGD 2026-08-13.** Den varning som stod här —
+      *"listan är inte bevisat fullständig, `.ts`-filer är inte kontrollerade"* — gäller inte
+      längre. Hela `src/` är genomsökt, `.ts` såväl som `.tsx`, och **varje träff nedan är
+      spårad hela vägen till den JSX som renderar den**. Ingen post vilar på antagande.
 
-      ⚠️ **Listan är inte bevisat fullständig.** Kommentarer sållades bort för hand, och bara
-      `.tsx` genomsöktes — `.ts`-filer utöver `importNotice.ts` är inte kontrollerade. Räkna
-      med fler, och gör om sökningen ordentligt när uppgiften körs.
+      **Metoden, så att den går att göra om:** tre sökningar vars resultat jämfördes.
+      (1) Alla tankstreck i `*.tsx`, lästa i sin helhet. (2) Alla i `*.ts` med citattecken på
+      samma rad. (3) Alla i `*.ts` på rader som inte inleds med `*` eller `//` — den fångar
+      mallsträngar där citattecknet står på en tidigare rad, vilket sökning 2 missar.
+      **2 och 3 gav samma mängd**, vilket är skälet att mängden får kallas stängd.
+
+      **De 13 strängar som renderas — alla verifierade:**
+
+      | # | Fil | Strängen | Renderas av |
+      |---|---|---|---|
+      | 1 | `src/ui/QuickLog.tsx:230` | *"fungerar — två tryck totalt."* | JSX direkt |
+      | 2 | `src/ui/QuickLog.tsx:258` | *"Offline — AI-tolkning kräver nät…"* | JSX direkt |
+      | 3 | `src/ui/QuickLog.tsx:270` | *"— {n} set"* | JSX direkt |
+      | 4 | `src/ui/pages/SettingsPage.tsx:93` | *"…på hemskärmen — annars kan…"* | JSX direkt |
+      | 5 | `src/ui/pages/TodayPage.tsx:268` | *"Skriv i stället — „Bänk 90x5"* | JSX direkt |
+      | 6 | `src/ui/SyncStatus.tsx:66` | *"…gått förlorat — datan ligger kvar"* | JSX direkt |
+      | 7 | `src/ui/ParseStats.tsx:41` | *"{n} försök — för få för en siffra"* | JSX direkt |
+      | 8 | `src/lib/importNotice.ts:66` | *"…importerad… — datumet är uppskattat."* | entalsgrenen |
+      | 9 | `src/lib/importNotice.ts:67` | *"…importerade… — datumen är uppskattade."* | flertalsgrenen |
+      | 10 | `src/timer/diagnostics.ts:78` | *"…iOS fryser timern — larmet går inte att lita på…"* | `summarise()` → `TimerDiagnostics.tsx:30` |
+      | 11 | `src/lib/persistStorage.ts:56` | *"nekad — lägg till appen på hemskärmen"* | `detail` → `SettingsPage.tsx:86` |
+      | 12 | `src/sync/push.ts:103` | *"…utan seq — synken stoppad i stället för att loopa"* | `blocked` → `engine.ts:105,108` → `SyncStatus.tsx:64` |
+      | 13 | `src/ai/client.ts:88` | *"AI:n svarade inte i tid — skriv in setet manuellt"* | `degraded()` → `hint` → `QuickLog.tsx:224` |
+
+      **Rad 10–13 är helt nya.** De ligger alla i `.ts`-filer, alltså precis den lucka den
+      gamla varningen pekade ut. Ingen av dem är en literal i JSX: de föds i logiklagret och
+      renderas via en variabel, vilket är skälet att en sökning i `.tsx` aldrig kunde hitta dem.
+
+      **Rad 12 och 13 är felmeddelanden och syns bara när något gått snett. De rättas ändå.**
+      AVGJORT 2026-08-13. Ett felmeddelande är det tillfälle då texten spelar som störst roll:
+      användaren är redan irriterad och vill veta vad som hänt. Att låta just den texten läsa
+      som AI-skriven är sämre än någon annanstans, inte bättre. §0.3 gör ingen skillnad på
+      brödtext och feltext, och det finns inget skäl att införa en.
+
+      **`src/lib/id.ts:15` rättas också. AVGJORT 2026-08-13.** Den kastar
+      `'crypto.randomUUID saknas — kräver säker kontext (https)'` och når skärmen via
+      `engine.ts:124`, som fångar godtyckligt fel och lägger `err.message` i `lastError` — som
+      `SyncStatus.tsx:64` renderar. Att det bara sker över osäker kontext gör den sällsynt,
+      inte osynlig. **Regeln blir lättare att följa utan undantag att minnas**, och kostnaden
+      är en rad. Därmed är antalet strängar som ska rättas **14**, inte 13.
+
+      ⚠️ **Det här var två tekniska frågor som en tidigare version av uppgiften lade fram som
+      beslut åt Adam.** Det var fel enligt den arbetsregel `HANDOFF.md` 2026-08-12 (kväll)
+      slog fast: tekniska val avgörs av agenten och redovisas. Frågor går till Adam bara när de
+      rör hans data, hans tid eller hans prioritering. Ingen av dessa gjorde det.
+
+      **Testerna som låser texten, och som måste ändras i samma commit:**
+      `src/lib/importNotice.test.ts:31` och `:37`. Det är de **enda två**. Övriga tankstreck i
+      testfiler sitter i `describe`/`it`-beskrivningar, som aldrig når användaren och därför
+      inte rörs.
+
+      ✅ **Kontrollerat och rent:** `src/index.css` (23 träffar, alla i CSS-kommentarer, noll i
+      `content:`-regler), `index.html` och `public/` (noll träffar).
+
+      ℹ️ **Bara em-strecket (—) är förbjudet.** `DESIGN.md` §0.3 rad 93 nämner inget annat
+      streck. `SettingsPage.tsx:86` använder tankstreckets kortare släkting `–` som
+      tomvärdesmarkör — **den ska stå kvar**.
 
       **Viktigt:** ingen av dem är namnet på en knapp eller flik. Alla är brödtext. Det är
       skälet till att 11B.0e kunde välja `role` + tillgängligt namn som selektorstrategi utan
       att bygga in en brytpunkt.
 
-      **Att göra:** sök igenom hela `src/` efter tankstreck i **användarsynliga strängar** (inte
-      i kodkommentarer, där de är fria) och ersätt med komma, punkt eller kolon.
-      `importNotice.ts` har två förekomster, en i varje gren av entals/flertalsfallet, och båda
-      har tester som låser texten — testerna ska ändras i samma commit.
+      **Att göra — sökningen är redan gjord, kvar är redigeringen.** Ersätt tankstrecket i
+      samtliga 14 rader ovan (de 13 i tabellen plus `id.ts:15`) med komma, punkt eller kolon.
+      Kodkommentarer rörs inte, där är strecket fritt. `importNotice.ts` har två förekomster,
+      en i varje gren av entals/flertalsfallet, och båda har tester som låser texten —
+      `importNotice.test.ts:31` och `:37` ändras i samma commit.
       **Klart när:** noll tankstreck återstår i strängar som renderas, och testerna speglar det.
+
+      ⚠️ **Radnumren ovan är från 2026-08-13 och rör sig om någon annan uppgift redigerar
+      filerna först.** Sök på strängen, inte på raden. Metoden står under inventeringen och
+      går att köra om på under en minut.
       **Körs efter 12.20**, inte ihop med den: att blanda textstädning i testarbetet bryter mot
       regel 3 om atomära commits. Ordningen är säker eftersom 12.20:s vakt bara påstår att
       importnotisen syns, aldrig vad den lyder.
