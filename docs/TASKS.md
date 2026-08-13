@@ -1944,6 +1944,12 @@ och 13.1 måste vara klar före 13.6.
       **Övningssidan är därmed färdigbevakad.** Kvar är bara de två vakterna som ligger på
       andra skärmar, och de kräver båda ett riktigt seedat `workouts`-pass (se varningen nedan).
 
+      📌 **Adam har begärt en `/code-review` av alla sex vakterna när de är skrivna**
+      (2026-08-13). Vakt 1–3 och 6 är granskade var för sig under byggandet, men **helheten är
+      inte sedd** — och de två granskningar som körts i dag hittade båda verkliga fel, varav ett
+      infört samma dag. Uppgiften är inte klar förrän den granskningen är gjord.
+      Fixpunkt: `b7cb126` täcker hela arbetet.
+
       ⚠️ **"Klart när" här namnger EN fil, men vakterna mäter TRE skärmar.** 13.3 sitter i
       `listWorkoutSummaries` (passlistan) och 13.4 i `getLastPerformance` (spökdatan) — ingen
       av dem ligger på övningssidan. **Beslut:** alla sex byggs som beslut 5 kräver, men i
