@@ -33,12 +33,11 @@ Vakt 4 (passlistan, 13.3) och vakt 5 (`FÖRRA`-kolumnen, 13.4) byggdes, och där
 | `69aacb9` | `HistoryPage`: namn på de två listorna |
 | `622f1be` | **Åtgärder ur granskningen** |
 | `3715fc1` | `TASKS.md`: 12.20 stängd, tre fynd utbrutna |
+| `c72c8bc` | Eftervillkor assertade i `startaPass` och reps-förvalet |
 
-⚠️ **INGENTING ÄR PUSHAT.** `origin/main` står kvar på `27d8322`. Osända är de sju commits som
-utgör arbetet (tabellen ovan) **plus de dokumentcommits som följde efter dem** — den här
-överlämningen och dess rättelser. Kör `git status` för det exakta läget; ett tal skrivet här
-blir fel i samma stund nästa dokumentcommit läggs. Adam blev tillfrågad vid sessionens slut men
-hade inte svarat när detta skrevs.
+✅ **Pushat till `origin/main` vid sessionens slut**, efter att Adam bett om en genomgång först.
+Genomgången gjordes, två eftervillkor stramades åt som följd (`c72c8bc`), och alla fem
+grindarna kördes om gröna innan push.
 
 ### Grindarna — siffror från körningar
 
