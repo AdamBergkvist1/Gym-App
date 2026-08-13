@@ -34,8 +34,9 @@ Vakt 4 (passlistan, 13.3) och vakt 5 (`FÖRRA`-kolumnen, 13.4) byggdes, och där
 | `622f1be` | **Åtgärder ur granskningen** |
 | `3715fc1` | `TASKS.md`: 12.20 stängd, tre fynd utbrutna |
 
-⚠️ **INGENTING ÄR PUSHAT.** `HEAD` = `3715fc1`, `origin/main` = `27d8322`. Sju commits ligger
-osända. Adam blev tillfrågad vid sessionens slut men hade inte svarat när detta skrevs.
+⚠️ **INGENTING ÄR PUSHAT.** `origin/main` står kvar på `27d8322`. **Åtta commits ligger osända**
+— de sju i tabellen ovan plus den här överlämningen (`dffc3b9`). Adam blev tillfrågad vid
+sessionens slut men hade inte svarat när detta skrevs.
 
 ### Grindarna — siffror från körningar
 
