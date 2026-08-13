@@ -229,9 +229,16 @@ export async function seedaPassRått(
  * Vägen genom appen — beslut 6:s "som en riktig användare"            *
  * ------------------------------------------------------------------ */
 
-/** Startar ett tomt pass från passvyn. */
+/**
+ * Startar ett tomt pass från passvyn.
+ *
+ * Eftervillkoret assertas, precis som i `avslutaPass`. Registrerades klicket
+ * aldrig faller testet här i stället för längre ner med ett felmeddelande som
+ * pekar på fel sak — sessionens lärdom 2026-08-13.
+ */
 export async function startaPass(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Starta tomt pass' }).click();
+  await expect(page.getByRole('button', { name: '+ Lägg till övning' })).toBeVisible();
 }
 
 /** Avslutar det pågående passet. */
@@ -266,7 +273,9 @@ export function setlista(page: Page, övningsnamn: string) {
  * vikt det inte vet vad den blev. Utan den kontrollen hade en ändring i
  * `stepWeight` gjort testet grönt mot fel siffra.
  *
- * Reps lämnas på förvalet 8, som `plan.ts` sätter på en tom rad.
+ * Reps lämnas på förvalet `plan.ts` sätter på en tom rad. **Också det assertas
+ * innan raden bockas av** — returvärdet är annars ett påstående funktionen inte
+ * har täckning för, och anroparna bygger sina jämförelser på just det talet.
  */
 export async function loggaSetGenomAppen(
   page: Page,
@@ -285,6 +294,7 @@ export async function loggaSetGenomAppen(
   await expect(arket).toHaveCount(0);
 
   await expect(raderna.getByRole('button', { name: /^Vikt 10 kilo för set 1/ })).toBeVisible();
+  await expect(raderna.getByRole('button', { name: /^8 reps för set 1/ })).toBeVisible();
   await raderna.getByRole('button', { name: 'Klarmarkera set 1' }).click();
   await expect(raderna.getByRole('button', { name: 'Ångra set 1' })).toBeVisible();
 
