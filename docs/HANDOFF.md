@@ -5,7 +5,119 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ---
 
-## 🆕 2026-08-13 — Jobbdatorn duger. Övningssidan färdigbevakad, fyra av sex vakter klara
+## 🆕 2026-08-13 (kväll) — 12.20 KLAR. Alla sex vakterna byggda, granskade och sabotageprövade
+
+### Börja här
+
+**12.20 är stängd.** Nästa uppgift är inte given av den här sessionen — välj ur `docs/TASKS.md`.
+Naturliga kandidater i tur och ordning:
+
+1. **12.22 textstädningen.** Den var uttryckligen inbokad *efter* 12.20, och ordningen är nu
+   uppfylld. Inventeringen är redan gjord; kvar är ren redigering av 14 strängar.
+2. **Vakt B** (skärmen renderar och får plats) — beslut 8 och 9 i 11B.0e, alltså nästa steg i
+   den plan 12.20 tillhörde.
+3. **12.30–12.32**, de tre fynden den här sessionens granskning bröt ut. Alla låg prioritet.
+
+### Vad som gjordes
+
+Vakt 4 (passlistan, 13.3) och vakt 5 (`FÖRRA`-kolumnen, 13.4) byggdes, och därefter kördes den
+`/code-review` av **alla sex** vakterna som Adam begärde. Detaljerna per vakt står i
+`docs/TASKS.md` under 12.20 — läs den, inte den här filen.
+
+| Commit | Vad |
+|---|---|
+| `13d383a` | Selektorfästen i `SetRow` och `ExerciseCard` |
+| `3ee4e26` | `hämtaÖvningar` och `seedaPassRått` i hjälparen |
+| `822e444` | **12.20 vakt 4** |
+| `590f189` | **12.20 vakt 5** (5a och 5b) |
+| `69aacb9` | `HistoryPage`: namn på de två listorna |
+| `622f1be` | **Åtgärder ur granskningen** |
+| `3715fc1` | `TASKS.md`: 12.20 stängd, tre fynd utbrutna |
+
+⚠️ **INGENTING ÄR PUSHAT.** `HEAD` = `3715fc1`, `origin/main` = `27d8322`. Sju commits ligger
+osända. Adam blev tillfrågad vid sessionens slut men hade inte svarat när detta skrevs.
+
+### Grindarna — siffror från körningar
+
+| Grind | Utfall |
+|---|---|
+| `typecheck` | ren |
+| `lint` | **0 fel**, 3 kända `react-refresh`-varningar i `icons.tsx` |
+| `test` | **274 passed** i 22 filer |
+| `e2e` | **60 passed** (51 vid sessionens början) |
+| `build` | 9 poster, 651,20 KiB |
+
+### Lärdomen: sabotaget hittade ett fel i vakten, inte i koden
+
+Den viktigaste behållningen den här gången kom inte ur granskningen utan ur **sabotageprövningen
+av vakt 4** — och den prövade vakten, inte appen.
+
+Vakten föll som väntat, men **på sitt ankare i stället för på sin negation**. Skälet:
+Playwrights `hasText` matchar **delsträngar**, och `180 kg` innehåller `80 kg`. Ankaret träffade
+två rader och dog på strict mode. Att bara byta siffror hade lämnat fällan kvar åt nästa person
+som rör talen, så negationen räknar nu **rader i passlistan**. Ett antal är en identitet; en
+delsträng är en gissning.
+
+Samma sak i mindre skala i vakt 5b: den blev röd av sabotage, men i **uppsättningen** — det
+importerade setet fanns redan när pass 1 skapades, så planen förifylldes och hjälparen dog innan
+påståendet mättes. Sådden flyttades efter det app-loggade setet.
+
+⚠️ **Regeln som faller ut:** *att en vakt blir röd räcker inte — den ska bli röd på rätt rad.*
+Läs felmeddelandet under sabotaget. Pekar det på en hjälpare eller på uppsättningen är
+påståendet fortfarande oprövat, och du vet mindre än du tror.
+
+### Vad granskningen hittade
+
+Båda axlarna kördes mot fixpunkt `b7cb126`, och **båda flaggade oberoende av varandra samma
+svaghet i vakt 4:s ankare** — det starkaste skäl som finns att tro på ett fynd. Det tyngsta
+fyndet var dock spec-axelns: **vakt 4 bröt mot beslut 6** genom att seeda det vanliga passet
+rått, så `isImported: false` kom ur testets egen fixtur i stället för ur `startWorkout`. Vakten
+mätte sig själv. Åtgärdat — passet skapas nu genom appen.
+
+Standards-axeln påstod dessutom att sabotageprövningen för vakt 4 och 5 *saknades*. Det var
+felformulerat: den var gjord, men bara redovisad i commitmeddelanden. Numera står den i
+`TASKS.md`.
+
+### Ett dokumentfel som hade lurat nästa session
+
+`TASKS.md` påstod att *"vakt 4 och 5 går via `workouts` och kräver ett riktigt seedat pass"*.
+Halva påståendet var fel: `getLastPerformance` läser **bara** `loggedSets`. Rättat, med skälet
+utskrivet — ett dokument som anger fel grund får nästa agent att tro att kravet är uppfyllt av
+fel anledning, och då försvinner det verkliga kravet ur synfältet.
+
+### Om arbetssättet
+
+**Node hämtas portabelt varje session** (~2 min): zip från `nodejs.org/dist/latest-v22.x/`,
+SHA256 mot `SHASUMS256.txt`, uppackning i skrapkatalogen, `$env:PATH` satt i *varje* anrop.
+Gjordes igen i dag och stämde. Inget lämnas kvar på arbetsgivarens maskin.
+
+⚠️ **PowerShell-fällan som kostade två omtag:** en here-string (`@'…'@`) med **dubbla
+citattecken** i texten bröts sönder och `git commit` tolkade orden som sökvägar. Undvik `"` helt
+i commitmeddelanden här.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/code-review`** | Fungerade bevisligen igen. Kör den på varje omgång vakter — två axlar som oberoende pekar på samma rad är den billigaste sanning som finns |
+| **`/tdd`** | Om vakt B tas härnäst. Sömmarna är beslutade i 11B.0e beslut 8 |
+| **`/diagnosing-bugs`** | Bara om något faller. Begär utskriften först — gissa inte |
+
+---
+
+## 2026-08-13 — Jobbdatorn duger. Övningssidan färdigbevakad, fyra av sex vakter klara — DELVIS ÖVERSPELAD
+
+> **⚠️ Två saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "Nästa uppgift är vakt 4 och 5" är avklarat.** Båda är byggda, granskade och
+> sabotageprövade. 12.20 är stängd. Se sektionen överst.
+>
+> **(2) Den begärda `/code-review` av alla sex vakterna är GJORD.** Sektionen nedan säger att
+> den *"inte är gjord ännu och ska inte glömmas"* — den kördes 2026-08-13 (kväll) mot fixpunkt
+> `b7cb126`, och dess fynd är åtgärdade eller utbrutna till 12.30–12.32.
+>
+> **(3) Pushstatusen nedan gäller inte längre.** Den säger att allt är pushat, vilket stämde när
+> den skrevs. Sju nyare commits ligger osända — se sektionen överst.
 
 ### Börja här
 
