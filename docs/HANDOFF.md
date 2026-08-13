@@ -5,7 +5,127 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ---
 
-## 🆕 2026-08-13 (kväll) — 12.20 KLAR. Alla sex vakterna byggda, granskade och sabotageprövade
+## 🆕 2026-08-13 (natt) — 12.32 KLAR. Sökningen hittade något, tvärtemot vad den gissade
+
+### ⛔ LÄS DETTA FÖRST: en commit ligger opushad, och du byter dator
+
+`a6b1da9` finns **bara på hemdatorn**. Sessionen avslutades innan Adam hann ta ställning till
+push, och nästa session är planerad till den andra maskinen. **Blir den inte pushad börjar
+morgondagen med en `main` som saknar 12.32**, och arbetet görs troligen om.
+
+```bash
+git push origin main
+```
+
+Är det redan gjort när du läser detta säger `git status -sb` *"up to date"* — då är raden
+avklarad och du kan gå vidare.
+
+### Börja här
+
+Kort session (~1 h), och den gjorde **en** sak: `docs/TASKS.md` 12.32. Ingen kod ändrades.
+
+Kandidater härnäst, i den ordning jag skulle ta dem:
+
+1. **12.22 textstädningen** — fortfarande det bästa korta jobbet. Inventeringen är stängd:
+   14 strängar listade med fil, rad och renderingsväg, och de två testerna som låser texten
+   är utpekade. Mekaniskt arbete med känd botten.
+2. **12.33** (ny, se nedan) — härdning av `fångaKonsolfel`. Liten diff, men **den ändrar
+   vakt 6 och kräver sabotageprövning om**. Inte en svans på en kort session.
+3. **12.31** — ren omdöpning av `IMPORTERAT_SET`, en fil.
+4. **Vakt B** — egen session.
+
+### Vad som gjordes
+
+**12.32 var §7.1-sökningen som aldrig gjordes före `e2e/hjalpare.ts`.** Resultatet står i
+`docs/EXTERNT.md` under *Övervägt och uppskjutet* → *"Hjälpare för e2e-sviten"*, med tabell
+över fyra kandidater. Läs den, inte den här filen, för detaljerna. **Inget infört, noll nya
+poster i `package.json`.**
+
+| Commit | Vad |
+|---|---|
+| `a6b1da9` | 12.32 stängd, 12.33 utbruten. `EXTERNT.md` + `TASKS.md`, 98 tillagda rader |
+
+### Det som faktiskt var värt något
+
+Uppgiften förutspådde sitt eget svar: *"slutsatsen blir med all sannolikhet inget som
+passar"*. **På sådden stämde det. På konsolfelsfångsten gjorde det inte det.**
+
+`fångaKonsolfel` (`e2e/hjalpare.ts:316`) bygger för hand det Playwright har inbyggt sedan
+**1.56**: `page.consoleMessages()` och `page.pageErrors()`. **Verifierat i typerna för den
+version vi faktiskt kör** — `node_modules/playwright-core` är `1.62.1`, och metoderna står i
+`types/types.d.ts:2361` respektive `:3933`. Inte hämtat ur en dokumentationssida.
+
+Vinsten är inte färre rader. De inbyggda är **retroaktiva** (upp till 200 senaste), så
+hjälparens dokumenterade fälla — *"MÅSTE ANROPAS FÖRE FÖRSTA `goto`"* — upphör att finnas.
+Utbrutet till **12.33** i stället för att fixas direkt, eftersom det ändrar en vakt.
+
+⚠️ **Lärdomen är metodmässig och gäller nästa gång §7.1 känns som en formalitet:** en sökning
+vars svar man tror sig veta är precis den som inte blir gjord. Den här kostade ~30 minuter och
+hittade en plattformsprimitiv vi redan betalade för. **Att gissa rätt är inte samma sak som
+att ha letat.**
+
+### Licensfyndet, som är värt att minnas som mönster
+
+`playwright-indexeddb` deklarerar `MIT` i sin `package.json` — men repot
+`vrknetha/playwright-indexeddb` har **ingen `LICENSE`-fil** (`gh api …/license` ger 404), och
+npm-posten saknar `repository`-fält, så kopplingen mellan paketet och repot vilar bara på
+namnet. §7.2b gör det till *alla rättigheter förbehållna*.
+
+**Ett `license`-fält i `package.json` är inte en licens.** Det är en rad vem som helst kan
+fylla i; en licens är en text med en upphovsrättsinnehavare. Registret har redan rätt vana
+inskriven på två ställen (*"licens verifierad direkt mot repot, inte ur sökträffar"*) — det
+här är fallet som visar varför den vanan finns.
+
+### Grindarna — INTE KÖRDA, och det är avsiktligt
+
+| Grind | Utfall |
+|---|---|
+| samtliga fem | **inte körda denna session** |
+
+Ändringen rör **bara `docs/`**. Ingen `.ts`, `.tsx`, `package.json` eller migration. Det finns
+alltså inget för grindarna att pröva som de inte redan prövade i `25e88e9`.
+
+⚠️ **Siffrorna som gäller är fortfarande sektionen nedanför:** 274 tester, 60 e2e, bygge
+651,20 KiB. **De är ärvda, inte uppmätta i dag.** Rör du kod härnäst — kör om dem först, så
+att du vet att du står på grönt innan du börjar.
+
+### Om maskinen
+
+Sessionen kördes på **hemdatorn**. `node --version` → **v24.16.0**, `npm` → **11.13.0**.
+Hela stycket om portabel Node i sektionen nedan är alltså irrelevant här — men det gäller
+fortfarande jobbdatorn, så det står kvar oförändrat. **Kör `node --version` först, som
+sektionen nedan redan säger.**
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/handoff`** | Vid nästa sessionsslut. Den här filen är projektets minne |
+| **`/tdd`** | Om **12.33** tas. Vakt 6 ska bli röd på rätt rad innan den blir grön — sabotaget är själva uppgiften, inte en efterkontroll |
+| **`/code-review`** | Om **12.22** tas. 14 strängar över 9 filer är precis den sortens spridd ändring där en axel missar en förekomst |
+| **`/diagnosing-bugs`** | Bara om något faller. Begär utskriften först — gissa inte |
+
+⚠️ **`/research` behövdes inte och togs medvetet inte in.** 12.32 var riktad mot tre
+konkreta kandidatklasser, och passformsbedömningen krävde att `hjalpare.ts` låg framme.
+Ett separat forskningsdokument hade dessutom dubblerat `EXTERNT.md`, som redan **är**
+registret för just den frågan. Nästa gång §7.1-sökningen är bred snarare än riktad är
+avvägningen den omvända.
+
+---
+
+## 2026-08-13 (kväll) — 12.20 KLAR. Alla sex vakterna byggda, granskade och sabotageprövade — DELVIS ÖVERSPELAD
+
+> **⚠️ Två saker i sektionen nedan gäller inte längre.**
+>
+> **(1) Pushstatusen.** Raden *"✅ Pushat till `origin/main` vid sessionens slut"* stämde när
+> den skrevs. **En nyare commit (`a6b1da9`) ligger osänd** — se sektionen överst.
+>
+> **(2) Kandidatlistan under "Börja här".** Punkt 3 pekar ut *"12.30–12.32"* som öppna.
+> **12.32 är stängd** sedan 2026-08-13 (natt). 12.30 och 12.31 är fortfarande öppna, och en
+> **ny 12.33** har tillkommit ur 12.32:s sökning.
+>
+> Allt annat i sektionen — grindsiffrorna, lärdomen om sabotage, Node-stycket — gäller
+> oförändrat.
 
 ### Börja här
 
