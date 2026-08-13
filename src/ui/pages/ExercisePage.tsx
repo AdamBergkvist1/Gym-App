@@ -103,7 +103,12 @@ export function ExercisePage() {
       {(importnotis || e1rmSerie.length >= 2) && (
         <div className="space-y-2">
           {importnotis && (
-            <p className="text-xs text-[var(--color-dim)]">
+            // `role="note"` ger vakten i `ovningssida.spec.ts` något att haka i som
+            // INTE är lydelsen. 12.22 skriver om just den här meningen, och ett test
+            // som matchat på texten hade gått sönder av en ren textstädning.
+            // Beslut 5 och 7 i 11B.0e. Rollen är också ärlig mot innehållet: det är
+            // en sidoupplysning om datan, inte en varning och inte en statusrad.
+            <p role="note" className="text-xs text-[var(--color-dim)]">
               {importnotis}
             </p>
           )}
