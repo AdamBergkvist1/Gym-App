@@ -1003,7 +1003,7 @@ nuvarande.
       licens i kommentar överst, raden finns i `docs/EXTERNT.md`, och noll emoji återstår i
       `src/ui/`. **Noll nya poster i `package.json`.**
 
-- [ ] **11B.0d Välj den ljusa karaktärsriktningen. Ny 2026-08-12. GÖRS FÖRE ALL KOD.**
+- [x] **11B.0d Välj den ljusa karaktärsriktningen. Ny 2026-08-12. KLAR 2026-08-12.**
       Ersätter det val som gjordes 2026-08-05, då lime valdes mellan tre **mörka** alternativ.
 
       **Metoden behålls för att den fungerade** — körbara mockuper jämförda på synintryck slår
