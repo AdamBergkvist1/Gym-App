@@ -120,6 +120,27 @@ export function IkonPrickar(props: IkonProps) {
 }
 
 /**
+ * Fritextgenvägen på Idag-skärmen. Ersätter `⌨`.
+ *
+ * Den saknades i 11B.0c:s ursprungliga tabell, vilket är hela innehållet i
+ * 12.28: uppgiften räknade sju förekomster när det var åtta.
+ */
+export function IkonTangentbord(props: IkonProps) {
+  return (
+    <Ikon {...props}>
+      <path d="M2 8a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2l0 -8" />
+      <path d="M6 10l0 .01" />
+      <path d="M10 10l0 .01" />
+      <path d="M14 10l0 .01" />
+      <path d="M18 10l0 .01" />
+      <path d="M6 14l0 .01" />
+      <path d="M18 14l0 .01" />
+      <path d="M10 14l4 .01" />
+    </Ikon>
+  );
+}
+
+/**
  * Fliken Pass.
  *
  * ⚠️ Den här hör till **flikraden**, inte till övningskorten. Kortens 🏋 ersätts

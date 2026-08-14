@@ -27,6 +27,7 @@ import {
   updatePlannedSet,
 } from '../../db/plan';
 import type { ParsedSet } from '../../parser/types';
+import { IkonTangentbord } from '../icons';
 import { QuickLog } from '../QuickLog';
 import { ExerciseCard } from '../ExerciseCard';
 import { ExercisePicker } from '../ExercisePicker';
@@ -263,9 +264,10 @@ export function TodayPage() {
         <button
           type="button"
           onClick={() => setVisaFritext(true)}
-          className="w-full rounded-lg border border-dashed border-[var(--color-line)] py-2 text-sm text-[var(--color-dim)]"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--color-line)] py-2 text-sm text-[var(--color-dim)]"
         >
-          ⌨ Skriv i stället: &bdquo;Bänk 90x5&ldquo;
+          <IkonTangentbord className="size-4" />
+          Skriv i stället: &bdquo;Bänk 90x5&ldquo;
         </button>
       )}
 

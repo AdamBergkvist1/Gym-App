@@ -924,8 +924,12 @@ nuvarande.
       Det står i direkt konflikt med förbudslistan i §0.3, och konflikten är Adams beslut att
       lösa åt ikonernas fördel.
 
-      **Sju förekomster, mätta och inte antagna. Notera att de INTE har samma öde** — den
+      **Åtta förekomster, mätta och inte antagna. Notera att de INTE har samma öde** — den
       första ersätts inte av en ikon utan tas bort helt:
+
+      ⚠️ **Rubriken sa "sju" fram till 2026-08-14.** Rätt antal är åtta; `⌨` i
+      `TodayPage.tsx:268` saknades i tabellen nedan. Det var 12.28, nu stängd. **Sju av åtta
+      är åtgärdade** — kvar är bara 🏋, som väntar på accentbrickan i steg 4.
 
       | Fil | Vad | Vad som ska hända |
       |---|---|---|
@@ -2373,7 +2377,7 @@ och 13.1 måste vara klar före 13.6.
       appen, som en riktig användare"*, och ingen vakt gör det ännu. Det avgörs när vakt 5
       byggs, som är den enda som faktiskt kräver ett pågående pass.
 
-- [ ] **12.28 Emojiräkningen i 11B.0c är fel: åtta, inte sju. Ny 2026-08-13.**
+- [x] **12.28 Emojiräkningen i 11B.0c är fel: åtta, inte sju. Ny 2026-08-13. KLAR 2026-08-14.**
       Funnen av `/code-review` (Spec-axeln), oberoende bekräftad mot repot samma dag.
       11B.0c:s rubrik lyder *"Sju förekomster, mätta och inte antagna"*. Det är **åtta**:
       **⌨ i `src/ui/pages/TodayPage.tsx:268`** saknas i tabellen.
@@ -2388,6 +2392,27 @@ och 13.1 måste vara klar före 13.6.
       **Att göra:** lägg till `IkonTangentbord`, byt ⌨, och rätta siffran i 11B.0c och
       `DESIGN.md`. Litet jobb, men det får inte glömmas — *"noll emoji återstår i `src/ui/`"*
       går annars aldrig att stänga ärligt.
+
+      ✅ **KLAR 2026-08-14.** `IkonTangentbord` tillagd i `src/ui/icons.tsx` (Tabler
+      `outline/keyboard`, hämtad ur källan och inte hittepå-path-data), `⌨` utbytt i
+      `TodayPage.tsx:268`, och alla tre siffrorna rättade till åtta.
+
+      ⚠️ **En fjärde siffra saknades också, och den är värre.** Sökningen efter emoji gjordes
+      om över **hela `src/`**, inte bara `src/ui/`, och hittade tre till som **renderas för
+      användaren** men aldrig räknats av någon av de tre dokumenten:
+
+      | Fil | Glyf | Renderas av |
+      |---|---|---|
+      | `src/timer/diagnostics.ts:78` | ⚠️ | `summarise()` → `TimerDiagnostics.tsx:30` |
+      | `src/timer/diagnostics.ts:81` | ⚠️ | samma väg |
+      | `src/timer/diagnostics.ts:83` | ✅ | samma väg |
+
+      **De faller utanför 11B.0c för att uppgiften avgränsade sig till `src/ui/`** — men
+      användaren ser ingen skillnad på var en glyf bor i filträdet. De är dessutom en annan
+      sorts fix: glyfen sitter i en **mallsträng**, och en SVG går inte att stoppa i en
+      sträng. Antingen stryks tecknet och `TimerDiagnostics.tsx` sätter ikonen, eller så får
+      raden bära sin status på annat sätt. **Utbrutet till 12.34** i stället för att lösas
+      här, eftersom det ändrar ett gränssnitt mellan logik och vy.
 
 - [ ] **12.29 Småfynd ur granskningen 2026-08-13. Låg prioritet.**
       Standards-axeln gav fyra bedömningsfrågor, ingen hård överträdelse. Härkomstregistret,
@@ -2500,6 +2525,35 @@ och 13.1 måste vara klar före 13.6.
 
       **Låg prioritet.** Nuvarande kod är korrekt så länge ordningsregeln följs — detta är
       härdning, inte en bugg.
+
+- [ ] **12.34 Tre emoji utanför `src/ui/` som ingen räkning fångat. Ny 2026-08-14.**
+      Utbruten ur 12.28. `DESIGN.md` §0.3 förbjuder emoji som ikoner, och 11B.0c räknar dem
+      — men **avgränsat till `src/ui/`**. Tre glyfer bor utanför den mappen och renderas ändå:
+
+      | Fil | Glyf | Renderas av |
+      |---|---|---|
+      | `src/timer/diagnostics.ts:78` | ⚠️ | `summarise()` → `TimerDiagnostics.tsx:30` |
+      | `src/timer/diagnostics.ts:81` | ⚠️ | samma väg |
+      | `src/timer/diagnostics.ts:83` | ✅ | samma väg |
+
+      **Varför de aldrig fångades:** tre dokument räknade emoji och alla tre sökte i `src/ui/`.
+      Användaren ser däremot ingen skillnad på var i filträdet en glyf bor. Det är samma
+      lucka som 12.22 hade: en inventering ärver sin sökväg, och sökvägen var snävare än
+      problemet. **Skriv därför sökningen mot hela `src/`, inte mot `src/ui/`.**
+
+      **Varför det inte är samma fix som de övriga sju:** glyfen sitter i en **mallsträng**,
+      inte i JSX. En SVG går inte att lägga i en sträng. Antingen stryks tecknet och
+      `TimerDiagnostics.tsx` sätter ikonen utifrån vilken gren `summarise()` returnerade, eller
+      så får raden bära sin status på annat sätt. **Det ändrar gränssnittet mellan logik och
+      vy**, vilket är skälet att det inte gjordes i förbifarten.
+
+      ⚠️ **`summarise()` returnerar i dag en färdig mening.** Ska vyn kunna välja ikon måste
+      den veta *vilket* av tre lägen det är — alltså behöver funktionen returnera ett läge
+      plus en text, inte en sträng. Det är den verkliga kostnaden här, inte tecknet.
+
+      **Klart när:** noll emoji återstår i strängar som renderas, mätt över **hela `src/`**,
+      och `src/timer/restTimer.test.ts` speglar det som testet på rad 106 låser.
+      **Låg prioritet** — diagnosvyn är Adams felsökningsverktyg, inte en huvudskärm.
 
 ---
 

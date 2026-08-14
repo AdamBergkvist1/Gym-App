@@ -87,7 +87,7 @@ underkänna är i praktiken ingen regel, så här är det som en lista. Preciser
 |---|---|
 | **Lila eller mörkblå gradient** | Standardvalet när en modell ombeds designa fritt |
 | **Glasmorfism** (frostat glas, suddig genomskinlighet) | Samma sak, och den läser dåligt i solljus |
-| **Emoji som ikoner** | Ritas av operativsystemet, ser olika ut per plattform, kan inte ärva vår färg. Sex förekomster i dag, se 11B.0c |
+| **Emoji som ikoner** | Ritas av operativsystemet, ser olika ut per plattform, kan inte ärva vår färg. **Åtta i `src/ui/`, varav sju är åtgärdade 2026-08-14** — kvar är 🏋 i `ExerciseCard.tsx`, som väntar på accentbrickan i steg 4. Se 11B.0c och 12.28 |
 | **Jämnt rundade kort överallt** | När allt har samma radie bär radien ingen information |
 | **Centrerad hjältetext** | Marknadsföringsspråk i en app som ska loggas i |
 | **Tankstreck (—) i apptexten** | Adam 2026-08-12: läser som AI-skriven text. Gäller **det appen skriver till användaren**, inte den här filen eller kodkommentarer |
