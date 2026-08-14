@@ -1,11 +1,178 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-13. Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-14. Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-13 (natt) — 12.32 KLAR. Sökningen hittade något, tvärtemot vad den gissade
+## 🆕 2026-08-14 — Designrundans förarbete är slut. Färgen avgjord, ikonerna borta
+
+### ✅ Pushat. Börja med `git pull`
+
+Sex commits gick till `origin/main` vid sessionens slut. **Allt nedan finns på den andra
+maskinen.** Fyra av dem rör bara `docs/`, två rör `src/`.
+
+### Börja här
+
+**Nästa jobb är `11B.0b` steg 1: referenserna Luna och Ellie.** Adam pekade ut det själv, och
+det stämmer — det är den sista öppna resten i 11B.0b som inte är blockerad av något annat.
+
+De står i `SPEC.md` §4, tillagda 2026-08-12, och är **Chris Raroques appar**:
+- **Luna** (budgetapp) — för *täta sifferrader på liten skärm*. Den uppfyller dessutom
+  11B.0b:s krav på minst en referens **utanför träningsappsgenren**.
+- **Ellie** (dagsplanerare) — för *färg, form och rörelse i ljust tema*.
+
+Ellie är den mer akuta av de två: hela paletten byttes till ljust 2026-08-12 och samtliga
+nio befintliga referensbilder i `docs/Reference-pics/` samlades **före** det bytet.
+
+⚠️ **En referensmapp utan anteckningar är bara bilder.** 11B.0b säger det uttryckligen: skriv
+ner **vad** i varje referens som ska tas efter och **varför**. Det är kravet som gör steg 1
+klart, inte att filerna finns.
+
+**Därefter är steg 4 — själva ombyggnaden — nästa riktiga jobb**, och det är stort. Allt
+förarbete utom Luna/Ellie är nu gjort.
+
+### Vad som gjordes
+
+Fem commits, i ordning. Ingen av dem är en gissning — grindarna kördes.
+
+| Commit | Vad |
+|---|---|
+| `888005a` | **12.22 KLAR.** Tankstrecken ur apptexten, 13 strängar |
+| `c11a5e6` | **11B.0b steg 3:** semantiken uppmätt mot ljust papper. Tre fel funna |
+| `b7ba2cd` | `TASKS.md`: kryssa i 11B.0d, klar sedan 12 augusti men otickad |
+| `10e38a2` | **11B.0b steg 3:** väg C vald av Adam. Valet flyttade kravet till kanten |
+| `919173e` | **12.28 KLAR.** `IkonTangentbord` ersätter den åttonde emojin |
+
+Detaljerna står i `docs/TASKS.md` och `docs/DESIGN.md` §1b. Upprepas inte här.
+
+### Grindarna — körda efter den sista kodändringen
+
+| Grind | Resultat |
+|---|---|
+| typecheck | ren |
+| lint | 0 fel, 3 kända `react-refresh`-varningar i `icons.tsx` |
+| test | **274** i 22 filer |
+| build | klart, precache **651,60 KiB** |
+| e2e | **60 passed** på 1,2 min |
+
+Dessutom verifierad i appen med `npm run shots -- --15`: tangentbordsikonen renderar som SVG
+och ärver textens färg. **Inte bara grönt i tester.**
+
+### Det som faktiskt var värt något
+
+**Tre inventeringar i rad har haft samma fel, och det är ett mönster värt att bära med sig:**
+*en inventering ärver sin sökväg, och sökvägen är nästan alltid snävare än problemet.*
+
+1. **12.22** listade 14 strängar. Rad 1 var en JSX-kommentar — inventeringen spårade varje
+   träff till rätt fil och rad men läste aldrig **omgivande** rader. Rätt antal: 13.
+2. **12.22** påstod att ingen sträng var en knappetikett. `TodayPage.tsx:268` är en. Ingen
+   skada, men slutsatsen att 11B.0e:s selektorval "inte byggde in en brytpunkt" var sann av
+   tur, inte av konstruktion.
+3. **12.28** räknade emoji i `src/ui/`. Tre till renderas från `src/timer/diagnostics.ts`.
+   Användaren ser ingen skillnad på var i filträdet en glyf bor. Blev **12.34**.
+
+**Skriv nästa inventering mot hela `src/`, och läs träffen i sitt sammanhang.**
+
+### Färgbeslutet, och en rättelse jag gjorde på mig själv
+
+`DESIGN.md` §0.5 påstod att semantiken *"står kvar oförändrad från §1"*. §1:s värden är Radix
+**mörka** skalor. Mot papperet `#F0EBE1` mäter de **1,29–1,77:1**. Gult låg på 1,29:1 och var
+i praktiken osynligt.
+
+Två fynd som inte var uppenbara:
+
+- **Radix ljusa steg 11 räcker inte hos oss.** Det är konstruerat för 4,5:1 mot **vitt**;
+  vårt papper är mörkare och äter marginalen. Alla tre landar på 3,88–4,39:1. **En kopierad
+  palett ärver sitt underlag** — att en skala är "tillgänglighetsgodkänd" säger ingenting
+  förrän den mätts mot den bakgrund vi faktiskt använder.
+- **Adam valde väg C, och valet ändrade kraven.** Under de andra vägarna bar texten
+  betydelsen och kanten var dekorativ. Under C bär kanten den, och då gäller WCAG 1.4.11:
+  3:1. Radix steg 8 klarar det inte för någon roll. Detta mättes **efter** beslutet och
+  ändrade värdena — kanterna flyttades till steg 10 och 11.
+
+⚠️ **Klargult kan inte bära betydelse mot vitt.** Amber steg 8, 9 och 10 mäter 1,58–2,20:1.
+Exakt ett värde duger, steg 11 `#ab6400`, och det är mörk ockra. Kulören lever därför i
+**ytan**, inte i kanten. Följd: `warn` får aldrig fylld yta med vit glyf.
+
+**Min egen mockup hade felet den varnade för.** C-kolumnens gula stapel ritades i `#ffc53d`,
+1,58:1. Rättad, med felet utskrivet i filen — ett beslutsunderlag som tyst korrigeras är inte
+längre ett underlag.
+
+### Adam ifrågasatte kontrastkravet, och han hade rätt
+
+Ordagrant: *"känns lite som att det är ni Claude som har satt vissa principer nu"*.
+
+**Det stämmer.** WCAG AA kom in i `34dc43d`, en planeringscommit från agentsidan, och står i
+`PLAN.md` och 11B.7 — aldrig i något Adam bett om. Det han skrev i `SPEC.md` §4 är
+*"Minimalistiskt, rena kontraster"*. Steget därifrån till "4,5:1 enligt WCAG AA" togs av en
+agent utan att fråga.
+
+**Regeln behålls, men vet varför:** skälet är Adams användning (svettiga ögon, gymbelysning,
+telefon som sänker ljusstyrkan i värme), och 4,5:1 är bara ett mätbart ombud för det. Kravet
+band dessutom nästan ingenting — väg C landar på 15–16:1 för text. Det enda standarden dödade
+var klargula linjer mot vitt, som är svåra att se på riktigt och inte bara på pappret.
+
+**Om den någon gång kostar något Adam bryr sig om: lätta på den. Det är hans app.**
+
+### Öppet, och som kräver ett beslut
+
+⚠️ **`11B.0c` har två slutvillkor som motsäger varandra.** Uppgiften säger på ett ställe att
+*"det som gör 0c klar är ikonfilerna, registerposten och att de sju glyferna ovan är borta"* —
+allt det är uppfyllt. Men det formella **"Klart när"** säger *"noll emoji återstår i
+`src/ui/`"*, och 🏋 i `ExerciseCard.tsx` står kvar. Den är **medvetet** uppskjuten: den ska
+inte ersättas av en ikon utan raderas med hela rutan när B4:s accentbricka byggs i steg 4.
+
+**Rekommendation:** skriv om "Klart när" så att 🏋 uttryckligen undantas och pekas till steg 4,
+och kryssa i 0c. Uppgiften är i praktiken färdig och blockerar inget. **Gjordes inte här** —
+att ändra ett slutvillkor är ett beslut, inte bokföring, och det hörde inte till någon av
+sessionens commits.
+
+**`11B.0b` kan inte kryssas i än:** steg 1 saknar Luna och Ellie, och steg 3:s ikondel pekar
+på 0c ovan.
+
+### Inte verifierat
+
+- **Ingenting av det ljusa temat finns i koden.** `src/index.css` är fortfarande hela det
+  mörka temat från 5 augusti. Färgerna lever bara i `DESIGN.md` tills steg 4 körs.
+  Skärmdumpen i sessionen visar mörkt tema med lime — det är väntat, inte en bugg.
+- **Ingen av de nya färgerna är sedd på en riktig skärm.** De är uppmätta, inte upplevda.
+  Mockupen är ritad på en datorskärm, inte i gymbelysning.
+- **12.34 är inte påbörjad.** Fixen kräver att `summarise()` returnerar ett läge i stället för
+  en färdig mening, alltså en gränssnittsändring mellan logik och vy.
+
+### Miljö
+
+**Node finns inte installerat på jobbdatorn** men den portabla från en tidigare session låg
+kvar och användes: `…\07443bf8-…\scratchpad\node-v22.23.2-win-x64`. **Ingen nedladdning
+behövdes.** Skrapkataloger städas, så nästa session kan behöva hämta om den — se
+`jobbdatorn-klarar-alla-grindar` i minnet för hur.
+
+⚠️ **`preview_start` fungerar inte här** — `npm` ligger inte på förhandsvisningens PATH när
+Node är portabel. Använd `npm run shots` i stället; det är projektets eget verktyg och
+fungerade utan problem.
+
+**e2e är 60 tester, inte 36.** Sviten växte med 12.20. Minnesanteckningen säger 36 och är
+gammal på den punkten.
+
+### Föreslagna skills för nästa session
+
+- **`/research`** för Luna och Ellie. Referensinsamling är att leta upp och läsa primärkällor
+  (Raroques videor och skärmbilder), vilket är precis vad den är till för. Resultatet ska bli
+  anteckningar om *vad och varför*, inte bara filer.
+- **`/grill-me`** innan steg 4 startar. Det är den största kodändringen i projektet, och 11B
+  har redan visat sig vara halvbyggt en gång när ingen grillade först.
+- **`/code-review`** efter steg 4:s första skärm — inte efter hela ombyggnaden.
+
+---
+
+## 2026-08-13 (natt) — 12.32 KLAR. Sökningen hittade något, tvärtemot vad den gissade — DELVIS ÖVERSPELAD
+
+> ⚠️ **ÖVERSPELAT: kandidatlistan under "Börja här" och antalet strängar i 12.22.**
+> 12.22 är **gjord** 2026-08-14, och sektionen ovanför beskriver den som nästa jobb.
+> Dessutom sa den *"14 strängar listade"* — **rätt antal är 13.** Rad 1 i inventeringens
+> tabell var en JSX-kommentar, inte renderad text. Se sektionen överst.
+> **Substansen om 12.32 och 12.33 står kvar oförändrad.**
 
 ### ✅ Pushat. Börja med `git pull`
 
