@@ -33,6 +33,8 @@ samma commit.
 | Fraunces, variabel woff2 (latin) + licenstexten | [undercasetype/Fraunces](https://github.com/undercasetype/Fraunces) | **OFL-1.1** | `src/assets/fonts/fraunces-var-latin.woff2`, `src/assets/fonts/OFL.txt` → `src/index.css` (fas 11B steg 4) | 2026-08-12 |
 | 12 ikon-SVG:er, **bara** i beslutsmockupen | [lucide-icons/lucide](https://github.com/lucide-icons/lucide) | **ISC** + **MIT** | `docs/mockups/11b-ikoner.html` | 2026-08-12 |
 | 9 ikoners `d`-strängar. **Valt paket** | [tabler/tabler-icons](https://github.com/tabler/tabler-icons) | **MIT** | `src/ui/icons.tsx`, `docs/mockups/11b-ikoner.html` | 2026-08-12 |
+| 9 referensskärmbilder: Hevy, MacroFactor, Strava, Apple Watch, Lifesum | Insamlade av Adam, ursprung ej dokumenterat vid insamlingen | ⚠️ **Oklart** — se noten nedan | `docs/Reference-pics/` (9 filer) | ~2026-08-04 |
+| 10 App Store-skärmbilder: Ellie (5), Luna (5) | Apples CDN `is1-ssl.mzstatic.com`, via [itunes lookup-API](https://itunes.apple.com/lookup?id=1602196200) för app-id `1602196200` och `6504741176`. Utgivare **AloaLabs, LLC** (Chris Raroque) | ⚠️ **Upphovsrätt AloaLabs.** Ingen licens ges. Se noten nedan | `docs/Reference-pics/Ellie iOS 1–5.jpg`, `Luna iOS 1–5.jpg` → `docs/DESIGN.md` §0.5, §3 | 2026-08-14 |
 
 ### mattpocock/skills — `handoff`
 
@@ -160,6 +162,37 @@ hur mycket bläck en ikon lägger på skärmen. Uppmätt med `getTotalLength()` 
 vid identisk `stroke-width="2"`, drar Tabler **441 enheter mot Lucides 470** — alltså 6 %
 *mindre* linje. Storleksskillnaden i filerna kommer från metadatakommentaren överst och den
 radbrutna attributformateringen. **Proxymått är inte mätningar.**
+
+### Referensskärmbilderna — registrerade 2026-08-14, och en fråga för Adam
+
+**De nio äldre bilderna stod aldrig i registret.** De har legat i `docs/Reference-pics/` sedan
+omkring 4 augusti och är den enda posten i projektet som brutit mot §7.2c. Upptäckt när Luna
+och Ellie skulle registreras. Nu införda — men **deras ursprung går inte att rekonstruera i
+efterhand**: två heter `Skärmbild 2026-08-02 …` och ser ut att vara Adams egna telefonbilder,
+`image8/16.webp` ser hämtade ut, och resten är namngivna efter appen utan källa. Det är precis
+den situation registret finns för att förhindra, och den går inte att laga nu — bara att
+skriva ner.
+
+**De tio nya är App Store-marknadsbilder och tillhör AloaLabs, LLC.** Ingen licens ges för
+dem; Apple visar dem publikt för att marknadsföra appar. Vi har alltså **ingen uttrycklig
+rätt** att lägga dem i ett publikt repo.
+
+**Så här ser läget ut, utan dramatik:**
+
+- Vi kopierar **ingen kod**. Bilderna används som designunderlag och ligger i briefen
+  tillsammans med skriven analys av dem — kommentar och kritik, vilket är den starkaste
+  positionen man kan ha för den här sortens användning.
+- Att lagra andras marknadsbilder i ett publikt repo är vanligt och lågrisk i praktiken, men
+  det är formellt ett mångfaldigande. **Riskbilden är i värsta fall ett mejl som ber oss ta
+  bort dem** — inte något som hotar appen.
+- `CLAUDE.md` §7.2b:s licenstabell täcker **kod**, inte bilder, så det finns ingen befintlig
+  regel att luta sig mot. Den här noten är därför ett underlag, inte ett beslut.
+
+⚠️ **Adams val, och det brådskar inte:** låt dem ligga (som de nio redan gör), eller
+gitignorera `docs/Reference-pics/` så att bilderna finns lokalt men inte publikt. Det andra
+kostar att anteckningarna i `DESIGN.md` §0.5 inte längre går att granska mot bilden av den som
+klonar repot — vilket var hela skälet till att de laddades ner. **Tills Adam säger annat
+ligger de kvar.**
 
 ---
 

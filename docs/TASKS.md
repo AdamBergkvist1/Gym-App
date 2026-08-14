@@ -875,17 +875,28 @@ nuvarande.
       för att jämföra vägar men inte som beslutad token. Rättad i samma commit, med felet
       utskrivet i filen — ett beslutsunderlag som tyst korrigeras är inte längre ett underlag.
 
-      **Kvar i 11B.0b: bara referenserna Luna och Ellie (Raroque) i steg 1.**
-      Uppdaterat 2026-08-14 (kväll). Steg 3 bestod av två delar och **båda är nu klara** —
-      färgen 2026-08-14 och ikonerna när **11B.0c** stängdes samma dag. Varken färgen eller
-      ikonerna blockerar något längre. **Steg 1 är alltså det enda som står mellan 11B.0b och
-      en ikryssning**, och därmed det sista förarbetet före steg 4.
+      ✅ **ALLA FYRA STEG ÄR KLARA 2026-08-14 (kväll). Kvar: bara Adams godkännande.**
+      Steg 3:s två delar stängdes samma dag — färgen genom väg C, ikonerna genom **11B.0c**.
+      Steg 1:s rest, referenserna Luna och Ellie, är hämtad och **läst**: tio App Store-bilder
+      i `docs/Reference-pics/`, med anteckningar i `DESIGN.md` §0.5.
+
+      **Uppgiftens eget slutvillkor är *"`docs/DESIGN.md` finns och Adam har godkänt den"*.**
+      Filen finns. Godkännandet saknas, och det är inte något jag kan kryssa i åt honom —
+      därför står rutan öppen trots att allt arbete är gjort. **Det enda som återstår av hela
+      11B:s förarbete är att Adam läser briefen och säger ja.**
+
+      ⚠️ **Vad referenssteget inte kunde leverera.** `SPEC.md` §4 bad om Ellie för *"färg, form
+      och **rörelse**"*. App Store-bilder är stillbilder — **rörelsen är inte inhämtad**, och
+      11B.5 har alltså inget referensstöd. Källan för den delen är Raroques YouTube-spellistor,
+      där han bygger båda apparna på kamera. Utbrutet som en egen rest snarare än dolt i ett
+      ✅: se noten i `DESIGN.md` §0.5.
 
       Arbetsordningen är hämtad från Chris Raroques flöde och står i
       `ai-workbench/tools/`: **referenser → prototyp → implementation.**
-      1. ✅ Samla referenser i `docs/Reference-pics/` — nio bilder: Hevy, MacroFactor, Strava,
-         Apple Watch, Lifesum. **Kvar:** Luna och Ellie (Raroque), tillagda i `SPEC.md` §4
-         2026-08-12.
+      1. ✅ **KLART 2026-08-14.** Referenser i `docs/Reference-pics/` — nio bilder (Hevy,
+         MacroFactor, Strava, Apple Watch, Lifesum) plus **tio nya: Ellie och Luna** (Raroque,
+         App Store, `Ellie iOS 1–5.jpg` och `Luna iOS 1–5.jpg`). Anteckningarna om **vad och
+         varför** står i `DESIGN.md` §0.5 och §3 — det var kravet, inte att filerna finns.
       2. ✅ Skissa varje skärm mot referenserna — `DESIGN.md` §3.
       3. ✅ Fastställ **tokens**: färg ✅ (omgjord mot ljus botten 2026-08-14, `DESIGN.md`
          §0.5 + §1b), typografi ✅, spacing ✅, radier ✅,

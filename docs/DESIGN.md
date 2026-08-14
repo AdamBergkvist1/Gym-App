@@ -127,6 +127,101 @@ aldrig var problemet.
 bockar — inte i texten. Texten förblir vit. Det är därför Apple Watch kan vara nästan helt
 svartvit och ändå kännas levande, medan vår app var enfärgat grå och kändes död.
 
+### Luna och Ellie — hämtade och lästa 2026-08-14
+
+De två referenserna som `SPEC.md` §4 pekade ut 2026-08-12 men som aldrig hämtades. Båda är
+byggda av **Chris Raroque** (utgivare AloaLabs, LLC — samma säljarnamn på båda listningarna,
+vilket är det som binder ihop dem). Tio skärmdumpar ligger i `docs/Reference-pics/` som
+`Ellie iOS 1–5.jpg` och `Luna iOS 1–5.jpg`.
+
+⚠️ **Vad de här bilderna INTE kan svara på.** Det är **App Store-marknadsföringsbilder**, inte
+den körda appen: iscensatta, idealiserade, och de kan ligga efter aktuell version. Framför allt
+— `SPEC.md` bad om Ellie för *"färg, form och **rörelse**"*, och **rörelse går inte att avgöra
+ur stillbilder.** Två av tre levererade. Vill vi ha rörelsedelen är källan Raroques
+YouTube-spellistor, där han bygger båda apparna på kamera. Det är inte gjort, och 11B.5
+(rörelse) har inget stöd härifrån.
+
+#### Ellie — vad som ska tas efter, och varför
+
+**`Ellie iOS 3.jpg` är den viktigaste bilden i hela mappen.** Den är **väg C, i produktion,
+oberoende av oss.** Timebox-blocken bär betydelse med *tonad yta + tjock färgad vänsterkant +
+text i samma kulör*. Exakt den modell Adam valde 2026-08-14, byggd av någon annan som kom fram
+till den utan att ha läst vår brief.
+
+Tre saker i den bilden är belägg, inte tycke:
+
+1. **Det gula blocket har mörk ockratext på blek gul yta.** Aldrig klargul linje, aldrig gul
+   text. Det är **ordagrant §1b:s slutsats** — *"klargult kan inte bära betydelse"*, *"kulören
+   lever i ytan, inte i kanten"*. En utgiven app har alltså träffat samma vägg och valt samma
+   utväg. Det gör begränsningen till en egenskap hos gult, inte till vår pedanteri.
+2. **Den färgade vänsterkanten är B4:s accentbricka.** En färgad stapel som bär identitet
+   **utan symbol i sig** — precis det B4 gör och det som gör att 🏋 kan raderas i steg 4 utan
+   att ersättas. Formen är därmed prövad i produktion, inte bara i vår mockup.
+3. **De tonade blocken ligger alltid på en vit/nästan vit yta, aldrig direkt på bakgrunden.**
+   Samma som §1b fynd 3. Ta med den regeln oförändrad.
+
+Ur `Ellie iOS 1.jpg` (dagslistan):
+
+| Ta efter | Varför |
+|---|---|
+| Varm off-white botten, **rent vita kort** med tunn ljus kant + mycket mjuk skugga | Samma struktur som vårt papper `#F0EBE1` + vita kort. Bekräftar att separationen behöver både kant och skugga — §1b mätte korten till 1,188:1, vilket är för lite på egen hand |
+| Kategorifärg som en **liten prick**, inte en fyllning | Håller §0.5:s regel om små mättade former. Färgen syns utan att någon yta domineras |
+| Bock: **fylld grön ruta med vit glyf** när klar, **enbart konturruta** när tom | Direkt användbar för setbekräftelsen i `SetRow`. Notera att detta är tillåtet för `ok` men **förbjudet för `warn`** — vitt på gult mäter 1,58:1 |
+| Datumraden med **vald dag som fylld svart cirkel**, inte accentfärgad | Markeringen är neutral, så accenten förblir osparad och de semantiska färgerna behåller sin betydelse. Värt att ta rakt av till Historik |
+
+⛔ **Vad som INTE ska tas från Ellie: densiteten.** Ett kort per uppgift med den paddningen ger
+~5 rader per skärm. Vi ska klara **25 set** (11B.9). Ellie är referens för färg och form —
+aldrig för täthet. Att `SPEC.md` delade upp rollerna mellan de två apparna var alltså rätt.
+
+`Ellie iOS 4.jpg` (bottenark över nedtonad bakgrund, sekundärval som blekt fyllda chips) är
+underlag för vår `SetAdjustSheet`. `Ellie iOS 5.jpg` visar webbappen, där samma språk pressas
+tätare: tidsuppskattning i en liten grå pill, metaraden högerställd.
+
+#### Luna — vad som ska tas efter, och varför
+
+`Luna iOS 1.jpg` är svaret på **täta sifferrader**, och den gör fyra saker vi ska kopiera:
+
+1. **Bara ett tal per rad är färgat** — det som kräver ett beslut. Det andra talet är vanligt
+   svart. Färgas varje siffra läses ingen av dem. Det här är den enskilt viktigaste
+   densitetslärdomen och den motsäger frestelsen att färgkoda allt.
+2. **Det färgade talet ligger i en tonad pill**, blek grön/blek amber/blek röd med **mörk text
+   i samma kulör**. Väg C igen, och amber-pillen har mörk ockratext precis som Ellies gula
+   block. **Två oberoende appar, samma lösning på gult.**
+3. **Raderna är helt platta — inga avdelare mellan dem.** Separationen görs av radhöjd och
+   högerställning ensamt. Avdelare kostar pixlar och lägger till brus; det är så man får plats
+   med fler rader utan att det ser packat ut. Rakt in i 11B.9.
+4. **Grupphuvudet namnger kolumnerna** i en egen kontur-ruta, tvåradigt: grå etikett över
+   mörkt värde (`Weekly` / `6 days left` · `Budgeted` / `$360` · `Left` / `$347`). Samma grepp
+   som `SetRow` redan använder enligt §2 — men Luna visar att det skalar till tre kolumner.
+
+Ur `Luna iOS 2.jpg`: **beloppet är högerställt och grått, inte svart.** Titeln bär raden,
+siffran slås upp först när man vill ha den. Ett billigt sätt att lugna en lång lista.
+Datumrubriker (`Today`, `Yesterday`) står som fet mörk text utan behållare.
+
+⛔ **Vad som INTE ska tas från Luna: emoji i färgade cirklar som kategoriikoner.** Det är
+ordagrant §0.3:s förbudslista, och det är precis vad 11B.0c nyss tog bort. Luna kommer undan
+med det för att appen är medvetet leksaksaktig; vår karaktär är Bläck, återhållsam. Lunas
+violetta accent är av samma skäl för hög för oss.
+
+`Luna iOS 3.jpg` (stor siffra + liten etikett + tunn förloppslinje) är underlag för timern och
+passvolymen. `Luna iOS 4.jpg` visar valt tillstånd som **blek fyllning + hel färgad kant** —
+användbart under väg C, där kanten bär betydelsen. `Luna iOS 5.jpg` har inget designvärde
+(hundbilder) men är **primärkällans kvitto** på att Chris Raroque är utvecklaren, vilket är
+påståendet `SPEC.md` §4 vilar på.
+
+#### Sammanfattning: vad de två faktiskt tillförde
+
+**Ellie bekräftade ett beslut vi redan fattat.** Den ändrar ingenting i §1b — den gör tvärtom
+väg C och B4 mindre riskabla, eftersom båda nu är sedda i en utgiven app. Värdet ligger i att
+vi slipper vara först.
+
+**Luna tillförde något nytt.** De platta raderna utan avdelare och regeln *"bara ett tal per
+rad får vara färgat"* stod ingenstans i briefen före i dag, och båda går direkt in i 11B.9.
+
+**Kravet på en referens utanför träningsappsgenren är därmed uppfyllt** — Luna är en
+budgetapp, Ellie en dagsplanerare. Ingen av dem har med styrketräning att göra, vilket var
+hela poängen: briefen ska inte medelvärda Hevy och Boostcamp.
+
 ### ✅ BESLUTET SOM GÄLLER: Bläck, valt av Adam 2026-08-12
 
 **Ljust tema. Papper `#F0EBE1`, accent marinblå `#2B4570`, Fraunces i rubriker.**
@@ -781,6 +876,8 @@ Formen är låst i `SPEC.md` §2b: fyra flikar — **Pass, Historik, Övningar, 
 | `Reference-pics/Skärmbild …104719` | **Sammanfattningsrad `Tid · Volym · Set`** överst i passet |
 | `Reference-pics/image8.webp`, `image16.webp` (MacroFactor) | Mörkt kortspråk, **stor siffra + liten etikett**, segmenterad tidsperiod `1V·1M·3M·1Å·Allt`, **trendlinje med osäkerhetsband** |
 | liftosaur.com (läst 2026-08-04, AGPL — inget kopierat) | Uppvärmning märks med **ordet "Warmup"**, inte med färg |
+| `Reference-pics/Ellie iOS 1–5.jpg` (Raroque, 2026-08-14) | **Väg C i produktion:** tonad yta + färgad vänsterkant + text i samma kulör. **Vänsterkanten = B4:s accentbricka.** Fylld grön bock vs tom konturruta. Vald dag som **fylld svart** cirkel, inte accentfärgad |
+| `Reference-pics/Luna iOS 1–5.jpg` (Raroque, 2026-08-14) | **Täta sifferrader:** platta rader **utan avdelare**, högerställda tabulära tal, **bara ett tal per rad färgat** (det som kräver beslut), tonad pill som semantikbärare, tvåradigt grupphuvud som namnger kolumnerna |
 
 ### ✅ Den öppna frågan från §1 är löst
 
