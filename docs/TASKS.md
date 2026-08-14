@@ -875,10 +875,11 @@ nuvarande.
       för att jämföra vägar men inte som beslutad token. Rättad i samma commit, med felet
       utskrivet i filen — ett beslutsunderlag som tyst korrigeras är inte längre ett underlag.
 
-      **Kvar i 11B.0b: bara ikonuppsättningen.** Steg 3 bestod av två delar och färgen var
-      den ena — den andra är ikonerna, som hör till **11B.0c** och fortfarande är öppen.
-      Uppgiften kan alltså inte kryssas i ännu, men **färgen blockerar inget längre.**
-      Steg 1 har också en rest: referenserna Luna och Ellie (Raroque) är inte hämtade.
+      **Kvar i 11B.0b: bara referenserna Luna och Ellie (Raroque) i steg 1.**
+      Uppdaterat 2026-08-14 (kväll). Steg 3 bestod av två delar och **båda är nu klara** —
+      färgen 2026-08-14 och ikonerna när **11B.0c** stängdes samma dag. Varken färgen eller
+      ikonerna blockerar något längre. **Steg 1 är alltså det enda som står mellan 11B.0b och
+      en ikryssning**, och därmed det sista förarbetet före steg 4.
 
       Arbetsordningen är hämtad från Chris Raroques flöde och står i
       `ai-workbench/tools/`: **referenser → prototyp → implementation.**
@@ -886,9 +887,9 @@ nuvarande.
          Apple Watch, Lifesum. **Kvar:** Luna och Ellie (Raroque), tillagda i `SPEC.md` §4
          2026-08-12.
       2. ✅ Skissa varje skärm mot referenserna — `DESIGN.md` §3.
-      3. 🟡 Fastställ **tokens**: färg ✅ (omgjord mot ljus botten 2026-08-14, `DESIGN.md`
+      3. ✅ Fastställ **tokens**: färg ✅ (omgjord mot ljus botten 2026-08-14, `DESIGN.md`
          §0.5 + §1b), typografi ✅, spacing ✅, radier ✅,
-         **ikonuppsättning 🔴 — enda kvarvarande delen, se 11B.0c.**
+         **ikonuppsättning ✅ (11B.0c stängd 2026-08-14).**
       4. ✅ Skriv `DESIGN.md` med tokens plus en skiss per skärm.
 
       **Varför referensdrivet och inte fritt:** `11A.12` byggdes från referensbilder efter
@@ -919,7 +920,7 @@ nuvarande.
       grillning: att veta om det finns en femte flik är en förutsättning för att kunna skissa
       navigationen.
 
-- [ ] **11B.0c Ikonuppsättning ersätter emoji. Ny 2026-08-12.**
+- [x] **11B.0c Ikonuppsättning ersätter emoji. Ny 2026-08-12. KLAR 2026-08-14.**
       `DESIGN.md` §3 undantog uttryckligen ikoner: *"Vi använder unicode och emoji i dag."*
       Det står i direkt konflikt med förbudslistan i §0.3, och konflikten är Adams beslut att
       lösa åt ikonernas fördel.
@@ -933,7 +934,7 @@ nuvarande.
 
       | Fil | Vad | Vad som ska hända |
       |---|---|---|
-      | `src/ui/ExerciseCard.tsx:65` | **🏋** i övningens ikonruta | ⛔ **RADERAS.** Hela `<span>`-rutan går bort och ersätts av accentbrickan (10 × 34 px, ingen symbol). **Leta inte efter en skivstångsikon** |
+      | `src/ui/ExerciseCard.tsx:66` | **🏋** i övningens ikonruta | ⛔ **RADERAS I STEG 4**, inte här. Hela `<span>`-rutan går bort och ersätts av accentbrickan (10 × 34 px, ingen symbol). **Leta inte efter en skivstångsikon.** Uttryckligen undantagen från 0c:s slutvillkor |
       | `src/ui/ExerciseCard.tsx:83` | `⋯` menyknappen | → ikon ur paketet. **Tillagd 2026-08-12** — den saknades i listan, som därför sa sex |
       | `src/ui/SetRow.tsx:136` | `✓` bekräfta-knapp | → ikon ur paketet |
       | `src/ui/ExerciseCard.tsx:140` | `✓` | → ikon ur paketet |
@@ -1014,13 +1015,35 @@ nuvarande.
          Uppmätt linjelängd vid identisk `stroke-width` ger Tabler **441 enheter mot Lucides
          470** — 6 % *mindre* linje. Se `docs/EXTERNT.md`.
 
-      ⚠️ **Grindarna är INTE körda på den här ändringen.** Maskinen saknar Node. Kontrollerat
-      för hand i stället: inga komponenttester finns (samtliga `*.test.ts` ligger i `db`, `lib`,
-      `parser`, `sync`, `ai`, `timer`), och båda e2e-specarna väljer på roll och tillgängligt
-      namn — inte på `✓`, `←`, `→` eller `⋯`. **Adam kör grindarna hemma.**
-      **Klart när:** de ikoner vi faktiskt använder är kopierade som SVG-filer med ursprung och
-      licens i kommentar överst, raden finns i `docs/EXTERNT.md`, och noll emoji återstår i
-      `src/ui/`. **Noll nya poster i `package.json`.**
+      **Grindarna är körda. Uppdaterat 2026-08-14 (kväll).** Varningen som stod här sa att de
+      *inte* var körda, eftersom maskinen saknade Node. Det gäller inte längre: hela sviten
+      kördes på hemmadatorn efter sista kodändringen — typecheck ren, lint **0 fel** (3 kända
+      `react-refresh`-varningar i `icons.tsx`), **274** tester i 22 filer, build **651,59 KiB**
+      precache, e2e **60 passed** på 1,3 min. Handkontrollen som ersatte grindarna gissade rätt:
+      inga komponenttester finns, och båda e2e-specarna väljer på roll och tillgängligt namn —
+      inte på `✓`, `←`, `→` eller `⋯`.
+
+      **Klart när:** de ikoner vi faktiskt använder är kopierade med ursprung och licens i
+      kommentar överst, raden finns i `docs/EXTERNT.md`, och **noll emoji återstår i `src/ui/`
+      med ett uttryckligt undantag: 🏋 i `ExerciseCard.tsx:66`.** **Noll nya poster i
+      `package.json`.**
+
+      ⚠️ **Om undantaget — omskrivet 2026-08-14 (kväll), och det är en ändring av ett
+      slutvillkor, inte bokföring.** Villkoret sa tidigare "noll emoji återstår i `src/ui/`"
+      utan undantag, vilket gjorde 0c omöjlig att kryssa i trots att allt arbete som hör till
+      0c var gjort. 🏋 kan inte ersättas av en ikon, för den ska **inte** bli en ikon: hela
+      `<span>`-rutan raderas när B4:s accentbricka byggs. Att låta 0c stå öppen i väntan på
+      steg 4 hade gjort slutvillkoret till en beskrivning av steg 4 i stället för av 0c.
+      **Ansvaret för 🏋 flyttas därför till steg 4** och står i tabellen ovan. Adam godkände
+      omskrivningen 2026-08-14.
+
+      **Två rättelser i samma svep, båda mätta:**
+      1. Villkoret sa *"kopierade som SVG-filer"*. Det är de inte — de nio `d`-strängarna
+         ligger som JSX i `src/ui/icons.tsx`. Skälet står i filhuvudet: separata `.svg`-filer
+         som React-komponenter kräver `vite-plugin-svgr`, och 0c förbjuder nya poster i
+         `package.json`. Ordet "filer" struket; kravet på ursprung och licens står kvar.
+      2. `package.json` är **orörd sedan `26e4181`**, alltså långt före ikonarbetet. Kontrollerat
+         i git-historiken, inte antaget.
 
 - [x] **11B.0d Välj den ljusa karaktärsriktningen. Ny 2026-08-12. KLAR 2026-08-12.**
       Ersätter det val som gjordes 2026-08-05, då lime valdes mellan tre **mörka** alternativ.
