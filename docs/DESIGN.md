@@ -164,7 +164,11 @@ sekundärtexten till 4,37:1 och klarar inte AA.
 | `--color-line-strong` | `#C4BCB0` | — | Kant som bär betydelse |
 | **`--color-accent`** | **`#2B4570`** | **8,08:1** mot bg | Appens färg |
 | `--color-accent-text` | `#263C63` | **10,5:1** mot kort | Länkfärg |
-| `--color-ok` | `#2F7A55` | 5,2:1 mot vit bock | Sparat. Betydelsen är upptagen |
+| `--color-ok` | `#2F7A55` | ⚠️ se not | Sparat. Betydelsen är upptagen |
+
+> ⚠️ **`--color-ok` bar ett missvisande mätvärde.** Här stod *"5,2:1 mot vit bock"*. Det är
+> sant men mäter **en vit bock ovanpå fyllningen** — inte färgen som text. Som text mäter
+> `#2F7A55` **4,38:1 mot papperet**, alltså under AA. Uppmätt 2026-08-14. Ersätts i §1b.
 
 **Sekundära ytor tonas i accenten, och andelen är regeln:** kort 0 %, mätrutor och chips
 5,5 %, genvägen 8,5 %, PB-chipet 15 %. Tonerna **räknas fram ur accenten** i stället för att
@@ -251,8 +255,23 @@ annars blir startskärmen och statusraden en annan svärta än appen.
 
 ### Vad som INTE ändras
 
-Semantikens färger (`ok`, `warn`, `err`, `pb`) står kvar oförändrade från §1 — de är mätta,
-godkända och betyder något. Accenten är ett **tillägg**, inte en omskrivning.
+> ### ⛔ FELAKTIGT. Rättat 2026-08-14 — se §1b
+>
+> Här stod: *"Semantikens färger (`ok`, `warn`, `err`, `pb`) står kvar oförändrade från §1 —
+> de är mätta, godkända och betyder något."*
+>
+> **De är mätta mot `#0a0a0a`.** §1:s värden är Radix **mörka** skalor. Mot papperet
+> `#F0EBE1` mäter de **1,29:1 till 1,77:1** — `--color-warn-text` (`#ffca16`) hamnar på
+> 1,29:1 och är i praktiken osynligt. Påståendet är alltså inte en avrundning åt fel håll,
+> det är fel.
+>
+> **Varför felet var lätt att göra:** meningen skrevs samma dag som temabytet, och den är
+> sann om *betydelserna*. Grön betyder fortfarande sparat. Det är **värdena** som inte
+> överlever ett bakgrundsbyte, och de två sakerna låg i samma mening.
+>
+> Semantiken görs om i **§1b**. Betydelserna därifrån och från §1 står kvar oförändrade.
+
+Accenten är ett **tillägg**, inte en omskrivning.
 
 Typografin från §2 står kvar, med ett undantag: **sidrubriken går från 22 till 30 px.**
 Referenserna är samstämmiga och 22 px läser som en underrubrik.
@@ -400,6 +419,123 @@ De ersätts av tokens i fas 11B steg 4.
 **Namnen är avsiktligt betydelsebaserade, inte kulörbaserade.** `--color-ok-text` och inte
 `--color-green-11`: skulle vi någon gång byta kulör för "sparat" ska bara den här filen
 ändras, inte varje komponent som råkade heta grönt.
+
+---
+
+## §1b Semantiken mot ljust papper
+
+> **§1 ovan gäller fortfarande för allt utom värdena.** Betydelserna — grön = sparat, gul =
+> kräver ett beslut, röd = fel eller destruktivt, PB alltid med utskriven etikett — är
+> oförändrade. Det som görs om här är hexvärdena, eftersom de var mätta mot svart.
+
+**Uppmätt 2026-08-14** med WCAG:s luminansformel mot papperet `#F0EBE1` och korten
+`#FFFFFF`. Papperet är det svårare underlaget och styr därför alla domar nedan.
+Beslutsunderlaget ligger som körbar mockup i `docs/mockups/11b-semantiska-farger.html`.
+
+**Mätmetoden är verifierad mot briefens egna publicerade tal** innan den användes på nya
+värden: kort/papper 1,188:1 (§0.5 anger 1,19), `--color-dim` 4,57:1, `--color-accent`
+8,08:1. Alla tre stämmer.
+
+### Fynd 1 — de mörka värdena är obrukbara, inte bara suboptimala
+
+| Token | Värde | Mot papper | Mot kort |
+|---|---|---|---|
+| `--color-ok-text` | `#3dd68c` | **1,58:1** | 1,88:1 |
+| `--color-warn-text` | `#ffca16` | **1,29:1** | 1,53:1 |
+| `--color-err-text` | `#ff9592` | **1,77:1** | 2,11:1 |
+| `--color-pb-text` | `#b1f1cb` | **1,08:1** | 1,29:1 |
+
+Kravet är 4,5:1. Detta är inte en justering utan en omskrivning.
+
+### Fynd 2 — §1:s stegregel går inte att följa på ljust
+
+§1 säger: *"Färgad text använder ALLTID steg 11."* **Den regeln fungerar inte här.**
+
+| Roll | Radix ljust steg 11 | Mot papper | Mot kort |
+|---|---|---|---|
+| Sparat | `#218358` | **3,97:1** ⛔ | 4,72:1 ✓ |
+| Uppmärksamhet | `#ab6400` | **3,88:1** ⛔ | 4,61:1 ✓ |
+| Fel | `#ce2c31` | **4,39:1** ⛔ | 5,21:1 ✓ |
+
+**Orsaken är konstruktionen, inte ett olyckligt val.** Radix ljusa skalor är byggda så att
+steg 11 nätt och jämnt når 4,5:1 mot **vitt**. Vårt papper är mörkare än vitt, och äter upp
+marginalen. Att steget klarar sig på korten men inte på papperet är alltså väntat så snart
+man vet varför — och det är precis den sortens sak som en obruten kedja av kopierade
+hexvärden döljer.
+
+**Följd:** stegregeln ersätts av ett **kontrastmål**. Vilket mål är det som återstår att
+välja, se nedan.
+
+### Fynd 3 — tonade ytor försvinner på papperet
+
+| Radix steg 3 | Mot papper |
+|---|---|
+| `#e6f6eb` (grön) | 1,061:1 |
+| `#fff7c2` (gul) | 1,094:1 |
+| `#feebec` (röd) | 1,036:1 |
+
+Steget mellan kort och papper är 1,188:1. **De diskreta ytorna har alltså mindre separation
+mot papperet än ett vanligt vitt kort har.** En varningsruta lagd direkt på bakgrunden blir
+osynlig.
+
+**Regel, och den gäller oavsett vilken väg som väljs nedan:** en tonad semantisk yta ligger
+**alltid ovanpå ett vitt kort**, aldrig direkt på papperet. Skrivs som en regel just för att
+den annars kommer att brytas av misstag — den är osynlig i koden och syns bara på skärmen.
+
+### Det som återstår: tre vägar, en smakfråga
+
+Kontrasterna är mätta och avgjorda. Kvar är ett val som inte är tekniskt, och som därför är
+Adams: **hur mycket kulör som får offras för läsbarhet.** Alla tre klarar AA.
+
+| Väg | Lägsta på papper | Gult läser som gult? | Vad det kostar |
+|---|---|---|---|
+| **A** — steg 12 som text | 9,57:1 | ⛔ Nej, blir brunt | Mättnaden faller 100 % → 57 % |
+| **B** — framräknad 5,5:1 | 5,50:1 | Delvis, ockra | §1:s marginalprincip (9:1) överges |
+| **C** — betydelsen i ytan | ~15,8:1 | ✅ Ja | Färgad text upphör som mönster |
+
+**Rekommendation: B.** Den klarar AA med verklig marginal på det svårare underlaget, får
+6,5:1 på korten där merparten av den semantiska texten faktiskt sitter, och behåller
+kulöridentiteten som gör betydelsen läsbar i ögonvrån. A gör gult till brunt, vilket
+underminerar §1:s hela premiss att gul betyder en enda sak — en brun varning är ingen
+varning. C är designmässigt mest korrekt för ljusa teman men är den största regeländringen,
+och den bör inte tas i samma svep som ett bakgrundsbyte.
+
+**Tonerna räknas fram, de handplockas inte:** varje värde i B är steg 11 blandat mot steg 12
+i sRGB tills kontrastmålet nås mot papperet. Samma princip som §0.5:s accenttoner, och av
+samma skäl — handplockade värden glider isär när något justeras.
+
+### Tokens — B, om den väljs
+
+```css
+@theme {
+  /* Semantik mot ljust papper. Uppmätt 2026-08-14 mot #F0EBE1.
+   * Steg 11→12-blandning tills 5,5:1 nås. Radix Colors (MIT), LJUSA skalor.
+   * Tonade ytor ligger ALLTID på vitt kort — se fynd 3. */
+
+  --color-ok-text: #1e6a49;    /* 5,50:1 papper · 6,54:1 kort */
+  --color-ok-solid: #30a46c;   /* fyllning, vit bock ovanpå: 3,16:1 */
+  --color-ok-line: #5bb98b;
+  --color-ok-bg: #e6f6eb;      /* endast på kort */
+
+  --color-warn-text: #87510d;  /* 5,50:1 papper · 6,54:1 kort */
+  --color-warn-solid: #ffc53d;
+  --color-warn-line: #e2a336;
+  --color-warn-bg: #fff7c2;    /* endast på kort */
+
+  --color-err-text: #b2262d;   /* 5,51:1 papper · 6,55:1 kort */
+  --color-err-solid: #e5484d;
+  --color-err-line: #eb8e90;
+  --color-err-bg: #feebec;     /* endast på kort */
+
+  --color-pb-text: #1e6a49;
+  --color-pb-bg: #e6f6eb;      /* endast på kort */
+}
+```
+
+⚠️ **`--color-ok-solid` bär vit bock på 3,16:1.** Det klarar 3:1 för grafiska objekt
+(WCAG 1.4.11) men **inte** 4,5:1 som text. Bocken är en form, inte text, så det är
+godtagbart — men byts den mot en siffra eller bokstav gäller inte längre domen.
+Noterat här för att den sortens byte annars sker utan att någon mäter om.
 
 ---
 

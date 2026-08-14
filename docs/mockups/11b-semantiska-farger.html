@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11B.0b steg 3 — semantiska färger mot ljust papper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+  /* Beslutsunderlag, inte produktionskod. Hämtar Fraunces över nätet med flit:
+     mockuper är underlag, appen har fonten som fil (docs/EXTERNT.md). */
+  :root {
+    --papper: #F0EBE1;
+    --kort: #FFFFFF;
+    --fg: #1C1917;
+    --dim: #6F6960;
+    --line: #F0ECE5;
+    --line-strong: #C4BCB0;
+    --accent: #2B4570;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 96px;
+    background: var(--papper); color: var(--fg);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  h1, h2, h3 { font-family: Fraunces, Georgia, serif; font-weight: 600; margin: 0; }
+  h1 { font-size: 30px; letter-spacing: -0.01em; }
+  h2 { font-size: 22px; margin: 40px 0 6px; }
+  .lead { color: var(--dim); font-size: 14px; margin: 6px 0 0; max-width: 68ch; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); margin-top: 18px; }
+  .kol { background: var(--kort); border-radius: var(--radius); padding: 18px; box-shadow: 0 1px 2px rgba(28,25,23,.06), 0 4px 14px rgba(28,25,23,.05); }
+  .kol > h3 { font-size: 17px; margin-bottom: 2px; }
+  .kol .why { color: var(--dim); font-size: 13px; margin: 4px 0 14px; min-height: 54px; }
+
+  /* --- app-fragment, så färgen bedöms i sammanhang och inte som en swatch --- */
+  .rad { display: grid; grid-template-columns: 30px 1fr 62px 44px; gap: 8px; align-items: center;
+         padding: 9px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .rad:last-child { border-bottom: 0; }
+  .rad .set { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+  .rad .val { font-size: 24px; font-weight: 600; }
+  .bock { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center;
+          color: #fff; font-size: 15px; }
+  .notis { border-radius: 12px; padding: 11px 13px; font-size: 14px; margin-top: 12px; }
+  .notis b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .chip { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+  .pilla { display:inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--dim); }
+
+  table { border-collapse: collapse; width: 100%; margin-top: 14px; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line-strong); }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; text-align: right; }
+  .sw { display: inline-block; width: 13px; height: 13px; border-radius: 3px; vertical-align: -2px; margin-right: 7px; border: 1px solid rgba(0,0,0,.12); }
+  .fall { color: #b2262d; font-weight: 600; }
+  .pass { color: #1e6a49; font-weight: 600; }
+
+  .banner { background: var(--kort); border-left: 4px solid var(--accent); border-radius: 10px;
+            padding: 14px 16px; margin-top: 16px; }
+  .banner p { margin: 6px 0 0; font-size: 14px; color: var(--dim); }
+  .banner p:first-of-type { margin-top: 0; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em;
+         background: rgba(43,69,112,.07); padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Semantiska färger mot ljust papper</h1>
+  <p class="lead">
+    11B.0b steg 3. Papperet <code>#F0EBE1</code> och korten <code>#FFFFFF</code> är redan
+    avgjorda i 11B.0d — det här gäller bara <b>sparat</b>, <b>uppmärksamhet</b>, <b>fel</b>
+    och <b>personbästa</b>. Alla tal nedan är uppmätta med WCAG:s luminansformel mot
+    papperet, som är det svårare av de två underlagen.
+  </p>
+
+  <div class="banner">
+    <p><b>Varför det här behövde göras om.</b> <code>DESIGN.md</code> §0.5 påstår att
+    semantiken <i>"står kvar oförändrad från §1"</i>. §1:s värden är Radix <b>mörka</b>
+    skalor, mätta mot <code>#0a0a0a</code>.</p>
+    <p>Mot papperet mäter de <span class="fall">1,29:1 till 1,77:1</span>. Gult
+    (<code>#ffca16</code>) hamnar på 1,29:1 och är i praktiken osynligt. Påståendet är
+    alltså inte en avrundning åt fel håll, det är fel.</p>
+  </div>
+
+  <h2>Det icke-uppenbara fyndet</h2>
+  <p class="lead">
+    §1 har en regel: <i>"färgad text använder ALLTID steg 11."</i> Den regeln går inte att
+    följa här. Radix ljusa skalor är konstruerade så att steg 11 nätt och jämnt når 4,5:1
+    mot <b>vitt</b> — och vårt papper är mörkare än vitt, vilket äter upp marginalen.
+  </p>
+
+  <table>
+    <thead><tr><th>Roll</th><th>Radix steg 11</th><th class="n">mot papper</th><th class="n">mot kort</th><th>Dom på papper</th></tr></thead>
+    <tbody>
+      <tr><td>Sparat</td><td><span class="sw" style="background:#218358"></span><code>#218358</code></td><td class="n">3,97:1</td><td class="n">4,72:1</td><td class="fall">under AA</td></tr>
+      <tr><td>Uppmärksamhet</td><td><span class="sw" style="background:#ab6400"></span><code>#ab6400</code></td><td class="n">3,88:1</td><td class="n">4,61:1</td><td class="fall">under AA</td></tr>
+      <tr><td>Fel</td><td><span class="sw" style="background:#ce2c31"></span><code>#ce2c31</code></td><td class="n">4,39:1</td><td class="n">5,21:1</td><td class="fall">under AA</td></tr>
+    </tbody>
+  </table>
+  <p class="lead" style="margin-top:10px">
+    Alla tre faller. Även <code>--color-ok: #2F7A55</code>, som §0.5 själv införde, mäter
+    <b>4,38:1</b> mot papperet. Tabellen anger den som <i>"5,2:1 mot vit bock"</i> — men det
+    mäter en vit bock <i>ovanpå</i> fyllningen, inte färgen som text. Två olika saker.
+  </p>
+
+  <h2>Tre vägar, samma innehåll</h2>
+  <p class="lead">Samma setrad, samma AI-ruta, samma synkfel i alla tre. Skillnaden är bara hur färgen bär betydelsen.</p>
+
+  <div class="grid">
+
+    <!-- A -->
+    <div class="kol">
+      <h3>A — steg 12 som text</h3>
+      <p class="why">Maximal läsbarhet (~10:1) och trognast mot §1:s princip om stor marginal
+      för svettiga ögon. Priset: gult blir <b>brunt</b>. Mättnaden faller från 100 % till 57 %.</p>
+
+      <div class="rad"><span class="set">1</span><span class="val">92,5 × 5</span><span class="pilla">90×5</span>
+        <span class="bock" style="background:#193b2d">✓</span></div>
+      <div class="rad"><span class="set">2</span><span class="val">92,5 × 5</span><span class="pilla">90×5</span>
+        <span class="bock" style="background:#193b2d">✓</span></div>
+
+      <div class="notis" style="background:#fff7c2; color:#4f3422; border:1px solid #e2a336">
+        <b>Kontrollera tolkningen</b>
+        Är det Bänkpress, 92,5 kg × 5 reps, 3 set?
+      </div>
+      <div class="notis" style="background:#feebec; color:#641723; border:1px solid #eb8e90">
+        <b>Synken är stoppad</b>
+        Inget har gått förlorat. Datan ligger kvar lokalt.
+      </div>
+      <p style="margin:14px 0 0"><span class="chip" style="background:#e6f6eb; color:#193b2d">PB · 92,5 kg</span></p>
+    </div>
+
+    <!-- B -->
+    <div class="kol">
+      <h3>B — framräknad 5,5:1 <span style="font-size:12px;color:var(--dim);font-weight:400">(mitt förslag)</span></h3>
+      <p class="why">Steg 11 blandat mot steg 12 tills 5,5:1 nås mot papperet. Klarar AA med
+      marginal på båda underlagen och <b>behåller kulören</b> (72–90 % mättnad). Tonerna
+      räknas fram, precis som §0.5:s accenttoner.</p>
+
+      <div class="rad"><span class="set">1</span><span class="val">92,5 × 5</span><span class="pilla">90×5</span>
+        <span class="bock" style="background:#1e6a49">✓</span></div>
+      <div class="rad"><span class="set">2</span><span class="val">92,5 × 5</span><span class="pilla">90×5</span>
+        <span class="bock" style="background:#1e6a49">✓</span></div>
+
+      <div class="notis" style="background:#fff7c2; color:#87510d; border:1px solid #e2a336">
+        <b>Kontrollera tolkningen</b>
+        Är det Bänkpress, 92,5 kg × 5 reps, 3 set?
+      </div>
+      <div class="notis" style="background:#feebec; color:#b2262d; border:1px solid #eb8e90">
+        <b>Synken är stoppad</b>
+        Inget har gått förlorat. Datan ligger kvar lokalt.
+      </div>
+      <p style="margin:14px 0 0"><span class="chip" style="background:#e6f6eb; color:#1e6a49">PB · 92,5 kg</span></p>
+    </div>
+
+    <!-- C -->
+    <div class="kol">
+      <h3>C — betydelsen flyttar till ytan</h3>
+      <p class="why">Texten är nästan svart överallt. Betydelsen bärs av <b>yta och kant</b>,
+      inte av textfärgen. Så gör de flesta ljusa designsystem — och det är enda sättet gult
+      kan läsa som gult.</p>
+
+      <div class="rad"><span class="set">1</span><span class="val">92,5 × 5</span><span class="pilla">90×5</span>
+        <span class="bock" style="background:#30a46c">✓</span></div>
+      <div class="rad"><span class="set">2</span><span class="val">92,5 × 5</span><span class="pilla">90×5</span>
+        <span class="bock" style="background:#30a46c">✓</span></div>
+
+      <div class="notis" style="background:#fff7c2; color:#1C1917; border-left:4px solid #ffc53d">
+        <b>Kontrollera tolkningen</b>
+        Är det Bänkpress, 92,5 kg × 5 reps, 3 set?
+      </div>
+      <div class="notis" style="background:#feebec; color:#1C1917; border-left:4px solid #e5484d">
+        <b>Synken är stoppad</b>
+        Inget har gått förlorat. Datan ligger kvar lokalt.
+      </div>
+      <p style="margin:14px 0 0"><span class="chip" style="background:#e6f6eb; color:#1C1917; border:1px solid #5bb98b">PB · 92,5 kg</span></p>
+    </div>
+  </div>
+
+  <h2>Vad varje väg kostar</h2>
+  <table>
+    <thead><tr><th>Väg</th><th>Lägsta kontrast på papper</th><th>Gult läser som gult?</th><th>Följer §1:s marginalprincip?</th><th>Regeländring</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>A</b> steg 12</td><td class="n pass">9,57:1</td>
+        <td class="fall">Nej — brunt</td><td class="pass">Ja</td>
+        <td>§1:s "alltid steg 11" skrivs om till steg 12</td>
+      </tr>
+      <tr>
+        <td><b>B</b> 5,5:1</td><td class="n pass">5,50:1</td>
+        <td>Delvis — ockra</td><td>Nej, 5,5 i stället för 9</td>
+        <td>§1:s stegregel ersätts av ett kontrastmål</td>
+      </tr>
+      <tr>
+        <td><b>C</b> yta</td><td class="n pass">15,8:1 <span style="color:var(--dim);font-weight:400">(nästan svart text)</span></td>
+        <td class="pass">Ja</td><td class="pass">Ja</td>
+        <td>Störst: färgad text upphör som mönster</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>En sak till, som mätningen råkade avslöja</h2>
+  <p class="lead">
+    Radix diskreta ytor (steg 3) mäter <b>1,04–1,09:1</b> mot papperet — alltså <i>mindre</i>
+    separation än steget mellan kort och papper, som är 1,188:1. <b>Tonade ytor försvinner
+    på papperet.</b> De fungerar bara ovanpå ett vitt kort. Det är en regel som måste stå i
+    briefen, annars kommer den att brytas av misstag: en varningsruta lagd direkt på
+    bakgrunden blir osynlig.
+  </p>
+
+</div>
+</body>
+</html>

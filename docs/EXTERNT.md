@@ -28,6 +28,7 @@ samma commit.
 | Vad | Källa | Licens | Våra filer | Datum |
 |---|---|---|---|---|
 | Färgvärden ur `grayDark`, `greenDark`, `amberDark`, `redDark` | [radix-ui/colors](https://github.com/radix-ui/colors) | **MIT** | `docs/DESIGN.md` §1 → `src/index.css` (fas 11B steg 4) | 2026-08-04 |
+| Färgvärden ur `green`, `amber`, `red`, `gray` — **ljusa** skalor | [radix-ui/colors](https://github.com/radix-ui/colors) | **MIT** | `docs/DESIGN.md` §1b, `docs/mockups/11b-semantiska-farger.html` → `src/index.css` (fas 11B steg 4) | 2026-08-14 |
 | `handoff`-skillen, i praktiken ordagrant | [mattpocock/skills](https://github.com/mattpocock/skills) | **MIT** | `.claude/skills/handoff/SKILL.md` | 2026-08-11 |
 | Fraunces, variabel woff2 (latin) + licenstexten | [undercasetype/Fraunces](https://github.com/undercasetype/Fraunces) | **OFL-1.1** | `src/assets/fonts/fraunces-var-latin.woff2`, `src/assets/fonts/OFL.txt` → `src/index.css` (fas 11B steg 4) | 2026-08-12 |
 | 12 ikon-SVG:er, **bara** i beslutsmockupen | [lucide-icons/lucide](https://github.com/lucide-icons/lucide) | **ISC** + **MIT** | `docs/mockups/11b-ikoner.html` | 2026-08-12 |
@@ -67,6 +68,20 @@ samma commit.
   vald för utseende, inte för garanterad kontrast.
 - **Verifierat 2026-08-04:** samtliga textfärger uppmätta mot `#0a0a0a` med WCAG:s
   luminansformel. Lägsta värde 9,40:1 mot kravet 4,5:1. Tabellen finns i `DESIGN.md` §1.
+
+**Tillägg 2026-08-14 — de ljusa skalorna.** Temabytet till ljust gjorde de mörka värdena
+obrukbara (1,29–1,77:1 mot papperet), så steg 3, 8, 9, 11 och 12 ur `green`, `amber` och
+`red` i de **ljusa** skalorna är kopierade på samma villkor: värden, inte kod.
+
+- **Värdena hämtade direkt ur källan**, inte ur minnet eller en sökträff:
+  `raw.githubusercontent.com/radix-ui/colors/main/src/light.ts`. Filstrukturen har ändrats
+  sedan 2026-08-04 — skalorna ligger numera samlade i `src/light.ts`, inte i `src/light/`.
+- **Ett fynd värt att bära med sig:** Radix ljusa steg 11 är konstruerat för att nå 4,5:1
+  mot **vitt**. Vårt papper `#F0EBE1` är mörkare, och marginalen räcker inte — alla tre
+  hamnar på 3,88–4,39:1. **En kopierad palett ärver sitt underlag.** Att skalan är
+  "tillgänglighetsgodkänd" säger ingenting förrän den mätts mot den bakgrund vi faktiskt
+  använder. Det är hela skälet att §1b räknar fram egna toner i stället för att kopiera
+  ett steg till.
 
 > **MIT-attribution.** Licensen kräver att upphovsrättsraden följer med. För kopierade
 > *värden* i en egen fil är den här posten det som uppfyller villkoret — det är därför

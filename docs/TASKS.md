@@ -837,6 +837,35 @@ nuvarande.
       mätta mot svart bakgrund och måste göras om mot ljus. Typografi, spacing och radier
       överlever.
 
+      ⚠️ **STEG 3 VAR BREDARE BESKRIVET ÄN DET ÄR. Rättat 2026-08-14.**
+      Formuleringen ovan säger *"färgtokens"* utan avgränsning, vilket lät som att hela
+      färgsystemet skulle göras om. **Karaktärstokens är redan omgjorda mot ljus botten** —
+      papper, kort, fg, dim, line, line-strong och accent avgjordes i 11B.0d senare samma dag
+      och står uppmätta i `DESIGN.md` §0.5. Det som faktiskt återstod var **semantiken**
+      (`ok`, `warn`, `err`, `pb`), och den var inte bara omätt utan **felaktigt bokförd som
+      klar** — §0.5 påstod att den *"står kvar oförändrad från §1"*.
+
+      ✅ **MÄTNINGEN ÄR GJORD 2026-08-14. Se `DESIGN.md` §1b.** Tre fynd, alla uppmätta:
+      1. De mörka värdena mäter **1,29–1,77:1** mot papperet. `--color-warn-text` hamnar på
+         1,29:1 och är i praktiken osynligt. Omskrivning, inte justering.
+      2. **§1:s regel "färgad text använder ALLTID steg 11" går inte att följa.** Radix ljusa
+         steg 11 är konstruerat för 4,5:1 mot **vitt**; vårt papper är mörkare och äter
+         marginalen. Alla tre landar på 3,88–4,39:1. Stegregeln ersätts av ett kontrastmål.
+      3. **Tonade ytor (steg 3) mäter 1,04–1,09:1 mot papperet** — mindre separation än ett
+         vitt kort har (1,188:1). En semantisk yta måste därför **alltid ligga på ett kort**,
+         aldrig direkt på bakgrunden.
+
+      Mätskriptet kontrollerades mot briefens egna publicerade tal innan det användes på nya
+      värden (kort/papper 1,188:1, dim 4,57:1, accent 8,08:1 — alla tre stämde).
+
+      🟡 **KVAR: ett val som är Adams, inte ett tekniskt.** Tre vägar ligger som körbar
+      mockup i `docs/mockups/11b-semantiska-farger.html`, alla klarar AA. Frågan är hur mycket
+      kulör som får offras för läsbarhet — **A** steg 12 (max läsbarhet, gult blir brunt),
+      **B** framräknad 5,5:1 (rekommenderad, behåller kulören), **C** betydelsen flyttar till
+      ytan (mest korrekt för ljust tema, största regeländringen).
+      Tokenblocket för B ligger färdigt i §1b och kan klistras in som det är.
+      **Steg 3 stängs när vägen är vald.** Ingen kod skrivs före det, enligt rubrikens villkor.
+
       Arbetsordningen är hämtad från Chris Raroques flöde och står i
       `ai-workbench/tools/`: **referenser → prototyp → implementation.**
       1. ✅ Samla referenser i `docs/Reference-pics/` — nio bilder: Hevy, MacroFactor, Strava,
