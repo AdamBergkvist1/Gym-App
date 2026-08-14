@@ -482,7 +482,93 @@ osynlig.
 **alltid ovanpå ett vitt kort**, aldrig direkt på papperet. Skrivs som en regel just för att
 den annars kommer att brytas av misstag — den är osynlig i koden och syns bara på skärmen.
 
-### Det som återstår: tre vägar, en smakfråga
+### ✅ BESLUTET SOM GÄLLER: väg C, vald av Adam 2026-08-14
+
+**Betydelsen bärs av yta och kant. Texten är nästan svart överallt.**
+Det är så ljusa designsystem gör, och det är enda sättet gult kan läsa som gult — se
+fynd 4 nedan för varför de andra vägarna inte kunde ge det.
+
+**Följden för §1:s regler, skriven rakt ut:** regeln *"färgad text använder ALLTID steg 11"*
+**upphör**. Färgad text blir ett undantag i stället för mönstret, och när den används har den
+egna uppmätta värden (se tokenblocket). **Betydelserna är oförändrade** — grön = sparat,
+gul = kräver ett beslut, röd = fel, PB alltid med utskriven etikett.
+
+### Fynd 4 — valet av C flyttade kravet från texten till kanten
+
+Detta mättes **efter** beslutet, och det ändrade värdena. Under väg B bar texten betydelsen
+och kanten var dekorativ, alltså räckte 1,5:1. **Under C är kanten det som identifierar
+rutan**, och då gäller WCAG 1.4.11: **3:1 mot kortet.**
+
+| Roll | Steg 8 | Steg 9 | Steg 10 | Steg 11 | Vald kant |
+|---|---|---|---|---|---|
+| Sparat | 2,40 ⛔ | 3,16 ✓ | **3,55 ✓** | 4,72 ✓ | `#2b9a66` (steg 10) |
+| Uppmärksamhet | 2,20 ⛔ | 1,58 ⛔ | 1,71 ⛔ | **4,61 ✓** | `#ab6400` (steg 11) |
+| Fel | 2,39 ⛔ | 3,91 ✓ | **4,37 ✓** | 5,21 ✓ | `#dc3e42` (steg 10) |
+
+⚠️ **Klargult kan inte bära betydelse mot vitt.** Amber steg 8, 9 och 10 mäter 1,58–2,20:1 —
+alla under kravet. Det finns **exakt ett** användbart värde, steg 11 `#ab6400`, och det är
+mörk ockra snarare än gult. **Kulören lever därför i ytan** (`#fff7c2`, blekgul), inte i
+kanten. Det är inte en kompromiss utan konsekvensen av att gult är en ljus kulör: en gul yta
+kan vara gul, en gul linje mot vitt kan inte samtidigt vara gul och synlig.
+
+**Detta är också skälet att `warn` aldrig får en fylld yta med vit glyf ovanpå:** vitt på
+`#ffc53d` mäter **1,58:1**. Grön (3,16:1) och röd (3,91:1) klarar det, gul gör det inte.
+
+> ℹ️ **Mockupen visade först fel här.** `docs/mockups/11b-semantiska-farger.html` ritade
+> C-kolumnens gula stapel i `#ffc53d`. Det dög för att *jämföra vägar*, men inte som
+> beslutad token. Filen är rättad i samma commit, med felet utskrivet i den — ett
+> beslutsunderlag som tyst korrigeras är inte längre ett underlag.
+
+### Tokens — väg C. Detta är det som gäller
+
+```css
+@theme {
+  /* Semantik mot ljust papper. Väg C, vald 2026-08-14.
+   * Betydelsen bärs av YTA + KANT. Texten är --color-fg.
+   * Radix Colors (MIT), ljusa skalor. Uppmätt mot #FFFFFF (kort).
+   *
+   * ⚠️ TONADE YTOR LIGGER ALLTID PÅ ETT VITT KORT, aldrig direkt på
+   * papperet — se fynd 3. Mot papperet mäter de 1,04–1,09:1 och
+   * försvinner, vilket är MINDRE än kortets egen 1,188:1. */
+
+  /* Ytor. Svart text på dem: 15,25–16,10:1 */
+  --color-ok-bg: #e6f6eb;
+  --color-warn-bg: #fff7c2;
+  --color-err-bg: #feebec;
+
+  /* Kanter som BÄR betydelsen. Alla ≥3:1 mot kortet (WCAG 1.4.11) */
+  --color-ok-line: #2b9a66;    /* 3,55:1 */
+  --color-warn-line: #ab6400;  /* 4,61:1 — enda gula värdet som klarar kravet */
+  --color-err-line: #dc3e42;   /* 4,37:1 */
+
+  /* Fyllda ytor med vit glyf ovanpå. Form, krav 3:1 */
+  --color-ok-solid: #30a46c;   /* vit bock: 3,16:1 */
+  --color-err-solid: #e5484d;  /* vit glyf: 3,91:1 */
+  /* warn har AVSIKTLIGT ingen solid: vitt på #ffc53d är 1,58:1 */
+
+  /* UNDANTAG — färgad text utan yta bakom sig, t.ex. en naken
+   * "Ta bort"-knapp. Ska vara sällsynt; mönstret är svart text på tonad
+   * yta. Framräknade ur steg 11→12 tills 5,5:1 nås mot PAPPERET, som är
+   * det svårare underlaget. */
+  --color-ok-text: #1e6a49;    /* 5,50:1 papper · 6,54:1 kort */
+  --color-warn-text: #87510d;  /* 5,50:1 papper · 6,54:1 kort */
+  --color-err-text: #b2262d;   /* 5,51:1 papper · 6,55:1 kort */
+
+  /* Personbästa. Färgen bär aldrig budskapet ensam — utskriven
+   * PB-etikett följer alltid med, oförändrat från §1. */
+  --color-pb-bg: #e6f6eb;
+  --color-pb-line: #2b9a66;
+}
+```
+
+**Vad som försvann jämfört med §1:** `--color-pb-text` finns inte längre som egen token. PB
+är svart text på tonad yta med kant, precis som allt annat semantiskt, plus etiketten. En
+egen textfärg för PB fanns bara för att bära budskapet med kulör — vilket §1 själv förbjöd i
+samma stycke.
+
+### De tre vägar som jämfördes
+
+Behålls som historik. **C valdes.**
 
 Kontrasterna är mätta och avgjorda. Kvar är ett val som inte är tekniskt, och som därför är
 Adams: **hur mycket kulör som får offras för läsbarhet.** Alla tre klarar AA.
@@ -493,44 +579,16 @@ Adams: **hur mycket kulör som får offras för läsbarhet.** Alla tre klarar AA
 | **B** — framräknad 5,5:1 | 5,50:1 | Delvis, ockra | §1:s marginalprincip (9:1) överges |
 | **C** — betydelsen i ytan | ~15,8:1 | ✅ Ja | Färgad text upphör som mönster |
 
-**Rekommendation: B.** Den klarar AA med verklig marginal på det svårare underlaget, får
-6,5:1 på korten där merparten av den semantiska texten faktiskt sitter, och behåller
-kulöridentiteten som gör betydelsen läsbar i ögonvrån. A gör gult till brunt, vilket
-underminerar §1:s hela premiss att gul betyder en enda sak — en brun varning är ingen
-varning. C är designmässigt mest korrekt för ljusa teman men är den största regeländringen,
-och den bör inte tas i samma svep som ett bakgrundsbyte.
+**Rekommendationen var B. Adam valde C**, och han hade rätt: B var det säkra valet, inte
+det bästa. Skälet mot C var att den är den största regeländringen och inte borde tas i
+samma svep som ett bakgrundsbyte — men det är ett argument om *tajmning*, och regeländringen
+måste ändå göras någon gång. **Gult som läsbar textfärg finns inte på ljus botten.**
+B hade gett ockra och kallat det gult; C ger en gul yta som faktiskt är gul.
 
-**Tonerna räknas fram, de handplockas inte:** varje värde i B är steg 11 blandat mot steg 12
-i sRGB tills kontrastmålet nås mot papperet. Samma princip som §0.5:s accenttoner, och av
-samma skäl — handplockade värden glider isär när något justeras.
-
-### Tokens — B, om den väljs
-
-```css
-@theme {
-  /* Semantik mot ljust papper. Uppmätt 2026-08-14 mot #F0EBE1.
-   * Steg 11→12-blandning tills 5,5:1 nås. Radix Colors (MIT), LJUSA skalor.
-   * Tonade ytor ligger ALLTID på vitt kort — se fynd 3. */
-
-  --color-ok-text: #1e6a49;    /* 5,50:1 papper · 6,54:1 kort */
-  --color-ok-solid: #30a46c;   /* fyllning, vit bock ovanpå: 3,16:1 */
-  --color-ok-line: #5bb98b;
-  --color-ok-bg: #e6f6eb;      /* endast på kort */
-
-  --color-warn-text: #87510d;  /* 5,50:1 papper · 6,54:1 kort */
-  --color-warn-solid: #ffc53d;
-  --color-warn-line: #e2a336;
-  --color-warn-bg: #fff7c2;    /* endast på kort */
-
-  --color-err-text: #b2262d;   /* 5,51:1 papper · 6,55:1 kort */
-  --color-err-solid: #e5484d;
-  --color-err-line: #eb8e90;
-  --color-err-bg: #feebec;     /* endast på kort */
-
-  --color-pb-text: #1e6a49;
-  --color-pb-bg: #e6f6eb;      /* endast på kort */
-}
-```
+**Tonerna räknas fram, de handplockas inte:** de framräknade värdena lever kvar som
+undantagstokens i C:s tokenblock. Varje sådant värde är steg 11 blandat mot steg 12 i sRGB
+tills 5,5:1 nås mot papperet. Samma princip som §0.5:s accenttoner, och av samma skäl —
+handplockade värden glider isär när något justeras.
 
 ⚠️ **`--color-ok-solid` bär vit bock på 3,16:1.** Det klarar 3:1 för grafiska objekt
 (WCAG 1.4.11) men **inte** 4,5:1 som text. Bocken är en form, inte text, så det är

@@ -858,13 +858,27 @@ nuvarande.
       Mätskriptet kontrollerades mot briefens egna publicerade tal innan det användes på nya
       värden (kort/papper 1,188:1, dim 4,57:1, accent 8,08:1 — alla tre stämde).
 
-      🟡 **KVAR: ett val som är Adams, inte ett tekniskt.** Tre vägar ligger som körbar
-      mockup i `docs/mockups/11b-semantiska-farger.html`, alla klarar AA. Frågan är hur mycket
-      kulör som får offras för läsbarhet — **A** steg 12 (max läsbarhet, gult blir brunt),
-      **B** framräknad 5,5:1 (rekommenderad, behåller kulören), **C** betydelsen flyttar till
-      ytan (mest korrekt för ljust tema, största regeländringen).
-      Tokenblocket för B ligger färdigt i §1b och kan klistras in som det är.
-      **Steg 3 stängs när vägen är vald.** Ingen kod skrivs före det, enligt rubrikens villkor.
+      ✅ **VÄG C VALD AV ADAM 2026-08-14. STEG 3 ÄR STÄNGT.** Betydelsen bärs av **yta och
+      kant**, texten är nästan svart. Tokenblocket ligger färdigt i `DESIGN.md` §1b.
+
+      **Valet ändrade kraven, vilket mättes efteråt och är fynd 4.** Under de andra vägarna
+      bar texten betydelsen och kanten var dekorativ. Under C är kanten det som identifierar
+      rutan, och då gäller WCAG 1.4.11: **3:1 mot kortet.** Radix steg 8 klarar det inte för
+      någon roll (2,20–2,40:1), så kanterna flyttades till steg 10 och 11.
+
+      ⚠️ **Klargult kan inte bära betydelse mot vitt.** Amber steg 8, 9 och 10 mäter
+      1,58–2,20:1. Det finns **exakt ett** användbart värde, steg 11 `#ab6400` (4,61:1), och
+      det är mörk ockra. Kulören lever därför i **ytan** `#fff7c2`, inte i kanten. Följd:
+      `warn` får aldrig en fylld yta med vit glyf — vitt på `#ffc53d` är 1,58:1.
+
+      ⚠️ **Mockupen visade först fel i C-kolumnen** (gul stapel `#ffc53d`, 1,58:1). Den dög
+      för att jämföra vägar men inte som beslutad token. Rättad i samma commit, med felet
+      utskrivet i filen — ett beslutsunderlag som tyst korrigeras är inte längre ett underlag.
+
+      **Kvar i 11B.0b: bara ikonuppsättningen.** Steg 3 bestod av två delar och färgen var
+      den ena — den andra är ikonerna, som hör till **11B.0c** och fortfarande är öppen.
+      Uppgiften kan alltså inte kryssas i ännu, men **färgen blockerar inget längre.**
+      Steg 1 har också en rest: referenserna Luna och Ellie (Raroque) är inte hämtade.
 
       Arbetsordningen är hämtad från Chris Raroques flöde och står i
       `ai-workbench/tools/`: **referenser → prototyp → implementation.**
@@ -872,8 +886,9 @@ nuvarande.
          Apple Watch, Lifesum. **Kvar:** Luna och Ellie (Raroque), tillagda i `SPEC.md` §4
          2026-08-12.
       2. ✅ Skissa varje skärm mot referenserna — `DESIGN.md` §3.
-      3. 🔴 Fastställ **tokens**: färg (görs om mot ljus botten), typografi ✅, spacing ✅,
-         radier ✅, ikonuppsättning (aldrig gjord, se 11B.0c).
+      3. 🟡 Fastställ **tokens**: färg ✅ (omgjord mot ljus botten 2026-08-14, `DESIGN.md`
+         §0.5 + §1b), typografi ✅, spacing ✅, radier ✅,
+         **ikonuppsättning 🔴 — enda kvarvarande delen, se 11B.0c.**
       4. ✅ Skriv `DESIGN.md` med tokens plus en skiss per skärm.
 
       **Varför referensdrivet och inte fritt:** `11A.12` byggdes från referensbilder efter
