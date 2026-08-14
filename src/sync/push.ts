@@ -100,7 +100,7 @@ export async function pushOutbox(client: RpcCaller, db: GymDatabase): Promise<Pu
           applied,
           skipped,
           blocked: true,
-          error: `utkorgen innehåller ${entries.length - seqs.length} post(er) utan seq — synken stoppad i stället för att loopa`,
+          error: `utkorgen innehåller ${entries.length - seqs.length} post(er) utan seq. Synken stoppad i stället för att loopa`,
         };
       }
 

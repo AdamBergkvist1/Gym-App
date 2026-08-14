@@ -38,7 +38,7 @@ function Rad({
         <span className="tabular-nums">
           {andel === null ? (
             <span className="text-[var(--color-dim)]">
-              {data.total} försök — för få för en siffra
+              {data.total} försök, för få för en siffra
             </span>
           ) : (
             <strong>{Math.round(andel * 100)} % rätt</strong>

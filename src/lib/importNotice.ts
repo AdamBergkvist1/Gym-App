@@ -63,6 +63,6 @@ export function importedNotice(punkter: readonly Punkt[]): string | null {
 
   const n = importerade.length;
   return n === 1
-    ? `1 punkt före ${månad} är importerad från gamla anteckningar — datumet är uppskattat.`
-    : `${n} punkter före ${månad} är importerade från gamla anteckningar — datumen är uppskattade.`;
+    ? `1 punkt före ${månad} är importerad från gamla anteckningar. Datumet är uppskattat.`
+    : `${n} punkter före ${månad} är importerade från gamla anteckningar. Datumen är uppskattade.`;
 }

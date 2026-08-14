@@ -75,7 +75,7 @@ export function summarise(events: TimerEvent[]): string {
   const värsta = Math.max(...iBakgrunden.map((e) => e.driftSeconds));
 
   if (påÅterkomst.length > 0) {
-    return `⚠️ ${påÅterkomst.length} av ${iBakgrunden.length} larm i bakgrunden kom först när appen öppnades igen. iOS fryser timern — larmet går inte att lita på i bakgrunden.`;
+    return `⚠️ ${påÅterkomst.length} av ${iBakgrunden.length} larm i bakgrunden kom först när appen öppnades igen. iOS fryser timern. Larmet går inte att lita på i bakgrunden.`;
   }
   if (sena.length > 0) {
     return `⚠️ ${sena.length} av ${iBakgrunden.length} larm i bakgrunden var mer än 5 s sena. Värst: ${värsta} s.`;

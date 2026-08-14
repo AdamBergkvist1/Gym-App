@@ -2008,7 +2008,7 @@ och 13.1 måste vara klar före 13.6.
       lint ren, bygget klart (648,69 kB precache). Noll importrader behövde ändras — vilket
       var hela poängen med att radera i stället för att fylla.
 
-- [ ] **12.22 Tankstreck i apptexten bryter mot förbudslistan. Ny 2026-08-12.**
+- [x] **12.22 Tankstreck i apptexten bryter mot förbudslistan. Ny 2026-08-12. KLAR 2026-08-14.**
       Hittad vid verifieringen av 13.6. `DESIGN.md` §0.3 förbjuder tankstreck (—) i **det appen
       skriver till användaren**, på Adams begäran: det läser som AI-skriven text. Men
       `src/lib/importNotice.ts` producerar just det:
@@ -2102,6 +2102,63 @@ och 13.1 måste vara klar före 13.6.
       **Körs efter 12.20**, inte ihop med den: att blanda textstädning i testarbetet bryter mot
       regel 3 om atomära commits. Ordningen är säker eftersom 12.20:s vakt bara påstår att
       importnotisen syns, aldrig vad den lyder.
+
+      ---
+
+      ### ✅ GENOMFÖRT 2026-08-14. Två fel i inventeringen rättade på vägen.
+
+      Metoden kördes om innan redigeringen: **samtliga 14 rader låg kvar på sina dokumenterade
+      radnummer**, ingen fil hade flyttat sig. Sökning 2 och 3 gav fortfarande samma mängd.
+
+      ⚠️ **RÄTTELSE 1: rad 1 i tabellen var ingen sträng. Antalet är 13, inte 14.**
+      `src/ui/QuickLog.tsx:230` (*"fungerar — två tryck totalt."*) står inne i ett
+      `{/* … */}`-block som börjar på rad 227 — det är en **JSX-kommentar**, inte renderad text.
+      Tabellen påstod *"JSX direkt"*. Den raden är alltså uttryckligen undantagen av uppgiftens
+      egen mening *"Kodkommentarer rörs inte"*, och **lämnades orörd**.
+      **Varför felet uppstod:** inventeringen spårade varje träff till *filen och raden* som
+      renderar, men rad 1 kontrollerades aldrig mot omgivande rader. En träff mitt i ett
+      flerradigt `{/* */}` ser ut som brödtext när man bara läser sin egen rad.
+
+      ⚠️ **RÄTTELSE 2: påståendet "ingen av dem är namnet på en knapp" stämmer inte.**
+      `src/ui/pages/TodayPage.tsx:268` **är** en `<button>`-etikett, alltså knappens
+      tillgängliga namn. Ingen skada skedd — **inget test refererar strängen** (kontrollerat med
+      sökning i `e2e/` och alla testfiler), så beslut 7 i 11B.0e fick ingen brytpunkt.
+      Men slutsatsen *"11B.0e kunde välja `role` + tillgängligt namn utan att bygga in en
+      brytpunkt"* vilade på fel premiss och var sann av tur, inte av konstruktion.
+
+      **De 13 ändringarna, med valt ersättningstecken:**
+
+      | Fil | Blev |
+      |---|---|
+      | `QuickLog.tsx:258` | `Offline:` |
+      | `QuickLog.tsx:270` | `, {n} set` |
+      | `SettingsPage.tsx:93` | `hemskärmen, annars` |
+      | `TodayPage.tsx:268` | `Skriv i stället:` |
+      | `SyncStatus.tsx:66` | `förlorat. Datan` |
+      | `ParseStats.tsx:41` | `försök, för få` |
+      | `importNotice.ts:66,67` | `anteckningar. Datumet/Datumen` |
+      | `diagnostics.ts:78` | `timern. Larmet` |
+      | `persistStorage.ts:56` | `nekad: lägg till` |
+      | `push.ts:103` | `utan seq. Synken` |
+      | `client.ts:88` | `i tid, skriv in` |
+      | `id.ts:15` | `saknas, kräver` |
+
+      Kolon valdes där ledet efter strecket förklarar det före (`Offline:`, `nekad:`), punkt där
+      båda leden är egna påståenden, komma där texten renderas inuti parenteser
+      (`client.ts:88` → `({problem.hint})` i `QuickLog.tsx:224`, där en punkt hade läst illa).
+
+      **Testerna:** `importNotice.test.ts:31` och `:37` ändrade i samma commit, som föreskrivet.
+      `push.test.ts:230` och `restTimer.test.ts:106` matchar på delsträngar utan tankstreck
+      (`/utan seq/`, `/iOS fryser timern/`) och överlevde oförändrade — kontrollerat före
+      redigeringen, inte upptäckt efteråt.
+
+      ℹ️ **Medvetet orörd:** `src/sync/supabase.ts:24` har ett tankstreck i ett
+      `console.info`-anrop. Det når konsolen, aldrig skärmen, och faller därför utanför §0.3:s
+      *"det appen skriver till användaren"*. Noterat här så att nästa sökning inte tar om frågan.
+
+      **Verifierat efteråt:** sökningarna körda om — noll tankstreck återstår i någon sträng som
+      renderas. Samtliga kvarvarande träffar i `src/` är kommentarsrader, kontrollerade i sitt
+      sammanhang en och en.
 
 - [ ] **12.21 `lastPulledAt`-markörerna är aldrig bevisade.** Utbruten ur A.1 2026-08-12 när
       egressutredningen avslutades. **Detta är inte en kostnadsfråga** — mätningen visade att

@@ -53,7 +53,7 @@ export async function requestPersistentStorage(): Promise<StorageStatus> {
         ? already
           ? 'redan beviljad sedan tidigare'
           : 'beviljad nu'
-        : 'nekad — lägg till appen på hemskärmen',
+        : 'nekad: lägg till appen på hemskärmen',
     };
   } catch (err) {
     return {

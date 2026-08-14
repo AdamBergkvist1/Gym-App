@@ -28,13 +28,13 @@ describe('13.5 textrad om uppskattade datum', () => {
     ];
 
     expect(importedNotice(punkter)).toBe(
-      '7 punkter före maj 2024 är importerade från gamla anteckningar — datumen är uppskattade.'
+      '7 punkter före maj 2024 är importerade från gamla anteckningar. Datumen är uppskattade.'
     );
   });
 
   it('böjer meningen i singular när bara en punkt är importerad', () => {
     expect(importedNotice([punkt('2024-04-04T10:00:00.000Z', true)])).toBe(
-      '1 punkt före maj 2024 är importerad från gamla anteckningar — datumet är uppskattat.'
+      '1 punkt före maj 2024 är importerad från gamla anteckningar. Datumet är uppskattat.'
     );
   });
 

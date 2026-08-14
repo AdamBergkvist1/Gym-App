@@ -16,9 +16,9 @@ import { hämtaÖvning, seedaRått } from './hjalpare';
  * följer den ordningen, och det är inte en försiktighetsåtgärd utan ett krav.
  *
  * SELEKTORER: `role` + tillgängligt namn (beslut 7). Inget test här påstår vad en
- * text *lyder* när det räcker att påstå att den *finns* — 12.22 skriver om flera av
- * appens meningar, och ett test som låser lydelsen hade gått sönder av en ren
- * textstädning.
+ * text *lyder* när det räcker att påstå att den *finns* — 12.22 skrev om flera av
+ * appens meningar 2026-08-14, och ett test som låst lydelsen hade gått sönder av den
+ * rena textstädningen. Det gjorde inget här.
  */
 
 test('1. övningssidan renderar — rubriken är övningens namn', async ({ page }) => {

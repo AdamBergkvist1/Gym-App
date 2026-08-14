@@ -85,7 +85,7 @@ export async function parseWithAi(
   } catch (err) {
     const meddelande =
       err instanceof Error && err.name === 'AbortError'
-        ? 'AI:n svarade inte i tid — skriv in setet manuellt'
+        ? 'AI:n svarade inte i tid, skriv in setet manuellt'
         : `AI-anropet misslyckades: ${err instanceof Error ? err.message : String(err)}`;
     return degraded(rawText, meddelande, Date.now() - start);
   } finally {

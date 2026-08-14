@@ -124,9 +124,9 @@ export function ExercisePage() {
         <div className="space-y-2">
           {importnotis && (
             // `role="note"` + `aria-label` ger vakten i `ovningssida.spec.ts` något
-            // att haka i som INTE är lydelsen. 12.22 skriver om just den här
-            // meningen, och ett test som matchat på texten hade gått sönder av en ren
-            // textstädning. Rollen är också ärlig mot innehållet: det är en
+            // att haka i som INTE är lydelsen. 12.22 skrev om just den här meningen
+            // 2026-08-14, och ett test som matchat på texten hade gått sönder av den
+            // rena textstädningen. Rollen är också ärlig mot innehållet: det är en
             // sidoupplysning om datan, inte en varning och inte en statusrad.
             //
             // ⚠️ **Etiketten måste vara namnet på vad raden HANDLAR om, aldrig en

@@ -30,7 +30,8 @@ test('1. sådd följt av navigering syns på sidan', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: övning.name })).toBeVisible();
 
-  // Påstår att notisen SYNS, aldrig vad den lyder — 12.22 skriver om meningen.
+  // Påstår att notisen SYNS, aldrig vad den lyder — 12.22 skrev om meningen 2026-08-14
+  // utan att röra det här testet, vilket var hela poängen med valet.
   await expect(page.getByRole('note', { name: 'Om datans ursprung' })).toBeVisible();
 });
 

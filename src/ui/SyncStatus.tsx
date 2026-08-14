@@ -63,7 +63,7 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
         <p className="mt-2 text-xs break-words text-[var(--color-warn-text)]">
           {status.lastError}
           <span className="block text-[var(--color-dim)]">
-            Kön är stoppad tills detta är löst. Inget har gått förlorat — datan ligger kvar
+            Kön är stoppad tills detta är löst. Inget har gått förlorat. Datan ligger kvar
             lokalt.
           </span>
         </p>

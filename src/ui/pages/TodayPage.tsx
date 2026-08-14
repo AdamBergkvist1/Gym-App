@@ -265,7 +265,7 @@ export function TodayPage() {
           onClick={() => setVisaFritext(true)}
           className="w-full rounded-lg border border-dashed border-[var(--color-line)] py-2 text-sm text-[var(--color-dim)]"
         >
-          ⌨ Skriv i stället — &bdquo;Bänk 90x5&ldquo;
+          ⌨ Skriv i stället: &bdquo;Bänk 90x5&ldquo;
         </button>
       )}
 

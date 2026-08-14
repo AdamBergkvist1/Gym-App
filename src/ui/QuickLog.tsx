@@ -255,7 +255,7 @@ export function QuickLog({
       )}
       {aiState === 'offline' && problem && (
         <p className="mt-1 text-xs text-[var(--color-dim)]">
-          Offline — AI-tolkning kräver nät. Texten ligger kvar.
+          Offline: AI-tolkning kräver nät. Texten ligger kvar.
         </p>
       )}
 
@@ -267,7 +267,7 @@ export function QuickLog({
           <p className="text-sm">
             Är det <strong>{draft.sets[0]!.exerciseName}</strong>, {draft.weight} kg ×{' '}
             {draft.reps} reps
-            {draft.sets.length > 1 && <> — {draft.sets.length} set</>}?
+            {draft.sets.length > 1 && <>, {draft.sets.length} set</>}?
           </p>
           {/* Modellens motivering. Härledd data får aldrig se ut som inmatad. */}
           {draft.sets[0]!.reasoning !== undefined && (

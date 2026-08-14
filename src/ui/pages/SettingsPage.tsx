@@ -90,7 +90,7 @@ export function SettingsPage() {
 
       {storage?.state === 'denied' && (
         <p className="mt-2 text-sm text-[var(--color-dim)]">
-          Lagringen är inte beständig. Lägg till appen på hemskärmen — annars kan
+          Lagringen är inte beständig. Lägg till appen på hemskärmen, annars kan
           webbläsaren rensa osynkade pass.
         </p>
       )}

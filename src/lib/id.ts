@@ -12,7 +12,7 @@ export function newId(): string {
     // Luckor ska vara synliga, aldrig tyst ersatta (CLAUDE.md). En egen
     // Math.random-baserad reserv här vore tyst svagare och skulle underminera
     // idempotensen utan att någon märkte det.
-    throw new Error('crypto.randomUUID saknas — kräver säker kontext (https)');
+    throw new Error('crypto.randomUUID saknas, kräver säker kontext (https)');
   }
   return globalThis.crypto.randomUUID();
 }
