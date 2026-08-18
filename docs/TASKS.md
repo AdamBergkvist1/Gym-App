@@ -925,6 +925,20 @@ nuvarande.
 
       **Klart när:** `docs/DESIGN.md` finns och Adam har godkänt den.
 
+      > ### ⏰ 2026-08-18: briefen är omskriven efter grillningen inför steg 4. Godkännandet kvarstår
+      >
+      > `HANDOFF.md` rekommenderade en grillning **före** steg 4, eftersom det är projektets
+      > största kodändring och 11B redan visat sig vara halvbyggt en gång. Den kördes, och den
+      > välte mer än väntat — se `SPEC.md` §2 och `DESIGN.md` §3.1.
+      >
+      > **Ordningen som avtalades med Adam i grillningens första runda:** grilla → briefen
+      > rättas → **Adam läser och säger ja** → först därefter kod. Att godkänna en brief som
+      > höll på att ändras hade varit att godkänna ingenting.
+      >
+      > Briefen är nu rättad. **Det som återstår av hela 11B:s förarbete är fortfarande bara
+      > Adams ja** — men det är nu ett ja till ett annat dokument än det han hade läst före
+      > 2026-08-18.
+
       **Att göra först:** en grillning, på Adams begäran samma dag — *"där behövs en stor
       grill me tror jag"*. Den ska köras före steg 1, inte efter, eftersom den avgör vad
       referenserna ska leta efter. 11B.0a (informationsarkitekturen) hör till samma
@@ -1178,9 +1192,95 @@ nuvarande.
 
       **Klart när:** ✅ uppfyllt — sömmarna står skrivna här och Adam har sagt ja.
 
+- [ ] **11B.0f Snittkolumnen ersätter `FÖRRA` i setraden. Ny 2026-08-18.**
+      Kom ur grillningen inför steg 4 och är dess viktigaste enskilda resultat. Hela
+      resonemanget ligger i `SPEC.md` §2 och formen i `DESIGN.md` §3.1 — **läs dem, inte
+      den här rutan.** Här står bara vad som ska byggas och hur det ska prövas.
+
+      **Ny funktion i `src/db/history.ts`**, inte i `repo.ts`: det är en historikfråga, inte
+      en loggningsoperation. Signaturen ska ta emot `exerciseId` och ett setnummer.
+
+      | Regel | Värde |
+      |---|---|
+      | Underlag | De tre senaste passen **med den övningen** — inte de tre senaste passen |
+      | Gruppering | Per **setnummer**, eftersom man blir svagare för varje set i rad |
+      | Avrundning | Närmaste **2,5 kg** |
+      | Åldersgräns | **8 veckor**, annars *"senast tränad i \<månad år\>"* |
+      | Filter | Raderade, uppvärmningsset **och importerade** — samma tre som 13.4 |
+      | Färre än 3 pass | Visa ändå, märkt med antalet. `–` bara när underlag saknas helt |
+
+      ⚠️ **Formuleringen "de tre senaste passen" är den fälla uppgiften finns för att undvika.**
+      Adam preciserade den själv: kör man bänk på måndagen och ben tisdag till torsdag
+      innehåller de tre senaste passen noll bänkset, och kolumnen står tom just när den behövs.
+      Indexet finns redan — `getLastPerformance` slår upp på `[exerciseId+performedAt]` och går
+      bakåt genom set för övningen oberoende av pass.
+
+      **Fällan som inte är löst än:** passen har olika många set. Set 5 kan ha ett enda
+      underlag när set 1 har tre. Vad som då visas ska avgöras när funktionen skrivs, inte
+      antas.
+
+      **Klart när:** funktionen har enhetstester som täcker alla sex reglerna ovan, inklusive
+      åldersgränsen och blandfallet med importerade set. Vakt 5 i 12.20 mäter `FÖRRA` och
+      **måste skrivas om i samma commit** — annars är den grön mot en kolumn som inte finns.
+
+- [ ] **11B.0g Mockuper för Pass, och Strong som negativ referens. Ny 2026-08-18.**
+      Två till tre körbara varianter i `docs/mockups/`, samma metod som gav färgen och formen
+      i sex omgångar. **Två axlar ska varieras, en i taget** enligt den metod 11B.0d bevisade:
+
+      1. **Fritextinmatningen:** alltid synligt fält överst mot hopfälld genväg ritad som en
+         riktig kontroll. Se `DESIGN.md` §3.1.
+      2. **Snittkolumnen:** synlig i `--text-meta`/`--color-dim` mot dold bakom ett tryck.
+
+      ⛔ **Varianterna ska härledas ur etablerade appar, inte ur egna idéer.** Adams krav
+      2026-08-18, och det är §0.2 med skärpta tänder: *"utgå fortfarande från hur tidigare
+      etablerade appar fungerar, så att man inte uppfinner hjulet på nytt"*.
+
+      **Strong hämtas först**, som App Store-bilder på samma sätt som Ellie och Luna. Den är
+      mappens enda negativa referens — den enda app Adam faktiskt använt och övergett — och
+      hans omdöme är att det kanske är utseendet snarare än funktionen han ogillar. Det går
+      inte att pröva utan bilderna framme.
+
+      **Klart när:** Adam har valt en variant per axel, och valet står i `DESIGN.md` med skäl.
+
+- [x] **11B.0h Betalfunktionerna hos konkurrenterna. Ny och KLAR 2026-08-18.**
+      Adams iakttagelse: bygger han appen själv slipper han både betalvägg och påminnelser,
+      och det som ligger bakom andras betalsteg är en färdig lista över vad folk faktiskt
+      vill ha. **Två oberoende sökningar kördes på samma fråga**, vilket var avsikten:
+
+      | Fil | Källa |
+      |---|---|
+      | `docs/research/betalfunktioner-i-gymappar.md` | Gemini Deep Research, körd av Adam |
+      | `docs/research/betalfunktioner-i-gymappar-oberoende.md` | `/research`, körd i repot |
+
+      **Resultatet är en lista att prioritera ur, inte att bygga.** Fyndet som båda landar på:
+      betalväggarna speglar nästan aldrig driftskostnad. De sex mest låsta funktionerna är
+      alla artificiella, och den allra mest låsta är **full grafhistorik** — sex av nio appar.
+
+      ⚠️ **Tre av rekommendationerna motsäger beslut som fattades samma dag**, och det står
+      utskrivet så att ingen ändrar tillbaka för att "researchen sa så": klassisk spökdata
+      (se `SPEC.md` §2), regelbaserad autoprogression (avvisad, gör appen till tränare), och
+      Chart.js (nytt beroende — kräver Adams ja enligt §7.3, och `Sparkline.tsx` har redan ett
+      skrivet beslut med utlösare).
+
+      ⏰ **Reddit var blockerat** i den ena körningen, så dess användarröster kommer från
+      Play Store och App Store i stället. Tre identifierade men olästa trådar är länkade.
+
+      ⚠️ **Liftosaur är AGPL-3.0.** Inga kodrader därifrån, någonsin. Att läsa för idéer är
+      fritt — men påverkar Liftoscript designen krävs en rad i `docs/EXTERNT.md`. Inget är
+      hämtat, så ingen registerrad krävs i dag.
+
 **11B.1–11B.9 nedan är implementation av briefen.** Ingen av dem är ett eget designbeslut
 längre — värdena kommer från `DESIGN.md`. Motsäger en uppgift briefen är det briefen som
 gäller, och uppgiften skrivs om.
+
+> ### 🔄 Runda 1 omfattar 4.1–4.3. Avgjort 2026-08-18
+>
+> Steg 4 delas i två rundor — se `DESIGN.md` §"Implementationsordning för steg 4" för skälet.
+> **Runda 1: tokens, Pass, Historik.** Runda 2 (Statistik, Övningar, Mer) kräver en egen
+> grillning eftersom det är ny funktionalitet, inte omskrivning.
+>
+> **11B.5 (rörelse) ligger utanför runda 1** — referensstöd saknas, och animationer ändrar
+> ingen struktur och kan därför läggas till i efterhand. Uppgiften står kvar oförändrad.
 
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
