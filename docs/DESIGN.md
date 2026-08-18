@@ -750,13 +750,22 @@ Sju steg, namngivna efter **roll** och inte storlek — samma princip som färgt
 |---|---|---|---|---|
 | `--text-set` | 1.5 | **24** | 600 | Vikt och reps i setraden |
 | `--text-timer` | 2 | 32 | 600 | Vilotimern medan den går |
-| `--text-title` | 1.375 | 22 | 600 | Sidrubrik (`h1`) |
+| `--text-title` | 1.875 | **30** | 600 | Sidrubrik (`h1`). Rättad 2026-08-18, se noten |
 | `--text-exercise` | 1.0625 | 17 | 600 | Övningsnamn på kortet |
 | `--text-body` | 0.9375 | 15 | 400 | Brödtext, standard |
 | `--text-meta` | 0.8125 | 13 | 400 | Spökdata, tider, metadata |
 | `--text-label` | 0.6875 | 11 | 600 | Kolumnrubriker, versaler |
 
 **Setvärdet går från 16 → 24 px.** Det är den enda ändring som faktiskt löser 11B.1.
+
+> ✏️ **Rättat 2026-08-18: `--text-title` stod som 22 px och var fel.** §0.5 säger *"sidrubriken
+> går från 22 till 30 px"* med motiveringen att referenserna ligger på 30–34 och att 22 läser
+> som en underrubrik, och `src/index.css` har haft 1.875rem sedan 2026-08-05. **Två av tre
+> ställen sa alltså 30, och tabellen här sa 22.**
+>
+> Värt att notera *hur* felet hittades: inte genom att läsa briefen, utan genom att jämföra
+> den mot koden inför steg 4. **En brief som aldrig byggs mot är en brief vars motsägelser
+> ingen upptäcker.**
 
 > ❓ **Beslut jag vill ha ditt ja på:** timern blir 32 px, alltså fortfarande större än
 > setraden. Bokstavligt läst bryter det mot 11B.1.
@@ -878,6 +887,7 @@ Formen är låst i `SPEC.md` §2b: fyra flikar — **Pass, Historik, Övningar, 
 | liftosaur.com (läst 2026-08-04, AGPL — inget kopierat) | Uppvärmning märks med **ordet "Warmup"**, inte med färg |
 | `Reference-pics/Ellie iOS 1–5.jpg` (Raroque, 2026-08-14) | **Väg C i produktion:** tonad yta + färgad vänsterkant + text i samma kulör. **Vänsterkanten = B4:s accentbricka.** Fylld grön bock vs tom konturruta. Vald dag som **fylld svart** cirkel, inte accentfärgad |
 | `Reference-pics/Luna iOS 1–5.jpg` (Raroque, 2026-08-14) | **Täta sifferrader:** platta rader **utan avdelare**, högerställda tabulära tal, **bara ett tal per rad färgat** (det som kräver beslut), tonad pill som semantikbärare, tvåradigt grupphuvud som namnger kolumnerna |
+| **Strong — ⏰ EJ HÄMTAD ÄNNU. Beslutad 2026-08-18** | **Negativ referens, och mappens enda.** Den enda app Adam faktiskt använt och övergett. Alla nio övriga referenser visar appar som ser bra ut; ingen visar vad som fick honom att sluta. Han kan peka på konkreta saker han ogillar i stället för att beskriva dem i luften, vilket är hårdare data än ännu en snygg skärm. Hämtas som App Store-bilder, samma väg som Ellie och Luna |
 
 ### ✅ Den öppna frågan från §1 är löst
 
@@ -988,13 +998,16 @@ och en enkel kortrubrik. Så ser formen inte ut längre:
 │ │   12   │  4 850  │     3     │ │  en yta, tre fält, hårfina
 │ │  SET   │VOLYM KG │    ÖVN    │ │  linjer emellan
 │ └──────────────────────────────┘ │
+│ ┌──────────────────────────────┐ │  fritext, ALLTID synlig
+│ │ ⌨  Bänk 90x5                 │ │  prövas mot hopfälld i mockup
+│ └──────────────────────────────┘ │
 │ ┌──────────────────────────────┐ │  vit yta, radie 18,
 │ │ ▍ Bänkpress             ⋯    │ │  indragen 16 px
 │ │ ▍ Skivstång · 3 set · 1385kg │ │  ▍ = accentbricka 10×34
-│ │   Set  Förra   Kg  Reps   ✓  │ │  metarad --text-meta
-│ │    1   92,5×5  92,5   5   ●  │ │  klar: --color-ok-bg
-│ │    2   90×5    90     5   ●  │ │
-│ │    3   90×5    90     5   ○  │ │  48 px, väntar
+│ │   Set  Snitt   Kg  Reps   ✓  │ │  metarad --text-meta
+│ │    1   90×5    92,5   5   ●  │ │  klar: --color-ok-bg
+│ │    2   90×5    90     5   ●  │ │  snitt av 3 senaste passen
+│ │    3   88×5    90     5   ○  │ │  48 px, väntar
 │ │ ─────────────────────────────│ │  hårfin linje
 │ │   + Lägg till set            │ │
 │ └──────────────────────────────┘ │
@@ -1044,6 +1057,55 @@ ikonrutan aldrig bar.
 └──────────────────────────────────┘
 ```
 </details>
+
+### 🔄 `FÖRRA` blir `SNITT`. Avgjort 2026-08-18, och det är rundans tyngsta ändring
+
+**Kolumnen visade "exakt vad du lyfte förra passet". Den visar nu ett snitt över de tre
+senaste passen med samma övning.** Hela beslutet med skäl ligger i `SPEC.md` §2 — läs det,
+inte det här stycket, för *varför*. Här står bara vad det betyder för formen.
+
+| Regel | Värde |
+|---|---|
+| Underlag | De tre senaste passen **med den övningen**, inte de tre senaste passen |
+| Gruppering | Per **setnummer**. Set 3 jämförs med set 3 — man blir svagare för varje set i rad |
+| Avrundning | Närmaste **2,5 kg**. Ett snitt som inte går att lägga på stången är oanvändbart |
+| Åldersgräns | **8 veckor.** Äldre än så: inget snitt, utan *"senast tränad i oktober 2024"* |
+| Filter | Ärver 13.4: hoppar över raderade, uppvärmningsset **och importerade** |
+| Typografi | `--text-meta`, `--color-dim`. **Aldrig samma storlek som det du skriver in** |
+
+**Typografin är inte en detalj, den är hela poängen.** Mönstret är MacroFactors `av`-konstruktion:
+`2108` stort, `of 2643` litet och grått under. Referensvärdet finns, men det viskar. Skälet att
+gömma kolumnen bakom ett tryck — vilket övervägdes — föll på att ett snitt inte skriker på samma
+sätt som en toppdag gör. **Att både jämna ut värdet och gömma det vore att lösa samma problem
+två gånger, och då syns aldrig det värde som efterfrågades.**
+
+⚠️ **Färre än tre pass: visa snittet ändå, märkt med hur många pass det bygger på.** Det är det
+tillstånd som kommer att synas *mest*, eftersom appen tas i bruk från nästan noll. `–` reserveras
+för när underlag saknas helt — samma regel som §3.3 redan har: *"aldrig en nolla: en nolla ser ut
+som ett resultat."*
+
+⚠️ **Kolumnrubriken `Snitt` är ett förslag, inte ett beslut.** Den ska prövas i mockupen mot
+alternativ som `Normalt` och `Typiskt`. MacroFactor kallar sin motsvarighet `Trend`.
+
+---
+
+### 🔄 Fritextinmatningen flyttas upp och blir en riktig kontroll. 2026-08-18
+
+**Skissen ovan saknade den helt, och det var ett fel.** `CLAUDE.md` kallar fritextinmatningen
+för halva appens kärnvärde — *"total friktionsfri inmatning via AI-tolkning"* — och Adam anger
+tidsåtgången som ett av två skäl att sluta logga. Ändå ritades den bort ur B4-skissen, och i
+koden är den en knapp med **streckad kant och dimmad text** (`TodayPage.tsx`), alltså
+formspråket för något valfritt.
+
+**Det som ska prövas i mockupen:** alltid synligt fält överst i passet, mot hopfälld genväg
+ritad som en riktig kontroll i stället för en streckad ruta. Argumentet för det alltid synliga
+är att en funktion man måste öppna kostar ett tryck varje gång — och det är just de trycken
+som är hela poängen med den.
+
+**Vad som INTE prövas:** fritext som primär inmatningsväg med setraderna som resultat. Ingen
+etablerad app gör så, och §0.2 säger att designen lånas från appar som bevisligen fungerar.
+
+---
 
 **Tre beslut i den här skissen:**
 
@@ -1115,6 +1177,51 @@ utskriven differens. Dyker upp i samma ögonblick setet bockas av — den starka
 >
 > Detta är ett **förslag**, inte ett beslut: bandets bredd måste ha en grund innan det ritas,
 > annars är det bara dekoration som låtsas vara statistik. Avgörs i 12.7.
+
+> ### 🔑 Den långa horisonten är Statistiks bärande krav. Tillagt 2026-08-18
+>
+> Detta är det starkaste kravet vi har på den här skärmen, och det kommer inte ur designtycke
+> utan ur skälet Adam slutade använda Strong:
+>
+> > *"när man skriver in samma siffror pass efter pass, ibland ner ibland upp, så kändes det
+> > bara tråkigt… ibland ser man inte utveckling på ett tag och då kanske man vill ta en paus
+> > från appen. Sen komma tillbaka senare och se att man gjort progress."*
+>
+> **Under en platå säger den korta horisonten "ingenting händer" vid varje enskilt tillfälle.**
+> Det är sant per pass och falskt per år. Statistik är den enda skärm som kan visa det andra,
+> och den ska därför byggas mot **år, inte veckor** — tidsfönstret `1V·1M·3M·6M·1Å·Allt` finns
+> redan i skissen, men förvalet ska ligga långt ut, inte kort.
+>
+> Adams data ligger dessutom precis där: bänkkurvan 70 → 95 kg över fem år finns i appen sedan
+> fas 13, och `getExerciseHistory` filtrerar **inte** bort importerade set. Den långa vyn
+> fungerar redan i dag — den bor bara på `/ovning/:id`, en detaljvy man måste leta sig till.
+>
+> ⚠️ **Tre oberoende källor pekar åt samma håll**, vilket är ovanligt nog att skrivas ut:
+> Adams egen erfarenhet, och båda betalväggsundersökningarna i `docs/research/`. Hevy låser
+> grafhistorik till tre månader, och full historik är den **mest paywallade funktionen i hela
+> kategorin** — sex av nio appar. En användare kallar flera års progression *"den ultimata
+> belöningen för att logga noggrant"*. Det som konkurrenterna tar mest betalt för är alltså
+> gratis för oss, och det råkar vara samma sak som Adam saknade.
+
+> ### ⛔ Kroppsviktskortet i skissen ovan får ritas, men inte byggas. 2026-08-18
+>
+> **Kroppsvikt finns ingenstans i koden.** Ingen tabell, ingen migration, ingen repo-funktion,
+> inget i synken — genomsökt 2026-08-18. Ändå ritar skissen kortet, och `SPEC.md` §3b kräver
+> funktionen.
+>
+> **Principen som gäller, och som är generell:**
+>
+> | | Exempel | Hör hemma i designrundan? |
+> |---|---|---|
+> | **Ny datapunkt** | Kroppsvikt — kräver tabell, migration, RLS, synkväg | ⛔ Nej. Egen uppgift |
+> | **Härledning ur befintlig data** | Snittet i setraden, `epley1RM`, `volumeKg` | ✅ Ja. Ren funktion med enhetstester |
+>
+> **Skissen får ligga före backenden** — det var Adams poäng, och den är god: att se skärmen
+> är hur man vet vad backenden ska bära. Men skissen är då ett *underlag för en kommande
+> uppgift*, inte något som byggs i steg 4.
+>
+> Regeln står här för att den annars bryts av misstag. En skärmskiss ser alltid ut som design,
+> även när den i själva verket beställer en databastabell.
 
 ---
 
@@ -1217,3 +1324,35 @@ de märks mest:
 
 **Navigationen görs datadriven i steg 1**, enligt `SPEC.md` §2b — annars måste `AppShell` och
 `App.tsx` röras vid varje efterföljande steg.
+
+> ### 🔄 Steg 4 delas i två rundor. Avgjort 2026-08-18
+>
+> **De sex delstegen är inte lika stora, och att räkna upp dem i en lista dolde det.**
+> 4.1–4.3 är omskrivning av kod som finns. 4.4–4.6 är **tre nya sidor**, varav Statistik
+> dessutom kräver beräkningar som inte är skrivna: aggregering av set per muskelgrupp och
+> vecka finns inte som funktion, och inte heller volymkurvans tidsfönster. `primaryMuscle`
+> finns på varje övning i katalogen, så *datan* finns — men inget som summerar den.
+>
+> | Runda | Delsteg | Karaktär |
+> |---|---|---|
+> | **1** | 4.1 tokens · 4.2 Pass · 4.3 Historik | Omskrivning. Besluten är fattade och uppmätta |
+> | **2** | 4.4 Statistik · 4.5 Övningar · 4.6 Mer | Ny funktionalitet. **Egen grillning krävs**, troligen `/wayfinder` |
+>
+> ⚠️ **Steg 4.1 var redan till hälften gjord när rundan planerades**, vilket ingen visste.
+> `src/ui/nav.ts` säger i sin egen doc-kommentar att den *är* steg 4.1, den datadrivna
+> navigationen är byggd, `AppShell` har den flytande pillernavigeringen, och hela §2:s
+> typografiblock plus `tabular-nums` ligger i `index.css` sedan `cfb2ca2` — **allt byggt mot
+> mörkt tema.** Det som faktiskt återstår i 4.1 är färgvärdena, §1b:s semantik, `@font-face`
+> för Fraunces och radien 16 → 18 px.
+>
+> **Det är andra gången 11B visar sig vara halvbyggt medan dokumenten beskrev den som
+> ostartad.** Första gången kostade en halv grillningssession (se rutan i `TASKS.md` 11B).
+> Regeln som faller ut: **läs koden innan du planerar en fas, inte efter.**
+>
+> **Vad som medvetet lämnas utanför runda 1:**
+> - **Rörelse (11B.5).** Referensstöd saknas — `SPEC.md` §4 bad om Ellie för rörelse, men bara
+>   stillbilder hämtades. Uppgiften står kvar; den är dessutom lättast att lägga till i
+>   efterhand eftersom animationer inte ändrar någon struktur.
+> - **Rullhjulen** (`ScrollPicker`). Adam 2026-08-18: mönstret är rätt, utförandet ska bli
+>   bättre. Båda betalväggsundersökningarna rekommenderar rullhjul framför tangentbord. Det
+>   utvärderas i ett eget spår enligt §3.5 — att bygga om dem här hade blandat två frågor.
