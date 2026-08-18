@@ -16,9 +16,72 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 
 ## 2. Kärnfunktioner (Användarupplevelse)
 - **Fritextloggning via AI (MCP):** Användaren ska kunna skriva t.ex. "Bänkpress 90kg 5 reps, kändes lätt" i en inmatningsruta. AI:n parsar detta och strukturerar datan automatiskt.
-- **Spökdata (Auto-fill):** Om användaren väljer att logga manuellt, ska inmatningsfälten (Vikt/Reps) vara ifyllda med transparent text baserat på *exakt* vad användaren lyfte under förra passet för den övningen.
+- **Spökdata (Auto-fill) — OMSKRIVEN 2026-08-18. Se rutan nedan, den ändrar vad spökdata är.**
+  Inmatningsfälten (Vikt/Reps) är förifyllda så att ett vanligt set kan loggas med ett enda
+  tryck. Värdet är **inte längre exakt vad som lyftes förra passet** utan ett snitt över de tre
+  senaste passen med samma övning.
 - **Vilotimer:** Startar asynkront när ett set loggas. Appen använder Wake Lock API för att förhindra att skärmen släcks under passet, samt Web Audio API för larm.
 - **Historik:** Visuell representation av tidigare pass och PB (Personbästa).
+
+> ### ⚠️ Spökdatan gjordes om 2026-08-18, och skälet är Adams eget
+>
+> Här stod att fälten fylls med *"exakt vad användaren lyfte under förra passet"*. Den raden
+> beskrev appens näst viktigaste funktion, och den var samtidigt hälften av skälet att Adam
+> slutar använda loggningsappar. Ordagrant, i grillningen inför steg 4:
+>
+> > *"man vill bara köra på och göra sitt bästa utan att alltid tänka på att man ska vara
+> > bättre eller lika bra som senaste passet (iom att man ser vad man tog senaste)"*
+>
+> **Två saker låg i samma mening och måste skiljas åt:**
+>
+> | | Vad den gör | Domen |
+> |---|---|---|
+> | **Förifyllning i fältet** | Sparar knapptryck. Ett vanligt set loggas med ett tryck | Behålls — det är hela friktionsvinsten |
+> | **Siffran som visas bredvid** | Ett facit du mäts mot vid varje set | Görs om |
+>
+> **Vad som gäller nu.** Värdet är **snittet av de tre senaste passen med samma övning**, per
+> setnummer, avrundat till en vikt som går att lägga på stången. Ett och samma tal används
+> både som förifyllning och som visad referens — annars vore facit tillbaka i fältet.
+>
+> **"De tre senaste passen med den övningen"**, inte de tre senaste passen. Kör man bänk på
+> måndagen och ben tisdag till torsdag innehåller de tre senaste passen noll bänkset.
+> Preciserat av Adam, och formuleringen står här just för att den lösa varianten blir fel
+> implementerad.
+>
+> **Per setnummer**, eftersom man blir svagare för varje set i rad. Set 3 jämförs med set 3.
+>
+> **Åldersgräns åtta veckor.** Är det senaste passet med övningen äldre än så visas inget
+> snitt, utan när övningen senast tränades. Skälet är Adams eget bruksmönster: han tar paus
+> när utvecklingen står stilla och återkommer senare. Utan gränsen presenteras ett två år
+> gammalt snitt som "ditt normalläge", vilket är exakt den jämförelse regeln ska ta bort.
+>
+> **Varför ett snitt och inte senaste passet:** en enskild mätning är brus. MacroFactor —
+> redan en av projektets fem referensappar — löste samma problem för kroppsvikt genom att
+> visa en utjämnad trend i stället för dagsvikten. Adam föreslog samma sak för styrka utan
+> att känna till kopplingen.
+>
+> **Regeln fanns redan i koden, fast bara för importerade set.** `repo.ts` skriver i 13.4:
+> *"spökdatan är ett minnesstöd om förra passet — inte ett rekord att matcha varje gång
+> övningen öppnas."* Avsikten var alltså rätt sedan tidigare; det var utförandet som gjorde
+> minnesstödet till ett facit.
+>
+> ⚠️ **Detta motsäger marknadens konsensus med flit.** `docs/research/betalfunktioner-i-gymappar.md`
+> rekommenderar klassisk spökdata, och det är vad Strong och Hevy gör. Vi avviker medvetet, på
+> Adams egen erfarenhet. Ändras det tillbaka någon gång ska det vara efter ett beslut, inte
+> för att någon läste researchen och trodde att briefen var omodern.
+
+> ### 🔄 Ett andra, lösare loggningsläge är ett uttalat mål. Tillagt 2026-08-18
+>
+> **§2b nedan är öppen på den här punkten.** Adam i grillningen inför steg 4: det tar tid från
+> passet att logga varje set, och han vill kunna *"logga mer allmänt hur det går i passen"*
+> eller bara sina PB under perioder när han inte orkar mer.
+>
+> **Vad som är avgjort:** att ett sådant läge ska finnas. **Vad som inte är avgjort:** vad det
+> innehåller. Adam själv: *"vet egentligen inte exakt om det behöver vara så stor skillnad på
+> lägena."* Det avgörs i en egen runda, inte i designrundan.
+>
+> Raden står här för att nästa person inte ska läsa §2b som slutgiltig. Formen är fyra flikar
+> — men den är ritad för ett enda loggningsläge, och det kommer att behöva prövas om.
 
 ## 2b. Informationsarkitektur — appens skärmar
 
