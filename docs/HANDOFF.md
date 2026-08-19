@@ -1,11 +1,191 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-14. Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-19. Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-14 — Designrundans förarbete är slut. Färgen avgjord, ikonerna borta
+## 🆕 2026-08-19 — Grillningen inför steg 4 välte appens kärnvärde. 11B.0b är stängd
+
+### ⚠️ INTE PUSHAT. Fem commits ligger osända
+
+`git status -sb` svarar `## main...origin/main [ahead 4]` före den här filens commit, alltså
+**fem med den.** Sessionen kördes på en Mac (hemdatorn), och Adam sa att han vill fortsätta i
+en rensad chatt — troligen samma maskin, där pushen inte är nödvändig. **Men flyttar arbetet
+till jobbdatorn måste det pushas först**, annars finns ingenting av nedanstående där.
+
+Adam har inte bett om en push, och därför är den inte gjord.
+
+### Börja här
+
+**Nästa jobb är `11B.0g`: hämta Strong-bilderna, bygg sedan Pass-mockuperna.** Allt förarbete
+i 11B är slut — 11B.0b stängdes den här sessionen.
+
+Ordningen inom 0g spelar roll: **Strong hämtas först.** Den är mappens enda *negativa* referens
+— den enda app Adam faktiskt använt och övergett — och hans omdöme är att det kanske är
+utseendet snarare än funktionen han ogillar. Det går inte att pröva utan bilderna framme.
+
+Mockupen ska variera **två axlar, en i taget** (metoden från 11B.0d): fritextens plats, och
+snittkolumnens synlighet. Detaljerna står i `TASKS.md` 11B.0g.
+
+⛔ **Varianterna ska härledas ur etablerade appar, inte ur egna idéer.** Adams uttryckliga krav
+den här sessionen. Det är §0.2 med skärpta tänder, och det är ett acceptanskriterium.
+
+### Det viktigaste: grillningen välte appens näst viktigaste funktion
+
+**Detta är sessionens enda verkligt betydelsefulla resultat, och det hade inte hittats genom
+att bygga.** `CLAUDE.md` säger att kärnvärdet är friktionsfri inmatning **och intelligent
+spökdata**. `SPEC.md` §1 definierade spökdata som *exakt vad du lyfte förra passet*.
+
+Adam, ombedd att beskriva varför han slutar använda loggningsappar:
+
+> *"man vill bara köra på och göra sitt bästa utan att alltid tänka på att man ska vara bättre
+> eller lika bra som senaste passet (iom att man ser vad man tog senaste)"*
+
+**Appens näst viktigaste funktion var alltså hälften av hans motstånd mot att använda den.**
+Vi stod i begrepp att bygga en snyggare version av precis det.
+
+Beslutet och skälen ligger i **`SPEC.md` §2** och formen i **`DESIGN.md` §3.1** — läs dem, inte
+den här filen. Kort: `FÖRRA` blir `SNITT`, ett medelvärde över de tre senaste passen **med den
+övningen**, per setnummer, avrundat till 2,5 kg, med åtta veckors åldersgräns.
+
+Tre saker om fyndet som är värda att bära med sig:
+
+1. **Adams förslag var MacroFactors lösning, flyttad från kroppsvikt till styrka.** Han kände
+   inte till kopplingen. MacroFactor är redan en av projektets fem referensappar, och bilderna
+   låg i `docs/Reference-pics/`.
+2. **Regeln stod redan i vår kod, fast bara för importerade set.** `repo.ts` i 13.4:
+   *"spökdatan är ett minnesstöd om förra passet — inte ett rekord att matcha varje gång
+   övningen öppnas."* Avsikten var rätt; utförandet gjorde minnesstödet till ett facit.
+3. **Vi avviker medvetet från marknadens konsensus.** Båda betalväggsundersökningarna
+   rekommenderar klassisk spökdata. Avvikelsen är utskriven i `SPEC.md` så att ingen ändrar
+   tillbaka med researchen som skäl.
+
+### Vad som gjordes — sex commits
+
+| Commit | Vad |
+|---|---|
+| `5e17d2d` | **`SPEC.md`** — spökdatan görs om, andra loggningsläget blir ett uttalat mål |
+| `29dbc01` | **`DESIGN.md`** — setraden, fritextens plats, långa horisonten, kroppsviktsprincipen, `--text-title`-rättelsen, Strong som negativ referens |
+| `aaf2065` | **`TASKS.md`** — 11B.0f, 11B.0g, 11B.0h; runda 1 avgränsad till 4.1–4.3 |
+| `9a6cf96` | Den oberoende betalväggssökningen, 797 rader |
+| `766ecce` | **11B.0b stängd** — slutvillkoret begärde fel sorts omdöme |
+| *(denna)* | Överlämningen |
+
+Adams egna två commits (`7a625b9`, `43ff385`) lade in Gemini-rapporten. ⏰ **`43ff385` har ett
+felaktigt meddelande** — *"Update print statement from 'Hello' to 'Goodbye'"* — som var
+automatgenererat. Adam har sagt att det får stå. Sök alltså inte efter researchen på dess
+commitmeddelande.
+
+### Grindarna — INTE KÖRDA, och det är rätt
+
+| Grind | Utfall |
+|---|---|
+| samtliga fem | **inte körda denna session** |
+
+`git diff --stat 7f623f5..HEAD` visar **fem filer, alla under `docs/`**. Ingen `.ts`, `.tsx`,
+`package.json` eller migration. Det finns inget för grindarna att pröva.
+
+⚠️ **Siffrorna som gäller är ärvda, inte uppmätta i dag:** 274 tester i 22 filer, 60 e2e,
+bygge 651,60 KiB, lint 0 fel med 3 kända `react-refresh`-varningar i `icons.tsx`. De kommer
+från 2026-08-14. **Rör du kod härnäst — kör om dem först**, så att du vet att du står på grönt.
+
+### Inte verifierat, och det ska inte antas
+
+- **Ingenting av det ljusa temat finns i koden.** `src/index.css` har fortfarande lime
+  `#bef264` och ren svart bakgrund från 5 augusti. Färgerna lever bara i `DESIGN.md`.
+- **Ingen av de nya färgerna är sedd på en riktig skärm.** De är uppmätta, inte upplevda.
+  Detta är ett av två kvarstående omdömen som är Adams — se 11B.0b:s nya slutvillkorsruta.
+- **Snittfunktionen finns inte.** 11B.0f är en beskrivning, ingen kod.
+- ⚠️ **Vakt 5 i 12.20 mäter `FÖRRA`-kolumnen.** Den kolumnen ska bort. Vakten **måste skrivas
+  om i samma commit som 11B.0f**, annars är den grön mot något som inte existerar.
+- **Steg 4.1 är till hälften redan gjord**, vilket ingen visste när rundan planerades.
+  `src/ui/nav.ts` säger i sin egen doc-kommentar att den *är* steg 4.1. Detta är **andra
+  gången** 11B visat sig vara halvbyggt medan dokumenten beskrev den som ostartad.
+  **Regeln som faller ut: läs koden innan du planerar en fas, inte efter.**
+
+### Öppna beslut som nästa session stöter på
+
+1. **Passen har olika många set.** Set 5 kan ha ett enda underlag när set 1 har tre. Vad
+   snittkolumnen då visar är **inte avgjort** — avgörs när 11B.0f skrivs, och ska inte antas.
+2. **Kolumnrubriken `Snitt` är ett förslag.** Prövas mot `Normalt` och `Typiskt` i mockupen.
+   MacroFactor kallar sin motsvarighet `Trend`.
+3. **Chart.js** kommer att bli en riktig fråga i runda 2. `Sparkline.tsx` har redan ett skrivet
+   beslut med utlösare: *"blir graferna fler och mer krävande är det då ett bibliotek ska
+   övervägas"*. Statistik är det fallet. **Kräver Adams ja** enligt `CLAUDE.md` §7.3.
+
+### Två undersökningar av betalväggar, och vad de gav
+
+Båda ligger i `docs/research/` och är körda **oberoende av varandra** med flit — Adams via
+Gemini Deep Research, min via `/research` utan att läsa hans. Detaljerna står i `TASKS.md`
+11B.0h, inte här.
+
+**Det de båda landar på:** betalväggarna speglar nästan aldrig driftskostnad, och den mest
+låsta funktionen i hela kategorin är **full grafhistorik** — sex av nio appar. Det är tredje
+oberoende källan som pekar på att den långa tidshorisonten är det som betyder något, efter
+Adams platå-erfarenhet och Geminis rapport. **Det konkurrenterna tar mest betalt för har Adam
+redan gratis, med fem års data i.**
+
+⚠️ **Liftosaur är AGPL-3.0.** Inga kodrader därifrån, någonsin. Läsa för idéer är fritt, men då
+krävs en rad i `docs/EXTERNT.md`. Inget är hämtat, så ingen registerrad krävs i dag.
+
+### Om arbetssättet — två saker som fungerade
+
+**Att läsa koden före grillningen betalade sig omedelbart.** Femton fynd kom ur den
+genomgången, varav briefens självmotsägelse om `--text-title` (22 mot 30 px) och att fritexten
+— halva appens kärnvärde — är ritad med streckad kant som något valfritt. **Inget av det
+syntes i dokumenten.**
+
+**Tekniska frågor gick inte till Adam.** Fortsatt rätt: han svarade på det som rörde hans data,
+hans tid och hans prioritering, och den mest värdefulla frågan i hela grillningen var *"vilka
+loggningsappar har du använt och vad fick dig att sluta?"* — den enda där han var primärkällan.
+
+⚠️ **En sak att inte upprepa:** slutvillkoret för 11B.0b krävde att Adam läste 1300 rader.
+Det motsade briefens egen §0.2 om att han inte är designer och inte ska behöva vara det.
+**Skriv aldrig ett slutvillkor som begär fel sorts omdöme av honom.**
+
+### Miljö
+
+Sessionen kördes på **macOS (hemdatorn)**, Darwin 24.6.0. `node --version` → **v24.13.0**,
+`npm` → **11.6.2**. **`gh` saknas** (`command not found`) — det spelade ingen roll här eftersom
+inget hämtades från GitHub, men `CLAUDE.md` §7.3 steg 1 förutsätter den.
+
+Hela stycket om portabel Node i äldre sektioner gäller **bara jobbdatorn**. Kör
+`node --version` först.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/prototype`** eller körbara HTML-mockuper | För 11B.0g. Projektets egen mockupmetod har gett sex lyckade beslutsomgångar — den är beprövad här och `/prototype` bygger i riktig kod, vilket är en annan fråga. Välj metod medvetet |
+| **`/tdd`** | För **11B.0f**. Sex regler som ska bli tester, och vakt 5 ska bli röd på rätt rad innan den skrivs om. Sabotaget är uppgiften, inte en efterkontroll |
+| **`/code-review`** | Efter steg 4:s **första** skärm, inte efter hela ombyggnaden. Stod redan i förra överlämningen och gäller oförändrat |
+| **`/wayfinder`** | Till **runda 2** (Statistik, Övningar, Mer). Den är byggd för arbete som är för stort för en session och inneslutet i dimma, och det är precis vad tre obyggda sidor med oskriven beräkningslogik är. **Inte** för runda 1 — där finns ingen dimma kvar |
+| **`/diagnosing-bugs`** | Bara om något faller. Begär utskriften först — gissa inte |
+
+---
+
+## 2026-08-14 — Designrundans förarbete är slut. Färgen avgjord, ikonerna borta — DELVIS ÖVERSPELAD
+
+> **⚠️ Fyra saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "Nästa jobb är 11B.0b steg 1: Luna och Ellie" är utfört** 2026-08-14 (`7f623f5`).
+> Tio App Store-bilder ligger i `docs/Reference-pics/` med anteckningar i `DESIGN.md` §0.5.
+>
+> **(2) Den rekommenderade `/grill-me` före steg 4 ÄR KÖRD** 2026-08-18, och den välte mer än
+> väntat — spökdatan är omgjord och `SPEC.md` §2 är omskriven. Se sektionen överst.
+>
+> **(3) "`11B.0b` kan inte kryssas i än" gäller inte.** Uppgiften är **stängd** 2026-08-19,
+> efter att slutvillkoret formulerats om. Det krävde att Adam läste 1300 rader, vilket motsade
+> briefens egen §0.2.
+>
+> **(4) Rekommendationen om `11B.0c`:s motstridiga slutvillkor är utförd** (`53c87a8`).
+>
+> **(5) Pushstatusen gäller inte.** *"✅ Pushat"* stämde när det skrevs. **Fem nyare commits
+> ligger osända** — se sektionen överst.
+>
+> Allt annat — färgbeslutet, mätningarna, lärdomen om inventeringar, Node-stycket — gäller
+> oförändrat.
 
 ### ✅ Pushat. Börja med `git pull`
 
