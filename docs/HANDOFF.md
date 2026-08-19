@@ -7,14 +7,17 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ## 🆕 2026-08-19 — Grillningen inför steg 4 välte appens kärnvärde. 11B.0b är stängd
 
-### ⚠️ INTE PUSHAT. Fem commits ligger osända
+### ✅ Pushat. Börja med `git pull`
 
-`git status -sb` svarar `## main...origin/main [ahead 4]` före den här filens commit, alltså
-**fem med den.** Sessionen kördes på en Mac (hemdatorn), och Adam sa att han vill fortsätta i
-en rensad chatt — troligen samma maskin, där pushen inte är nödvändig. **Men flyttar arbetet
-till jobbdatorn måste det pushas först**, annars finns ingenting av nedanstående där.
+`43ff385..d109662` gick till `origin/main` vid sessionens slut, på Adams begäran. Kontrollerat
+efter en färsk `fetch`: `git status -sb` svarar `## main...origin/main` utan `ahead`, och
+`origin/main` står på `d109662`. **Allt nedan finns alltså på den andra maskinen.**
 
-Adam har inte bett om en push, och därför är den inte gjord.
+Samtliga commits rör bara `docs/`, så pullen kan inte krocka med kod du har lokalt.
+
+> ✏️ **Den här rutan sa först "INTE PUSHAT".** Det stämde när den skrevs — Adam bad om pushen
+> efteråt, i samma session. Rättad i egen commit i stället för genom `--amend`, så att
+> historiken visar att överlämningen stämde vid varje tidpunkt.
 
 ### Börja här
 
@@ -181,8 +184,9 @@ Hela stycket om portabel Node i äldre sektioner gäller **bara jobbdatorn**. K�
 >
 > **(4) Rekommendationen om `11B.0c`:s motstridiga slutvillkor är utförd** (`53c87a8`).
 >
-> **(5) Pushstatusen gäller inte.** *"✅ Pushat"* stämde när det skrevs. **Fem nyare commits
-> ligger osända** — se sektionen överst.
+> **(5) Pushstatusen stämmer fortfarande, men gäller andra commits.** *"✅ Pushat"* var sant
+> när det skrevs, och är sant igen: sex nyare commits gick till `origin/main` 2026-08-19.
+> `HEAD` = `origin/main` = `d109662`. Se sektionen överst.
 >
 > Allt annat — färgbeslutet, mätningarna, lärdomen om inventeringar, Node-stycket — gäller
 > oförändrat.
