@@ -200,12 +200,18 @@
 
   <h2>Axel 1 — var bor fritext-loggningen?</h2>
   <p class="fraga">
-    Frågan är <b>inte</b> om fritext ska finnas, utan vad den kostar att nå. Ett alltid synligt
-    fält kostar noll tryck men äter en rad högst upp på varje pass. En hopfälld genväg kostar
-    ett tryck men ritas här som en <b>riktig kontroll</b> — inte den streckade rutan i
-    <code>TodayPage.tsx</code>, som är formspråket för något valfritt.
+    ✏️ <b>Rättad formulering 2026-08-19.</b> Här stod först att 1A <i>"kostar ett tryck"</i> och
+    1B <i>"är alltid synligt"</i>, som om den ena raden inte syntes. <b>Båda syns.</b> Adam
+    läste om det rätt: <i>"menar du att 1A blir som 1B efter det att man har tryckt på den …
+    så du undrar vilken jag vill ha från början liksom."</i> Precis så.
     <br><br>
-    ⚠️ <b>Passkommentaren ligger likadant i båda</b> och är alltså inte det som prövas här.
+    <b>Frågan är vilket vilotillstånd raden ska ha.</b> Båda tar en rad. Skillnaden är vad raden
+    <i>signalerar</i> innan du rört den:
+    <b>1A</b> är invikt — en genväg som säger "här kan du skriva" och fälls ut till 1B när du
+    trycker. <b>1B</b> är redan utfälld — markör, platshållare och en armerad
+    <i>Tolka</i>-knapp, hela tiden.
+    <br><br>
+    ⚠️ <b>Passkommentaren ligger likadant i båda</b> och prövas alltså inte här.
     Den är med för att du sa att de är två olika saker — den skrivs vid avslut, fritext-loggningen
     mitt i passet. Du ser den underst, vid <i>Avsluta pass</i>.
   </p>
@@ -223,6 +229,19 @@
     skarp: där kostar spökdatakolumnen <b>ungefär en tredjedel av setradens bredd</b> och stod
     tom i alla tre raderna. <b>2B tar bort kolumnen helt</b> och lägger snittet under värdet
     i stället — MacroFactors konstruktion, som §3.1 redan pekar ut som mönstret.
+  </p>
+  <p class="fraga">
+    ✏️ <b>Omgjord 2026-08-19: snittet är två tal, inte ett.</b> Första versionen visade bara
+    snittvikten. Adam: <i>"för att det ska make sense måste man visa snitt i vikt kopplat till
+    reps och inte bara snitt i vikt. för om man tar ju mer reps på högre vikt osv."</i>
+    <b>Han har rätt, och briefens egen skiss i §3.1 sa redan <code>90×5</code></b> — felet
+    var mitt.
+    <br><br>
+    Därför bär båda rutorna nu <b>både</b> snittvikt och snittreps, och det är där de skiljer
+    sig: <b>2A</b> lägger ihop dem till <code>90×5</code> i en egen kolumn. <b>2B</b> delar upp
+    dem så att <b>varje kolumn bär sitt eget snitt under sig</b> — snittvikten under vikten,
+    snittrepsen under repsen. Set 3 har medvetet olika reps (5 mot snittets 6) så att det syns
+    att talen rör sig oberoende.
   </p>
 
   <div class="rad" id="rad2"></div>
@@ -255,10 +274,15 @@ const IKON_TIDTAGARE = SVG(`
 
 const IKON_BOCK = SVG(`<path d="M5 12l5 5l10 -10"/>`, 16);
 
+/* Snittet är TVÅ tal, inte ett. Adam 2026-08-19:
+   "för att det ska make sense måste man visa snitt i vikt kopplat till reps
+    och inte bara snitt i vikt. för om man tar ju mer reps på högre vikt osv."
+   Första versionen av den här mockupen visade bara snittvikten, vilket gjorde
+   hela rad 2 missvisande. Briefens egen skiss i §3.1 säger "90×5". */
 const SET = [
-  { nr: '1', snitt: '90',   kg: '92,5', reps: '5', klar: true  },
-  { nr: '2', snitt: '90',   kg: '90',   reps: '5', klar: true  },
-  { nr: '3', snitt: '87,5', kg: '90',   reps: '5', klar: false },
+  { nr: '1', snittKg: '90',   snittReps: '5', kg: '92,5', reps: '5', klar: true  },
+  { nr: '2', snittKg: '90',   snittReps: '5', kg: '90',   reps: '5', klar: true  },
+  { nr: '3', snittKg: '87,5', snittReps: '6', kg: '90',   reps: '5', klar: false },
 ];
 
 /* Övningsytan. variant styr hur snittet ritas: 'kolumn' eller 'under'. */
@@ -267,10 +291,11 @@ function ovning(variant, rubrik) {
   const rader = SET.map(s => `
       <tr class="${s.klar ? 'klar' : ''}">
         <td><span class="setnr">${s.nr}</span></td>
-        ${visaKol ? `<td><span class="snittkol">${s.snitt}</span></td>` : ''}
+        ${visaKol ? `<td><span class="snittkol">${s.snittKg}×${s.snittReps}</span></td>` : ''}
         <td><span class="varde">${s.kg}</span>${
-          visaKol ? '' : `<span class="under">${s.snitt}</span>`}</td>
-        <td><span class="varde">${s.reps}</span></td>
+          visaKol ? '' : `<span class="under">${s.snittKg}</span>`}</td>
+        <td><span class="varde">${s.reps}</span>${
+          visaKol ? '' : `<span class="under">${s.snittReps}</span>`}</td>
         <td><span class="bock ${s.klar ? 'pa' : 'av'}">${s.klar ? IKON_BOCK : ''}</span></td>
       </tr>`).join('');
 
@@ -363,8 +388,9 @@ const RAD2 = [
     kalla: 'Härledd ur: Strong och Hevy, som båda ger spökdatan en egen kolumn',
     snitt: 'kolumn', rubrik: 'Snitt',
     noter: [
-      '<span class="for"><b>För:</b></span> snittet står bredvid det du skriver in, i samma rad, lätt att jämföra utan att flytta blicken.',
+      '<span class="for"><b>För:</b></span> <code>90×5</code> hålls ihop som <i>ett</i> uttryck. Vikt och reps hör ihop, och här går de aldrig att läsa isär av misstag.',
       '<span class="mot"><b>Mot:</b></span> kolumnen kostar bredd i varje rad, även när den är tom. I Strong var det ~⅓ av radbredden, och där stod den tom i alla tre raderna.',
+      '<span class="mot"><b>Mot:</b></span> <code>90×5</code> i 13 px blir tätt. Det är två tal och ett kryss på den plats där kolumnen redan är trång.',
       '<b>Rubriken är inte avgjord.</b> §3.1 säger uttryckligen att <i>Snitt</i> är ett förslag som ska prövas mot <i>Normalt</i> och <i>Typiskt</i>. MacroFactor kallar sin <i>Trend</i>.'
     ]},
   { namn: '2B — Litet och grått under värdet',
@@ -372,8 +398,10 @@ const RAD2 = [
     snitt: 'under', rubrik: '',
     noter: [
       '<span class="for"><b>För:</b></span> ingen kolumn alls. Bredden går till Kg och Reps, och snittet <i>viskar</i> i stället för att stå som en jämförelsekolumn.',
-      '<span class="for"><b>För:</b></span> det svarar direkt på fyndet ur Strong: ingen bredd betalas för information som ofta inte finns.',
-      '<span class="mot"><b>Mot:</b></span> utan kolumnrubrik är det inte självklart <i>vad</i> talet är. Första gången måste det förklaras någonstans.',
+      '<span class="for"><b>För:</b></span> <b>varje tal står under det det hör till</b> — snittvikten under vikten, snittrepsen under repsen. Man behöver aldrig fråga sig vilket tal som är vilket.',
+      '<span class="for"><b>För:</b></span> svarar direkt på fyndet ur Strong: ingen bredd betalas för information som ofta inte finns.',
+      '<span class="mot"><b>Mot:</b></span> talen står isär, så kopplingen <i>90 kg hörde ihop med 5 reps</i> är svagare än i 2A:s <code>90×5</code>.',
+      '<span class="mot"><b>Mot:</b></span> utan kolumnrubrik är det inte självklart <i>vad</i> talen är. Första gången måste det förklaras någonstans.',
       '<b>Öppet:</b> när underlaget är tunt ska talet märkas med antal pass (§3.1). Det får inte plats lika lätt här som i en kolumn.'
     ]},
 ];
