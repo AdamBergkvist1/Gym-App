@@ -222,6 +222,165 @@ rad får vara färgat"* stod ingenstans i briefen före i dag, och båda går di
 budgetapp, Ellie en dagsplanerare. Ingen av dem har med styrketräning att göra, vilket var
 hela poängen: briefen ska inte medelvärda Hevy och Boostcamp.
 
+### Strong — hämtad och läst 2026-08-19
+
+Mappens **enda negativa referens**, och den sista som saknades. Sex App Store-bilder ligger som
+`Strong iOS 1–6.jpg`, hämtade från Apples publika lookup-API (app-id `464254577`, utgivare
+**Strong Fitness PTE Limited**, version 6.5.0 släppt 2026-08-12).
+
+⏰ **Bilderna är äldre än appen de säljer.** De är 1242×2208 px — 5,5-tumsformatet från
+iPhone 8 Plus — och statusraden visar `Carrier` och prickar i stället för staplar, alltså
+iOS 10-tidens utseende. Marknadsbilderna har inte följt med appens utveckling. **De visar
+sannolikt en äldre Strong än den Adam använde och övergav**, och det är en verklig svaghet
+hos just den här referensen. Samma reservation som för Ellie och Luna gäller dessutom: det är
+iscensatta säljbilder, inte den körda appen.
+
+**Bild 1 är den enda som betyder något för 11B.0g.** Den visar Pass-skärmen mitt i ett pass —
+exakt vår skärm, byggd av någon annan. Bilderna 2–6 (övningsdetalj, viktskivekalkylator,
+vilotimer, profil, hemskärmswidget) är sidoskärmar.
+
+#### Fynd 1 — spökdatakolumnen är tom i Strongs egen säljbild
+
+Setraden är `Set · Previous · kg · Reps · ✓`. I alla tre setraderna står **`No Previous`**.
+
+Detta är bilden Strong själva valt för att sälja appen, och kolumnen har ingenting att visa i
+någon rad. Man kan invända att det är en tom demodatabas — men det är just poängen: **de har
+byggt säljbilden utan att bry sig om att fylla kolumnen.** Den bär inte tillräckligt mycket
+värde för att iscensättas.
+
+#### Fynd 2 — och den är i praktiken oläslig. Uppmätt
+
+| Element | Färg | Bakgrund | Kontrast |
+|---|---|---|---|
+| `No Previous`, bekräftad rad | `#B2C1BA` | `#EAFAF0` | **1,73:1** |
+| `No Previous`, obekräftad rad | `#C5C5C5` | `#F6F6F6` | **1,60:1** |
+| `85` i `kg`-kolumnen, samma rad | `#1F2C2B` | `#EAFAF0` | **13,37:1** |
+
+WCAG kräver 4,5:1 för brödtext och 3:1 för stor text. Spökdatan ligger på **under hälften av
+det lägre kravet**, medan viktvärdet bredvid ligger på 13:1. Skillnaden är åtta gånger, i
+samma rad — den är alltså medveten, inte ett slarv.
+
+> **Metodnot:** värdena är mörkaste pixel i textytan, mätt mot radens bakgrund. Kantutjämning
+> kan bara göra pixlar ljusare, aldrig mörkare, så **de uppmätta talen är tak** — den
+> upplevda kontrasten är lika låg eller lägre, aldrig högre.
+
+#### Fynd 3 — den kostar ungefär en tredjedel av radbredden
+
+Setraden är 903 px bred av skärmens 1242. `Previous`-kolumnens utrymme är omkring **310 px,
+drygt en tredjedel**, medan `kg` och `Reps` får ~165 px vardera. Texten `No Previous` mäter
+224 px. Kolumngränser är inte utritade, så utrymmet är räknat ur mellanrummen och är därför
+ungefärligt — men storleksordningen är entydig.
+
+**Det här är axel 2:s argument, hämtat ur en app i produktion:** en alltid synlig spökdatakolumn
+betalar en tredjedel av setradens bredd och lägger sig på 1,7:1 i kontrast, för något som ofta
+inte finns.
+
+⚠️ **Dra inte slutsatsen längre än den räcker.** Att Strong tonar ner kolumnen visar att *de*
+värderat den lågt visuellt. Det säger ingenting om huruvida `SNITT` är rätt — Adams invändning
+mot spökdata i `SPEC.md` §2 var psykologisk, inte visuell. De två fynden pekar åt samma håll av
+olika skäl, och det är värt att hålla isär.
+
+#### Fynd 4 — `Previous` har ingen inmatningsform, och det är avsiktligt
+
+I den obekräftade raden får `Set`, `kg`, `Reps` och bocken **var sitt ljusgrått rundat fält** —
+synliga tryckytor. `Previous` är naken text på vit botten, utan fält.
+
+Kolumnen är alltså redan visuellt klassad som *läsbart, inte rörbart*. **Det stödjer att vår
+`SNITT` ritas som ren text utan fältram**, och att den inte ska se ut som något man kan fylla i.
+
+#### Fynd 5 — fritexten ligger överst, alltid synlig, utan ram
+
+Under passets titel och tid, **ovanför första övningen**, står passanteckningen som vanlig
+brödtext: *"Felt super successful with this workout. Having a good night's rest definitely
+helped!"* Ingen ram, ingen etikett, ingen "lägg till anteckning"-knapp. Den syns i bild 1 och
+igen i bild 3, alltså på samma plats i två olika skärmlägen.
+
+**Detta är axel 1:s "alltid synligt fält överst", härlett ur en etablerad app** — vilket är vad
+11B.0g kräver.
+
+⚠️ **Men det är inte samma sak som vår fritext.** Hos Strong är detta en *anteckning om passet*,
+skriven efteråt och läst av människan. Vår fritext är **inmatning** som tolkas av AI och blir
+set. Strong visar var den kan ligga, inte hur den ska bete sig när man skriver i den.
+
+#### Fynd 6 — bekräftade set delar ett enda grönt band
+
+Set 1 och 2 ligger i **en sammanhängande grön yta** (`#EAFAF0`, y 1680–1887 i bilden), utan
+avdelare mellan raderna och kant till kant utan radie. Bocken är `#30CD6C` i fylld rundad ruta;
+den obekräftade radens bock är en tunn linje utan ruta.
+
+Det är **Lunas "platta rader utan avdelare" en gång till, oberoende bekräftat** — nu i en
+träningsapp i stället för en budgetapp.
+
+#### Fynd 7 — betalväggen syns i säljbilderna, och det är grafhistoriken
+
+Bild 2 har ett **hänglås** på övningsdetaljen, vars flikar är `About · History · Charts ·
+Records`. Bild 5 har en **gul nyckelikon** på grafen *Squat — Best Set*.
+
+**Det som är låst är alltså graferna och rekorden.** Det är exakt vad båda undersökningarna i
+11B.0h landade på, och nu ett tredje oberoende belägg — den här gången ur konkurrentens egen
+marknadsföring i stället för ur en rapport.
+
+#### Vad bilderna INTE kan svara på — och varför Strong ändå hämtades
+
+**Sex säljbilder kan visa hur Strong ser ut. De kan inte visa varför Adam slutade.** Det är
+hela skälet till att appen är med i mappen, och den delen är hans att svara på — de nio andra
+referenserna visar appar som ser bra ut, ingen visar vad som fick honom att sluta.
+
+#### Adams svar 2026-08-19
+
+> ✏️ **Rättat samma dag, efter Adams invändning:** *"känns som att du tar mina svar och
+> förvränger dom. Behöver inte överdriva så hårt alltid."* Första versionen av det här stycket
+> skrev att utseendet var frikänt och att `Previous`-kolumnen *"gjorde skadan"*. Ingetdera
+> följer av svaren. Stycket står nu som svaren gavs.
+
+| Fråga | Svar |
+|---|---|
+| Tittade du på `Previous`-kolumnen? | *"Tror jag tittade lite … minns inte exakt"* |
+| Något att peka på i bilden? | *"Inget riktigt speciellt"* — men *"tycker fortf inte strong interfacet är så snyggt"* |
+| Känner du igen versionen? | *"Ja lite ja det gör jag"* |
+| Skrev du fritext i Strong? | *"Jag skrev sällan saker i strong vad jag minns"* |
+
+**Utseendet är inte frikänt.** Adam tycker fortfarande inte att Strong är snyggt. Han kunde
+bara inte peka ut ett *enskilt element* som orsak, vilket är något annat. Motviljan är alltså
+**diffus snarare än lokaliserad**.
+
+Det är i sig användbart för hur referensen ska brukas: **Strong ger oss ingen lista på detaljer
+att undvika, utan en helhet att inte hamna i.** Att leta efter den avgörande detaljen i
+bilderna är därför fel arbete.
+
+**`Previous`: underlaget är för tunt för att avgöra något.** *"Tror … minns inte exakt"*, plus
+Adams eget tillägg *"behöver inte ta mig så hårt på orden."* Det enda som kan sägas är att han
+inte beskrev kolumnen som osynlig. **Axel 2 avgörs i mockupen, inte här.**
+
+**Titeln får tas bort under pass.** *"Det spelar inte så mycket roll att det står så, kan ta
+bort det från skärmen när man tränar."* Frigör översta raden, som axel 1 konkurrerar om.
+
+#### Fritexten är två funktioner, inte en — Adams distinktion 2026-08-19
+
+Kom ur den omställda frågan. **Briefen har hittills behandlat detta som ett element. Adam
+skiljer på två:**
+
+| | Vad det är | Adams hållning |
+|---|---|---|
+| **Passkommentar** | Fritext *om* passet, skriven när man avslutar | *"vi kan prova att ha den för oss ändå … kommentera något när man känner för det när man avslutar passet"* — **ja, men lågt insatsvärde** |
+| **Fritext-loggning** | `bänk 80x8` tolkas av AI och blir set | *"vet inte om jag kommer använda fritext alternativet så mycket men får se"* — **osäker** |
+
+*"Men det är skillnad på det och att skriva 'bänk 80x8' för att logga ett set."*
+
+⚠️ **Adam tror att strukturerad inmatning kan vara effektivare för själva loggningen:**
+*"tror ändå det är mer effektivt att söka på övningen klicka och skrolla osv för att lägga
+till hur många set och vikt."*
+
+Det är användarens omdöme om appens uttalade kärnvärde, och det ska stå kvar oavsett vad som
+byggs. **Men det ska inte heller blåsas upp:** han säger *"får se"* och *"kanske går att
+utveckla mer sen"* — osäkerhet, inte avslag. `SPEC.md` §2 har redan ett **andra
+loggningsläge** som mål, vilket är precis det han efterfrågar. Ingen kursändring behövs; det
+som ändras är att det andra läget inte längre är sekundärt av artighet.
+
+**Följden för axel 1:** placeringen överst — den Strong visar och den `DESIGN.md` §3.1 utgår
+från — gäller **passkommentaren**. Fritext-loggningen är en annan sak, används mitt i passet
+och behöver inte samma yta. **Mockupen ska pröva dem som två element, inte ett.**
+
 ### ✅ BESLUTET SOM GÄLLER: Bläck, valt av Adam 2026-08-12
 
 **Ljust tema. Papper `#F0EBE1`, accent marinblå `#2B4570`, Fraunces i rubriker.**
@@ -887,7 +1046,7 @@ Formen är låst i `SPEC.md` §2b: fyra flikar — **Pass, Historik, Övningar, 
 | liftosaur.com (läst 2026-08-04, AGPL — inget kopierat) | Uppvärmning märks med **ordet "Warmup"**, inte med färg |
 | `Reference-pics/Ellie iOS 1–5.jpg` (Raroque, 2026-08-14) | **Väg C i produktion:** tonad yta + färgad vänsterkant + text i samma kulör. **Vänsterkanten = B4:s accentbricka.** Fylld grön bock vs tom konturruta. Vald dag som **fylld svart** cirkel, inte accentfärgad |
 | `Reference-pics/Luna iOS 1–5.jpg` (Raroque, 2026-08-14) | **Täta sifferrader:** platta rader **utan avdelare**, högerställda tabulära tal, **bara ett tal per rad färgat** (det som kräver beslut), tonad pill som semantikbärare, tvåradigt grupphuvud som namnger kolumnerna |
-| **Strong — ⏰ EJ HÄMTAD ÄNNU. Beslutad 2026-08-18** | **Negativ referens, och mappens enda.** Den enda app Adam faktiskt använt och övergett. Alla nio övriga referenser visar appar som ser bra ut; ingen visar vad som fick honom att sluta. Han kan peka på konkreta saker han ogillar i stället för att beskriva dem i luften, vilket är hårdare data än ännu en snygg skärm. Hämtas som App Store-bilder, samma väg som Ellie och Luna |
+| `Reference-pics/Strong iOS 1–6.jpg` (hämtad 2026-08-19) | **Negativ referens, och mappens enda** — den enda app Adam faktiskt använt och övergett. **Bild 1 är vår Pass-skärm byggd av någon annan:** setraden `Set·Previous·kg·Reps·✓` med spökdatan **tom i alla tre raderna** och uppmätt till **1,6–1,7:1** i kontrast mot 13:1 för viktvärdet bredvid; kolumnen kostar ~⅓ av radbredden och saknar inmatningsfält medan alla andra kolumner har det. **Fritexten ligger överst, alltid synlig, utan ram.** Bekräftade set delar ett grönt band utan avdelare — Lunas platta rader, oberoende bekräftat. Hänglås på `Charts`/`Records` bekräftar 11B.0h. **Adam tycker fortfarande inte att Strong är snyggt, men kunde inte peka ut ett enskilt element** — motviljan är diffus, så referensen ger en helhet att undvika, inte en lista på detaljer. Se §0.5 |
 
 ### ✅ Den öppna frågan från §1 är löst
 

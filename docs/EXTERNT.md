@@ -35,6 +35,7 @@ samma commit.
 | 9 ikoners `d`-strängar. **Valt paket** | [tabler/tabler-icons](https://github.com/tabler/tabler-icons) | **MIT** | `src/ui/icons.tsx`, `docs/mockups/11b-ikoner.html` | 2026-08-12 |
 | 9 referensskärmbilder: Hevy, MacroFactor, Strava, Apple Watch, Lifesum | Insamlade av Adam, ursprung ej dokumenterat vid insamlingen | ⚠️ **Oklart** — se noten nedan | `docs/Reference-pics/` (9 filer) | ~2026-08-04 |
 | 10 App Store-skärmbilder: Ellie (5), Luna (5) | Apples CDN `is1-ssl.mzstatic.com`, via [itunes lookup-API](https://itunes.apple.com/lookup?id=1602196200) för app-id `1602196200` och `6504741176`. Utgivare **AloaLabs, LLC** (Chris Raroque) | ⚠️ **Upphovsrätt AloaLabs.** Ingen licens ges. Se noten nedan | `docs/Reference-pics/Ellie iOS 1–5.jpg`, `Luna iOS 1–5.jpg` → `docs/DESIGN.md` §0.5, §3 | 2026-08-14 |
+| 6 App Store-skärmbilder: Strong | Apples CDN `is1-ssl.mzstatic.com`, via [itunes lookup-API](https://itunes.apple.com/lookup?id=464254577) för app-id `464254577`. Utgivare **Strong Fitness PTE Limited**, version 6.5.0 | ⚠️ **Upphovsrätt Strong Fitness PTE Limited.** Ingen licens ges. Samma läge som Ellie/Luna — se noten nedan | `docs/Reference-pics/Strong iOS 1–6.jpg` → `docs/DESIGN.md` §0.5, §3 | 2026-08-19 |
 
 ### mattpocock/skills — `handoff`
 
@@ -193,6 +194,17 @@ gitignorera `docs/Reference-pics/` så att bilderna finns lokalt men inte publik
 kostar att anteckningarna i `DESIGN.md` §0.5 inte längre går att granska mot bilden av den som
 klonar repot — vilket var hela skälet till att de laddades ner. **Tills Adam säger annat
 ligger de kvar.**
+
+> ✏️ **Tillägg 2026-08-19: sex Strong-bilder till, och en andra rättighetshavare.**
+> `docs/Reference-pics/` innehåller nu **16 hämtade App Store-bilder**, inte tio, och de
+> tillhör **två** bolag — AloaLabs, LLC och Strong Fitness PTE Limited. Stycket ovan säger
+> *"de tio nya … tillhör AloaLabs, LLC"*; det var sant när det skrevs och gäller fortfarande
+> Ellie och Luna.
+>
+> **Resonemanget ändras inte av tillägget** — ingen kod kopieras, bilderna ligger i briefen
+> tillsammans med skriven analys, och riskbilden är densamma. Men Adams öppna val gäller nu
+> en större hög och en till motpart, vilket är skälet att det står här i stället för att
+> tyst läggas till i tabellen.
 
 ---
 

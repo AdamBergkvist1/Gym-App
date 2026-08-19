@@ -1264,10 +1264,41 @@ nuvarande.
       2026-08-18, och det är §0.2 med skärpta tänder: *"utgå fortfarande från hur tidigare
       etablerade appar fungerar, så att man inte uppfinner hjulet på nytt"*.
 
-      **Strong hämtas först**, som App Store-bilder på samma sätt som Ellie och Luna. Den är
-      mappens enda negativa referens — den enda app Adam faktiskt använt och övergett — och
-      hans omdöme är att det kanske är utseendet snarare än funktionen han ogillar. Det går
-      inte att pröva utan bilderna framme.
+      ✅ **Strong är hämtad och läst 2026-08-19.** Sex bilder som `Strong iOS 1–6.jpg`,
+      registrerade i `docs/EXTERNT.md`, med anteckningarna i `DESIGN.md` §0.5. **Bild 1 är
+      vår Pass-skärm byggd av någon annan** och räcker för båda axlarna:
+
+      | Axel | Vad Strong visar |
+      |---|---|
+      | Fritexten | Ligger **överst, alltid synlig, utan ram** — men som passanteckning, inte inmatning |
+      | Spökdatan | Egen kolumn, **tom i alla tre raderna**, uppmätt **1,6–1,7:1** i kontrast mot 13:1 för viktvärdet bredvid, och ~⅓ av radbredden |
+
+      ⏰ Bilderna är äldre än appen (1242×2208, iOS 10-statusrad, mot version 6.5.0), men
+      **Adam känner igen versionen** — åldersvarningen är därmed mildrad, inte upphävd.
+
+      **Referensen gav inget lokaliserat visuellt utslag.** Adam tycker fortfarande inte att
+      Strong är snyggt, men kunde inte peka ut ett enskilt element: *"inget riktigt
+      speciellt"*. Motviljan är alltså diffus. **Följden för arbetssättet:** leta inte efter
+      den avgörande detaljen i bilderna — referensen ger en helhet att undvika.
+
+      **`Previous`-kolumnen avgör ingenting.** *"Tror jag tittade lite … minns inte exakt"*,
+      och Adam bad uttryckligen om att inte tolkas ordagrant. Axel 2 avgörs i mockupen.
+
+      **Passets titel får tas bort under pass** — frigör översta raden, som axel 1 konkurrerar
+      om.
+
+      ⚠️ **Axel 1 delades i två.** Adam skiljer
+      på **passkommentar** (fritext om passet, skriven vid avslut — *"kan vi prova att ha den
+      för oss ändå"*) och **fritext-loggning** (`bänk 80x8` → set). Om det senare är han
+      osäker: *"vet inte om jag kommer använda fritext alternativet så mycket men får se"*, och
+      han tror strukturerad inmatning kan vara effektivare för att logga. Det är osäkerhet,
+      inte avslag — och `SPEC.md` §2:s andra loggningsläge är redan svaret. Detaljerna i
+      `DESIGN.md` §0.5.
+
+      **Mockupen ska pröva dem som två element, inte ett.** Placeringen överst gäller
+      passkommentaren.
+
+      **Kvar av uppgiften:** de två till tre körbara varianterna, och Adams val per axel.
 
       **Klart när:** Adam har valt en variant per axel, och valet står i `DESIGN.md` med skäl.
 
