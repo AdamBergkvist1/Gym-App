@@ -1229,7 +1229,7 @@ inte det här stycket, för *varför*. Här står bara vad det betyder för form
 | Regel | Värde |
 |---|---|
 | Underlag | De tre senaste passen **med den övningen**, inte de tre senaste passen |
-| Gruppering | Per **setnummer**. Set 3 jämförs med set 3 — man blir svagare för varje set i rad |
+| Gruppering | Per **setnummer bland arbetsseten**. Set 3 jämförs med set 3 — man blir svagare för varje set i rad. Uppvärmningen räknas inte in i numret; se `SPEC.md` §2 |
 | **Vad som visas** | **Två tal: en vikt OCH ett repsantal.** `90×5`, aldrig bara `90`. Se rutan under tabellen |
 | **Hur talen kopplas** | **Vikten snittas. Repsen gör det inte** — de tas från det set vars vikt ligger närmast snittvikten. Avgjort 2026-08-25, se rutan |
 | Avrundning | Vikt: närmaste **viktsteg för övningens utrustning** — `skivstång` 2,5 kg, allt annat 1 kg. Ett snitt som inte går att lägga på stången är oanvändbart, men 2,5 kg överallt förstör hantelvikter. Se rutan. Reps: hela reps, och de är redan hela |
@@ -1239,7 +1239,8 @@ inte det här stycket, för *varför*. Här står bara vad det betyder för form
 
 ### ✅ Hur vikten och repsen kopplas. Avgjort av Adam 2026-08-25
 
-**Vikten snittas och avrundas till 2,5 kg. Repsen tas från det set vars vikt ligger närmast
+**Vikten snittas och avrundas till övningens viktsteg** — 2,5 kg för skivstång, 1 kg för allt
+annat, se rutan under den här. **Repsen tas från det set vars vikt ligger närmast
 snittvikten.** Underlaget 90×5, 85×8 och 92,5×4 ger `90×5` — ett set som faktiskt utförts.
 
 Tre vägar vägdes (de står i `TASKS.md` 11B.0f). Den som föll bort var att snitta båda talen

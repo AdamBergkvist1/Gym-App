@@ -1232,7 +1232,7 @@ nuvarande.
       | Regel | Värde |
       |---|---|
       | Underlag | De tre senaste passen **med den övningen** — inte de tre senaste passen |
-      | Gruppering | Per **setnummer**, eftersom man blir svagare för varje set i rad |
+      | Gruppering | Per **setnummer räknat bland arbetsseten**, eftersom man blir svagare för varje set i rad. **Preciserat 2026-08-25** — inte det lagrade `setIndex`, se rutan längst ner |
       | Avrundning | Närmaste viktsteg för övningens **utrustning** — `skivstång` 2,5 kg, allt annat 1 kg. **Ändrad 2026-08-25**, se rutan längst ner |
       | Åldersgräns | **8 veckor**, annars *"senast tränad i \<månad år\>"* |
       | Filter | Raderade, uppvärmningsset **och importerade** — samma tre som 13.4 |
@@ -1372,6 +1372,53 @@ nuvarande.
       💡 **Öppen följdfråga:** `±`-knapparna i `SetAdjustSheet` är hårdkodade till
       `−1 / −2,5 / +2,5 / +1`. Samma utrustningsregel skulle kunna styra dem. Det är en
       UI-ändring i en komponent steg 4 bygger om, så den ligger som förslag — inte beslut.
+      ✅ **Adam 2026-08-25: skjuts till steg 4** — *"dom får vi ta när det steget kommer."*
+
+      🔴 **RÄTTELSE 2026-08-25 efter `/code-review`: grupperingen använde fel setnummer.**
+      Första implementationen grupperade på det `setIndex` som ligger lagrat på raden. `logSet`
+      numrerar alla set för övningen i passet **inklusive uppvärmningen** (`repo.ts:232`), så
+      ett pass med uppvärmning lade första arbetssetet på index 1 och ett pass utan lade det på
+      index 0. **Skiljer sig uppvärmningsvanan mellan passen jämfördes arbetsset *n* med
+      arbetsset *n+1*** — exakt den trötthetsförskjutning regeln finns för att undvika.
+
+      Fältet heter nu `workSetIndex` och räknas om bland de set som blir kvar efter filtret.
+      Raderade och importerade set lämnar därmed inga hål i numreringen heller.
+
+      ⚠️ **Kostnaden är utskriven i `SPEC.md` §2 och gäller den som bygger skärmen:**
+      `workSetIndex` är **inte** setradens plats i listan. `SetRow` numrerar raderna med
+      uppvärmningen inräknad och visar `W` för den, så skärmen måste räkna arbetsset själv.
+      Betalas medvetet — alternativet är ett snitt som tyst jämför fel set.
+
+      **Att felet fanns är i sig ett argument för att granska innan man bygger vidare.** Det
+      överlevde 13 tester skrivna med `/tdd`, eftersom testerna cementerade beteendet i stället
+      för att pröva regeln: fixturen hade uppvärmning i *ett* pass och jämförde aldrig två pass
+      med olika uppvärmningsvana.
+
+- [x] **11B.0i `ScrollPicker` rapporterade sin egen scroll som ett val. Ny och KLAR 2026-08-25.**
+      **Stod inte i planen — den hittades.** E2E-sviten började faila slumpmässigt under
+      arbetet med 11B.0f, och `/diagnosing-bugs` visade att det inte var flakighet utan en
+      bugg i appen: hjulets spärr mot att rapportera sin **egen** programmatiska scroll släpptes
+      efter 60 ms medan debouncen som rapporterar väntade 90 ms.
+
+      **Följden var tyst datakorruption i kärnflödet:** fyra tryck på `+2,5` gav **8 kg i
+      stället för 10**. Det drabbar telefonen, inte bara sviten.
+
+      Fixen tar bort tiden ur villkoret i stället för att justera den: bara scroll som följer
+      på `pointerdown`, `touchstart`, `wheel` eller `keydown` får bli ett val. **En avsikt kan
+      inte komma för sent på samma sätt som en tidsgräns.**
+
+      🆕 `src/ui/ScrollPicker.test.tsx` är **repots första komponenttest** — jsdom (redan
+      installerat) och `react-dom`, inga nya poster i `package.json`. Det finns alltså nu en
+      söm för UI-logik som inte kräver e2e.
+
+      **Mätt före → efter:** serie `repeat-each=6 workers=1` 3/4 rött → 6/6 grönt; parallellt
+      `repeat-each=4 workers=2` 7/8 rött → 8/8 grönt; full svit 1–2 fel per körning → 60/60.
+
+      ⏰ **Inte verifierad på riktig hårdvara.** Allt är kört mot WebKit i Playwright, aldrig
+      mot Safari på Adams telefon.
+
+      **Raden är efterhandsförd 2026-08-25** — `/code-review` flaggade med rätta att fixen
+      saknade förankring i planen (regel 1: *"arbeta strikt utifrån `TASKS.md`"*).
 
 - [x] **11B.0g Mockuper för Pass, och Strong som negativ referens. Ny 2026-08-18. KLAR 2026-08-19.**
       **Slutvillkoret uppfyllt:** Adam har valt en variant per axel — `1A` invikt genväg och

@@ -65,9 +65,9 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 > > Frågan stod öppen här med flit: snittas vikt och reps var för sig kan resultatet bli en
 > > kombination som aldrig utförts — 90×5, 85×8 och 92,5×4 ger `90×6`, ett set som inte hänt.
 > >
-> > **Regeln som gäller:** vikten snittas och avrundas till 2,5 kg. **Repsen snittas inte** —
-> > de tas från det set vars vikt ligger närmast snittvikten. Exemplet ger `90×5`, ett set som
-> > faktiskt utförts.
+> > **Regeln som gäller:** vikten snittas och avrundas till övningens viktsteg (se rutan nedan
+> > — **inte alltid 2,5 kg**). **Repsen snittas inte** — de tas från det set vars vikt ligger
+> > närmast snittvikten. Exemplet ger `90×5`, ett set som faktiskt utförts.
 > >
 > > ⚠️ **Skälet är inte att ett påhittat par känns fel — det är att felet lutar åt ett håll.**
 > > Vikt och reps byter av varandra: kör man tyngre blir det färre reps. Snittas de var för sig
@@ -128,6 +128,26 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 > implementerad.
 >
 > **Per setnummer**, eftersom man blir svagare för varje set i rad. Set 3 jämförs med set 3.
+>
+> > ### 🔄 Setnumret räknas bland ARBETSSETEN. Preciserat 2026-08-25 efter kodgranskning
+> >
+> > Första implementationen grupperade på det `setIndex` som ligger lagrat på raden. **Det är
+> > fel**, och felet är precis det trötthetsargumentet ovan finns för att undvika.
+> >
+> > `logSet` numrerar alla set för övningen i passet, **uppvärmningen inräknad**
+> > (`repo.ts:232`). Ett pass med uppvärmning lägger alltså första arbetssetet på index 1; ett
+> > pass utan lägger det på index 0. Skiljer sig uppvärmningsvanan mellan passen **jämförs
+> > arbetsset *n* med arbetsset *n+1***, och snittet mäter fel trötthetsnivå.
+> >
+> > **Regeln som gäller:** numret räknas om bland de set som blir kvar efter filtret — det
+> > **n:te arbetssetet** med övningen i passet, i tidsordning. Raderade och importerade set
+> > lämnar därmed heller inga hål i numreringen.
+> >
+> > ⚠️ **Följd för den som bygger skärmen:** fältet heter `workSetIndex` och är **inte** samma
+> > sak som setradens plats i listan. `SetRow` numrerar raderna med uppvärmningen inräknad och
+> > visar `W` för den. Skärmen måste alltså räkna arbetsset själv för att slå upp rätt snitt.
+> > Det är en riktig kostnad, och den betalas medvetet: alternativet är ett snitt som tyst
+> > jämför fel set.
 >
 > **Åldersgräns åtta veckor.** Är det senaste passet med övningen äldre än så visas inget
 > snitt, utan när övningen senast tränades. Skälet är Adams eget bruksmönster: han tar paus
