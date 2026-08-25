@@ -1233,7 +1233,7 @@ nuvarande.
       |---|---|
       | Underlag | De tre senaste passen **med den övningen** — inte de tre senaste passen |
       | Gruppering | Per **setnummer**, eftersom man blir svagare för varje set i rad |
-      | Avrundning | Närmaste **2,5 kg** |
+      | Avrundning | Närmaste viktsteg för övningens **utrustning** — `skivstång` 2,5 kg, allt annat 1 kg. **Ändrad 2026-08-25**, se rutan längst ner |
       | Åldersgräns | **8 veckor**, annars *"senast tränad i \<månad år\>"* |
       | Filter | Raderade, uppvärmningsset **och importerade** — samma tre som 13.4 |
       | Färre än 3 pass | Visa ändå, märkt med antalet. `–` bara när underlag saknas helt |
@@ -1334,6 +1334,33 @@ nuvarande.
       **Kravet är flyttat, inte struket:** det gäller den commit som byter `SetRow` till
       `getSetAverages` i steg 4. Snubbeltråden ligger i `e2e/passvy.spec.ts`
       filhuvud som en ⛔-ruta. **Adam avgör om 11B.0f ska bockas av utan den delen.**
+
+      🔄 **AVRUNDNINGEN GJORDES OM 2026-08-25, efter research.** Den var 2,5 kg för allt, och
+      det är fel för allt som inte är en skivstång: hantelcurl på 8, 9 och 10 kg ger snittet 9,
+      som avrundat till 2,5-rutnätet blir **10** — en vikt Adam kanske aldrig lyft. Fyndet är
+      hans: *"vissa övningar som hantelcurl kör man ju enkilos grejer ibland."*
+
+      **Ny regel:** steget härleds ur övningens `equipment`. `skivstång` → 2,5 kg, allt annat
+      → 1 kg. Principen bakom står i `SPEC.md` §2 och är det som ska överleva talen:
+      **avrunda bara så grovt som utrustningen är garanterad att vara.**
+
+      **Varför inte per övning som marknaden gör.** `docs/research/viktsteg-och-avrundning-i-gymappar.md`
+      visar att FitNotes, Strong och kommande MacroFactor Workouts alla lägger ett redigerbart
+      steg per övning. Vi börjar ändå med utrustningen, av ett mätbart skäl: **katalogen bär
+      redan `equipment` på alla 46 övningar** (`skivstång` 15, `hantlar` 13, `kroppsvikt` 7,
+      `kabel` 6, `maskin` 5), så regeln blir en ren funktion utan schemaändring eller
+      migration. Ett redigerbart fält per övning läggs till **om** ett standardvärde skaver.
+      Adams beslut: *"kanske kan börja med denna … och om det behövs i framtiden kanske köra
+      på redigerbart fält om vi märker att det är nice."*
+
+      ⚠️ **Rapporten ska läsas med en spärr:** den innehåller **noll källänkar**, trots att
+      prompten bad om källa per påstående. Det strukturella resonemanget står på egna ben, men
+      dess sifferpåståenden om enskilda appar är obelagda och får inte citeras vidare som
+      fakta. Adam har erbjudit sig att klistra in länkarna separat.
+
+      💡 **Öppen följdfråga:** `±`-knapparna i `SetAdjustSheet` är hårdkodade till
+      `−1 / −2,5 / +2,5 / +1`. Samma utrustningsregel skulle kunna styra dem. Det är en
+      UI-ändring i en komponent steg 4 bygger om, så den ligger som förslag — inte beslut.
 
 - [x] **11B.0g Mockuper för Pass, och Strong som negativ referens. Ny 2026-08-18. KLAR 2026-08-19.**
       **Slutvillkoret uppfyllt:** Adam har valt en variant per axel — `1A` invikt genväg och

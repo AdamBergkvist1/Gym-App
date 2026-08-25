@@ -80,6 +80,39 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 > > Talet är fortfarande ett typvärde och inte ett facit. Att det nu råkar vara ett verkligt
 > > set är en följd av regeln, inte ett krav på den.
 >
+> > ### 🔄 Avrundningen är INTE 2,5 kg överallt. Avgjort 2026-08-25
+> >
+> > Här stod *"en vikt som går att lägga på stången"*, och koden avrundade allt till 2,5 kg.
+> > **Det är fel för allt som inte är en skivstång.** Adam: *"vissa övningar som hantelcurl kör
+> > man ju enkilos grejer ibland."* Hantelcurl på 8, 9 och 10 kg ger snittet 9 — avrundat till
+> > 2,5-rutnätet blir det **10**, en vikt han kanske aldrig lyft.
+> >
+> > **Regeln som gäller:** viktsteget härleds ur övningens `equipment`.
+> >
+> > | Utrustning | Steg | Varför |
+> > |---|---|---|
+> > | `skivstång` | **2,5 kg** | 1,25-skivor finns på varje gym. Garanterat |
+> > | `hantlar`, `kabel`, `maskin`, `kroppsvikt` | **1 kg** | Varierar mellan gym. Inget att garantera |
+> >
+> > **Principen bakom, och den är viktigare än talen: avrunda bara så grovt som utrustningen är
+> > garanterad att vara.** Asymmetrin är avsiktlig. Avrundas hantlar till 1 kg på ett gym med
+> > tvåkilossteg blir talet på sin höjd 1 kg fel, och ett tryck på `+1` rättar det. Avrundas de
+> > till 2 kg på ett gym med enkilossteg **förstörs precision användaren faktiskt använde** —
+> > 9 blir 8 eller 10, och det verkliga normalläget går inte längre att se. **Ett för fint steg
+> > är återställbart. Ett för grovt är det inte.**
+> >
+> > ⚠️ **Adam tränar på olika gym**, och det är skälet att regeln formulerades som en princip i
+> > stället för som en tabell över hans utrustning. Frågan *"vilka steg har ditt gym?"* har
+> > inget svar, och en lösning som kräver ett är fel lösning.
+> >
+> > **Marknaden gör detta per övning, inte per utrustning** — FitNotes har ett redigerbart
+> > `Weight Increment` per övnings-id, Strong har det under *Progression settings*, och
+> > MacroFactors utvecklare har sagt att deras kommande träningsmodul följer FitNotes. Se
+> > `docs/research/viktsteg-och-avrundning-i-gymappar.md`. **Vi börjar med att härleda ur
+> > `equipment`** eftersom katalogen redan bär det fältet på alla 46 övningar — noll
+> > schemaändring, noll migration. Ett redigerbart fält per övning läggs till **om** ett
+> > standardvärde visar sig skava, inte innan. Adams beslut 2026-08-25.
+>
 > **"De tre senaste passen med den övningen"**, inte de tre senaste passen. Kör man bänk på
 > måndagen och ben tisdag till torsdag innehåller de tre senaste passen noll bänkset.
 > Preciserat av Adam, och formuleringen står här just för att den lösa varianten blir fel

@@ -1232,7 +1232,7 @@ inte det här stycket, för *varför*. Här står bara vad det betyder för form
 | Gruppering | Per **setnummer**. Set 3 jämförs med set 3 — man blir svagare för varje set i rad |
 | **Vad som visas** | **Två tal: en vikt OCH ett repsantal.** `90×5`, aldrig bara `90`. Se rutan under tabellen |
 | **Hur talen kopplas** | **Vikten snittas. Repsen gör det inte** — de tas från det set vars vikt ligger närmast snittvikten. Avgjort 2026-08-25, se rutan |
-| Avrundning | Vikt: närmaste **2,5 kg** — ett snitt som inte går att lägga på stången är oanvändbart. Reps: hela reps, och de är redan hela |
+| Avrundning | Vikt: närmaste **viktsteg för övningens utrustning** — `skivstång` 2,5 kg, allt annat 1 kg. Ett snitt som inte går att lägga på stången är oanvändbart, men 2,5 kg överallt förstör hantelvikter. Se rutan. Reps: hela reps, och de är redan hela |
 | Åldersgräns | **8 veckor.** Äldre än så: inget snitt, utan *"senast tränad i oktober 2024"* |
 | Filter | Ärver 13.4: hoppar över raderade, uppvärmningsset **och importerade** |
 | Typografi | `--text-meta`, `--color-dim`. **Aldrig samma storlek som det du skriver in** |
@@ -1254,6 +1254,26 @@ precis den skada `SPEC.md` §2 finns för att ta bort.**
 **Vad regeln kostar:** repsen är inte ett snitt, så de hoppar mellan hela tal när underlaget
 skiftar. Det är avsiktligt — talet ska viska att *ungefär så här brukar det se ut*, inte
 låtsas om en precision som inte finns.
+
+### ✅ Viktsteget härleds ur utrustningen. Avgjort 2026-08-25
+
+**`skivstång` avrundas till 2,5 kg. Allt annat till 1 kg.** Skälen i sin helhet står i
+`SPEC.md` §2 — här bara det som rör formen.
+
+**Principen:** avrunda bara så grovt som utrustningen är garanterad att vara. 1,25-skivor
+finns på varje gym; hantelrack och kabelstackar gör det inte. Ett för fint steg kostar ett
+tryck på `+1`. Ett för grovt raderar det värde användaren faktiskt lyfte.
+
+⚠️ **Följd för setraden:** snittvikten under hantelövningar visar nu hela kilon — `9`, inte
+`10`. Talet blir alltså oftare ett tal användaren känner igen, vilket är hela poängen med att
+det står där. Typografin är oförändrad: `--text-meta`, `--color-dim`, aldrig samma storlek som
+det du skriver in.
+
+💡 **Öppen följdfråga, inte avgjord:** `±`-knapparna i justeringsarket är hårdkodade till
+`−1 / −2,5 / +2,5 / +1` ([SetAdjustSheet.tsx](../src/ui/SetAdjustSheet.tsx)). Samma
+utrustningsregel skulle kunna styra dem, så att hantelövningar får `+1` som huvudsteg i
+stället för `+2,5`. **Det är en UI-ändring i en komponent steg 4 bygger om**, och den ligger
+därför kvar som förslag tills Adam sagt till.
 
 **Typografin är inte en detalj, den är hela poängen.** Mönstret är MacroFactors `av`-konstruktion:
 `2108` stort, `of 2643` litet och grått under. Referensvärdet finns, men det viskar. Skälet att
