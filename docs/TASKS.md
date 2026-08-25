@@ -1267,11 +1267,21 @@ nuvarande.
       facit. **Men det ska vara ett val, inte en bieffekt.** Adam informerad och införstådd
       2026-08-19; han hänvisade frågan hit med flit.
 
-      **Klart när:** funktionen har enhetstester som täcker alla sex reglerna ovan, inklusive
-      åldersgränsen och blandfallet med importerade set. Vakt 5 i 12.20 mäter `FÖRRA` och
-      **måste skrivas om i samma commit** — annars är den grön mot en kolumn som inte finns.
+      💡 **Öppen fråga som följer av 2B-valet: vad förklarar talen första gången?** Med 2B
+      finns ingen kolumnrubrik, så de små grå siffrorna är inte självförklarande. Adams förslag
+      2026-08-19: **långtryck som visar en infobricka.** Det kostar noll permanent yta, vilket
+      är samma skäl som gjorde att 2B vann. ⚠️ Appen är en telefon-PWA — det är `long-press`,
+      inte hover, och den är osynlig tills den hittas. **Förslag, inte beslut.** Se
+      `DESIGN.md` §3.1.
 
-- [ ] **11B.0g Mockuper för Pass, och Strong som negativ referens. Ny 2026-08-18.**
+      **Klart när:** funktionen har enhetstester som täcker alla reglerna ovan — inklusive
+      åldersgränsen, blandfallet med importerade set och **att både vikt och reps returneras**.
+      Vakt 5 i 12.20 mäter `FÖRRA` och **måste skrivas om i samma commit** — annars är den grön
+      mot en kolumn som inte finns.
+
+- [x] **11B.0g Mockuper för Pass, och Strong som negativ referens. Ny 2026-08-18. KLAR 2026-08-19.**
+      **Slutvillkoret uppfyllt:** Adam har valt en variant per axel — `1A` invikt genväg och
+      `2B` snittet under värdet — och båda valen står i `DESIGN.md` §3.1 med skäl.
       Två till tre körbara varianter i `docs/mockups/`, samma metod som gav färgen och formen
       i sex omgångar. **Två axlar ska varieras, en i taget** enligt den metod 11B.0d bevisade:
 
@@ -1329,13 +1339,13 @@ nuvarande.
       egen skiss sa redan `90×5`; mockupen ritade bara vikten. Rättat i `3a43135`, och
       preciseringen är införd i `SPEC.md` §2, `DESIGN.md` §3.1 och 11B.0f ovan.
 
-      ⏰ **AXEL 1 ÄR INTE AVGJORD.** Adam lutade åt `1A` — *"kanske 1A så att den är något
-      invikt till en början"* — men det är en lutning, och den har **inte** bekräftats som
-      beslut. Frågeformuleringen var dessutom fel först: den skrev 1A/1B som *synlig mot dold*
-      när båda syns. Det som skiljer är radens **vilotillstånd**: `1A` invikt genväg som fälls
-      ut vid tryck, `1B` redan utfälld med markör och armerad `Tolka`-knapp.
+      ✅ **AXEL 1 ÄR AVGJORD 2026-08-19: `1A`, invikt genväg** som fälls ut vid tryck. Skälen
+      står i `DESIGN.md` §3.1. Frågeformuleringen var fel först — den skrev 1A/1B som *synlig
+      mot dold* när båda syns; det som skiljer är radens **vilotillstånd**. Rättat i `3a43135`.
 
-      **Kvar av uppgiften:** Adams val på axel 1, och att det skrivs in i `DESIGN.md` med skäl.
+      💡 **Adams förslag på den olösta förklaringsfrågan:** långtryck som visar en infobricka
+      om vad talet betyder. Nedskrivet i `DESIGN.md` §3.1 som **förslag, inte beslut** — hör
+      till 11B.0f eller steg 4.
 
       **Klart när:** Adam har valt en variant per axel, och valet står i `DESIGN.md` med skäl.
 

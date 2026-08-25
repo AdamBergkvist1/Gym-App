@@ -1292,6 +1292,54 @@ som är hela poängen med den.
 **Vad som INTE prövas:** fritext som primär inmatningsväg med setraderna som resultat. Ingen
 etablerad app gör så, och §0.2 säger att designen lånas från appar som bevisligen fungerar.
 
+### ✅ FORMEN: 1A "invikt genväg", vald av Adam 2026-08-19
+
+**Vald ur `docs/mockups/11b-0g-pass.html`, rad 1.** Fritext-loggningen ligger som en **invikt
+genväg** överst i passet, ritad som en riktig kontroll — och fälls ut till ett fullt fält när
+man trycker.
+
+> ✏️ **Frågan var först fel ställd, och det ska stå här.** Mockupen beskrev 1A som *"kostar ett
+> tryck"* och 1B som *"alltid synligt"*, som om den ena raden inte syntes. **Båda syns och båda
+> tar en rad.** Adam läste om det rätt: *"menar du att 1A blir som 1B efter det att man har
+> tryckt på den … så du undrar vilken jag vill ha från början liksom."* Det som skiljer är
+> radens **vilotillstånd**, ingenting annat.
+
+| Vilotillstånd | Vad raden signalerar innan du rört den |
+|---|---|
+| **1A, valt** | En genväg: *"här kan du skriva"*. Fälls ut vid tryck |
+| 1B | Ett armerat fält: markör, platshållare och en `Tolka`-knapp, hela tiden |
+
+**Adams skäl:** *"kanske 1A så att den är något invikt till en början."* Det rimmar med hans
+egen osäkerhet om hur mycket fritext-loggningen kommer användas (§0.5) — ett armerat fält som
+står framme i varje pass är en stark signal för en funktion han ännu inte vet om han vill ha.
+
+⚠️ **Stycket ovan argumenterade för motsatsen, och det står kvar med flit.** *"En funktion man
+måste öppna kostar ett tryck varje gång — och det är just de trycken som är hela poängen med
+den."* Argumentet är fortfarande giltigt; det förlorade mot användarens egen bedömning av sitt
+bruk. **Visar det sig att fritexten används mer än Adam trodde, är 1B det första att pröva om**
+— inte något nytt.
+
+⛔ **Detta gäller fritext-loggningen, inte passkommentaren.** De är två funktioner (§0.5).
+Passkommentaren ligger vid `Avsluta pass` och berörs inte av valet.
+
+### 💡 Förslag, inte beslut: långtryck förklarar de små talen
+
+**Den öppna frågan från 2B är hur snittalen förklaras första gången.** Adam 2026-08-19:
+
+> *"man kanske kan göra funktion sen om man typ håller över något i en liten stund så kommer
+> en info bricka om vad siffran innebär och sånt … sånt är rätt vanligt i många appar."*
+
+Det passar ovanligt väl, av samma skäl som 2B vann: **det kostar noll permanent yta.** Att
+lägga en rubrik eller en förklarande rad i setraden hade tagit tillbaka just det utrymme 2B
+sparade.
+
+⚠️ **En sak att inte kopiera rakt av: appen är en telefon-PWA, så det finns ingen hover.**
+Motsvarigheten är **långtryck** (`long-press`), och den har en egen kostnad — den är osynlig
+tills man råkar hitta den, och den krockar med systemets egen textmarkering om den byggs slarvigt.
+
+**Inget är avgjort här.** Förslaget hör till 11B.0f eller steg 4 och står nedskrivet så att
+frågan inte återuppfinns.
+
 ---
 
 **Tre beslut i den här skissen:**
