@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestDb, type GymDatabase } from './db';
 import {
   deleteSet,
@@ -12,6 +12,7 @@ import {
 import {
   getExerciseHistory,
   getPersonalRecords,
+  getSetAverages,
   getWorkoutSets,
   listTrainedExercises,
   listWorkoutSummaries,
@@ -240,6 +241,262 @@ describe('9.4 personbästa', () => {
     await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 200, reps: 1, isWarmup: true }, db);
     await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
     expect((await getPersonalRecords(BENK, db)).heaviest?.weightKg).toBe(90);
+  });
+});
+
+/**
+ * 11B.0f — snittet som ersätter `FÖRRA` i setraden.
+ *
+ * Reglerna står i `SPEC.md` §2 och `DESIGN.md` §3.1. Testerna här är skrivna
+ * före funktionen, i den ordning reglerna hänger ihop.
+ *
+ * Historiken skrivs genom den RIKTIGA loggningsvägen (`startWorkout`/`logSet`)
+ * med `Date` fejkad, inte som handknackade rader. Skälet: `setIndex` räknas
+ * fram inne i `logSet`, och en fixtur som sätter det själv hade kunnat vara
+ * grön mot en numrering appen aldrig skapar.
+ */
+const NU = new Date('2026-08-25T18:00:00.000Z');
+const DYGN = 24 * 60 * 60 * 1000;
+
+describe('11B.0f snittet per setnummer', () => {
+  beforeEach(() => vi.useFakeTimers({ toFake: ['Date'], now: NU }));
+  afterEach(() => vi.useRealTimers());
+
+  /** Ett avslutat pass `dagarSedan` dagar tillbaka, med seten i ordning. */
+  async function pass(
+    setLista: Array<[weightKg: number, reps: number]>,
+    dagarSedan: number,
+    exerciseId = BENK
+  ) {
+    vi.setSystemTime(new Date(NU.getTime() - dagarSedan * DYGN));
+    const w = await startWorkout(db);
+    for (const [weightKg, reps] of setLista) {
+      await logSet({ workoutId: w.id, exerciseId, weightKg, reps }, db);
+    }
+    await endWorkout(db);
+    vi.setSystemTime(NU);
+    return w;
+  }
+
+  it('snittar vikten per setnummer, inte över alla set i en klump', async () => {
+    await pass(
+      [
+        [90, 5],
+        [80, 5],
+      ],
+      7
+    );
+    await pass(
+      [
+        [100, 5],
+        [90, 5],
+      ],
+      3
+    );
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // Set 1: (90 + 100) / 2 = 95. Set 2: (80 + 90) / 2 = 85.
+    // Klumpas alla fyra ihop blir svaret 90 på båda raderna — det är felet
+    // grupperingen finns för att undvika. Man blir svagare för varje set i rad.
+    expect(sets.map((s) => s.weightKg)).toEqual([95, 85]);
+  });
+
+  it('bygger på de tre senaste passen MED ÖVNINGEN, inte de tre senaste passen', async () => {
+    // Fyra bänkpass. Det äldsta ska falla utanför underlaget.
+    await pass([[40, 5]], 40);
+    await pass([[90, 5]], 21);
+    await pass([[100, 5]], 14);
+    await pass([[95, 5]], 10);
+
+    // Tre benpass EFTER alla bänkpassen. Kör man bänk på måndagen och ben
+    // tisdag till torsdag innehåller "de tre senaste passen" noll bänkset, och
+    // kolumnen står tom just när den behövs. Därför står de här.
+    await pass([[100, 5]], 3, KNABOJ);
+    await pass([[100, 5]], 2, KNABOJ);
+    await pass([[100, 5]], 1, KNABOJ);
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // (90 + 100 + 95) / 3 = 95. Räknas det fjärde passet med blir svaret
+    // 81,25 — därför är 40 kg avsiktligt orimligt lätt.
+    expect(sets[0]?.weightKg).toBe(95);
+  });
+
+  it('avrundar snittvikten till närmaste 2,5 kg — en vikt som inte går på stången är oanvändbar', async () => {
+    await pass([[90, 5]], 21);
+    await pass([[85, 5]], 14);
+    await pass([[92.5, 5]], 7);
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // Råsnittet är 89,1666… kg. Ingen skivkombination ger det.
+    expect(sets[0]?.weightKg).toBe(90);
+  });
+
+  it('tar repsen från setet närmast snittvikten i stället för att snitta dem', async () => {
+    // Briefens eget exempel, ordagrant ur `TASKS.md` 11B.0f.
+    await pass([[90, 5]], 21);
+    await pass([[85, 8]], 14);
+    await pass([[92.5, 4]], 7);
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // Snittvikten är 90. Närmast den ligger 90-setet, som kördes på 5 reps.
+    //
+    // ⚠️ Snittas repsen i stället blir svaret 90×6, och det är inte bara "ett
+    // set som aldrig hänt": i e1RM är 90×6 = 108, mot de faktiska setens
+    // 105,0 / 107,7 och 104,8. Paret blir tyngre än VARTENDA set som utfördes.
+    // Vikt och reps byter av varandra, så snittas de var för sig lutar felet
+    // alltid uppåt — aldrig nedåt. Ett för högt referensvärde är precis den
+    // skada `SPEC.md` §2 finns för att ta bort. Avgjort av Adam 2026-08-25.
+    expect(sets[0]).toMatchObject({ weightKg: 90, reps: 5 });
+  });
+
+  it('låter det senaste setet vinna när två ligger lika nära snittvikten', async () => {
+    await pass([[85, 10]], 14);
+    await pass([[95, 3]], 7);
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // Snittet är precis 90, och båda seten ligger 5 kg bort. Utan en regel för
+    // oavgjort avgörs raden av vilken ordning databasen råkar svara i.
+    // Det senaste passet är den bättre gissningen om hur det ser ut nu.
+    expect(sets[0]).toMatchObject({ weightKg: 90, reps: 3 });
+  });
+
+  it('räknar inte uppvärmningsset som underlag', async () => {
+    vi.setSystemTime(new Date(NU.getTime() - 7 * DYGN));
+    const w = await startWorkout(db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 85, reps: 5 }, db);
+    await endWorkout(db);
+    vi.setSystemTime(NU);
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // 40 kg är förberedelse, inte arbete — samma regel som volymen redan har.
+    // Setnumret behålls som det lagrades: `logSet` räknar uppvärmningen som en
+    // rad, och `SetRow` numrerar raderna likadant. Uppvärmningens plats blir
+    // alltså tom i stället för att skjuta ner arbetssetens numrering.
+    expect(sets.map((s) => [s.setIndex, s.weightKg])).toEqual([
+      [1, 90],
+      [2, 85],
+    ]);
+  });
+
+  it('räknar inte raderade set som underlag', async () => {
+    vi.setSystemTime(new Date(NU.getTime() - 7 * DYGN));
+    const w = await startWorkout(db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+    const bort = await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 500, reps: 5 }, db);
+    await deleteSet(bort.id, db);
+    await endWorkout(db);
+    vi.setSystemTime(NU);
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // 500 kg är en felskrivning som ångrats. Får den ligga kvar i underlaget
+    // förgiftar den snittet i tre pass framåt.
+    expect(sets.map((s) => [s.setIndex, s.weightKg])).toEqual([[0, 90]]);
+  });
+
+  it('räknar aldrig importerade set som underlag — samma regel som 13.4', async () => {
+    vi.setSystemTime(new Date(NU.getTime() - 7 * DYGN));
+    const w = await startWorkout(db);
+    await logSet(
+      { workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 1, source: 'import' },
+      db
+    );
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 80, reps: 5 }, db);
+    await endWorkout(db);
+    vi.setSystemTime(NU);
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // Adams `2024 vecka 14: Bänk: 90 kg` var ett 1-repsmax ur gamla
+    // anteckningar. Blir det underlag lyfts snittet av ett maxlyft, och
+    // referensen blir ett rekord att matcha — precis det 13.4 stängde för
+    // spökdatan och det `SPEC.md` §2 stängde för snittet.
+    expect(sets.map((s) => [s.setIndex, s.weightKg, s.reps])).toEqual([[1, 80, 5]]);
+  });
+
+  it('visar inget snitt alls när övningen inte tränats på åtta veckor', async () => {
+    await pass([[90, 5]], 70);
+
+    const { sets, staleSince } = await getSetAverages(BENK, db);
+
+    // Adam tar paus när utvecklingen står stilla och återkommer senare. Utan
+    // gränsen presenteras ett två år gammalt snitt som "ditt normalläge",
+    // vilket är exakt den jämförelse regeln ska ta bort. Raden ska i stället
+    // säga när övningen senast tränades — därför datumet, inte bara `null`.
+    expect(sets).toEqual([]);
+    expect(staleSince).toBe('2026-06-16T18:00:00.000Z');
+  });
+
+  it('räknar exakt åtta veckor som fortfarande färskt — gränsen är ÄLDRE än, inte lika med', async () => {
+    await pass([[90, 5]], 56);
+
+    const { sets, staleSince } = await getSetAverages(BENK, db);
+
+    // Regeln säger "äldre än åtta veckor". Dagen på gränsen ska alltså visa
+    // snittet. Vakten kan inte bli röd av sig själv — den kontrollerades
+    // genom att `>` tillfälligt gjordes om till `>=`, vilket fällde den.
+    expect(sets).toHaveLength(1);
+    expect(staleSince).toBeNull();
+  });
+
+  it('visar tunt underlag ändå och märker det med antalet pass, räknat per setnummer', async () => {
+    await pass(
+      [
+        [90, 5],
+        [85, 5],
+      ],
+      14
+    );
+    await pass([[95, 5]], 7);
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // Passen har olika många set. Set 1 har två pass bakom sig, set 2 bara ett.
+    // Båda visas — `–` är reserverat för när underlag saknas HELT, samma regel
+    // som §3.3: aldrig en nolla, en nolla ser ut som ett resultat.
+    //
+    // Att antalet räknas per setnummer och inte per övning är ett omdömesbeslut
+    // 2026-08-25, utskrivet i `TASKS.md` 11B.0f. Det tillämpar en regel som
+    // redan fanns på ett fall briefen inte hade tänkt på.
+    expect(sets.map((s) => [s.setIndex, s.weightKg, s.workoutCount])).toEqual([
+      [0, 92.5, 2],
+      [1, 85, 1],
+    ]);
+  });
+
+  it('ger tomt utan datum när övningens enda set är importerade — inte "senast tränad"', async () => {
+    vi.setSystemTime(new Date(NU.getTime() - 400 * DYGN));
+    const w = await startWorkout(db);
+    await logSet(
+      { workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 1, source: 'import' },
+      db
+    );
+    await endWorkout(db);
+    vi.setSystemTime(NU);
+
+    const { sets, staleSince } = await getSetAverages(BENK, db);
+
+    // De två tomma tillstånden är INTE samma sak: `–` betyder "aldrig loggat
+    // i appen", datumet betyder "loggat, men för länge sedan". Räknas åldern
+    // före filtret får en övning användaren aldrig loggat en datumrad ur
+    // 2025 års anteckningar. Vakten kontrollerades genom att flytta
+    // åldersberäkningen före filtret, vilket fällde den.
+    expect(sets).toEqual([]);
+    expect(staleSince).toBeNull();
+  });
+
+  it('ger tomt utan datum för en övning som aldrig loggats', async () => {
+    // Kontraktsvakt för `–`-tillståndet. `SPEC.md` §3.3: aldrig en nolla, en
+    // nolla ser ut som ett resultat.
+    expect(await getSetAverages(KNABOJ, db)).toEqual({ sets: [], staleSince: null });
   });
 });
 

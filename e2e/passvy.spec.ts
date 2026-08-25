@@ -19,6 +19,23 @@ import {
  * 13.4 — Adams `2024 vecka 14: Bänk 90 kg` var ett 1-repsmax, och spökdatan är
  * ett minnesstöd om förra passet, inte ett rekord att matcha varje gång.
  *
+ * ⏰ **KOLUMNEN SKA BORT, OCH DEN HÄR VAKTEN MÅSTE SKRIVAS OM MED DEN.**
+ * `SPEC.md` §2 ersätter `FÖRRA` med ett snitt, och `DESIGN.md` §3.1 valde formen
+ * 2B: inget `setrad-forra`, utan snittvikten under vikten och snittrepsen under
+ * repsen. Beräkningen finns redan — `getSetAverages` i `src/db/history.ts`,
+ * byggd i 11B.0f med enhetstester som täcker 13.4-filtret.
+ *
+ * **Vakten står kvar oförändrad med flit.** Kolumnen finns fortfarande
+ * (`SetRow.tsx:98`), så vakten mäter något som existerar och är därmed ärlig i
+ * dag. Att skriva om den nu hade betytt påståenden om en skärm som ännu inte är
+ * byggd — steg 4 bygger den.
+ *
+ * ⛔ **Den commit som byter `SetRow` till `getSetAverages` MÅSTE skriva om
+ * vakten i samma commit.** Annars är den grön mot en kolumn som inte finns
+ * längre, och 13.4:s regel tappar sin enda e2e-täckning. Det som ska överleva
+ * omskrivningen är påståendet, inte `data-testid`:t: **ett importerat set får
+ * aldrig bli referensvärde, och dess vikt får inte synas någonstans i kortet.**
+ *
  * ⚠️ **TVÅ KODVÄGAR LÄSER `getLastPerformance`, OCH BÅDA MÄTS HÄR.** Det är inte
  * en dubblering utan hela poängen:
  *

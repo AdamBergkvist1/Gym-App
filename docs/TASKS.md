@@ -1309,6 +1309,32 @@ nuvarande.
       Vakt 5 i 12.20 mäter `FÖRRA` och **måste skrivas om i samma commit** — annars är den grön
       mot en kolumn som inte finns.
 
+      ✅ **FUNKTIONEN ÄR BYGGD OCH TESTAD 2026-08-25.** `getSetAverages` i
+      `src/db/history.ts`, byggd med `/tdd` — **13 tester, varje regel röd före den blev grön.**
+      Returnerar `{ sets: SetAverage[]; staleSince: string | null }`.
+
+      **Signaturen tar bara `exerciseId`, inte ett setnummer.** Briefen ovan skrev
+      *"exerciseId och ett setnummer"*. Avvikelsen är avsiktlig: `ExerciseCard.tsx:46` gör i dag
+      **ett** anrop per övningskort och skickar värdet ner i raderna. En signatur per setnummer
+      hade gjort en `useLiveQuery` per kort till en per rad, och ett indexuppslag per rad.
+      Bekräftat med Adam 2026-08-25.
+
+      **Två vakter kan inte bli röda av sig själva** — gränsen på exakt åtta veckor, och att en
+      övning med bara importerade set ger `–` i stället för *"senast tränad"*. Båda
+      kontrollerades genom att implementationen tillfälligt saboterades (`>` → `>=`, och
+      importfiltret borttaget), och båda föll. **Det står också i testernas kommentarer**, så
+      nästa läsare vet att de mäter något.
+
+      ⏰ **KVAR: vakt 5 i 12.20 är INTE omskriven, och det är ett medvetet avsteg från raden
+      ovan.** Skälet raden anger — *"annars är den grön mot en kolumn som inte finns"* — gäller
+      inte än: `FÖRRA`-kolumnen finns kvar i `SetRow.tsx:98` och drivs fortfarande av
+      `getLastPerformance`. Vakten mäter alltså något som existerar. Att skriva om den nu hade
+      krävt påståenden om en skärm som ännu inte är byggd.
+
+      **Kravet är flyttat, inte struket:** det gäller den commit som byter `SetRow` till
+      `getSetAverages` i steg 4. Snubbeltråden ligger i `e2e/passvy.spec.ts`
+      filhuvud som en ⛔-ruta. **Adam avgör om 11B.0f ska bockas av utan den delen.**
+
 - [x] **11B.0g Mockuper för Pass, och Strong som negativ referens. Ny 2026-08-18. KLAR 2026-08-19.**
       **Slutvillkoret uppfyllt:** Adam har valt en variant per axel — `1A` invikt genväg och
       `2B` snittet under värdet — och båda valen står i `DESIGN.md` §3.1 med skäl.

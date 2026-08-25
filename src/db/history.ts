@@ -164,6 +164,150 @@ export async function getPersonalRecords(
   return { exerciseId, heaviest, bestE1rm, totalSets: rows.length };
 }
 
+/** `SPEC.md` §2: snittet bygger på de tre senaste passen med övningen. */
+const ANTAL_PASS_I_SNITTET = 3;
+
+/** Minsta skivpar. Ett snitt som inte går att lägga på stången är oanvändbart. */
+const VIKTSTEG_KG = 2.5;
+
+/** Åtta veckor. Äldre underlag än så är inte längre ett normalläge. */
+const ÅLDERSGRÄNS_MS = 56 * 24 * 60 * 60 * 1000;
+
+export interface SetAverage {
+  setIndex: number;
+  /** Snittet av underlagets vikter, avrundat till närmaste 2,5 kg. */
+  weightKg: number;
+  /**
+   * INTE ett snitt. Repsen från det set vars vikt ligger närmast `weightKg`.
+   *
+   * Vikt och reps byter av varandra — kör man tyngre blir det färre reps — så
+   * snittas de var för sig hamnar paret ALLTID ovanför den verkliga kurvan,
+   * aldrig under. Det ger ett referensvärde som är tyngre än allt användaren
+   * faktiskt gjort, vilket är precis den skada `SPEC.md` §2 finns för att ta
+   * bort. Avgjort av Adam 2026-08-25, se `DESIGN.md` §3.1.
+   */
+  reps: number;
+  /**
+   * Hur många pass just det här setnumret bygger på, 1–3.
+   *
+   * Räknas per setnummer och inte per övning, eftersom passen har olika många
+   * set: har man kört fyra set en gång och två set två gånger har set 3 tunnare
+   * underlag än set 1. Färre än tre visas ändå, märkt med antalet — `–` är
+   * reserverat för när underlag saknas helt.
+   */
+  workoutCount: number;
+}
+
+export interface ExerciseSetAverages {
+  /** Snitt per setnummer, stigande. Tomma platser betyder `–`, aldrig en nolla. */
+  sets: SetAverage[];
+  /**
+   * Satt bara när senaste passet med övningen är äldre än åtta veckor. Då är
+   * `sets` tom, och raden visar *"senast tränad i \<månad år\>"* i stället.
+   *
+   * Skälet är Adams bruksmönster: han tar paus när utvecklingen står stilla.
+   * Utan gränsen presenteras ett två år gammalt snitt som hans normalläge.
+   */
+  staleSince: string | null;
+}
+
+/**
+ * Snittet som ersätter `FÖRRA` i setraden. Uppgift 11B.0f.
+ *
+ * Reglerna och skälen står i `SPEC.md` §2 och `DESIGN.md` §3.1 — läs dem där.
+ */
+export async function getSetAverages(
+  exerciseId: string,
+  database: GymDatabase = db
+): Promise<ExerciseSetAverages> {
+  // Samma tre filter som spökdatan i 13.4: raderade, uppvärmning och
+  // importerade. Det sista är det viktigaste — Adams `2024 vecka 14: Bänk:
+  // 90 kg` var ett 1-repsmax ur gamla anteckningar, och blir det underlag lyfts
+  // snittet av ett maxlyft.
+  //
+  // Filtret ligger FÖRE urvalet av pass: ett pass som bara innehåller
+  // uppvärmning eller importerade rader har inget underlag att bidra med och
+  // får inte äta en av de tre platserna.
+  const rows = (
+    await database.loggedSets
+      .where('[exerciseId+performedAt]')
+      .between([exerciseId, ''], [exerciseId, '￿'])
+      .toArray()
+  )
+    .filter((s) => !s.isDeleted && !s.isWarmup && s.source !== 'import')
+    // Sorteringen är inte kosmetisk: regeln för oavgjort längre ner läser den
+    // här ordningen. Indexet svarar visserligen stigande, men resten av filen
+    // sorterar också om efter `toArray()` i stället för att lita på det.
+    .sort(byPerformedAt);
+
+  const senastTränad = rows.reduce<string | null>(
+    (max, s) => (max === null || s.performedAt > max ? s.performedAt : max),
+    null
+  );
+  if (senastTränad !== null && Date.now() - new Date(senastTränad).getTime() > ÅLDERSGRÄNS_MS) {
+    return { sets: [], staleSince: senastTränad };
+  }
+
+  // De tre senaste passen MED ÖVNINGEN — inte de tre senaste passen. Kör man
+  // bänk på måndagen och ben tisdag till torsdag innehåller de tre senaste
+  // passen noll bänkset, och raden hade stått tom just när den behövs.
+  // Uppslaget går på `[exerciseId+performedAt]`, så passen som saknar övningen
+  // finns aldrig i `rows` från första början.
+  const senastIPasset = new Map<string, string>();
+  for (const s of rows) {
+    const nuvarande = senastIPasset.get(s.workoutId);
+    if (nuvarande === undefined || s.performedAt > nuvarande) {
+      senastIPasset.set(s.workoutId, s.performedAt);
+    }
+  }
+  const underlag = new Set(
+    [...senastIPasset.entries()]
+      .sort(([, a], [, b]) => (a < b ? 1 : a > b ? -1 : 0))
+      .slice(0, ANTAL_PASS_I_SNITTET)
+      .map(([workoutId]) => workoutId)
+  );
+
+  // Per setnummer, eftersom man blir svagare för varje set i rad. Set 3
+  // jämförs med set 3.
+  const perSetIndex = new Map<number, LocalSet[]>();
+  for (const s of rows) {
+    if (!underlag.has(s.workoutId)) continue;
+    const list = perSetIndex.get(s.setIndex);
+    if (list) list.push(s);
+    else perSetIndex.set(s.setIndex, [s]);
+  }
+
+  const sets = [...perSetIndex.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([setIndex, rader]) => {
+      const rått = rader.reduce((sum, s) => sum + s.weightKg, 0) / rader.length;
+      const weightKg = Math.round(rått / VIKTSTEG_KG) * VIKTSTEG_KG;
+
+      // Repsen snittas inte — de tas från setet närmast den vikt som VISAS,
+      // inte närmast råsnittet. Paret måste hänga ihop för den som läser det:
+      // "90 kg, och på 90 kg brukar det bli 5 reps". Ett repsantal valt efter
+      // ett tal användaren aldrig ser vore godtyckligt.
+      //
+      // Vid lika avstånd vinner det senaste setet. `rader` kommer ur indexet i
+      // stigande `performedAt`, så `<=` låter det senare skriva över det
+      // tidigare. Utan regeln avgörs raden av vilken ordning databasen råkar
+      // svara i, och det senaste passet är den bättre gissningen om hur det
+      // ser ut nu.
+      const närmast = rader.reduce((bäst, s) =>
+        Math.abs(s.weightKg - weightKg) <= Math.abs(bäst.weightKg - weightKg) ? s : bäst
+      );
+
+      return {
+        setIndex,
+        weightKg,
+        reps: närmast.reps,
+        workoutCount: new Set(rader.map((s) => s.workoutId)).size,
+      };
+    });
+
+  return { sets, staleSince: null };
+}
+
 /** Övningar användaren faktiskt har loggat, nyast först. Driver historiklistan. */
 export async function listTrainedExercises(
   database: GymDatabase = db
