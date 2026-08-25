@@ -1,11 +1,194 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-19. Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-25. Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-19 (kväll) — 11B.0g är STÄNGD. Allt förarbete i 11B är slut
+## 🆕 2026-08-25 — 11B.0f:s funktion är BYGGD. Kod rördes för första gången på fyra sessioner
+
+### ✅ Allt är pushat. Kontrollera själv i stället för att lita på ett SHA
+
+```bash
+git fetch origin && git status -sb
+```
+
+Svarar den `## main...origin/main` utan `ahead` eller `behind` är du i fas. Så såg det ut vid
+sessionens slut, kontrollerat efter en färsk `fetch`.
+
+**Sju commits:** sex från sessionen plus Adams `a9125ca` (researchrapporten, inlagd via
+GitHubs webbgränssnitt). **Grenarna divergerade** när Adam committade under sessionens gång —
+det löstes med `git rebase origin/main`, rent, inga konflikter. Räkna med att det händer igen.
+
+### ✅ Grindarna — ALLA FEM KÖRDA I SLUTLÄGET 2026-08-25, på hemdatorn
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **292 tester i 23 filer**, 2,97 s |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar i `icons.tsx` |
+| `npm run build` | ✅ **638,37 kB** (gzip 191,76), precache **651,50 KiB**, 9 entries |
+| `npm run e2e` | ✅ **60 passed**, 37,1 s |
+
+Vid sessionens **start** var samma svit 274 tester och e2e 60 passed på 39,2 s. Tillskottet är
+**18 tester**: 13 för snittfunktionen, 2 för `ScrollPicker`, 3 för viktsteget.
+
+### 🔴 Sessionens viktigaste fynd: e2e-flakigheten var en RIKTIG APPBUGG
+
+**Detta är det enda i sessionen som är värt att bära vidare oavsett vad man jobbar med.**
+
+Sviten började faila slumpmässigt, olika test varje körning. Det var frestande att kalla det
+flakighet och köra om. I stället diagnosticerades det med `/diagnosing-bugs`, och botten var
+en bugg i [`ScrollPicker`](../src/ui/ScrollPicker.tsx): hjulets spärr mot att rapportera sin
+**egen** programmatiska scroll släpptes efter 60 ms, medan debouncen som rapporterar väntade
+90 ms. Under maskinlast skrevs hjulets gamla position tillbaka som ett användarval.
+
+**Följden drabbade dig på telefonen, inte bara sviten:** fyra tryck på `+2,5` gav **8 kg i
+stället för 10**. Tyst datakorruption i appens kärnflöde.
+
+⚠️ **Det som avgjorde diagnosen är metoden, inte fyndet.** Playwrights trace gav sekvensen
+`2,5 → 5 → 7,5 → 5,5 → 8`. **`5,5` kunde inte bortförklaras** — tappade klick kan bara ge 5
+eller 7,5, aldrig ett värde utanför 2,5-rutnätet. Det enda talet som inte gick ihop pekade
+rakt på orsaken. Tre konkurrerande hypoteser föll på mätning: tappade klick i WebKit, delad
+state mellan samtidiga test (failade lika ofta med `workers=1`), och ren maskinlast.
+
+**Lärdomen: en grind som failar slumpmässigt är inte brus, den är ett olöst fel.** Sviten var
+60/60 grön på morgonen och började faila först under last — buggen hade legat där hela tiden.
+
+Mätning före → efter, alla på ren kod: serie `repeat-each=6 workers=1` **3/4 rött → 6/6
+grönt**, parallellt `repeat-each=4 workers=2` **7/8 rött → 8/8 grönt**, full svit **1–2 fel per
+körning → 60/60, tre körningar i rad**.
+
+🆕 **`src/ui/ScrollPicker.test.tsx` är repots FÖRSTA komponenttest.** Kör i jsdom (redan
+installerat) och renderar med `react-dom` — **inga nya poster i `package.json`**.
+`vite.config.ts` inkluderade redan `src/**/*.test.tsx`. Det finns alltså nu en söm för
+UI-logik som inte kräver e2e, och steg 4 kan bygga vidare på den.
+
+⚠️ **Att repot hade noll komponenttester var det som lät buggen leva.** All UI-logik täcktes
+bara av e2e, och där ser en timingbugg ut som flakighet i stället för som en bugg.
+
+### Vad som blev gjort — 11B.0f
+
+**Funktionen är byggd och testad. Läs `TASKS.md` 11B.0f för status, inte den här filen.**
+
+`getSetAverages` i [`src/db/history.ts`](../src/db/history.ts), byggd med `/tdd` enligt
+föregående överlämnings beslut. **13 tester, varje regel röd innan den blev grön.**
+
+**Två avgöranden som gjordes under vägen, båda utskrivna i `SPEC.md` §2:**
+
+1. **Snittparet: snittad vikt, verkliga reps.** Adams val. Skälet som fällde alternativet att
+   snitta båda talen är **mätt**: vikt och reps byter av varandra, så snittas de var för sig
+   hamnar paret **alltid** ovanför den verkliga kurvan. Briefens eget exempel ger `90×6`, i
+   e1RM **108** mot de faktiska setens 105,0 / 107,7 / 104,8 — tyngre än vartenda set som
+   utfördes. **Ett för lågt referensvärde vore ofarligt; ett för högt är precis den skada
+   `SPEC.md` §2 finns för att ta bort.**
+2. **Viktsteget härleds ur `equipment`** — `skivstång` 2,5 kg, allt annat 1 kg. Kom ur Adams
+   invändning att hantelcurl körs i enkilossteg. **Principen är viktigare än talen: avrunda
+   bara så grovt som utrustningen är garanterad att vara.**
+
+⚠️ **Två vakter kunde inte bli röda av sig själva** — åldersgränsen på exakt åtta veckor, och
+att en övning med bara importerade set ger `–` i stället för *"senast tränad"*. Båda
+kontrollerades genom att **implementationen tillfälligt saboterades**, och båda föll. Det står
+i testernas kommentarer. **Gör likadant nästa gång en vakt inte kan bli röd naturligt.**
+
+### ⏰ KVAR I 11B.0f: vakt 5 är inte omskriven, och rutan är obockad
+
+Uppgiften kräver att vakt 5 i 12.20 skrivs om **i samma commit**. Det är **inte** gjort, och
+det är ett medvetet avsteg. Skälet uppgiften anger — *"annars är den grön mot en kolumn som
+inte finns"* — gäller inte än: `FÖRRA`-kolumnen finns kvar i
+[`SetRow.tsx:98`](../src/ui/SetRow.tsx) och drivs fortfarande av `getLastPerformance`.
+
+**Kravet är flyttat till den commit som byter `SetRow` till `getSetAverages` i steg 4.**
+Snubbeltråden ligger som en ⛔-ruta i `e2e/passvy.spec.ts` filhuvud. **Adam har inte sagt om
+11B.0f får bockas av utan den delen — rutan står kvar obockad med flit.**
+
+### Researchen om viktsteg — och varför den ska läsas med spärr
+
+`docs/research/viktsteg-och-avrundning-i-gymappar.md`, beställd av Adam från Gemini.
+**Läsanvisningen ligger överst i den filen.** Två fel hittades vid granskning:
+
+⛔ **Rapportens "Strong" är till stor del StrongLifts — en annan app.** Källorna för
+*"Progression settings"*, skivaktivering och destruktiv enhetsavrundning är alla
+`support.stronglifts.com`; Strongs egen hjälp ligger på `help.strongapp.io`. Påståendet hann
+skrivas in i `SPEC.md` §2 och är **struket där i egen commit**.
+
+⚠️ Ungefär hälften av de 46 källorna är Reddit-trådar. Källistan kom **inte** med vid
+inklistringen utan eftersändes; den ligger nu sist i rapportfilen med förstahands- och
+andrahandsmärkning. **Ingen länk är öppnad och verifierad av oss**, och det står utskrivet.
+
+**Slutsatsen står ändå kvar** — den bärs av FitNotes och Hevy, som båda har förstahandskällor.
+
+💡 **Rapportens rekommendation följdes INTE.** Den föreslog ett redigerbart fält per övning
+plus import av `free-exercise-db`. Vi härleder i stället ur katalogens befintliga
+`equipment`-fält: noll schemaändring, noll migration. Ett redigerbart fält läggs till **om**
+ett standardvärde skaver.
+
+✅ **`free-exercise-db` behövde ingen ny utredning** — den står redan i `EXTERNT.md` sedan
+2026-08-03 som uppskjuten, med en hårdare spärr än rapporten nämnde: **katalogens id:n är
+checksummade mot Supabase**, så att utöka katalogen är en datamigration. Villkoret för att ta
+upp det står redan skrivet: *"när Adam faktiskt saknar en övning han vill logga."*
+
+### Öppna beslut som nästa session stöter på
+
+1. **Får 11B.0f bockas av utan vakt 5-omskrivningen?** Adams beslut. Se ovan.
+2. ✅ **`±`-knapparna i `SetAdjustSheet` — AVGJORT ATT SKJUTA UPP.** De är hårdkodade till
+   `−1 / −2,5 / +2,5 / +1` och skulle kunna följa samma utrustningsregel. Adam 2026-08-25:
+   *"dom får vi ta när det steget kommer då antar jag."* **Alltså steg 4, inte tidigare.**
+3. **Vad förklarar snittalen första gången?** Oförändrat öppen sedan 2026-08-19. Med `2B`
+   finns ingen kolumnrubrik. Adams förslag om långtryck står i `DESIGN.md` §3.1 som förslag.
+4. **Chart.js** blir en fråga i runda 2. Kräver Adams ja enligt `CLAUDE.md` §7.3.
+
+### ⚠️ Arbetssättet: en fråga som inte skulle ha ställts
+
+`/tdd` kräver att sömmen bekräftas med användaren. Den ställdes som en fråga om
+funktionssignatur — Adam svarade *"förstår inte riktigt frågan så kör på det rekommenderade du
+tänker."*
+
+**Regeln som faller ut:** Adams del är **vad appen ska göra**. Tekniska val — signaturer,
+returtyper, var en modul bor — avgörs själv och **skrivs ner med skäl** så de går att
+överpröva. Samma dag ställdes en fråga han *kunde* svara på — hur snittvikt och reps kopplas
+ihop — och där kom ett tydligt val direkt, för den frågan handlade om vad han ser i appen.
+
+Kräver en skill att en söm bekräftas räcker det att **redovisa** den och gå vidare.
+
+### Miljö
+
+**macOS (hemdatorn)**, Darwin 24.6.0. `node` v24.13.0, `npm` 11.6.2. **`gh` saknas**
+fortfarande. Playwrights WebKit är installerad sedan 2026-08-19.
+
+⏰ **Allt e2e-arbete är kört mot WebKit i Playwright**, aldrig mot Safari på Adams telefon.
+Samma motor, men inte samma sak. `ScrollPicker`-fixen är **inte** verifierad på riktig hårdvara.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/code-review`** | Efter steg 4:s **första** skärm, inte efter hela ombyggnaden. Oförändrat i fyra överlämningar. `ScrollPicker`-fixen och `getSetAverages` är båda ogranskade |
+| **`/diagnosing-bugs`** | ✅ **Bevisade sitt värde den här sessionen.** Kör den när något faller — även när det ser ut som flakighet. Kravet att bygga en återkopplingsslinga *före* hypoteser var det som hittade buggen |
+| **`/tdd`** | Till steg 4:s logik. Redovisa sömmen, fråga inte om den |
+| **`/wayfinder`** | Till **runda 2** (Statistik, Övningar, Mer). Inte till runda 1 |
+
+---
+
+## 2026-08-19 (kväll) — 11B.0g är STÄNGD. Allt förarbete i 11B är slut — DELVIS ÖVERSPELAD
+
+> **⚠️ Fyra saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "Nästa jobb är `11B.0f`" är utfört.** Funktionen `getSetAverages` är byggd och testad
+> 2026-08-25. Vakt 5-delen av uppgiften återstår och är flyttad till steg 4. Se sektionen
+> överst.
+>
+> **(2) Grindtabellen är överspelad.** 274 tester har blivit 292, och e2e är omkörd. Se
+> tabellen överst — och kör dem ändå själv, av exakt det skäl den här sektionen redan lär ut.
+>
+> **(3) Den öppna frågan om snittet som två tal är AVGJORD** — snittad vikt, verkliga reps.
+> Beslutet med skäl ligger i `SPEC.md` §2.
+>
+> **(4) Avrundningen till 2,5 kg gäller inte längre överallt.** Steget härleds nu ur övningens
+> `equipment`: `skivstång` 2,5 kg, allt annat 1 kg. Se `SPEC.md` §2.
+>
+> Allt annat — `1A`/`2B`-valen, Strong-mätningarna, rättelsen om hedgade svar — gäller
+> oförändrat.
 
 ### ✅ Allt är pushat. Börja med `git pull`
 
