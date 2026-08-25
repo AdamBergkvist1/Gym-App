@@ -7,18 +7,21 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ## 🆕 2026-08-19 (kväll) — 11B.0g är STÄNGD. Allt förarbete i 11B är slut
 
-### ✅ Pushat till och med `4118dcf`. Börja med `git pull`
+### ✅ Allt är pushat. Börja med `git pull`
 
-Kontrollerat efter en färsk `fetch`: `git status -sb` svarar `## main...origin/main` utan
-`ahead`, och `origin/main` står på **`e5b90aa`** — överlämningen inräknad. **Sex commits gick
-upp den här sessionen.**
+**Kontrollera själv i stället för att lita på ett SHA här** — den här sektionen har redan
+rättats två gånger för att commit-id:t blev inaktuellt av nästa commit:
 
-> ✏️ **Den här rutan sa först `4118dcf` och varnade för att en sista commit kunde ligga
-> opushad.** Det stämde när det skrevs — överlämningen var inte committad än. Rättat i egen
-> commit i stället för genom `--amend`, så att historiken visar att uppgiften stämde vid varje
-> tidpunkt. Samma praxis som 2026-08-19 (dag).
+```bash
+git fetch origin && git status -sb
+```
 
-Samtliga commits rör `docs/` — ingen `.ts`, `.tsx`, `package.json` eller migration.
+Svarar den `## main...origin/main` utan `ahead` eller `behind` är du i fas. Så såg det ut när
+sessionen avslutades, kontrollerat efter en färsk `fetch`.
+
+**Sessionen gjorde åtta commits, samtliga under `docs/`** — ingen `.ts`, `.tsx`,
+`package.json` eller migration. Enda undantaget från "bara dokument" är att Playwrights
+WebKit installerades lokalt, vilket inte rör repot.
 
 ### Börja här
 
@@ -31,7 +34,22 @@ tre sessioner som kod ska röras**, och två saker måste göras innan en rad sk
    den hårda vägen: *läs koden innan du planerar, inte efter.* `getLastPerformance` finns
    redan och slår upp på `[exerciseId+performedAt]`.
 
-`/tdd` är rätt verktyg här — se skilltabellen längst ned.
+### ✅ Adam har godkänt att 11B.0f körs med `/tdd`. 2026-08-19
+
+**Det är ett beslut, inte en rekommendation.** Kör skillen som den är föreskriven — inte en
+inline-variant av rött/grönt "som ändå gör samma sak".
+
+**Varför just här, och det är inte formalia:** `vakt 5` i 12.20 mäter `FÖRRA`-kolumnen, som
+inte längre finns. **Ett test man aldrig sett faila bevisar ingenting** — skrivs koden först
+kan vakten bli grön mot något som inte existerar, och ingen märker det. Med TDD tvingas den
+bli **röd på rätt rad först**. Sabotaget är uppgiften, inte en efterkontroll.
+
+Snittfunktionen har dessutom många regler att hålla isär — underlag, gruppering, avrundning,
+åldersgräns, filter, och nu **vikt och reps** — och varje regel blir ett eget test.
+
+⏰ **Adam är införstådd med att det ser långsammare ut i början** och att röda körningar är
+ett delmål, inte ett problem. Han behöver inte granska testerna; hans del är fortfarande vad
+appen ska göra.
 
 ### ✅ Grindarna — ALLA FEM KÖRDA OCH GRÖNA 2026-08-19 (kväll), på hemdatorn
 
@@ -179,7 +197,7 @@ innan du pushar en commit du inte själv skapat.**
 
 | Skill | När, och varför just den |
 |---|---|
-| **`/tdd`** | För **11B.0f**, och nu starkare än förut. Reglerna är fler sedan snittet blev två tal, och **vakt 5 ska bli röd på rätt rad innan den skrivs om**. Sabotaget är uppgiften, inte en efterkontroll |
+| **`/tdd`** | ✅ **BESLUTAD för 11B.0f**, godkänd av Adam 2026-08-19 — inte längre ett förslag att väga. Se egen rubrik under "Börja här" |
 | **`/code-review`** | Efter steg 4:s **första** skärm, inte efter hela ombyggnaden. Oförändrat i tre överlämningar |
 | **`/wayfinder`** | Till **runda 2** (Statistik, Övningar, Mer). Inte till runda 1 — där finns ingen dimma kvar |
 | **`/diagnosing-bugs`** | Bara om något faller. Begär utskriften först — gissa inte |
