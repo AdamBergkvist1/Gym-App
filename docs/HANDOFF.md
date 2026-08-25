@@ -10,10 +10,13 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 ### ✅ Pushat till och med `4118dcf`. Börja med `git pull`
 
 Kontrollerat efter en färsk `fetch`: `git status -sb` svarar `## main...origin/main` utan
-`ahead`, och `origin/main` står på `4118dcf`. **Fem commits gick upp den här sessionen.**
+`ahead`, och `origin/main` står på **`e5b90aa`** — överlämningen inräknad. **Sex commits gick
+upp den här sessionen.**
 
-⏰ **En sista commit kan ligga opushad:** den med den här sektionen plus Adams setprecisering
-i 11B.0f. Kolla `git status -sb` först.
+> ✏️ **Den här rutan sa först `4118dcf` och varnade för att en sista commit kunde ligga
+> opushad.** Det stämde när det skrevs — överlämningen var inte committad än. Rättat i egen
+> commit i stället för genom `--amend`, så att historiken visar att uppgiften stämde vid varje
+> tidpunkt. Samma praxis som 2026-08-19 (dag).
 
 Samtliga commits rör `docs/` — ingen `.ts`, `.tsx`, `package.json` eller migration.
 
