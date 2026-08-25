@@ -1163,10 +1163,13 @@ och en enkel kortrubrik. Så ser formen inte ut längre:
 │ ┌──────────────────────────────┐ │  vit yta, radie 18,
 │ │ ▍ Bänkpress             ⋯    │ │  indragen 16 px
 │ │ ▍ Skivstång · 3 set · 1385kg │ │  ▍ = accentbricka 10×34
-│ │   Set  Snitt   Kg  Reps   ✓  │ │  metarad --text-meta
-│ │    1   90×5    92,5   5   ●  │ │  klar: --color-ok-bg
-│ │    2   90×5    90     5   ●  │ │  snitt av 3 senaste passen
-│ │    3   88×5    90     5   ○  │ │  48 px, väntar
+│ │   Set        Kg   Reps    ✓  │ │  metarad --text-meta
+│ │    1      92,5      5     ●  │ │  klar: --color-ok-bg
+│ │             90      5        │ │  snittet: --text-meta,
+│ │    2        90      5     ●  │ │  --color-dim, UNDER värdet
+│ │             90      5        │ │  (2B, valt 2026-08-19)
+│ │    3        90      5     ○  │ │  48 px, väntar
+│ │           87,5      6        │ │  reps rör sig oberoende
 │ │ ─────────────────────────────│ │  hårfin linje
 │ │   + Lägg till set            │ │
 │ └──────────────────────────────┘ │
@@ -1227,7 +1230,8 @@ inte det här stycket, för *varför*. Här står bara vad det betyder för form
 |---|---|
 | Underlag | De tre senaste passen **med den övningen**, inte de tre senaste passen |
 | Gruppering | Per **setnummer**. Set 3 jämförs med set 3 — man blir svagare för varje set i rad |
-| Avrundning | Närmaste **2,5 kg**. Ett snitt som inte går att lägga på stången är oanvändbart |
+| **Vad som visas** | **Två tal: snittvikt OCH snittreps.** `90×5`, aldrig bara `90`. Se rutan under tabellen |
+| Avrundning | Vikt: närmaste **2,5 kg** — ett snitt som inte går att lägga på stången är oanvändbart. Reps: **hela reps** |
 | Åldersgräns | **8 veckor.** Äldre än så: inget snitt, utan *"senast tränad i oktober 2024"* |
 | Filter | Ärver 13.4: hoppar över raderade, uppvärmningsset **och importerade** |
 | Typografi | `--text-meta`, `--color-dim`. **Aldrig samma storlek som det du skriver in** |
@@ -1243,8 +1247,32 @@ tillstånd som kommer att synas *mest*, eftersom appen tas i bruk från nästan 
 för när underlag saknas helt — samma regel som §3.3 redan har: *"aldrig en nolla: en nolla ser ut
 som ett resultat."*
 
-⚠️ **Kolumnrubriken `Snitt` är ett förslag, inte ett beslut.** Den ska prövas i mockupen mot
-alternativ som `Normalt` och `Typiskt`. MacroFactor kallar sin motsvarighet `Trend`.
+### ✅ FORMEN: 2B "under värdet", vald av Adam 2026-08-19
+
+**Vald ur `docs/mockups/11b-0g-pass.html`, rad 2.** Snittet får **ingen egen kolumn**. Varje
+talkolumn bär sitt eget snitt under sig i `--text-meta`/`--color-dim`: **snittvikten under
+vikten, snittrepsen under repsen.**
+
+Det är MacroFactors konstruktion — `2108` stort, `of 2643` litet och grått under — som §3.1
+redan pekade ut som mönstret. Nu är den vald, inte bara citerad.
+
+| Vad valet ger | Varför det vägde |
+|---|---|
+| **Ingen kolumnbredd betalas** | Strong-mätningen: där kostade spökdatakolumnen ~⅓ av setradens bredd och stod ändå tom i alla tre raderna |
+| **Varje tal står under det det hör till** | Man behöver aldrig fråga sig vilket tal som är vilket. Det var Adams eget skäl att välja 2B när snittet blev två tal |
+| **Talet viskar** | Uppfyller regeln i tabellen ovan: aldrig samma storlek som det du skriver in |
+
+**Vad valet kostar, och det ska stå kvar:** kopplingen *90 kg hörde ihop med 5 reps* är
+svagare när talen står isär än i 2A:s sammanhållna `90×5`. Det var 2A:s enda verkliga
+fördel, och den offrades medvetet.
+
+✅ **Kolumnrubriken är därmed inte längre en öppen fråga.** Här stod att `Snitt` skulle prövas
+mot `Normalt` och `Typiskt`, med MacroFactors `Trend` som jämförelse. **Med 2B finns ingen
+kolumn att namnge**, och frågan faller.
+
+⚠️ **Men något måste förklara talen första gången.** Utan rubrik är det inte självklart vad
+de små grå siffrorna är. Det är **inte löst** och hör till 11B.0f eller den skärm som byggs
+i steg 4 — inte hit.
 
 ---
 

@@ -40,8 +40,31 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 > | **Siffran som visas bredvid** | Ett facit du mäts mot vid varje set | Görs om |
 >
 > **Vad som gäller nu.** Värdet är **snittet av de tre senaste passen med samma övning**, per
-> setnummer, avrundat till en vikt som går att lägga på stången. Ett och samma tal används
+> setnummer, avrundat till en vikt som går att lägga på stången. Samma värde används
 > både som förifyllning och som visad referens — annars vore facit tillbaka i fältet.
+>
+> > ### 🔄 Snittet är TVÅ tal, inte ett. Preciserat av Adam 2026-08-19
+> >
+> > Stycket ovan skrev *"en vikt"* och *"ett och samma tal"*. **Det räcker inte, och skälet är
+> > Adams:**
+> >
+> > > *"för att det ska make sense måste man visa snitt i vikt kopplat till reps och inte bara
+> > > snitt i vikt. för om man tar ju mer reps på högre vikt osv."*
+> >
+> > **Vikt och reps går inte att skilja åt.** 90 kg säger ingenting utan hur många reps det var
+> > på. Ett snitt som bara följer vikten kan **stiga för att du kört färre reps** — det ser ut
+> > som framsteg utan att vara det, vilket är precis den falska signal hela omskrivningen finns
+> > för att ta bort.
+> >
+> > **Vad som visas:** snittvikten **och** snittrepsen på den vikten, för de senaste passen med
+> > övningen. Alltså `90×5`, inte `90`. `DESIGN.md` §3.1:s skiss sa detta redan; det var
+> > `SPEC.md` som var otydlig.
+> >
+> > ⚠️ **En följdfråga är medvetet obesvarad här:** snittas vikt och reps var för sig kan
+> > resultatet bli en kombination som aldrig utförts — 90×5, 85×8 och 92,5×4 ger `90×6`, ett
+> > set som inte hänt. Det behöver inte vara fel, eftersom talet är ett typvärde och inte ett
+> > facit, men det **är ett val**. Det avgörs i **11B.0f när funktionen skrivs**, och ska inte
+> > antas här. Adam informerad och införstådd 2026-08-19.
 >
 > **"De tre senaste passen med den övningen"**, inte de tre senaste passen. Kör man bänk på
 > måndagen och ben tisdag till torsdag innehåller de tre senaste passen noll bänkset.

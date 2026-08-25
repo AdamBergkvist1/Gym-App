@@ -1248,6 +1248,25 @@ nuvarande.
       underlag när set 1 har tre. Vad som då visas ska avgöras när funktionen skrivs, inte
       antas.
 
+      ⚠️ **NY OCH ÖPPEN 2026-08-19: snittet är två tal, och de kan ljuga tillsammans.**
+      Funktionen ska returnera **snittvikt OCH snittreps**, inte bara vikt — Adams
+      precisering, se `SPEC.md` §2 och `DESIGN.md` §3.1. Signaturen ovan ändras därefter.
+
+      **Frågan som måste avgöras här, och som medvetet lämnades öppen i briefen:** snittas
+      vikt och reps var för sig kan resultatet bli **en kombination som aldrig utförts**.
+      Underlaget 90×5, 85×8 och 92,5×4 ger snittet `90×6` — ett set som inte hänt.
+
+      | Väg | Vad den ger |
+      |---|---|
+      | **Snitta var för sig** | Enklast. Kan visa ett set som aldrig utförts |
+      | **Välj det mest representativa faktiska setet** | Alltid sant. Men är inte längre ett snitt, och en enskild mätning är brus — vilket var skälet till snittet från början (`SPEC.md` §2) |
+      | **Snitta vikten, visa vanligaste repsantalet på den vikten** | Mellanläge. Fler regler att testa |
+
+      **Det behöver inte vara fel att visa en kombination som aldrig hänt** — talet är ett
+      typvärde, inte ett facit, och hela poängen med `SPEC.md` §2 är att det inte ska vara ett
+      facit. **Men det ska vara ett val, inte en bieffekt.** Adam informerad och införstådd
+      2026-08-19; han hänvisade frågan hit med flit.
+
       **Klart när:** funktionen har enhetstester som täcker alla sex reglerna ovan, inklusive
       åldersgränsen och blandfallet med importerade set. Vakt 5 i 12.20 mäter `FÖRRA` och
       **måste skrivas om i samma commit** — annars är den grön mot en kolumn som inte finns.
@@ -1298,7 +1317,25 @@ nuvarande.
       **Mockupen ska pröva dem som två element, inte ett.** Placeringen överst gäller
       passkommentaren.
 
-      **Kvar av uppgiften:** de två till tre körbara varianterna, och Adams val per axel.
+      ✅ **Mockupen är byggd:** `docs/mockups/11b-0g-pass.html`, fyra körbara rutor.
+
+      ✅ **AXEL 2 ÄR AVGJORD 2026-08-19: `2B`, snittet under värdet.** Ingen egen kolumn;
+      varje talkolumn bär sitt eget snitt under sig. Skälen står i `DESIGN.md` §3.1.
+      **Kolumnrubriksfrågan (`Snitt`/`Normalt`/`Typiskt`) faller därmed** — det finns ingen
+      kolumn att namnge.
+
+      ⚠️ **Adam hittade ett fel i mockupen som gjorde hela axeln missvisande:** snittet
+      ritades som **ett** tal när det måste vara **två** — vikt kopplad till reps. Briefens
+      egen skiss sa redan `90×5`; mockupen ritade bara vikten. Rättat i `3a43135`, och
+      preciseringen är införd i `SPEC.md` §2, `DESIGN.md` §3.1 och 11B.0f ovan.
+
+      ⏰ **AXEL 1 ÄR INTE AVGJORD.** Adam lutade åt `1A` — *"kanske 1A så att den är något
+      invikt till en början"* — men det är en lutning, och den har **inte** bekräftats som
+      beslut. Frågeformuleringen var dessutom fel först: den skrev 1A/1B som *synlig mot dold*
+      när båda syns. Det som skiljer är radens **vilotillstånd**: `1A` invikt genväg som fälls
+      ut vid tryck, `1B` redan utfälld med markör och armerad `Tolka`-knapp.
+
+      **Kvar av uppgiften:** Adams val på axel 1, och att det skrivs in i `DESIGN.md` med skäl.
 
       **Klart när:** Adam har valt en variant per axel, och valet står i `DESIGN.md` med skäl.
 
