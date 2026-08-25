@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+// Testet läser katalogen med flit — se kommentaren i det andra fallet nedan.
+import { CATALOG } from '../db/catalog';
 import {
   formatVolume,
   formatWeight,
@@ -20,6 +22,21 @@ describe('11B.0f viktsteget per utrustning', () => {
     expect(weightStepFor('kabel')).toBe(1);
     expect(weightStepFor('maskin')).toBe(1);
     expect(weightStepFor('kroppsvikt')).toBe(1);
+  });
+
+  it('känner igen katalogens faktiska värden — inte bara strängar i det här testet', () => {
+    // ⚠️ VARFÖR TESTET LÄSER KATALOGEN. Testet ovan räknar upp värdena för hand,
+    // och en felstavning i BÅDE `weightStepFor` och den uppräkningen hade gått
+    // igenom. Här är katalogen sanningskällan: skivstångsövningarna måste få
+    // 2,5 och de övriga 1 kg. Stavas literalen i `weightStepFor` fel får ingen
+    // katalogövning 2,5, och raden faller.
+    const skivstång = CATALOG.filter((ö) => ö.equipment === 'skivstång');
+    const övriga = CATALOG.filter((ö) => ö.equipment !== 'skivstång');
+
+    expect(skivstång.length).toBeGreaterThan(0);
+    expect(övriga.length).toBeGreaterThan(0);
+    expect(new Set(skivstång.map((ö) => weightStepFor(ö.equipment)))).toEqual(new Set([2.5]));
+    expect(new Set(övriga.map((ö) => weightStepFor(ö.equipment)))).toEqual(new Set([1]));
   });
 
   it('faller tillbaka på hela kilon för okänd utrustning i stället för att anta stång', () => {

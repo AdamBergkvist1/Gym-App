@@ -15,12 +15,18 @@
  * samma commit — annars är repot och databasen inte längre överens.
  */
 
+import type { Equipment } from './types';
+
 export interface CatalogExercise {
   id: string;
   name: string;
   aliases: string[];
   primaryMuscle: string;
-  equipment: string;
+  /**
+   * Union, inte `string`. Värdet styr viktsteget i `weightStepFor` (11B.0f), så
+   * en felstavning gav tidigare tyst 1 kg i stället för ett byggfel.
+   */
+  equipment: Equipment;
 }
 
 export const CATALOG_ID_CHECKSUM = 'b4f02d6be5845b47bd3c041257481d2b';

@@ -30,9 +30,13 @@ export const REP_STEP = 1;
  * hantelsnitt på 9 kg blir 10, och det verkliga normalläget går inte längre att
  * se. Det första är återställbart, det andra är det inte.
  *
- * Marknaden lägger i stället steget redigerbart per övning (FitNotes, Strong).
- * Vi börjar med utrustningen eftersom katalogen redan bär `equipment` på alla
- * övningar — se `SPEC.md` §2 och `docs/research/viktsteg-och-avrundning-i-gymappar.md`.
+ * Marknaden lägger i stället steget redigerbart per övning (FitNotes) eller per
+ * utrustningstyp (Hevy, i uppvärmningskalkylatorn). Vi börjar med utrustningen
+ * eftersom katalogen redan bär `equipment` på alla övningar — se `SPEC.md` §2
+ * och `docs/research/viktsteg-och-avrundning-i-gymappar.md`.
+ *
+ * ✏️ Här stod först att även Strong gör det per övning. Det är struket: källan
+ * för det påståendet var StrongLifts, en annan app. Se rapportens läsanvisning.
  */
 export function weightStepFor(equipment: string | null): number {
   // Allt annat — `hantlar`, `kabel`, `maskin`, `kroppsvikt` och okänd

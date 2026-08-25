@@ -13,6 +13,18 @@ import type { EffortType } from '../parser/types';
 export const SET_SOURCES = ['manual', 'local_parse', 'ai_parse', 'import'] as const;
 export type SetSource = (typeof SET_SOURCES)[number];
 
+/**
+ * Utrustningen i katalogen. Styr viktsteget via `weightStepFor` (11B.0f), så en
+ * felstavning här ger tyst fel avrundning i stället för ett byggfel — därför
+ * unionen. Samma form som `SET_SOURCES` ovan.
+ *
+ * `LocalExercise.equipment` är avsiktligt bredare (`string | null`): egna
+ * övningar i fas 7 skapas av användaren och kan bära vad som helst. Det är
+ * KATALOGEN som ska hållas i strama tyglar, eftersom den är data vi äger.
+ */
+export const EQUIPMENT = ['skivstång', 'hantlar', 'kabel', 'maskin', 'kroppsvikt'] as const;
+export type Equipment = (typeof EQUIPMENT)[number];
+
 export interface LocalExercise {
   id: string;
   /** null = global katalogövning. Egna övningar får användarens id i fas 7. */
