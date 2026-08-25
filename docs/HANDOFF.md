@@ -1,11 +1,124 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-25. Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-25 (sent). Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-25 — 11B.0f:s funktion är BYGGD. Kod rördes för första gången på fyra sessioner
+## 🆕 2026-08-25 (sent) — `/code-review` kördes före steg 4 och hittade ett verkligt fel
+
+### ✅ Allt är pushat. Kontrollera själv
+
+```bash
+git fetch origin && git status -sb
+```
+
+### 🔴 Det viktigaste: 13 TDD-tester missade en bugg i kärnregeln
+
+**Granskningen var värd att köra, och skälet är obekvämt.** Snittfunktionen byggdes tidigare
+samma dag med `/tdd`, 13 tester, varje regel röd innan den blev grön. **Den grupperade ändå på
+fel setnummer.**
+
+`logSet` numrerar alla set för övningen i passet **inklusive uppvärmningen** (`repo.ts:232`).
+Ett pass med uppvärmning lade därför första arbetssetet på lagrat index 1 och ett pass utan
+lade det på 0. **Skiljer sig uppvärmningsvanan mellan passen jämfördes arbetsset *n* med
+arbetsset *n+1*** — ett utvilat set mot ett trött, alltså precis den trötthetsförskjutning
+grupperingen finns för att undvika.
+
+⚠️ **Varför testerna inte såg det:** fixturen hade uppvärmning i **ett** pass och jämförde
+aldrig två pass med olika uppvärmningsvana. **Testerna prövade regelns utfall i det fall koden
+redan hanterade, inte regeln själv.** Rött-grönt skyddar inte mot en fixtur som aldrig ställer
+frågan. Bär med dig det när nästa uppgift känns färdigtestad.
+
+Fältet heter nu `workSetIndex` och räknas om bland arbetsseten. ⚠️ **Det är INTE setradens
+plats i listan** — `SetRow` numrerar med uppvärmningen inräknad och visar `W` för den, så
+**skärmen i steg 4 måste räkna arbetsset själv.** Kostnaden är utskriven i `SPEC.md` §2.
+
+### Vad granskningen gav, och vad som gjordes med det
+
+Två axlar, parallella subagenter, mot `70cb810...HEAD`. **Standards: 8 fynd. Spec: 6 fynd.**
+
+**Rättat i den här omgången (tre commits):**
+
+| Fynd | Åtgärd |
+|---|---|
+| Spec (c)1 — grupperingen | Fixad med nytt rött test. `setIndex` → `workSetIndex` |
+| Spec (c)2 — **specen motsade sig själv** om avrundningen | `SPEC.md` och `DESIGN.md` sa fortfarande "2,5 kg" rakt av medan senare rutor sa utrustningsstyrt. Rättat — en spec som säger emot sig själv är sämre än ingen |
+| Spec (c)3 + kodkommentar | Föråldrad JSDoc, plus samma StrongLifts-förväxling som redan strukits ur `SPEC.md` men hängt kvar i `steps.ts` |
+| Spec (b) — `ScrollPicker`-fixen saknade förankring i planen | Efterhandsförd som **11B.0i** i `TASKS.md` |
+| Standards — Primitive Obsession | `EQUIPMENT`/`Equipment` i `types.ts` (samma form som `SET_SOURCES`), och `CatalogExercise.equipment` är unionen. **Ingen datarad ändrad, checksummorna oberörda.** Nytt test läser `CATALOG` i stället för att räkna upp strängar, så en felstavning i funktionen också fälls — kontrollerat med sabotage |
+
+⛔ **Ett påstått hårt brott höll inte vid kontroll.** Standards-axeln flaggade att
+researchrapporten saknar rad i `EXTERNT.md` (§7.2c). Registret definierar dock sitt omfång som
+*"extern **kod och data**"*, dess "Läst"-sektion innehåller kodrepon, och **båda tidigare
+researchrapporterna saknar rader**. Kvar står granskarens egen parentes: rapporterna *citerar*
+källor vi inte äger. **Öppen fråga som gäller alla tre rapporterna och föregår den här
+sessionen — inte ett brott den här diffen införde.** Adam får avgöra.
+
+### ⏰ Kvarstående fynd — INTE åtgärdade, medvetet
+
+Alla är bedömningsfrågor, inga buggar. **Kandidater för `/simplify` innan steg 4, inte krav:**
+
+1. **Duplicated Code** — grupperingsidiomet `get/push/set` finns tre gånger i `history.ts`
+   (rad 73, 254, 277). Ett lokalt `groupBy` skulle bära alla tre.
+2. **Duplicated Code** — jämförelselogiken för `performedAt` finns i tre varianter, varav en
+   återuppfinner `byPerformedAt` baklänges.
+3. **Redundant omväg** — `senastTränad` reducerar fram max ur en array som just sorterats
+   stigande. `rows.at(-1)?.performedAt` säger samma sak och gör sorteringsberoendet explicit.
+4. **`getSetAverages` är ~95 rader i fem faser.** Kommentarerna gör i dag jobbet som
+   funktionsnamn borde göra.
+5. **`onKeyDown={markeraAnvändarrörelse}`** markerar varje tangent, trots kommentaren om "de
+   fyra sätten". Slappt åt det ofarliga hållet — flaggan *tillåter* bara en rapport.
+6. **⛔-rutan i `e2e/passvy.spec.ts` kan inte fälla CI.** Löftet om att skriva om vakt 5 i
+   samma commit som `SetRow` byter till `getSetAverages` är oskyddat.
+7. **`"senast tränad i <månad år>"` är bara ett ISO-datum.** Formateringen hör till steg 4.
+
+### ✅ Grindarna — ALLA FEM I SLUTLÄGET 2026-08-25 (sent), hemdatorn
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **294 tester i 23 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ **638,37 kB** (gzip 191,76), precache **651,50 KiB** |
+| `npm run e2e` | ✅ **60 passed**, 23,7 s |
+
+### Nästa jobb
+
+**Steg 4: bygg Pass-skärmen mot `2B`.** Allt förarbete är slut och snittfunktionen är klar.
+Tre saker väntar där, alla redan beslutade och nedskrivna:
+
+1. **Vakt 5 MÅSTE skrivas om** i den commit som byter `SetRow` till `getSetAverages`.
+   ⛔-rutan i `e2e/passvy.spec.ts` är den enda påminnelsen som finns.
+2. **`±`-knapparna** ska följa utrustningsregeln. Adam: *"dom får vi ta när det steget kommer."*
+3. **Skärmen måste räkna arbetsset själv** för att slå upp rätt `workSetIndex`. Se ovan.
+
+**Öppet, obeslutat:** vad som förklarar snittalen första gången (`DESIGN.md` §3.1), och om
+11B.0f får bockas av utan vakt 5-omskrivningen — **Adams beslut, rutan står obockad**.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/simplify`** | Före steg 4, på de sju kvarstående fynden ovan. De är kvalitet, inte buggar — `/simplify` är gjord för exakt det |
+| **`/tdd`** | Till steg 4:s logik. ⚠️ **Läs lärdomen överst först:** be fixturen ställa frågan, inte bara bekräfta utfallet |
+| **`/code-review`** | ✅ **Bevisade sitt värde.** Kör igen efter steg 4:s första skärm |
+| **`/diagnosing-bugs`** | När något faller — även när det ser ut som flakighet |
+
+---
+
+## 2026-08-25 (tidigare) — 11B.0f:s funktion är BYGGD. Kod rördes för första gången på fyra sessioner — DELVIS ÖVERSPELAD
+
+> **⚠️ Två saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "13 tester, varje regel röd innan den blev grön" gav INTE en korrekt funktion.**
+> `/code-review` hittade efteråt att grupperingen använde fel setnummer. Fixat, men läs
+> sektionen överst — lärdomen om varför testerna missade det är viktigare än buggen.
+>
+> **(2) Grindtabellen är överspelad.** 292 tester har blivit 294. Se tabellen överst.
+>
+> Allt annat — `ScrollPicker`-buggen, viktstegsbeslutet, researchens svagheter — gäller
+> oförändrat.
 
 ### ✅ Allt är pushat. Kontrollera själv i stället för att lita på ett SHA
 
