@@ -42,8 +42,24 @@ const VISIBLE = 3;
 export function ScrollPicker({ values, value, onChange, label, caption, className }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** Hindrar att vår egen programmatiska scroll rapporteras som ett val. */
-  const självScroll = useRef(false);
+  /**
+   * Bara scrollningar användaren själv startat får rapporteras som ett val.
+   *
+   * ⚠️ **HÄR SATT EN BUGG SOM KOSTADE E2E-SVITEN DESS TROVÄRDIGHET.** Spärren
+   * mot att vår egen programmatiska scroll rapporterades var tidsbaserad: den
+   * släpptes efter 60 ms, medan debouncen som rapporterar väntade 90 ms. Under
+   * maskinlast hann scrollhändelsen dyka upp efter att spärren fallit, och då
+   * skrevs hjulets GAMLA position tillbaka som ett användarval.
+   *
+   * Följden var tyst datakorruption i appens kärnflöde: fyra tryck på `+2,5`
+   * gav `8` i stället för `10`, eftersom entalshjulet rapporterade 5 medan
+   * vikten redan var 7,5 — `withDigit(7,5, 'ones', 5)` är 5,5, och sista
+   * trycket lade 2,5 på det. Diagnosticerat ur en Playwright-trace 2026-08-25.
+   *
+   * En avsikt kan inte komma för sent på samma sätt som en tidsgräns, så
+   * tiden är borta ur villkoret i stället för justerad.
+   */
+  const användarrörde = useRef(false);
 
   const index = Math.max(0, values.indexOf(value));
 
@@ -53,14 +69,23 @@ export function ScrollPicker({ values, value, onChange, label, caption, classNam
     if (!el) return;
     const mål = index * ITEM_H;
     if (Math.abs(el.scrollTop - mål) < 2) return;
-    självScroll.current = true;
+    // En redan schemalagd rapport bygger på hjulets gamla position. Får den
+    // löpa ut efter att värdet ändrats utifrån skriver den tillbaka en siffra
+    // som inte längre gäller.
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+    användarrörde.current = false;
     el.scrollTo({ top: mål, behavior: 'auto' });
-    // Släpp spärren när scrollhändelserna hunnit rinna av.
-    setTimeout(() => (självScroll.current = false), 60);
   }, [index]);
 
+  function markeraAnvändarrörelse() {
+    användarrörde.current = true;
+  }
+
   function handleScroll() {
-    if (självScroll.current) return;
+    if (!användarrörde.current) return;
     if (timer.current) clearTimeout(timer.current);
     // `scrollend` finns inte i alla Safari-versioner vi bryr oss om, så vi
     // debouncar i stället. 90 ms är kort nog att kännas direkt.
@@ -87,6 +112,12 @@ export function ScrollPicker({ values, value, onChange, label, caption, classNam
         <div
           ref={ref}
           onScroll={handleScroll}
+          // De fyra sätten en människa kan sätta hjulet i rörelse. Allt annat
+          // som scrollar elementet är vår egen synk, och den är inget val.
+          onPointerDown={markeraAnvändarrörelse}
+          onTouchStart={markeraAnvändarrörelse}
+          onWheel={markeraAnvändarrörelse}
+          onKeyDown={markeraAnvändarrörelse}
           role="listbox"
           aria-label={label}
           tabIndex={0}
