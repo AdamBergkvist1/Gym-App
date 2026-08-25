@@ -105,13 +105,22 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 > > stället för som en tabell över hans utrustning. Frågan *"vilka steg har ditt gym?"* har
 > > inget svar, och en lösning som kräver ett är fel lösning.
 > >
-> > **Marknaden gör detta per övning, inte per utrustning** — FitNotes har ett redigerbart
-> > `Weight Increment` per övnings-id, Strong har det under *Progression settings*, och
-> > MacroFactors utvecklare har sagt att deras kommande träningsmodul följer FitNotes. Se
-> > `docs/research/viktsteg-och-avrundning-i-gymappar.md`. **Vi börjar med att härleda ur
-> > `equipment`** eftersom katalogen redan bär det fältet på alla 46 övningar — noll
-> > schemaändring, noll migration. Ett redigerbart fält per övning läggs till **om** ett
-> > standardvärde visar sig skava, inte innan. Adams beslut 2026-08-25.
+> > **Marknaden gör detta per övning eller per utrustningstyp** — FitNotes har ett redigerbart
+> > `Weight Increment` per övnings-id, och Hevy skiljer på *Plate rounding* och *Dumbbell
+> > rounding* i sin uppvärmningskalkylator. Båda står på apparnas egna hjälpsidor. Se
+> > `docs/research/viktsteg-och-avrundning-i-gymappar.md`.
+> >
+> > ✏️ **Här stod först att även Strong har steget under *Progression settings*. Det är fel och
+> > är struket.** Rapportens källa för det påståendet är `support.stronglifts.com` —
+> > **StrongLifts**, en annan app än Strong, vars hjälp ligger på `help.strongapp.io`.
+> > Rapporten blandar ihop de två under namnet "Strong". Rättat 2026-08-25 när Adam
+> > eftersände källistan. **Lärdomen är densamma som med de ärvda e2e-siffrorna i
+> > `HANDOFF.md`: ett påstående utan kontrollerbar källa ska inte skrivas in som fakta, hur
+> > rimligt det än låter.**
+> >
+> > **Vi börjar med att härleda ur `equipment`** eftersom katalogen redan bär det fältet på
+> > alla 46 övningar — noll schemaändring, noll migration. Ett redigerbart fält per övning
+> > läggs till **om** ett standardvärde visar sig skava, inte innan. Adams beslut 2026-08-25.
 >
 > **"De tre senaste passen med den övningen"**, inte de tre senaste passen. Kör man bänk på
 > måndagen och ben tisdag till torsdag innehåller de tre senaste passen noll bänkset.

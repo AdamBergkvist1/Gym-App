@@ -1,3 +1,50 @@
+> # ⚠️ LÄS DEN HÄR RUTAN FÖRST
+>
+> **Rapporten är beställd av oss från Gemini (deep research) 2026-08-25.** Den är underlag,
+> inte facit, och två fel är hittade vid granskning. Källistan låg inte med vid inklistringen
+> utan tillfördes efteråt; den ligger sist under **Citerade verk**.
+>
+> ## ⛔ Rapportens "Strong" är till stor del **StrongLifts** — en annan app
+>
+> Strong (`strongapp.io`) är en allmän träningslogg. StrongLifts (`stronglifts.com`) är en
+> app byggd kring 5×5-programmet. **Rapporten blandar ihop dem under namnet "Strong".**
+> Källorna avslöjar var gränsen går:
+>
+> | Påstående i rapporten | Källa | Gäller egentligen |
+> |---|---|---|
+> | Viktsteget bor per övning under *"Progression settings"* | 1 — `support.stronglifts.com` | **StrongLifts** |
+> | Man bör inte aktivera 35 lb-skivor; kalkylatorn väljer tyngsta skiva | 2 — `support.stronglifts.com` | **StrongLifts** |
+> | Enhetsbyte avrundar destruktivt, 60 kg → 130 lb | 41 — `support.stronglifts.com` | **StrongLifts** |
+> | Plate Calculator ligger bakom betalvägg | 3 — `help.strongapp.io` | Strong ✅ |
+>
+> **Följden:** allt rapporten säger om att *Strong* har steg per övning är obelagt. Citera det
+> inte vidare. FitNotes-påståendena (källa 6, 7) och Hevy-påståendena (8–11, 43) står däremot
+> på förstahandskällor — apparnas egna hjälpsidor — och det är de som bär slutsatsen.
+>
+> ## ⚠️ Källornas tyngd varierar kraftigt
+>
+> Ungefär **hälften av källorna är Reddit-trådar** (4, 5, 12–16, 19, 21, 24–26, 44). De är
+> användarrapporter, inte dokumentation. Två fall att vara särskilt försiktig med:
+>
+> - **JEFIT:s "snap to equipment increments"** sägs komma ur appens uppdateringsloggar, men de
+>   angivna källorna (17, 18, 28) är en Google Play-sida, en användares rutin och en bloggpost.
+>   **Ingen changelog.** Formuleringen är alltså inte belagd.
+> - **EWMA-förklaringen** stöds av källa 23, en generell Medium-artikel om EWMA i deep
+>   learning. Den säger ingenting om MacroFactor. Källa 20 är dessutom *"Macro Me"*, en helt
+>   annan app än MacroFactor.
+>
+> ## ✅ Vad vi ändå tog med oss
+>
+> Det **strukturella** resonemanget står oberoende av felen ovan och är det beslutet vilar på:
+> skilj lagrad rådata från presentationsavrundning, och låt viktsteget följa övningen eller
+> dess utrustning. Beslutet och dess skäl står i `SPEC.md` §2 — inte här.
+>
+> **Vi följde inte rapportens rekommendation.** Den föreslog ett redigerbart fält per övning
+> plus import av `free-exercise-db`. Vi härleder i stället steget ur katalogens befintliga
+> `equipment`-fält, vilket ger samma effekt utan schemaändring. Se `TASKS.md` 11B.0f.
+
+---
+
 Arkitektur och UX-mönster för hantering av viktsteg och avrundning i träningsappar
 Denna rapport utgör en djupgående, teknisk och användarupplevelsefokuserad (UX) branschanalys av hur etablerade träningsappar hanterar diskreta datamängder. Analysen fokuserar specifikt på viktsteg (increments), utrustningsdatabaser och algoritmer för avrundning. Den underliggande problematiken inom utveckling av mjukvara för styrketräning bottnar i en fundamental konflikt: diskrepansen mellan kontinuerliga matematiska värden (såsom glidande medelvärden, trendlinjer och procentuella uppskattningar av ett repetitionsmaximum, 1RM) och den fysiska verklighetens strikt diskreta utrustningssteg (exempelvis hantlar med ett kilos intervall eller skivstänger med tjugofem hektograms intervall). Denna utredning är strukturerad för att ge konkret och datadriven vägledning vid systemdesign och utveckling av en offline-first PWA-träningslogg, med särskilt fokus på att lösa de kognitiva och matematiska utmaningar som uppstår vid beräkning av referensvikter för användaren.
 
@@ -181,9 +228,68 @@ Ett designmönster där appen begränsar framtida viktförslag genom att endast 
 Även om systemet är förkonfigurerat för maximal friktionsfrihet, måste en väg för manuell korrigering finnas. Användargränssnittet bör innehålla en tydlig vy (t.ex. "Redigera övning") där individen när som helst kan överstyra och manuellt modifiera increment-variabeln. Om en användare med ett seriöst hemmagym har investerat i asymmetriska hantlar eller mikroviktsplattor, måste de ges autonomin att ändra sitt increment från standardvärdet 2,5 kg till 1,0 kg, eller från 5 lb till 1 lb. Denna arkitektur, inspirerad av FitNotes och Strong, garanterar att systemet förblir skalbart, relevant och tillförlitligt för tränande individer på alla nivåer, oberoende av vilken hårdvara de fysiskt har tillgång till.
 
 
-support.stronglifts.com
-Progression Settings: Increments, Deload, Frequency - Stronglifts
-Öppnas i ett nytt fönster
+---
+
+## Citerade verk
+
+Tillförda 2026-08-25, efter att rapporten klistrats in utan dem. **Läs rutan överst i filen
+innan du litar på ett enskilt påstående** — särskilt källa 1, 2 och 41, som är StrongLifts och
+inte Strong.
+
+Förstahandskällor är märkta 🟢 (appens egen dokumentation eller repo), användarrapporter 🟡.
+
+| # | Källa | Länk |
+|---|---|---|
+| 1 | 🟡 Progression Settings: Increments, Deload, Frequency — **StrongLifts** | https://support.stronglifts.com/article/71-progression |
+| 2 | 🟡 StrongLifts Plate Calculator + Setting Your Plates — **StrongLifts** | https://support.stronglifts.com/article/154-plate-calculator |
+| 3 | 🟢 About Plate Calculator — Strong Help Center | https://help.strongapp.io/article/169-plate-calculator |
+| 4 | 🟡 Reddit: Strong App users, can you only increment the weight by 1KG | https://www.reddit.com/r/AppleWatch/comments/hfkpvy/strong_app_users_can_you_only_increment_the/ |
+| 5 | 🟡 Reddit: Review of the New Strong App Update After Months of Use | https://www.reddit.com/r/strongapp/comments/1kspk8x/review_of_the_new_strong_app_update_after_months/ |
+| 6 | 🟢 Workout Tracking — FitNotes | http://www.fitnotesapp.com/workout_tracking/ |
+| 7 | 🟢 Workout Tools — FitNotes | http://www.fitnotesapp.com/workout_tools/ |
+| 8 | 🟢 Workout Settings Preferences: Timer / Warm up calculator — Hevy | https://help.hevyapp.com/hc/en-us/articles/33882110558743-Workout-Settings-Preferences-Timer-Warm-up-calculator-Plate-Calculator-Smart-Superset-Scrolling |
+| 9 | 🟢 How to Use Our Warm-up Sets Calculator — Hevy | https://www.hevyapp.com/features/warm-up-set-calculator/ |
+| 10 | 🟢 How to Use the Warm Up Calculator for Percentage-Based Warm-Up Sets — Hevy | https://help.hevyapp.com/hc/en-us/articles/35650921359639-How-to-Use-the-Warm-Up-Calculator-for-Percentage-Based-Warm-Up-Sets |
+| 11 | 🟢 Explore 12 Workout Settings for Better Training — Hevy | https://www.hevyapp.com/features/workout-settings/ |
+| 12 | 🟡 Reddit: Mixed db/kg and specific weights — r/alphaprogression | https://www.reddit.com/r/alphaprogression/comments/1fcli0p/mixed_dbkg_and_specific_weights/ |
+| 13 | 🟡 Reddit: Overall impressions of the app — r/alphaprogression | https://www.reddit.com/r/alphaprogression/comments/1dveqaa/overall_impressions_of_the_app/ |
+| 14 | 🟡 Reddit: Workout App with Progressive Overload? | https://www.reddit.com/r/naturalbodybuilding/comments/1ldtte2/workout_app_with_progressive_overload/ |
+| 15 | 🟡 Reddit: r/alphaprogression | https://www.reddit.com/r/alphaprogression/hot/ |
+| 16 | 🟡 Reddit: Progression for the workout app — r/MacroFactor | https://www.reddit.com/r/MacroFactor/comments/1q5zexk/progression_for_the_workout_app/ |
+| 17 | 🟡 JEFIT — Google Play-listning | https://play.google.com/store/apps/details?id=je.fit&hl=en_GB |
+| 18 | 🟡 My Custom Routine — JEFIT (användarsida) | https://www.jefit.com/routines/419167/my-custom-routine |
+| 19 | 🟡 Reddit: MacroFactor Workouts: Coming Jan. 2026 | https://www.reddit.com/r/MacroFactor/comments/1l79d4w/macrofactor_workouts_coming_jan_2026/ |
+| 20 | ⛔ Macro Me: AI Calorie Tracker — **annan app än MacroFactor** | https://apps.apple.com/gb/app/macro-me-ai-calorie-tracker/id6789923204 |
+| 21 | 🟡 Reddit: Analysing progress on a bulk — r/MacroFactor | https://www.reddit.com/r/MacroFactor/comments/qjr1nx/analysing_progress_on_a_bulk/ |
+| 22 | 🟡 GymPsycho vs Strong App — Comparison 2026 (GymPsychos egen jämförelse) | https://gympsycho.com/vs-strong/ |
+| 23 | ⛔ EWMA in Deep Learning — generell Medium-artikel, säger inget om MacroFactor | https://medium.com/@piyushkashyap045/exponential-weighted-moving-average-ewma-in-deep-learning-a-simple-guide-with-examples-ef247b3f964b |
+| 24 | 🟡 Reddit: Algorithm: MacroFactor vs. Google Sheets | https://www.reddit.com/r/MacroFactor/comments/14tzbwl/algorithm_macrofactor_vs_google_sheets/ |
+| 25 | 🟡 Reddit: Weight trend in MacroFactor seems to track too far off actual weight | https://www.reddit.com/r/MacroFactor/comments/zrkcsn/weight_trend_in_macrofactor_seems_to_track_too/ |
+| 26 | 🟡 Reddit: Release 4.0.0 — Customizable Dashboard, Step Tracking, and More | https://www.reddit.com/r/MacroFactor/comments/1gv61xj/release_400_customizable_dashboard_step_tracking/ |
+| 27 | 🟢 Previous Workout Values to Monitor Your Training — Hevy | https://www.hevyapp.com/features/track-exercises/ |
+| 28 | 🟡 Best Progressive Overload Apps For Strength Training — JEFIT-bloggen | https://www.jefit.com/blog/best-progressive-overload-apps-for-strength-training |
+| 29 | 🟢 Stack Cable Column, Octagon Frame Range — Escape Fitness | https://escapefitness.com/us/equipment/stack/ |
+| 30 | 🟢 NOHRD Walls — Exercise Walls | https://www.nohrd.com/gr/nohrd-walls/ |
+| 31 | 🟢 free-exercise-db — GitHub | https://github.com/yuhonas/free-exercise-db |
+| 32 | 🟢 "images has copyright?" — issue #13 i free-exercise-db | https://github.com/yuhonas/free-exercise-db/issues/13 |
+| 33 | 🟡 ExerciseGifDownloader — GitHub | https://github.com/XZE3N/ExerciseGifDownloader |
+| 34 | 🟡 wger Exercise Database Scraper — Apify | https://apify.com/parseforge/wger-exercise-database-scraper |
+| 35 | 🟢 wger — GitHub | https://github.com/wger-project/wger |
+| 36 | 🟢 wger 2.6-dokumentationen | https://wger.readthedocs.io/ |
+| 37 | 🟢 wger 2.0-dokumentationen | https://wger.readthedocs.io/en/2.0/ |
+| 38 | 🟡 wger Exercise Database API Scraper — Apify | https://apify.com/jungle_synthesizer/wger-exercise-database-api-scraper |
+| 39 | 🟡 wger API — public-api.org | https://public-api.org/api/1208/wger |
+| 40 | 🟢 exercises-dataset — GitHub | https://github.com/hasaneyldrm/exercises-dataset |
+| 41 | 🟡 How to Set Your Weight Unit — **StrongLifts** | https://support.stronglifts.com/article/172-weight-unit |
+| 42 | 🟢 Strong Workout Tracker Gym Log — App Store | https://apps.apple.com/se/app/strong-workout-tracker-gym-log/id464254577 |
+| 43 | 🟢 How to change units per-exercise — Hevy | https://www.hevyapp.com/help/change-units-per-exercise/ |
+| 44 | 🟡 Reddit: Does this or any app let you switch from pounds to kg in real time? | https://www.reddit.com/r/Hevy/comments/1ey3z8k/does_this_or_any_app_let_you_switch_from_pounds/ |
+| 45 | 🟢 FitNotes 2 — Gym Workout Log, App Store (SE) | https://apps.apple.com/se/app/fitnotes-2-gym-workout-log/id1538896016 |
+| 46 | 🟢 FitNotes 2 — Gym Workout Log, App Store (US) | https://apps.apple.com/us/app/fitnotes-2-gym-workout-log/id1538896016 |
+
+**Ingen av länkarna är öppnad och verifierad av oss.** De är återgivna som Gemini angav dem.
+Bedömningen 🟢/🟡/⛔ bygger på domän och titel, vilket räcker för att avgöra *vem* som talar —
+men inte för att avgöra om innehållet stödjer påståendet det citeras för.
 
 support.stronglifts.com
 Stronglifts Plate Calculator + Setting Your Plates

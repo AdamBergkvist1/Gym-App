@@ -1353,10 +1353,21 @@ nuvarande.
       Adams beslut: *"kanske kan börja med denna … och om det behövs i framtiden kanske köra
       på redigerbart fält om vi märker att det är nice."*
 
-      ⚠️ **Rapporten ska läsas med en spärr:** den innehåller **noll källänkar**, trots att
-      prompten bad om källa per påstående. Det strukturella resonemanget står på egna ben, men
-      dess sifferpåståenden om enskilda appar är obelagda och får inte citeras vidare som
-      fakta. Adam har erbjudit sig att klistra in länkarna separat.
+      ⚠️ **Rapporten ska läsas med en spärr, och granskningen hittade två fel.** Källistan
+      saknades vid inklistringen; Adam eftersände den samma dag och den ligger nu sist i
+      rapportfilen, med en läsanvisning överst i samma fil.
+
+      ⛔ **Rapportens "Strong" är till stor del StrongLifts — en annan app.** Källorna för
+      *"Progression settings"*, skivaktivering och destruktiv enhetsavrundning är alla
+      `support.stronglifts.com`. Strongs egen hjälp ligger på `help.strongapp.io` och bär bara
+      ett av påståendena. **Följden: att Strong har viktsteg per övning är obelagt, och det
+      påståendet är struket ur `SPEC.md` §2.** Slutsatsen står kvar — den bärs av FitNotes och
+      Hevy, som båda har förstahandskällor.
+
+      ⚠️ Ungefär hälften av källorna är Reddit-trådar. JEFIT:s citerade *"snap to equipment
+      increments"* sägs komma ur uppdateringsloggar men styrks av en Google Play-sida och en
+      bloggpost. EWMA-avsnittet stöds av en generell Medium-artikel som inte nämner
+      MacroFactor, och en av MacroFactor-källorna är appen *"Macro Me"* — en annan app.
 
       💡 **Öppen följdfråga:** `±`-knapparna i `SetAdjustSheet` är hårdkodade till
       `−1 / −2,5 / +2,5 / +1`. Samma utrustningsregel skulle kunna styra dem. Det är en
