@@ -393,12 +393,49 @@ describe('11B.0f snittet per setnummer', () => {
     const { sets } = await getSetAverages(BENK, db);
 
     // 40 kg är förberedelse, inte arbete — samma regel som volymen redan har.
-    // Setnumret behålls som det lagrades: `logSet` räknar uppvärmningen som en
-    // rad, och `SetRow` numrerar raderna likadant. Uppvärmningens plats blir
-    // alltså tom i stället för att skjuta ner arbetssetens numrering.
-    expect(sets.map((s) => [s.setIndex, s.weightKg])).toEqual([
+    //
+    // ✏️ Testet krävde först `[[1, 90], [2, 85]]`, alltså de LAGRADE
+    // setnumren med uppvärmningens plats tom. Det var fel och cementerade en
+    // bugg: uppvärmningen sköt ner arbetssetens numrering, så ett pass med
+    // uppvärmning jämfördes mot fel set i ett pass utan. Se testet ovan.
+    expect(sets.map((s) => [s.workSetIndex, s.weightKg])).toEqual([
+      [0, 90],
+      [1, 85],
+    ]);
+  });
+
+  it('jämför arbetsset med arbetsset även när bara det ena passet har uppvärmning', async () => {
+    // Pass A: uppvärmning + två arbetsset. `logSet` numrerar uppvärmningen som
+    // set 0, så arbetsseten hamnar på lagrat index 1 och 2.
+    vi.setSystemTime(new Date(NU.getTime() - 14 * DYGN));
+    const a = await startWorkout(db);
+    await logSet({ workoutId: a.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
+    await logSet({ workoutId: a.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+    await logSet({ workoutId: a.id, exerciseId: BENK, weightKg: 85, reps: 5 }, db);
+    await endWorkout(db);
+
+    // Pass B: ingen uppvärmning. Arbetsseten hamnar på lagrat index 0 och 1.
+    await pass(
+      [
+        [100, 5],
+        [95, 5],
+      ],
+      7
+    );
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // ⚠️ DETTA ÄR HELA POÄNGEN MED GRUPPERINGEN. Grupperas det lagrade
+    // `setIndex` hamnar A:s FÖRSTA arbetsset (index 1) i samma grupp som B:s
+    // ANDRA (index 1) — alltså jämförs ett utvilat set med ett trött, vilket är
+    // precis den förskjutning regeln finns för att undvika. Det gav
+    // [[0,100],[1,92.5],[2,85]]: tre rader ur två pass med två arbetsset var.
+    //
+    // Rätt svar är två rader. Arbetsset 1: (90+100)/2 = 95.
+    // Arbetsset 2: (85+95)/2 = 90.
+    expect(sets.map((s) => [s.workSetIndex, s.weightKg])).toEqual([
+      [0, 95],
       [1, 90],
-      [2, 85],
     ]);
   });
 
@@ -415,7 +452,7 @@ describe('11B.0f snittet per setnummer', () => {
 
     // 500 kg är en felskrivning som ångrats. Får den ligga kvar i underlaget
     // förgiftar den snittet i tre pass framåt.
-    expect(sets.map((s) => [s.setIndex, s.weightKg])).toEqual([[0, 90]]);
+    expect(sets.map((s) => [s.workSetIndex, s.weightKg])).toEqual([[0, 90]]);
   });
 
   it('räknar aldrig importerade set som underlag — samma regel som 13.4', async () => {
@@ -435,7 +472,11 @@ describe('11B.0f snittet per setnummer', () => {
     // anteckningar. Blir det underlag lyfts snittet av ett maxlyft, och
     // referensen blir ett rekord att matcha — precis det 13.4 stängde för
     // spökdatan och det `SPEC.md` §2 stängde för snittet.
-    expect(sets.map((s) => [s.setIndex, s.weightKg, s.reps])).toEqual([[1, 80, 5]]);
+    // ✏️ Krävde först `[[1, 80, 5]]` — det lagrade numret, där det importerade
+    // setet ockuperade plats 0. Nu räknas numret om bland arbetsseten, så ett
+    // bortfiltrerat set lämnar inget hål. Det app-loggade setet ÄR passets
+    // första riktiga arbetsset och ska jämföras som ett sådant.
+    expect(sets.map((s) => [s.workSetIndex, s.weightKg, s.reps])).toEqual([[0, 80, 5]]);
   });
 
   it('visar inget snitt alls när övningen inte tränats på åtta veckor', async () => {
@@ -482,7 +523,7 @@ describe('11B.0f snittet per setnummer', () => {
     // Att antalet räknas per setnummer och inte per övning är ett omdömesbeslut
     // 2026-08-25, utskrivet i `TASKS.md` 11B.0f. Det tillämpar en regel som
     // redan fanns på ett fall briefen inte hade tänkt på.
-    expect(sets.map((s) => [s.setIndex, s.weightKg, s.workoutCount])).toEqual([
+    expect(sets.map((s) => [s.workSetIndex, s.weightKg, s.workoutCount])).toEqual([
       [0, 92.5, 2],
       [1, 85, 1],
     ]);

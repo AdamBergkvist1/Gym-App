@@ -172,8 +172,23 @@ const ANTAL_PASS_I_SNITTET = 3;
 const ÅLDERSGRÄNS_MS = 56 * 24 * 60 * 60 * 1000;
 
 export interface SetAverage {
-  setIndex: number;
-  /** Snittet av underlagets vikter, avrundat till närmaste 2,5 kg. */
+  /**
+   * Det n:te ARBETSSETET med övningen i passet, nollindexerat.
+   *
+   * ⚠️ **Inte samma sak som setradens plats i listan, och inte samma sak som
+   * radens lagrade `setIndex`.** `logSet` numrerar alla set för övningen i
+   * passet inklusive uppvärmningen (`repo.ts:232`), så ett pass med uppvärmning
+   * lägger sitt första arbetsset på lagrat index 1 och ett pass utan lägger det
+   * på 0. Grupperades det lagrade numret jämfördes arbetsset n med arbetsset
+   * n+1 så fort uppvärmningsvanan skilde sig mellan passen — alltså ett utvilat
+   * set mot ett trött, vilket är precis den förskjutning grupperingen finns för
+   * att undvika. Hittat av `/code-review` 2026-08-25.
+   *
+   * **Skärmen måste räkna arbetsset själv för att slå upp rätt snitt.**
+   * `SetRow` numrerar raderna med uppvärmningen inräknad och visar `W` för den.
+   */
+  workSetIndex: number;
+  /** Snittet av underlagets vikter, avrundat till övningens viktsteg. */
   weightKg: number;
   /**
    * INTE ett snitt. Repsen från det set vars vikt ligger närmast `weightKg`.
@@ -273,17 +288,25 @@ export async function getSetAverages(
 
   // Per setnummer, eftersom man blir svagare för varje set i rad. Set 3
   // jämförs med set 3.
-  const perSetIndex = new Map<number, LocalSet[]>();
+  //
+  // Numret räknas om HÄR, bland de set som blivit kvar efter filtret — det
+  // lagrade `setIndex` duger inte, se `workSetIndex` i `SetAverage`. `rows` är
+  // sorterad stigande, så räknaren per pass ger arbetsseten i tidsordning.
+  // Raderade och importerade set lämnar därmed inte heller några hål.
+  const arbetssetIPasset = new Map<string, number>();
+  const perSetNummer = new Map<number, LocalSet[]>();
   for (const s of rows) {
     if (!underlag.has(s.workoutId)) continue;
-    const list = perSetIndex.get(s.setIndex);
+    const nummer = arbetssetIPasset.get(s.workoutId) ?? 0;
+    arbetssetIPasset.set(s.workoutId, nummer + 1);
+    const list = perSetNummer.get(nummer);
     if (list) list.push(s);
-    else perSetIndex.set(s.setIndex, [s]);
+    else perSetNummer.set(nummer, [s]);
   }
 
-  const sets = [...perSetIndex.entries()]
+  const sets = [...perSetNummer.entries()]
     .sort(([a], [b]) => a - b)
-    .map(([setIndex, rader]) => {
+    .map(([workSetIndex, rader]) => {
       const rått = rader.reduce((sum, s) => sum + s.weightKg, 0) / rader.length;
       const weightKg = Math.round(rått / viktsteg) * viktsteg;
 
@@ -302,7 +325,7 @@ export async function getSetAverages(
       );
 
       return {
-        setIndex,
+        workSetIndex,
         weightKg,
         reps: närmast.reps,
         workoutCount: new Set(rader.map((s) => s.workoutId)).size,
