@@ -6,7 +6,30 @@ import {
   parseWeightInput,
   stepReps,
   stepWeight,
+  weightStepFor,
 } from './steps';
+
+describe('11B.0f viktsteget per utrustning', () => {
+  it('ger 2,5 kg bara åt skivstången — allt annat får hela kilon', () => {
+    // Katalogens fem utrustningsvärden, alla fem prövade. 1,25-skivor finns på
+    // varje gym; hantelrack, kabelstackar och maskiner varierar, och Adam
+    // tränar på flera gym. Avrunda bara så grovt som utrustningen är
+    // garanterad att vara — `SPEC.md` §2.
+    expect(weightStepFor('skivstång')).toBe(2.5);
+    expect(weightStepFor('hantlar')).toBe(1);
+    expect(weightStepFor('kabel')).toBe(1);
+    expect(weightStepFor('maskin')).toBe(1);
+    expect(weightStepFor('kroppsvikt')).toBe(1);
+  });
+
+  it('faller tillbaka på hela kilon för okänd utrustning i stället för att anta stång', () => {
+    // Egna övningar (fas 7) kan ha vilket värde som helst, eller inget alls.
+    // Fallbacken ska vara det FINA steget: ett för grovt steg raderar vikter
+    // användaren faktiskt lyft, och det går inte att ångra i efterhand.
+    expect(weightStepFor(null)).toBe(1);
+    expect(weightStepFor('kettlebell')).toBe(1);
+  });
+});
 
 describe('11A.3 viktstegaren', () => {
   it('ökar och minskar med 2,5 kg', () => {

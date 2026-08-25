@@ -8,6 +8,7 @@
  */
 
 import { epley1RM, volumeKg } from '../lib/oneRepMax';
+import { weightStepFor } from '../lib/steps';
 import { db, type GymDatabase } from './db';
 import type { LocalSet, LocalWorkout } from './types';
 
@@ -167,9 +168,6 @@ export async function getPersonalRecords(
 /** `SPEC.md` §2: snittet bygger på de tre senaste passen med övningen. */
 const ANTAL_PASS_I_SNITTET = 3;
 
-/** Minsta skivpar. Ett snitt som inte går att lägga på stången är oanvändbart. */
-const VIKTSTEG_KG = 2.5;
-
 /** Åtta veckor. Äldre underlag än så är inte längre ett normalläge. */
 const ÅLDERSGRÄNS_MS = 56 * 24 * 60 * 60 * 1000;
 
@@ -267,6 +265,12 @@ export async function getSetAverages(
       .map(([workoutId]) => workoutId)
   );
 
+  // Viktsteget följer utrustningen: 2,5 kg för skivstång, 1 kg för allt annat.
+  // En hantelövning avrundad till 2,5 gör snittet 9 kg till 10 — en vikt som
+  // kanske aldrig lyfts. Se `weightStepFor` för hela skälet.
+  const övning = await database.exercises.get(exerciseId);
+  const viktsteg = weightStepFor(övning?.equipment ?? null);
+
   // Per setnummer, eftersom man blir svagare för varje set i rad. Set 3
   // jämförs med set 3.
   const perSetIndex = new Map<number, LocalSet[]>();
@@ -281,7 +285,7 @@ export async function getSetAverages(
     .sort(([a], [b]) => a - b)
     .map(([setIndex, rader]) => {
       const rått = rader.reduce((sum, s) => sum + s.weightKg, 0) / rader.length;
-      const weightKg = Math.round(rått / VIKTSTEG_KG) * VIKTSTEG_KG;
+      const weightKg = Math.round(rått / viktsteg) * viktsteg;
 
       // Repsen snittas inte — de tas från setet närmast den vikt som VISAS,
       // inte närmast råsnittet. Paret måste hänga ihop för den som läser det:

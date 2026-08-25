@@ -15,6 +15,31 @@
 export const WEIGHT_STEP_KG = 2.5;
 export const REP_STEP = 1;
 
+/**
+ * Viktsteget för en övning, härlett ur dess utrustning. Uppgift 11B.0f.
+ *
+ * **Regeln: avrunda bara så grovt som utrustningen är garanterad att vara.**
+ *
+ * 1,25-skivor finns på varje gym, så 2,5 kg är garanterat för skivstång.
+ * Hantelrack, kabelstackar och maskiner varierar mellan gym — och Adam tränar
+ * på flera — så där finns inget grovt steg att luta sig mot.
+ *
+ * Asymmetrin är avsiktlig och kostnaderna är olika stora åt de två hållen. Ett
+ * för FINT steg gör talet på sin höjd 1 kg fel, och ett tryck på `+1` rättar
+ * det. Ett för GROVT steg raderar precision användaren faktiskt använde: ett
+ * hantelsnitt på 9 kg blir 10, och det verkliga normalläget går inte längre att
+ * se. Det första är återställbart, det andra är det inte.
+ *
+ * Marknaden lägger i stället steget redigerbart per övning (FitNotes, Strong).
+ * Vi börjar med utrustningen eftersom katalogen redan bär `equipment` på alla
+ * övningar — se `SPEC.md` §2 och `docs/research/viktsteg-och-avrundning-i-gymappar.md`.
+ */
+export function weightStepFor(equipment: string | null): number {
+  // Allt annat — `hantlar`, `kabel`, `maskin`, `kroppsvikt` och okänd
+  // utrustning — får hela kilon.
+  return equipment === 'skivstång' ? WEIGHT_STEP_KG : 1;
+}
+
 /** Flyttalsavrundning så att 92,5 + 2,5 aldrig blir 95.00000000000001. */
 function round2(n: number): number {
   return Math.round(n * 100) / 100;

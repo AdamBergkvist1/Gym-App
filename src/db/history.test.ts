@@ -20,6 +20,8 @@ import {
 
 const BENK = '38433903-c5f6-41e4-b2e8-4f0587b6d0cf';
 const KNABOJ = '1c9ac04d-9226-42d1-a47e-ca9b27530e0b';
+/** `Sidolyft`, `equipment: 'hantlar'` — viktsteget ska bli 1 kg, inte 2,5. */
+const SIDOLYFT = '71af2635-6208-4da3-abf9-4bf02c926c80';
 
 let db: GymDatabase;
 let n = 0;
@@ -332,6 +334,20 @@ describe('11B.0f snittet per setnummer', () => {
 
     // Råsnittet är 89,1666… kg. Ingen skivkombination ger det.
     expect(sets[0]?.weightKg).toBe(90);
+  });
+
+  it('avrundar hantelövningar till hela kilon i stället för till 2,5-rutnätet', async () => {
+    await pass([[8, 12]], 21, SIDOLYFT);
+    await pass([[9, 12]], 14, SIDOLYFT);
+    await pass([[10, 12]], 7, SIDOLYFT);
+
+    const { sets } = await getSetAverages(SIDOLYFT, db);
+
+    // Snittet är exakt 9. Med skivstångens 2,5-rutnät blir det 10 — en vikt
+    // som kanske aldrig lyfts. 1,25-skivor finns på varje gym, men hantelrack
+    // varierar, så det finns inget grovt steg att garantera. Avrunda bara så
+    // grovt som utrustningen är garanterad att vara: `SPEC.md` §2.
+    expect(sets[0]?.weightKg).toBe(9);
   });
 
   it('tar repsen från setet närmast snittvikten i stället för att snitta dem', async () => {
