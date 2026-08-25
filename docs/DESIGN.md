@@ -1230,11 +1230,30 @@ inte det här stycket, för *varför*. Här står bara vad det betyder för form
 |---|---|
 | Underlag | De tre senaste passen **med den övningen**, inte de tre senaste passen |
 | Gruppering | Per **setnummer**. Set 3 jämförs med set 3 — man blir svagare för varje set i rad |
-| **Vad som visas** | **Två tal: snittvikt OCH snittreps.** `90×5`, aldrig bara `90`. Se rutan under tabellen |
-| Avrundning | Vikt: närmaste **2,5 kg** — ett snitt som inte går att lägga på stången är oanvändbart. Reps: **hela reps** |
+| **Vad som visas** | **Två tal: en vikt OCH ett repsantal.** `90×5`, aldrig bara `90`. Se rutan under tabellen |
+| **Hur talen kopplas** | **Vikten snittas. Repsen gör det inte** — de tas från det set vars vikt ligger närmast snittvikten. Avgjort 2026-08-25, se rutan |
+| Avrundning | Vikt: närmaste **2,5 kg** — ett snitt som inte går att lägga på stången är oanvändbart. Reps: hela reps, och de är redan hela |
 | Åldersgräns | **8 veckor.** Äldre än så: inget snitt, utan *"senast tränad i oktober 2024"* |
 | Filter | Ärver 13.4: hoppar över raderade, uppvärmningsset **och importerade** |
 | Typografi | `--text-meta`, `--color-dim`. **Aldrig samma storlek som det du skriver in** |
+
+### ✅ Hur vikten och repsen kopplas. Avgjort av Adam 2026-08-25
+
+**Vikten snittas och avrundas till 2,5 kg. Repsen tas från det set vars vikt ligger närmast
+snittvikten.** Underlaget 90×5, 85×8 och 92,5×4 ger `90×5` — ett set som faktiskt utförts.
+
+Tre vägar vägdes (de står i `TASKS.md` 11B.0f). Den som föll bort var att snitta båda talen
+var för sig, och skälet är mätt, inte tyckt:
+
+⚠️ **Snittas vikt och reps var för sig lutar felet alltid åt samma håll — uppåt.** Vikt och
+reps byter av varandra, så medelpunkten hamnar ovanför den verkliga kurvan. Samma underlag ger
+då `90×6`, vilket i e1RM är **108** mot de faktiska setens **105,0 / 107,7 / 104,8** — tyngre
+än vartenda set som utfördes. **Ett för lågt referensvärde vore ofarligt. Ett för högt är
+precis den skada `SPEC.md` §2 finns för att ta bort.**
+
+**Vad regeln kostar:** repsen är inte ett snitt, så de hoppar mellan hela tal när underlaget
+skiftar. Det är avsiktligt — talet ska viska att *ungefär så här brukar det se ut*, inte
+låtsas om en precision som inte finns.
 
 **Typografin är inte en detalj, den är hela poängen.** Mönstret är MacroFactors `av`-konstruktion:
 `2108` stort, `of 2643` litet och grått under. Referensvärdet finns, men det viskar. Skälet att

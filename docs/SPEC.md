@@ -60,11 +60,25 @@ Appen är en PWA designad för erfarna lyftare. Målet är att erbjuda den snabb
 > > övningen. Alltså `90×5`, inte `90`. `DESIGN.md` §3.1:s skiss sa detta redan; det var
 > > `SPEC.md` som var otydlig.
 > >
-> > ⚠️ **En följdfråga är medvetet obesvarad här:** snittas vikt och reps var för sig kan
-> > resultatet bli en kombination som aldrig utförts — 90×5, 85×8 och 92,5×4 ger `90×6`, ett
-> > set som inte hänt. Det behöver inte vara fel, eftersom talet är ett typvärde och inte ett
-> > facit, men det **är ett val**. Det avgörs i **11B.0f när funktionen skrivs**, och ska inte
-> > antas här. Adam informerad och införstådd 2026-08-19.
+> > ✅ **Följdfrågan är AVGJORD 2026-08-25 av Adam: snittad vikt, verkliga reps.**
+> >
+> > Frågan stod öppen här med flit: snittas vikt och reps var för sig kan resultatet bli en
+> > kombination som aldrig utförts — 90×5, 85×8 och 92,5×4 ger `90×6`, ett set som inte hänt.
+> >
+> > **Regeln som gäller:** vikten snittas och avrundas till 2,5 kg. **Repsen snittas inte** —
+> > de tas från det set vars vikt ligger närmast snittvikten. Exemplet ger `90×5`, ett set som
+> > faktiskt utförts.
+> >
+> > ⚠️ **Skälet är inte att ett påhittat par känns fel — det är att felet lutar åt ett håll.**
+> > Vikt och reps byter av varandra: kör man tyngre blir det färre reps. Snittas de var för sig
+> > hamnar paret därför **alltid ovanför** den verkliga kurvan, aldrig under. Mätt på briefens
+> > eget exempel: `90×6` är i e1RM **108**, mot de faktiska setens **105,0 / 107,7 / 104,8** —
+> > tyngre än vartenda set som utfördes. **Det är den för höga referensen den här rutan finns
+> > för att ta bort, tillbaka genom bakdörren.** Ett för lågt tal hade varit ofarligt; ett för
+> > högt är exakt skadan.
+> >
+> > Talet är fortfarande ett typvärde och inte ett facit. Att det nu råkar vara ett verkligt
+> > set är en följd av regeln, inte ett krav på den.
 >
 > **"De tre senaste passen med den övningen"**, inte de tre senaste passen. Kör man bänk på
 > måndagen och ben tisdag till torsdag innehåller de tre senaste passen noll bänkset.

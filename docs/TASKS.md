@@ -1254,6 +1254,13 @@ nuvarande.
       2 set två gånger har set 3 och 4 tunnare underlag än set 1 och 2. Frågan står kvar —
       den är bara mindre extrem än formuleringen antyder.
 
+      ✅ **Avgjord 2026-08-25, och den behövde ingen ny regel.** Raden *"färre än 3 pass: visa
+      snittet ändå, märkt med antalet"* gäller **per setnummer**, inte per övning. Har set 1
+      tre underlag och set 3 ett, visas båda — set 3 märkt med att det bygger på ett pass.
+      `–` bara när setnumret saknar underlag helt. Detta är ett omdömesbeslut fattat när
+      funktionen skrevs, inte Adams: det tillämpar en regel som redan stod i briefen på ett
+      fall briefen inte hade tänkt på. Vill man annat är det fritt att ändra här.
+
       ⚠️ **NY OCH ÖPPEN 2026-08-19: snittet är två tal, och de kan ljuga tillsammans.**
       Funktionen ska returnera **snittvikt OCH snittreps**, inte bara vikt — Adams
       precisering, se `SPEC.md` §2 och `DESIGN.md` §3.1. Signaturen ovan ändras därefter.
@@ -1268,10 +1275,27 @@ nuvarande.
       | **Välj det mest representativa faktiska setet** | Alltid sant. Men är inte längre ett snitt, och en enskild mätning är brus — vilket var skälet till snittet från början (`SPEC.md` §2) |
       | **Snitta vikten, visa vanligaste repsantalet på den vikten** | Mellanläge. Fler regler att testa |
 
-      **Det behöver inte vara fel att visa en kombination som aldrig hänt** — talet är ett
-      typvärde, inte ett facit, och hela poängen med `SPEC.md` §2 är att det inte ska vara ett
-      facit. **Men det ska vara ett val, inte en bieffekt.** Adam informerad och införstådd
-      2026-08-19; han hänvisade frågan hit med flit.
+      ✅ **AVGJORD 2026-08-25 av Adam: väg 3, med ett hål lagat.** Vikten snittas och avrundas
+      till 2,5 kg; **repsen snittas inte** utan tas från det set vars vikt ligger närmast
+      snittvikten. Underlaget ovan ger då `90×5`.
+
+      **Hålet i den bokstavliga väg 3:** *"vanligaste repsantalet på den vikten"* har inget
+      svar när ingen kört exakt den avrundade snittvikten — 85, 87,5 och 92,5 ger snittet 87,5
+      i ett underlag där inget set ligger på 87,5. **Närmaste vikt** har alltid ett svar.
+      Vid lika avstånd vinner det senaste setet.
+
+      ⚠️ **Skälet väg 1 föll är mätt, inte tyckt — och det är starkare än "ett set som aldrig
+      hänt".** Vikt och reps byter av varandra, så snittas de var för sig hamnar paret **alltid
+      ovanför** den verkliga kurvan, aldrig under. Briefens eget exempel ger `90×6`, vilket i
+      e1RM är **108** mot de faktiska setens **105,0 / 107,7 / 104,8** — tyngre än vartenda set
+      som utfördes. Ett för lågt referensvärde vore ofarligt; **ett för högt är precis den
+      skada `SPEC.md` §2 finns för att ta bort.** Driften är systematisk, inte en artefakt av
+      exemplet.
+
+      **Det är fortfarande inte fel att visa en kombination som aldrig hänt** — talet är ett
+      typvärde, inte ett facit. Att regeln nu råkar ge ett verkligt set är en följd, inte ett
+      krav. **Men det blev ett val, inte en bieffekt.** Adam avgjorde 2026-08-25 efter att ha
+      fått driften ovan mätt och utskriven.
 
       💡 **Öppen fråga som följer av 2B-valet: vad förklarar talen första gången?** Med 2B
       finns ingen kolumnrubrik, så de små grå siffrorna är inte självförklarande. Adams förslag
