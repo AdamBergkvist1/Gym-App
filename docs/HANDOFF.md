@@ -25,15 +25,15 @@ Samtliga commits rör `docs/` — ingen `.ts`, `.tsx`, `package.json` eller migr
 **Nästa jobb är `11B.0f`: snittfunktionen i `src/db/history.ts`.** Det är **första gången på
 tre sessioner som kod ska röras**, och två saker måste göras innan en rad skrivs:
 
-1. **Kör om grindarna.** Se tabellen nedan — fyra är gröna och mätta i dag, men **e2e går
-   inte att köra på hemdatorn** och det är inte åtgärdat.
+1. **Kör grindarna först.** Alla fem är gröna och mätta 2026-08-19 (se tabellen nedan), så du
+   vet vad du utgår från — men kör dem ändå, särskilt om du sitter på jobbdatorn.
 2. **Läs `src/db/history.ts` och `repo.ts` FÖRST.** Regeln som 11B två gånger fått lära sig
    den hårda vägen: *läs koden innan du planerar, inte efter.* `getLastPerformance` finns
    redan och slår upp på `[exerciseId+performedAt]`.
 
 `/tdd` är rätt verktyg här — se skilltabellen längst ned.
 
-### ⛔ Grindarna — KÖRDA I DAG, och en är trasig av miljöskäl
+### ✅ Grindarna — ALLA FEM KÖRDA OCH GRÖNA 2026-08-19 (kväll), på hemdatorn
 
 | Grind | Utfall 2026-08-19 |
 |---|---|
@@ -41,23 +41,25 @@ tre sessioner som kod ska röras**, och två saker måste göras innan en rad sk
 | `npm run typecheck` | ✅ rent |
 | `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar i `icons.tsx` |
 | `npm run build` | ✅ **638,27 kB** (gzip 191,72), precache **651,41 KiB**, 9 entries |
-| `npm run e2e` | ⛔ **60 failed — men inget test kördes** |
+| `npm run e2e` | ✅ **60 passed**, 45,4 s |
 
-⛔ **E2E-felet är INTE en regression. Läs det här innan du felsöker något:**
+**Detta är den första sessionen där alla fem är mätta på samma maskin samma dag.** Siffrorna
+ovan är körda, inte ärvda. Nästa session står på grönt.
 
-> `browserType.launch: Executable doesn't exist at …/ms-playwright/webkit-2336/pw_run.sh`
+> ✏️ **Rutan sa först att e2e var trasig, och det var sant i tre timmar.** Alla 60 failade på
+> `browserType.launch: Executable doesn't exist at …/ms-playwright/webkit-2336/pw_run.sh` —
+> `~/Library/Caches/ms-playwright/` fanns inte alls, så Playwrights webbläsarbinärer hade
+> **aldrig** installerats på den här maskinen. Alla tre projekten (`iphone-se`, `iphone-13`,
+> `iphone-15`) kör WebKit, så allt stannade utan att en enda assertion utvärderades.
+>
+> **Åtgärdat samma session:** `npx playwright install webkit` (76,9 MiB + FFmpeg), på Adams
+> uttryckliga ja. Rättat i egen commit, inte genom `--amend`.
 
-`~/Library/Caches/ms-playwright/` **finns inte alls** på den här maskinen. Playwrights
-webbläsarbinärer är aldrig installerade här. Alla tre projekten (`iphone-se`, `iphone-13`,
-`iphone-15`) kör WebKit, så allt failar på samma rad utan att en enda assertion utvärderas.
-
-**Åtgärd:** `npx playwright install webkit` (eller `install` för alla). **Inte gjort** — det
-är en nedladdning på flera hundra MB och Adam hade inte tagit ställning när sessionen tog slut.
-
-⚠️ **Följden för briefens historik: siffran "60 e2e" har aldrig gällt hemdatorn.** Den kommer
-från 2026-08-14 och alltså från jobbdatorn. Det stod som en ärvd sanning i två överlämningar
-utan att någon prövade den här. **Bygget är därmed grönt på fyra grindar, inte fem**, och det
-ska inte skrivas som "grindarna gröna" förrän WebKit är installerat.
+⚠️ **Behåll den här lärdomen, för den överlevde felet:** siffran *"60 e2e"* stod i briefen från
+2026-08-14 och **hade aldrig gällt hemdatorn** — den kom från jobbdatorn och ärvdes vidare i
+två överlämningar utan att prövas. Att den nu råkar stämma är en tillfällighet, inte ett
+kvitto på att ärvda siffror är säkra. **Kör grindarna på din maskin innan du litar på ett tal
+i det här dokumentet.**
 
 ### Vad som avgjordes — 11B.0g är klar
 
@@ -161,12 +163,17 @@ appens uttalade kärnvärde i `CLAUDE.md`. **Skriv inte bort det.** Men blås in
 ### Miljö
 
 **macOS (hemdatorn)**, Darwin 24.6.0. `node` **v24.13.0**, `npm` **11.6.2** (11.19.0 finns).
-**`gh` saknas** fortfarande. **Playwrights webbläsare saknas** — se grindtabellen.
+**`gh` saknas** fortfarande.
 
-⏰ **Något committar automatiskt i den här miljön.** Filer stagades, och commiten fanns redan
+✅ **Playwrights WebKit är nu installerad här** (`webkit-2336`, 76,9 MiB, plus FFmpeg).
+Engångsåtgärd per maskin — behövs sannolikt även på jobbdatorn första gången e2e körs där.
+
+⏰ **Commits dök upp som ingen i sessionen skapat.** Filer stagades, och commiten fanns redan
 när stagingen skulle kontrolleras — författad som Adam, med fullständigt meddelande, utan att
-`git commit` kördes. Innehållet var korrekt. **Anta inte att en commit du inte gjort är fel,
-men verifiera alltid `git show --stat` innan du pushar.**
+`git commit` kördes. Adams förklaring: han committar ibland själv via GitHubs webbgränssnitt.
+**Det förklarar inte allt** — meddelandena beskrev arbete som bara fanns i sessionen, i detalj.
+Innehållet var korrekt varje gång, kontrollerat med `git show --stat`. **Verifiera alltid
+innan du pushar en commit du inte själv skapat.**
 
 ### Suggested skills
 
@@ -175,7 +182,7 @@ men verifiera alltid `git show --stat` innan du pushar.**
 | **`/tdd`** | För **11B.0f**, och nu starkare än förut. Reglerna är fler sedan snittet blev två tal, och **vakt 5 ska bli röd på rätt rad innan den skrivs om**. Sabotaget är uppgiften, inte en efterkontroll |
 | **`/code-review`** | Efter steg 4:s **första** skärm, inte efter hela ombyggnaden. Oförändrat i tre överlämningar |
 | **`/wayfinder`** | Till **runda 2** (Statistik, Övningar, Mer). Inte till runda 1 — där finns ingen dimma kvar |
-| **`/diagnosing-bugs`** | Bara om något faller. **E2E-felet är redan diagnosticerat** — det är en saknad webbläsarbinär, inte en bugg |
+| **`/diagnosing-bugs`** | Bara om något faller. Begär utskriften först — gissa inte |
 
 ---
 
