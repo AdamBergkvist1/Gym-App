@@ -5,7 +5,192 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ---
 
-## 🆕 2026-08-19 — Grillningen inför steg 4 välte appens kärnvärde. 11B.0b är stängd
+## 🆕 2026-08-19 (kväll) — 11B.0g är STÄNGD. Allt förarbete i 11B är slut
+
+### ✅ Pushat till och med `4118dcf`. Börja med `git pull`
+
+Kontrollerat efter en färsk `fetch`: `git status -sb` svarar `## main...origin/main` utan
+`ahead`, och `origin/main` står på `4118dcf`. **Fem commits gick upp den här sessionen.**
+
+⏰ **En sista commit kan ligga opushad:** den med den här sektionen plus Adams setprecisering
+i 11B.0f. Kolla `git status -sb` först.
+
+Samtliga commits rör `docs/` — ingen `.ts`, `.tsx`, `package.json` eller migration.
+
+### Börja här
+
+**Nästa jobb är `11B.0f`: snittfunktionen i `src/db/history.ts`.** Det är **första gången på
+tre sessioner som kod ska röras**, och två saker måste göras innan en rad skrivs:
+
+1. **Kör om grindarna.** Se tabellen nedan — fyra är gröna och mätta i dag, men **e2e går
+   inte att köra på hemdatorn** och det är inte åtgärdat.
+2. **Läs `src/db/history.ts` och `repo.ts` FÖRST.** Regeln som 11B två gånger fått lära sig
+   den hårda vägen: *läs koden innan du planerar, inte efter.* `getLastPerformance` finns
+   redan och slår upp på `[exerciseId+performedAt]`.
+
+`/tdd` är rätt verktyg här — se skilltabellen längst ned.
+
+### ⛔ Grindarna — KÖRDA I DAG, och en är trasig av miljöskäl
+
+| Grind | Utfall 2026-08-19 |
+|---|---|
+| `npm run test` | ✅ **274 tester i 22 filer**, alla gröna. 2,31 s |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar i `icons.tsx` |
+| `npm run build` | ✅ **638,27 kB** (gzip 191,72), precache **651,41 KiB**, 9 entries |
+| `npm run e2e` | ⛔ **60 failed — men inget test kördes** |
+
+⛔ **E2E-felet är INTE en regression. Läs det här innan du felsöker något:**
+
+> `browserType.launch: Executable doesn't exist at …/ms-playwright/webkit-2336/pw_run.sh`
+
+`~/Library/Caches/ms-playwright/` **finns inte alls** på den här maskinen. Playwrights
+webbläsarbinärer är aldrig installerade här. Alla tre projekten (`iphone-se`, `iphone-13`,
+`iphone-15`) kör WebKit, så allt failar på samma rad utan att en enda assertion utvärderas.
+
+**Åtgärd:** `npx playwright install webkit` (eller `install` för alla). **Inte gjort** — det
+är en nedladdning på flera hundra MB och Adam hade inte tagit ställning när sessionen tog slut.
+
+⚠️ **Följden för briefens historik: siffran "60 e2e" har aldrig gällt hemdatorn.** Den kommer
+från 2026-08-14 och alltså från jobbdatorn. Det stod som en ärvd sanning i två överlämningar
+utan att någon prövade den här. **Bygget är därmed grönt på fyra grindar, inte fem**, och det
+ska inte skrivas som "grindarna gröna" förrän WebKit är installerat.
+
+### Vad som avgjordes — 11B.0g är klar
+
+Slutvillkoret var *"Adam har valt en variant per axel, och valet står i `DESIGN.md` med skäl"*.
+Uppfyllt på båda. Mockupen ligger i `docs/mockups/11b-0g-pass.html`, fyra körbara rutor.
+
+| Axel | Val | Skälet i korthet |
+|---|---|---|
+| Fritext-loggningen | **1A**, invikt genväg som fälls ut vid tryck | Ett armerat fält framme i varje pass är en stark signal för något Adam inte vet om han vill ha |
+| Snittet | **2B**, under värdet, ingen egen kolumn | Ingen kolumnbredd betalas, och varje tal står under det det hör till |
+
+**Skälen står i `DESIGN.md` §3.1 — läs dem där, inte här.**
+
+**Två sidoeffekter av 2B som är lätta att missa:**
+
+1. ✅ **Kolumnrubriksfrågan föll.** Briefen sa att `Snitt` skulle prövas mot `Normalt` och
+   `Typiskt`. Med 2B finns ingen kolumn att namnge. En öppen fråga försvann utan att någon
+   behövde svara på den.
+2. ⚠️ **Men något måste ändå förklara talen första gången.** Utan rubrik är de små grå
+   siffrorna inte självförklarande. **Olöst.**
+
+### 🔄 Det viktigaste fyndet: snittet är TVÅ tal, och det stod fel i tre dokument
+
+**Adam hittade felet i mockupen, och det pekade tillbaka på briefen.** Ordagrant:
+
+> *"för att det ska make sense måste man visa snitt i vikt kopplat till reps och inte bara
+> snitt i vikt. för om man tar ju mer reps på högre vikt osv."*
+
+**Vikt och reps går inte att skilja åt.** Ett snitt som bara följer vikten kan **stiga för att
+man kört färre reps** — det ser ut som framsteg utan att vara det, vilket är exakt den falska
+signal som hela omskrivningen i `SPEC.md` §2 finns för att ta bort.
+
+Rättat på tre ställen: `SPEC.md` §2 skrev *"en vikt"* och *"ett och samma tal"*;
+`DESIGN.md` §3.1:s regeltabell saknade rad för vad som visas; och §3.1:s skiss ritade en
+`Snitt`-kolumn som nu är borta.
+
+⚠️ **`DESIGN.md` §3.1:s skiss sa `90×5` hela tiden.** Briefen hade rätt och mockupen ritade
+fel. **Lärdomen är densamma som med `--text-title` i augusti: felet syntes först när briefen
+byggdes mot.**
+
+### Öppna beslut som nästa session stöter på
+
+1. ⚠️ **Snittas vikt och reps var för sig kan resultatet bli ett set som aldrig utförts.**
+   90×5, 85×8 och 92,5×4 ger `90×6`. Tre vägar med kostnader står i `TASKS.md` 11B.0f.
+   **Adam informerad och införstådd — han hänvisade frågan dit med flit.** Avgörs när
+   funktionen skrivs, inte innan.
+2. **Passen har olika många set.** Adam preciserade skalan: han kör **sällan 5 set, oftast
+   2–4**. Fällan är alltså mindre extrem än briefen antydde men **försvinner inte** — den
+   flyttar ner till set 3 och 4.
+3. **Vakt 5 i 12.20 mäter `FÖRRA`-kolumnen**, som inte längre finns. **Måste skrivas om i
+   samma commit som 11B.0f**, annars är den grön mot något som inte existerar. Oförändrat
+   sedan förra överlämningen.
+4. **Chart.js** blir en fråga i runda 2. Kräver Adams ja enligt `CLAUDE.md` §7.3.
+5. 💡 **Långtryck som visar en infobricka** om vad snittalen betyder — Adams förslag på den
+   olösta förklaringsfrågan. **Förslag, inte beslut.** Noterat i `DESIGN.md` §3.1 att appen är
+   en telefon-PWA, så det är `long-press` och inte hover, och att en osynlig gest har en egen
+   kostnad.
+
+### Strong är hämtad, och den gav inte det som förväntades
+
+Sex App Store-bilder i `docs/Reference-pics/Strong iOS 1–6.jpg`, registrerade i
+`docs/EXTERNT.md`. **Bild 1 är vår Pass-skärm byggd av någon annan.** Mätvärdena ur den
+ligger i `DESIGN.md` §0.5 — det viktigaste är att spökdatakolumnen står tom i alla tre
+raderna i Strongs **egen säljbild**, ligger på **1,6–1,7:1** i kontrast mot 13,4:1 för
+viktvärdet bredvid, och kostar ~⅓ av radbredden. Det blev axel 2:s starkaste argument.
+
+⛔ **Men hypotesen om varför Adam slutade höll inte.** Förra överlämningen antog att det
+kanske var utseendet. Ombedd att peka svarade han *"inget riktigt speciellt"* — samtidigt som
+han **fortfarande inte tycker att Strong är snyggt**. Motviljan är alltså **diffus, inte
+lokaliserad**. Följden för arbetssättet: **leta inte efter den avgörande detaljen i bilderna.**
+
+### ⚠️ En rättelse som gäller arbetssättet, inte koden
+
+**Adam avbröt sessionen med:** *"känns som att du tar mina svar och förvränger dom. Behöver
+inte överdriva så hårt alltid."*
+
+Han hade rätt. *"Inget riktigt speciellt"* hade blivit *"utseendet är frikänt"*, och
+*"tror jag tittade lite, minns inte exakt"* hade blivit *"kolumnen gjorde skadan"*. Båda
+skrevs om, och rättelsen står som en synlig ruta i `DESIGN.md` §0.5 med hans invändning
+citerad — inte som tyst omskrivning.
+
+**Regeln som faller ut, och som är värd mer än något beslut i den här sessionen:** Adam svarar
+ofta hedgat (*"tror"*, *"minns inte exakt"*, *"får se"*). **Hedgingen är data, inte artighet.**
+Skriv in svaret med hedgingen kvar, och dra aldrig ett svagt svar till en stark slutsats för
+att det gör dokumentet snyggare.
+
+### Fritexten är två funktioner, inte en — och det ändrar 11B
+
+Adams distinktion, som briefen tidigare behandlat som ett element:
+
+| | Vad det är | Adams hållning |
+|---|---|---|
+| **Passkommentar** | Fritext *om* passet, vid avslut | *"vi kan prova att ha den för oss ändå"* — ja, låg insats |
+| **Fritext-loggning** | `bänk 80x8` → set via AI | *"vet inte om jag kommer använda … men får se"* — **osäker** |
+
+⚠️ **Adam tror strukturerad inmatning kan vara effektivare för själva loggningen:** *"tror ändå
+det är mer effektivt att söka på övningen klicka och skrolla."* Det är användarens omdöme om
+appens uttalade kärnvärde i `CLAUDE.md`. **Skriv inte bort det.** Men blås inte upp det heller
+— det är *"får se"*, inte avslag, och `SPEC.md` §2:s andra loggningsläge är redan svaret.
+
+### Miljö
+
+**macOS (hemdatorn)**, Darwin 24.6.0. `node` **v24.13.0**, `npm` **11.6.2** (11.19.0 finns).
+**`gh` saknas** fortfarande. **Playwrights webbläsare saknas** — se grindtabellen.
+
+⏰ **Något committar automatiskt i den här miljön.** Filer stagades, och commiten fanns redan
+när stagingen skulle kontrolleras — författad som Adam, med fullständigt meddelande, utan att
+`git commit` kördes. Innehållet var korrekt. **Anta inte att en commit du inte gjort är fel,
+men verifiera alltid `git show --stat` innan du pushar.**
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/tdd`** | För **11B.0f**, och nu starkare än förut. Reglerna är fler sedan snittet blev två tal, och **vakt 5 ska bli röd på rätt rad innan den skrivs om**. Sabotaget är uppgiften, inte en efterkontroll |
+| **`/code-review`** | Efter steg 4:s **första** skärm, inte efter hela ombyggnaden. Oförändrat i tre överlämningar |
+| **`/wayfinder`** | Till **runda 2** (Statistik, Övningar, Mer). Inte till runda 1 — där finns ingen dimma kvar |
+| **`/diagnosing-bugs`** | Bara om något faller. **E2E-felet är redan diagnosticerat** — det är en saknad webbläsarbinär, inte en bugg |
+
+---
+
+## 2026-08-19 — Grillningen inför steg 4 välte appens kärnvärde. 11B.0b är stängd
+
+> **⚠️ Tre saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "Nästa jobb är `11B.0g`" är utfört.** Uppgiften är **stängd** 2026-08-19 (kväll).
+> Både axlarna är avgjorda — `1A` och `2B`. Se sektionen överst.
+>
+> **(2) Siffran "60 e2e" gäller INTE den här maskinen.** Den ärvdes från 2026-08-14 och kommer
+> från jobbdatorn. På hemdatorn saknas Playwrights webbläsarbinärer helt, och alla 60 failar
+> utan att köras. De övriga fyra grindarna är omkörda och gröna 2026-08-19. Se grindtabellen
+> överst.
+>
+> **(3) Hypotesen att Strong övergavs för utseendets skull höll inte.** Se sektionen överst.
+>
+> Allt annat — spökdatabeslutet, betalväggsfynden, `SPEC.md` §2 — gäller oförändrat.
 
 ### ✅ Pushat. Börja med `git pull`
 

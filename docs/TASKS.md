@@ -1248,6 +1248,12 @@ nuvarande.
       underlag när set 1 har tre. Vad som då visas ska avgöras när funktionen skrivs, inte
       antas.
 
+      ⏰ **Skalan på fällan, preciserad av Adam 2026-08-19:** han kör **sällan 5 set — oftast
+      2–4**. Exemplet "set 5" i stycket ovan är alltså det ovanliga fallet, inte det typiska.
+      **Men problemet försvinner inte**, det flyttar bara ner: har han kört 4 set en gång och
+      2 set två gånger har set 3 och 4 tunnare underlag än set 1 och 2. Frågan står kvar —
+      den är bara mindre extrem än formuleringen antyder.
+
       ⚠️ **NY OCH ÖPPEN 2026-08-19: snittet är två tal, och de kan ljuga tillsammans.**
       Funktionen ska returnera **snittvikt OCH snittreps**, inte bara vikt — Adams
       precisering, se `SPEC.md` §2 och `DESIGN.md` §3.1. Signaturen ovan ändras därefter.
