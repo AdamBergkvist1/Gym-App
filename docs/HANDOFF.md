@@ -1,11 +1,156 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-25 (sent). Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-26. Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-25 (sent) — `/code-review` kördes före steg 4 och hittade ett verkligt fel
+## 🆕 2026-08-26 — `/simplify` kördes, och appen är LJUS. Nästa jobb är steg 4.2
+
+### ✅ Allt är pushat. Kontrollera själv
+
+```bash
+git fetch origin && git status -sb
+```
+
+**Tolv commits**, `bd4835b..e8154d9`. Svarar kommandot `## main...origin/main` utan `ahead`
+eller `behind` är du i fas — så såg det ut vid sessionens slut, kontrollerat efter en färsk
+`fetch`.
+
+### 🔴 Det viktigaste att bära vidare: ett temabyte går sönder utan att koden ändras
+
+**Steg 4.1 bytte appen från det mörka lime-temat till ljusa Bläck.** Fyra fel uppstod, och
+**inget av dem syns i ett diff eller fälls av någon grind** — raderna var korrekta före bytet
+och fel efter, för att *tokens innebörd* ändrades under dem:
+
+| Vad | Före bytet | Efter bytet |
+|---|---|---|
+| Tre kontroller med `--color-line` som enda avgränsning | 1,47:1 mot svart | **1,01:1** mot papper — helt osynliga |
+| Vilotimerns text i `--color-bg` på grönt | 6,07:1 | **2,66:1** |
+
+Det enda som hittade dem var att **rendera appen och mäta kontrasten programmatiskt i DOM:en**
+med `javascript_tool` i webbläsarpanelen. Alla fem grindar var gröna hela tiden.
+**Gör om den mätningen efter 4.2 och 4.3** — metoden står i `TASKS.md` under `Steg 4.1`.
+
+### 🔴 Näst viktigast: krav som AI infört är inte Adams
+
+Adam invände två gånger denna session, och båda gångerna hade han rätt:
+
+> *"det är inte jag som har satt utan jag har bara valt och sagt vad jg önskar för färger men
+> inget om kontraster … inget jag kan ta beslut om då jag inte fattar siffror med kontraster
+> och varför det behövs och när liksom."*
+
+**Kontrastkraven (3:1, 4,5:1) i `DESIGN.md` §0.5, §1 och §1b är införda av AI-sessioner.**
+Adam har valt **färger**. Att siffrorna stod i dokument han godkänt gjorde att de citerades
+tillbaka till honom som hans egna krav — så blir ett antagande osynligt. Samma sak gällde
+formuleringen om svett, dålig belysning och telefoner som sänker ljusstyrkan i värmen; den var
+dessutom delvis obelagd, och den förstärktes för varje upprepning.
+
+**Regeln som gäller nu, utskriven i `DESIGN.md` §0.5:** ett tal ur en standard presenteras som
+ett **förslag med skälet i klartext**, aldrig som ett krav Adam redan ställt. Elva
+formuleringar är omskrivna i `DESIGN.md`, `PLAN.md`, `TASKS.md`, `index.css`,
+`ScrollPicker.tsx` och `TodayPage.tsx` — **skälen står kvar, dramatiken är borta.**
+
+### Vad som blev gjort
+
+**Läs `TASKS.md` för status, inte den här filen.** Kort:
+
+| Del | Utfall |
+|---|---|
+| **`/simplify`** (6 commits) | Fyra kalla granskare. Tyngsta fyndet **mätt**: `getSetAverages` läste hela övningens historik för tre pass — 13,7 ms mot 1,3 ms vid 1600 rader, linjärt mot konstant. Funktionen gick 61 → 45 kodrader |
+| **Steg 4.1** (4 commits) | Tokens, väg C, radie 18 px, Fraunces, temafärg på två ställen, `color-scheme: light`, iOS-statusrad |
+| **11B.0f** | **Rutan står obockad** — beslut och skäl i `TASKS.md`. Stängs i 4.2 |
+
+### ✅ Grindarna — ALLA FEM I SLUTLÄGET 2026-08-26, hemdatorn
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **294 tester i 23 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ **638,32 kB** (gzip 191,76), precache **718,55 KiB / 10 entries** |
+| `npm run e2e` | ✅ **60 passed**, 37,7 s |
+
+⚠️ **Precachen växte från 651,50 KiB** — det är Fraunces 67 kB. JS-bundlen är oförändrad.
+Uppgift 7.13 (bundlestorlek) är fortfarande öppen.
+
+### 🔜 NÄSTA JOBB: STEG 4.2 — Pass-skärmen mot form 2B
+
+Allt förarbete är klart. **Läs `DESIGN.md` §3.1 och `TASKS.md` `Steg 4.1` + `11B.0f`.**
+Fem saker väntar, alla redan beslutade och nedskrivna:
+
+1. **Snittkolumnen ersätter `FÖRRA`.** `getSetAverages` är byggd, testad och städad.
+   Form **2B**: inget `setrad-forra`, utan snittvikten under vikten och snittrepsen under repsen.
+2. ⛔ **Vakt 5 i `e2e/passvy.spec.ts` skrivs om i SAMMA commit.** Det är kriteriet som håller
+   11B.0f öppen. Rutan i filhuvudet är rättad — vakten faller *högljutt*, den blir inte tyst
+   grön, men den ska ändå skrivas om och inte raderas.
+3. **Skärmen får INTE räkna arbetsset ad hoc.** `workSetIndex` härleds i dag på två ställen med
+   prosa som enda koppling, och `ExerciseCard.tsx:153` skickar index **inklusive uppvärmning**.
+   Kopplas snittet dit hamnar fel snitt på fel rad **tyst**. Samma buggklass som `e02abf1`.
+   Bygg en delad härledning.
+4. **`±`-knapparna** ska följa utrustningsregeln (`weightStepFor`). Adam: *"dom får vi ta när
+   det steget kommer."*
+5. **Accentbrickan ersätter 🏋-emojin** (10 × 34 px). Sista posten i 11B.0c.
+
+**Två saker till som hör till 4.2:** `staleSince` är ett rått ISO-datum och ska bli *"senast
+tränad i \<månad år\>"*, och etiketten *"Vila klar"* ligger på 3,16:1 mot kravet 4,5:1 för
+liten text — timerchipet byggs om ändå.
+
+**Öppet, obeslutat:** vad som förklarar snittalen första gången. Med 2B finns ingen
+kolumnrubrik, så de små grå siffrorna är onämnda. Adams förslag är långtryck; **min
+rekommendation är långtryck plus en engångsförklaring första gången kolumnen har siffror**,
+samma mönster som 11B.6. Se `DESIGN.md` §3.1. **Adams beslut, inte fattat.**
+
+### 🖥️ Så visar du Adam något — läs detta innan du föreslår localhost
+
+**Han vill inte klicka runt på `localhost`** — det blir en bred webbsida, inte en telefon.
+
+- **Produktionen:** `https://adam-gym-app.vercel.app` — **Vercel bygger om automatiskt när du
+  pushar till `main`**, verifierat denna session. Han öppnar den i Safari på sin telefon. Det
+  är en riktig iPhone med `https`, alltså fungerar service worker och PWA-läget.
+- **Skärmbilder:** använd webbläsarpanelen i `preset: mobile` (375×812). Då är bilderna
+  telefonstora, vilket är vad han vill se.
+- **Xcodes simulator:** ⏰ **inte installerad, och kan inte installeras i dag.** Adam kör
+  **macOS 15.7.2**; App Store-versionen kräver **26.2**. Han planerar att uppdatera. **När det
+  är gjort:** App Store → Xcode → öppna en gång → `sudo xcode-select -s
+  /Applications/Xcode.app/Contents/Developer`. Kommandot kräver hans lösenord, du kan inte köra
+  det. Därefter går `mcp__Claude_Code_iOS_Simulator__control` att använda, och han föredrar den
+  vyn under uppbyggnadsfaserna.
+- ⚠️ **`apple-mobile-web-app-status-bar-style` ändrades till `default` i 4.1 och är OVERIFIERAD.**
+  Den gäller bara iOS i standalone-läge — lägg till på hemskärmen och starta därifrån. Varken
+  Playwright, skrivbordet eller simulatorn i webbläsarpanelen kan pröva den. **Be Adam titta.**
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/tdd`** | Till 4.2:s logik, särskilt den delade `workSetIndex`-härledningen. ⚠️ Läs lärdomen i sektionen 2026-08-25: be fixturen ställa frågan, inte bara bekräfta utfallet |
+| **`/code-review`** | ✅ Har bevisat sitt värde två gånger. Kör efter 4.2:s första skärm |
+| **`/simplify`** | ✅ Bevisade sitt värde denna session — det tyngsta fyndet var uppmätt, inte tyckt. Kör efter 4.2 |
+| **`/diagnosing-bugs`** | När något faller — även när det ser ut som flakighet |
+
+---
+
+## 2026-08-25 (sent) — `/code-review` kördes före steg 4 och hittade ett verkligt fel — DELVIS ÖVERSPELAD
+
+> **⚠️ Fyra saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "Nästa jobb: Steg 4: bygg Pass-skärmen mot 2B" hoppade över steg 4.1.** Tokens skulle
+> och ska komma först — se `DESIGN.md` §"Implementationsordning för steg 4". **4.1 är nu klar**,
+> och nästa jobb är **4.2**.
+>
+> **(2) Grindtabellen är överspelad.** Bygget är 638,32 kB och precachen **718,55 KiB** sedan
+> Fraunces lades till. Se tabellen överst.
+>
+> **(3) De sju kvarstående fynden är åtgärdade eller avförda** av `/simplify` 2026-08-26.
+> Ett av dem — förslaget att skrota `EQUIPMENT`-arrayen — **höll inte vid kontroll** och
+> avvisades med skäl. Se `TASKS.md` 11B.0f.
+>
+> **(4) "Adams beslut, rutan står obockad" om 11B.0f är avgjort.** Rutan står fortfarande
+> obockad, men nu av ett nedskrivet skäl och med en bestämd tidpunkt: den stängs i 4.2.
+>
+> Allt annat — särskilt **lärdomen om varför 13 TDD-tester missade buggen** — gäller oförändrat
+> och är fortfarande det viktigaste i sektionen.
 
 ### ✅ Allt är pushat. Kontrollera själv
 
