@@ -96,10 +96,18 @@ Fem saker väntar, alla redan beslutade och nedskrivna:
 tränad i \<månad år\>"*, och etiketten *"Vila klar"* ligger på 3,16:1 mot kravet 4,5:1 för
 liten text — timerchipet byggs om ändå.
 
-**Öppet, obeslutat:** vad som förklarar snittalen första gången. Med 2B finns ingen
-kolumnrubrik, så de små grå siffrorna är onämnda. Adams förslag är långtryck; **min
-rekommendation är långtryck plus en engångsförklaring första gången kolumnen har siffror**,
-samma mönster som 11B.6. Se `DESIGN.md` §3.1. **Adams beslut, inte fattat.**
+✅ **Avgjort 2026-08-26 av Adam — vad som förklarar snittalen. Två beslut, inte ett:**
+
+- **Långtryck byggs i 4.2.** *"Långtryck är bra allmänt annars."*
+- **Engångsförklaringen skjuts till 11B.6** (tomma tillstånd) och stryks inte. Skälet är
+  konkret: **ögonblicket finns inte.** Appen har varken registrering eller förstagångsflöde —
+  `src/main.tsx` slår fast att den ska fungera *"utan nät och utan konto"*. 11B.6 äger redan
+  samma fråga (*"första passet är enda tillfället att lära ut fritextsyntaxen"*), så de två
+  förklaringarna ska byggas **tillsammans, i samma mekanism**.
+
+⚠️ **Följden för 4.2, accepterad med öppna ögon:** långtrycket blir ett tag den *enda* vägen
+till förklaringen, och det är osynligt tills man hittar det. Adam är appens enda användare i
+dag och vet vad talen betyder. Se `DESIGN.md` §3.1 och `TASKS.md` 11B.6.
 
 ### 🖥️ Så visar du Adam något — läs detta innan du föreslår localhost
 

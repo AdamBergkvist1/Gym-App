@@ -1401,7 +1401,35 @@ bruk. **Visar det sig att fritexten används mer än Adam trodde, är 1B det fö
 ⛔ **Detta gäller fritext-loggningen, inte passkommentaren.** De är två funktioner (§0.5).
 Passkommentaren ligger vid `Avsluta pass` och berörs inte av valet.
 
-### 💡 Förslag, inte beslut: långtryck förklarar de små talen
+### ✅ AVGJORT 2026-08-26: långtryck byggs, engångsförklaringen skjuts till 11B.6
+
+**Adams beslut, och det är två beslut, inte ett.**
+
+**1. Långtryck byggs — i steg 4.2.** *"Långtryck är bra allmänt annars."* Det förklarar
+snittalen utan att kosta permanent yta, vilket är samma skäl som gjorde att 2B vann.
+
+**2. Engångsförklaringen skjuts upp, men stryks inte.** Adam: *"Så länge engångsförklaringen
+görs på ett bra sätt, tex precis när man har signat upp. Egentligen kanske skippa det helt för
+nu, men skriv upp det."*
+
+⚠️ **Skälet att skjuta upp den är konkret och inte en känsla: ögonblicket finns inte.** Appen
+har **varken registrering eller förstagångsflöde** — `src/main.tsx` säger uttryckligen att den
+ska fungera *"första gången appen öppnas, utan nät och utan konto"*, och inloggningen i
+Inställningar finns bara för synk. Att bygga förklaringen nu hade betytt att uppfinna ett
+förstagångsläge åt en enda tooltip.
+
+**Var den hör hemma:** [`TASKS.md` 11B.6 (tomma tillstånd)](TASKS.md), som redan äger frågan om
+vad appen lär ut första gången — den uppgiften slår fast att *"första passet är enda tillfället
+att lära ut fritextsyntaxen"*, alltså exakt samma mönster och samma ögonblick. Bygg dem
+tillsammans, inte var för sig.
+
+**Följden för 4.2:** långtrycket är då den *enda* vägen till förklaringen ett tag, och det är
+osynligt tills man hittar det. **Det är accepterat med öppna ögon** — Adam är appens enda
+användare i dag och vet vad talen betyder.
+
+---
+
+### 💡 Bakgrunden till beslutet ovan: förslaget som lades fram
 
 **Den öppna frågan från 2B är hur snittalen förklaras första gången.** Adam 2026-08-19:
 

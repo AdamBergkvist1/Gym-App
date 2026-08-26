@@ -1715,8 +1715,29 @@ gäller, och uppgiften skrivs om.
       haptikfrågan är avgjord med ett mätresultat.
 - [ ] **11B.6 Tomma tillstånd.** Första passet är enda tillfället att lära ut fritextsyntaxen,
       och det tillfället används inte i dag.
+
+      🔄 **UTÖKAD 2026-08-26: engångsförklaringen av snittalen hör hit, inte till 4.2.**
+      Adams beslut. Med form 2B står snittvikten och snittrepsen som små grå siffror **utan
+      rubrik**, och något måste säga vad de är första gången. Långtrycket byggs i 4.2, men det
+      är osynligt tills man hittar det.
+
+      ⚠️ **Varför den inte kunde byggas i 4.2:** ögonblicket finns inte. Appen har **varken
+      registrering eller förstagångsflöde** — `src/main.tsx` slår fast att den ska fungera
+      *"första gången appen öppnas, utan nät och utan konto"*, och inloggningen i Inställningar
+      finns bara för synk. Adam föreslog *"precis när man har signat upp"*, vilket är rätt
+      tanke men förutsätter något som inte är byggt. Att lägga det i 4.2 hade betytt att
+      uppfinna ett förstagångsläge åt en enda tooltip.
+
+      **Det hör hit för att den här uppgiften redan äger samma fråga och samma ögonblick:**
+      vad appen lär ut vid första passet. Fritextsyntaxen och snittalen ska förklaras
+      **tillsammans**, i samma mekanism — inte som två skilda lösningar på samma problem.
+
+      **Klart när:** båda förklaringarna visas en gång vid första passet och aldrig igen, och
+      långtrycket är vägen tillbaka till dem. Se `DESIGN.md` §3.1.
 - [ ] **11B.7 Färgsemantik som system.** Grönt = sparat, gult = tvetydigt är i dag enstaka val.
-      **Klart när:** betydelserna är definierade och kontrasterna klarar WCAG AA mot mörk botten.
+      **Klart när:** betydelserna är definierade och kontrasterna håller mot **ljus** botten.
+      ✏️ Här stod *"mot mörk botten"*. Överspelat av steg 4.1 — appen är ljus sedan 2026-08-26,
+      och semantiken följer väg C, där betydelsen bärs av yta + kant i stället för av textfärg.
 - [ ] **11B.8 Personbästa markeras när det slås.** Den starkaste återkopplingen en träningsapp
       kan ge, och nästan gratis när e1RM från fas 9 finns.
 - [ ] **11B.9 Densitet.** Ett pass med 25 set ska gå att överblicka. Nuvarande radhöjd är vald
