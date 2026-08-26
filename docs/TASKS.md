@@ -3225,6 +3225,12 @@ och 13.1 måste vara klar före 13.6.
       ljuger om räckvidden. **Klart när:** konstanten heter något som täcker båda användningarna
       (`SET_MALL`, med förvalet dokumenterat i docblocken). **Låg prioritet, ren omdöpning.**
 
+      🔄 **Inte längre bara en omdöpning — gör den ihop med 12.38.** Samma konstant bär ett
+      andra problem som steg 4.2 hittade: `performedAt` ligger två år tillbaka, vilket **kan
+      maskera tidsberoende filter** i vakter som mäter frågor med åldersgräns. Det träffade
+      vakt 5 på riktigt. Namnet och datumet sitter på samma rader; att dela upp dem i två
+      commits vore att röra samma ställe två gånger.
+
 - [x] **12.32 §7.1-sökningen gjordes aldrig före `e2e/hjalpare.ts`. Ny 2026-08-13 (kväll).
       KLAR 2026-08-13.**
       Utbruten ur `/code-review` av 12.20. §7.1: *"Att söka efter befintliga lösningar är ett
@@ -3346,6 +3352,155 @@ och 13.1 måste vara klar före 13.6.
       kappkörning som lagades för två dagar sedan, och `/simplify` är kvalitet — inte
       korrekthet. Ändras det ska det ske med `/diagnosing-bugs` eller `/tdd`, med ett test som
       först är rött. `ScrollPicker.test.tsx` är rätt plats; sömmen finns redan.
+
+> ### 🔴 12.36–12.40 kommer ur steg 4.2. LÄS PRIORITERINGEN INNAN DU PLOCKAR EN
+>
+> Fem uppgifter, och de är **inte** lika mycket värda. Steg 4.2 hittade tre fel som ingen av
+> de fem grindarna fällde, och **två av dem var tester som såg ut att mäta något men inte
+> gjorde det.** De hittades genom att jag saboterade koden med flit — alltså av en vana, inte
+> av en process. Händer det bara när någon råkar komma på det kommer nästa tysta vakt inte
+> hittas.
+>
+> | # | Vad | När |
+> |---|---|---|
+> | **12.36** | Kontrastmätningen finns inte i repot | **Före 4.3.** Det är metoden som hittat allt sedan 4.1 |
+> | **12.37** | Sabotagekontrollen är en vana, inte en regel | **Före 4.3.** Billig, och 4.3 skriver nya vakter |
+> | **12.38** | `IMPORTERAT_SET`:s datum kan maskera tidsberoende filter | **Med 12.37.** Samma familj |
+> | **12.39** | `getSetAverages` drar in hela `exercises` i sin observerade mängd | Före **fas 7** |
+> | **12.40** | Briefen saknar kanttoken för element direkt på papperet | **I 4.3**, när frågan återkommer |
+>
+> **12.36 och 12.37 är de enda som hindrar framtida fel.** De övriga tre är enskilda skulder.
+> Görs bara en sak, gör 12.36.
+
+- [ ] **12.36 Kontrastmätningen bor i ett sessionstranskript, inte i repot. Ny 2026-08-26.**
+      **Det här är det tyngsta fyndet ur steg 4.2**, och det handlar inte om en färg.
+
+      Steg 4.1 lämnade fyra fel som **inga grindar fångade**, för att tokens *innebörd* ändrades
+      under rader som aldrig rördes. Det enda som hittade dem var att rendera appen och mäta
+      kontrasten programmatiskt i DOM:en. Steg 4.2 gjorde om mätningen och hittade tre fel till.
+
+      ⛔ **Men skriptet finns ingenstans.** Det skrevs i webbläsarpanelen båda gångerna och dog
+      med sessionen. Nästa session måste återuppfinna det — **och kan göra om samma misstag**:
+
+      💡 **Mätskriptet ljög första gången det kördes i 4.2.** Det läste
+      `oklab(0.94 0.001 0.014 / 0.4)` med en RGB-regex, plockade `0.94` som rödvärde och
+      rapporterade **tre falska fel** på kolumnrubrikerna. Hade de "fixats" hade korrekta rader
+      ändrats. **En mätning som inte själv är kontrollerad är inte ett bevis.**
+
+      **Den fungerande metoden, och skälet den fungerar:** låt webbläsaren göra färgmatten.
+      Sätt en känd bottenfärg på en 1×1-canvas, måla elementets färg ovanpå, läs pixeln. Då
+      hanteras alfa, `oklab`, `color-mix` och allt annat CSS kan hitta på — utan att vi tolkar
+      en enda färgsträng själva. Bakgrunden byggs likadant: samla lagren från roten och ned och
+      måla dem i tur och ordning.
+
+      **Föreslagen form: en e2e-vakt, inte ett skript.** `e2e/no-horizontal-overflow.spec.ts`
+      är redan exakt det här mönstret — gå igenom varje element på varje rutt och mät något
+      som annars bara upptäcks av ett öga. Kontrastvakten är dess syskon, och som e2e körs den
+      av sig själv i stället för att kräva att någon minns den. Det är samma val som
+      `tabular-nums`: **strukturellt i stället för ihågkommet.**
+
+      ⚠️ **Den ärliga risken, som ska mötas och inte ignoreras:** en sådan vakt kan bli brusig.
+      Avsiktligt dämpad text, inaktiverade kontroller och dekorativa glyfer kan falla utan att
+      något är fel. **Bygg den med en uttrycklig undantagslista där varje post bär sitt skäl
+      i klartext** — ett tyst undantag är samma sorts lögn som en tyst grön vakt. Faller den på
+      något är svaret antingen en rättad färg eller en motiverad rad i listan, aldrig en höjd
+      tröskel.
+
+      **Klart när:** vakten mäter varje synligt textelement på Pass, Historik och Inställningar
+      mot sitt **faktiska** underlag; kravet följer storleken (4,5:1 under 24 px, 3:1 över, och
+      3:1 för kanter som bär betydelse enligt WCAG 1.4.11); den faller på ett infört fel —
+      **kontrollerat genom sabotage, inte antaget**; och undantagslistan är tom eller motiverad
+      post för post.
+
+- [ ] **12.37 Sabotagekontrollen är en vana, inte en regel. Ny 2026-08-26.**
+      Steg 4.2 hittade **två tysta gröna vakter**, båda genom att koden de mäter saboterades
+      med flit:
+
+      1. **Vakt 5 mätte fel filter.** Se `11B.0f`. Konsumenten bytte från `getLastPerformance`
+         till `getSetAverages`, och den nya källan har en åldersgräns den gamla saknade. Det
+         seedade setet låg två år tillbaka, så **åldersgränsen tog det även när importfiltret
+         saboterades.** 13.4 var oskyddad på visningsvägen utan att någon grind sa ett ord.
+      2. **Långtrycksvakten dolde ett designfel.** Se `Steg 4.2` del E. Infobrickans
+         `fixed inset-0`-overlay dök upp under fingret medan det låg nere, så `pointerup`
+         hamnade på overlayen och `click` uteblev helt — klickspärren blev omätbar.
+
+      **Vad de har gemensamt:** i båda fallen gick vakten grön **av rätt skäl av en slump**.
+      Ingen av dem syns i ett diff, och ingen grind kan fånga dem — ett test som passerar ser
+      likadant ut oavsett om det mäter något.
+
+      `history.test.ts` har redan vanan nedskriven på två ställen (*"Två vakter kan inte bli
+      röda av sig själva … båda kontrollerades genom att implementationen tillfälligt
+      saboterades"*), men det är en anteckning i en fil, inte en regel någon läser i tid.
+
+      **Klart när:** regeln står i `CLAUDE.md` och namnger de två tillfällen den gäller —
+      **(a) när ett test går grönt utan att implementationen ändrats**, och **(b) när en
+      konsument byter datakälla**, eftersom den då ärver källans alla filter. Formuleringen ska
+      vara kort; skälen bor här och i `11B.0f`.
+
+      💡 **Sidoiakttagelse värd att bära med:** ett test som *inte kan* bli rött är inte
+      värdelöst, men det ska stå utskrivet att det är dokumentation och inte en vakt. Se
+      `worksets.test.ts`, tomma-listan-fallet.
+
+- [ ] **12.38 `IMPORTERAT_SET`:s datum kan maskera tidsberoende filter. Ny 2026-08-26.**
+      Utbruten ur vakt 5-omskrivningen i steg 4.2. Mallen i `e2e/hjalpare.ts:56` har
+      `performedAt: '2024-04-04'` — **över två år tillbaka.**
+
+      Det var ofarligt så länge vakterna mätte `getLastPerformance`, som inte bryr sig om
+      ålder. Det slutade vara ofarligt i samma stund en vakt mätte `getSetAverages`, som har en
+      **åttaveckorsgräns**: setet faller då på åldern oavsett vad vakten tror sig mäta. Vakt 5
+      är rättad för egen del (den seedar nu inom gränsen), men **mallen är kvar och nästa vakt
+      går i samma fälla.**
+
+      **Klart när:** förvalet ligger nära nutid — eller, om ett gammalt datum är poängen för
+      någon vakt, att `seedaRått` tvingar anroparen att välja. **Hör ihop med 12.31**
+      (konstanten heter inte längre vad den är); gör dem i samma commit, det är samma rad.
+
+- [ ] **12.39 `getSetAverages` drar in hela `exercises` i sin observerade mängd. Ny 2026-08-26.**
+      **Punkt 2 i `/simplify`-listan under `11B.0f`, som lämnades till 4.2 och inte gjordes
+      där heller.** Skrivs upp som egen rad så den inte blir kvar i en löptext.
+
+      Funktionen gör ett eget `database.exercises.get()` för att få `equipment`. Anropas den
+      från `useLiveQuery` — vilket `ExerciseCard` gör, ett anrop per övningskort — hamnar hela
+      `exercises`-tabellen i den observerade mängden, så **varje skrivning dit kör om samtliga
+      korts historikskanning.**
+
+      **Latent i dag:** `ensureCatalog` anropas bara från tester. **Skarpt i fas 7**, när
+      synk-pullen skriver `exercises` under pågående pass.
+
+      **Åtgärden är billig och redan uttänkt:** låt anroparen skicka övningsraden.
+      `TodayPage.tsx` har den redan i minnet och skickar ner den som prop till `ExerciseCard`,
+      som i sin tur redan tar emot `exercise`. Signaturen blir `getSetAverages(exerciseId,
+      database, { excludeWorkoutId, equipment })` — eller `equipment` som eget argument.
+
+      **Klart när:** frågan läser inte `exercises`, och ett test visar att viktsteget följer
+      den utrustning anroparen skickar.
+
+- [ ] **12.40 Briefen saknar en kanttoken för element som ligger direkt på papperet. Ny 2026-08-26.**
+      Hittad i steg 4.2 del C, genom mätning. **Inte ett fel i koden i dag** — timerchipet är
+      korrekt — men en lucka i tokensystemet som kommer tillbaka.
+
+      §1b väg C mätte alla kanttokens **mot vitt kort**, eftersom fynd 3 slår fast att tonade
+      ytor alltid ligger på ett kort. `--color-ok-line` fick **3,55:1** där. Men §3.1 säger
+      samtidigt att vilotimern ska vara *"en chip i flödet, inte ett banderoll-lager"*, alltså
+      ett semantiskt element **direkt på papperet** — och där mäter samma token:
+
+      | Token | Mot papper (ut) | Mot `ok-bg` (in) |
+      |---|---|---|
+      | `--color-ok-line` | **2,99** ⛔ | 3,17 ✓ |
+      | `--color-ok-text` | **5,50** ✓ | 5,83 ✓ |
+
+      **Timerchipet använder därför `--color-ok-text` som kant**, vilket fungerar men är fel
+      namn på rätt värde: tokenen föddes som textfärg. Skälet står utskrivet i `RestTimer.tsx`.
+
+      ⚠️ **Frågan återkommer i 4.3.** Historik lägger med all sannolikhet semantiska element
+      utanför kort, och då upprepas valet — antingen med samma tysta avsteg eller med ett eget
+      beslut varje gång.
+
+      **Att avgöra, och det är en designfråga för Adam att godkänna:** ska §1b få en andra
+      kantnivå för element på papperet (t.ex. `--color-ok-line-paper`), eller ska regeln i
+      stället vara *"semantiska element ligger alltid på ett kort"* — vilket hade tvingat om
+      timerchipet? **Ta det i 4.3, inte tidigare**, så beslutet fattas mot ett verkligt andra
+      fall och inte mot ett hypotetiskt.
 
 ---
 

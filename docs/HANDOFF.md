@@ -87,21 +87,33 @@ grillning** — det är ny funktionalitet, inte omskrivning. Se rutan i `TASKS.m
 
 **Gör om kontrastmätningen efter 4.3.** Samma metod, canvas-varianten.
 
-### ⏰ Fyra öppna trådar, alla medvetna
+### ⏰ Åtgärdsplanen för fynden — **`TASKS.md` 12.36–12.40**, prioriterad där
+
+Adam bad 2026-08-26 om en plan för fynden i stället för bara en beskrivning. Den ligger i
+`TASKS.md` som fem uppgifter med en prioriteringsruta överst — **läs den rutan, inte den här
+listan**, innan du plockar en. Kort:
+
+| # | Vad | När |
+|---|---|---|
+| **12.36** | **Kontrastmätningen finns inte i repot.** Gör den till en e2e-vakt | **Före 4.3** |
+| **12.37** | **Sabotagekontrollen är en vana, inte en regel.** Skriv in den i `CLAUDE.md` | **Före 4.3** |
+| **12.38** | `IMPORTERAT_SET`:s datum kan maskera tidsberoende filter. Gör ihop med **12.31** | Med 12.37 |
+| **12.39** | `getSetAverages` drar in hela `exercises` i sin observerade mängd | Före **fas 7** |
+| **12.40** | Briefen saknar kanttoken för element direkt på papperet | **I 4.3** |
+
+🔴 **12.36 och 12.37 är de enda som hindrar framtida fel** — resten är enskilda skulder.
+Görs bara en sak, gör 12.36: det är metoden som hittat varenda temafel sedan 4.1, och den
+lever i dag bara i sessionstranskript.
+
+### ⏰ Två öppna trådar utan uppgift, båda medvetna
 
 1. **Långtrycket är enda vägen till förklaringen av snittalen** tills **11B.6** bygger
    engångsförklaringen. Accepterat av Adam med öppna ögon — han är appens enda användare.
-2. **`--color-ok-text` används som KANT i timerchipet**, inte `--color-ok-line`. Briefens
-   kanttoken är uppmätt mot **vitt kort** (3,55:1); chipet ligger på **papperet**, där samma
-   värde ger **2,99:1** — under kravet. `--color-ok-text` ger 5,50 ut och 5,83 in. **Värt att
-   avgöra i 4.3:** ska briefen ha en egen kanttoken för element som ligger direkt på papperet?
-   Frågan kommer tillbaka så fort Historik lägger ett semantiskt element utanför ett kort.
-3. **`getSetAverages` gör fortfarande ett eget `exercises.get()`.** Punkt 2 i
-   `/simplify`-listan (11B.0f) är alltså **inte** åtgärdad. Latent i dag, skarp när fas 7:s
-   synk-pull skriver `exercises`.
-4. **Steg 4.1:s ruta står obockad.** Alla tre kriterier i dess **Klart när** ser uppfyllda ut,
+   Ingen egen uppgift behövs; 11B.6 äger den.
+2. **Steg 4.1:s ruta står obockad.** Alla tre kriterier i dess **Klart när** ser uppfyllda ut,
    men rutan var inte min att bocka av. Enda kandidaten till skäl:
-   `apple-mobile-web-app-status-bar-style` är fortfarande **overifierad**. Se punkten nedan.
+   `apple-mobile-web-app-status-bar-style` är fortfarande **overifierad**, och den kräver
+   Adams telefon — se punkten nedan.
 
 ### 🖥️ Så visar du Adam något — oförändrat sedan förra sektionen
 
