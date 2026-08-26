@@ -32,7 +32,7 @@ export function HistoryPage() {
   if (workouts.length === 0) {
     return (
       <section>
-        <h1 className="text-2xl font-semibold">Historik</h1>
+        <h1 className="font-semibold">Historik</h1>
         <p className="mt-2 text-sm text-[var(--color-dim)]">
           Inga pass ännu. Logga ditt första under Pass.
         </p>
@@ -43,7 +43,7 @@ export function HistoryPage() {
   return (
     <section className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Historik</h1>
+        <h1 className="font-semibold">Historik</h1>
         <p className="mt-1 text-sm text-[var(--color-dim)]">
           {workouts.length} pass ·{' '}
           {workouts.reduce((n, w) => n + w.setCount, 0)} set totalt

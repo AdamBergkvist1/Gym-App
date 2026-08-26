@@ -1623,6 +1623,46 @@ gäller, och uppgiften skrivs om.
       sista är inte formalia — kontrastvärdena i briefen är uppmätta mot rätt underlag, men
       *vilket* underlag varje token faktiskt hamnar på syns bara när sidan renderas.
 
+      ✅ **BYGGD 2026-08-26. Alla fem grindar gröna** (294 tester, e2e 60 passed). Bygget växer
+      med Fraunces: precache **651,50 → 718,51 KiB**, 9 → 10 entries. JS-bundlen oförändrad.
+
+      **Den visuella kontrollen betalade sig direkt — den hittade tre osynliga kontroller.**
+      `Avsluta pass`, `Kopiera förra passet` och fritextgenvägen ritades med `--color-line`
+      (`#f0ece5`) utan egen yta, mot papperet `#f0ebe1`. Uppmätt **1,01:1** — kontrollerna hade
+      ingen synlig avgränsning alls. I det mörka temat gav samma token 1,47:1 mot svart och
+      *såg* ut att räcka. **Tokenbytet ändrade inte bara färgen utan vad färgen betyder på sitt
+      underlag**, och det syns inte i ett diff. Åtgärdat: de tre bär nu `--color-line-strong`,
+      alltså briefens egen token för kanter som identifierar en kontroll.
+
+      ⏰ **ÖPPEN FRÅGA TILL ADAM — `--color-line-strong` klarar inte sitt eget krav.**
+      Briefen definierar tokenen som *"kanter som BÄR BETYDELSE — t.ex. en obekräftad setrads
+      tryckyta"* och skriver ut **WCAG 1.4.11: 3:1** som kravet. Det mörka temats värde mätte
+      3,37:1. Bläcks `#C4BCB0` mäter:
+
+      | Underlag | Uppmätt | Krav |
+      |---|---|---|
+      | Mot papperet `#F0EBE1` | **1,58:1** | 3:1 |
+      | Mot vitt kort `#FFFFFF` | **1,88:1** | 3:1 |
+
+      Det gäller **bekräfta-bocken på setraden** — appens mest tryckta kontroll, och briefens
+      eget exempel på en kant som bär betydelse. Värdet är alltså inte fel *för att* det är
+      ljust; det är fel för att briefen ställer ett krav som värdet inte uppfyller. Samma klass
+      av självmotsägelse som `--text-title` ovan.
+
+      **Framräknade alternativ i samma varma familj, alla uppmätta:**
+
+      | Värde | Mot papper | Mot kort | Klarar 3:1 på båda |
+      |---|---|---|---|
+      | `#C4BCB0` (nuvarande) | 1,58 | 1,88 | ❌ |
+      | `#9A9186` | 2,61 | 3,10 | ❌ |
+      | **`#8A8378`** | **3,16** | **3,75** | ✅ ljusaste som klarar |
+      | `#7D766C` | 3,78 | 4,49 | ✅ |
+
+      ⛔ **Ändras INTE på eget bevåg.** `#C4BCB0` är valt av Adam 2026-08-12 och en mörkare kant
+      är en synlig karaktärsändring — papperet blir strängare. Rekommendationen är `#8A8378`,
+      som är det minsta steg som uppfyller kravet. **Adam avgör.** Alternativet är att skriva om
+      briefens krav i stället, men då ska det stå varför.
+
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
       **Klart när:** skalan är definierad i `index.css` och ingen komponent sätter egen storlek.

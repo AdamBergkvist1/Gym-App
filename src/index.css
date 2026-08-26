@@ -1,96 +1,151 @@
 @import 'tailwindcss';
 
-/* Endast mörkt tema — PLAN.md §2.2. Ingen ljus variant byggs.
+/* Ljust tema — "BLÄCK", valt av Adam 2026-08-12 ur fyra omgångar körbara
+ * mockuper. Endast ljust; ingen mörk variant byggs.
+ *
+ * ⚠️ HÄR LÅG TIDIGARE ETT HELT MÖRKT LIME-TEMA (svart botten, #bef264). Det är
+ * ÖVERSPELAT och står kvar i DESIGN.md §0.5 enbart som historik. Läs inte in
+ * det härifrån igen — filen bytte riktning i steg 4.1, inte av misstag.
  *
  * Alla värden nedan är definierade i docs/DESIGN.md, som är sanningen. Ändras
  * något här ska det ändras där först — annars driver koden och briefen isär,
  * vilket är precis det fel genomgången 2026-08-03 handlade om.
  */
+
+/* Fraunces (OFL) sätter SIDRUBRIKER, inget annat. Licenstexten ligger bredvid
+ * fontfilen som OFL.txt eftersom licensen kräver att den följer med, och posten
+ * står i docs/EXTERNT.md.
+ *
+ * SYSTEMETS TYPSNITT SÄTTER ALLA SIFFROR, och det är ett krav och ingen
+ * kompromiss: Fraunces SAKNAR tabulära siffror, så tal hade hoppat i sidled när
+ * de ändras — vilket 11B.2 förbjuder. Därför h1 och bara h1. */
+@font-face {
+  font-family: 'Fraunces';
+  src: url('./assets/fonts/fraunces-var-latin.woff2') format('woff2');
+  /* Variabel axel wght 400–700. opsz 9–144 styrs av font-optical-sizing, som
+   * är auto per förval. SOFT och WONK lämnas på sina förval, precis som i
+   * mockuperna. */
+  font-weight: 400 700;
+  font-style: normal;
+  /* swap: rubriken ritas i systemfonten direkt och byts när Fraunces landat.
+   * Alternativet är en osynlig rubrik i upp till tre sekunder på en app vars
+   * hela poäng är att öppnas mitt i ett set. */
+  font-display: swap;
+}
+
 @theme {
+  --font-title: 'Fraunces', ui-serif, Georgia, serif;
+
   /* ---------------------------------------------------------------- neutraler
-   * Uppdaterade 2026-08-05 enligt DESIGN.md §0.5. Alla uppmätta mot ren svart.
+   * Uppmätta 2026-08-12 mot ljus botten. DESIGN.md §0.5.
    *
-   * REN SVART, inte #0a0a0a: kortsteget går från 1,104:1 till 1,164:1.
-   * Marginellt i siffror — men tillsammans med 16 px radie och en synlig kant
-   * är det skillnaden mellan att kort FINNS och att de flyter ihop med
-   * bakgrunden. På OLED ger ren svart dessutom släckta pixlar, vilket ser
-   * djupare ut och drar mindre ström under ett långt pass.
+   * KORTEN ÄR RENT VITA OCH PAPPERET ÄR FÖRDJUPAT, båda efter en MÄTNING och
+   * inte en smakåsikt. Den först valda kombinationen hade papper #FCFAF7 och
+   * svagt tonade kort: separationen mättes till 1,01:1, alltså ingen alls —
+   * korten syntes bara tack vare sin skugga. Det förklarar Adams "lite tråkigt"
+   * bättre än accentfärgen gör. Rent vitt mot #F0EBE1 ger 1,19:1.
    *
-   * PWA-manifestets theme_color och background_color är ändrade i samma commit
-   * — annars blir startskärmen en annan svärta än appen.
+   * Djupare papper prövades och förkastades på mätning: vid #ECE6DA faller
+   * sekundärtexten till 4,37:1 och klarar inte AA.
+   *
+   * PWA-manifestets theme_color/background_color och index.html:s
+   * <meta name="theme-color"> är ändrade i SAMMA commit — annars blir
+   * startskärmen och statusraden en annan färg än appen.
    */
-  --color-bg: #000000;
-  --color-surface: #16161a;
-  --color-line: #2a2a30;
-  --color-fg: #f5f5f7;   /* 19,29:1 */
-  --color-dim: #8e8e96;  /*  6,46:1 */
+  --color-bg: #f0ebe1;      /* papperet */
+  --color-surface: #ffffff; /* kort. Rent vitt för separationens skull */
+  --color-fg: #1c1917;      /* 16,0:1 */
+  --color-dim: #6f6960;     /*  4,57:1 — GOLVET. Tål ingen ljusare botten */
+
+  /* Dekorativ linje. Ligger på VITA KORT, inte på papperet — mot papperet är
+   * den i praktiken osynlig, och det är avsiktligt: en dekorativ linje ska inte
+   * konkurrera med kortkanten. */
+  --color-line: #f0ece5;
 
   /* Kanter som BÄR BETYDELSE — t.ex. en obekräftad setrads tryckyta.
    * WCAG 1.4.11 kräver 3:1 för kanter som behövs för att identifiera en
-   * komponent. Uppmätt 3,37:1. Dekorativa kortramar använder --color-line. */
-  --color-line-strong: #606068;
+   * komponent. Dekorativa linjer använder --color-line. */
+  --color-line-strong: #c4bcb0;
 
   /* ------------------------------------------------------------------ accent
-   * Appens egen färg. Vald av Adam 2026-08-05 ur tre körbara mockuper.
+   * Appens egen färg: marinblå. Vald av Adam 2026-08-12.
    *
-   * VARFÖR DEN SAKNADES OCH VARFÖR DET SPELADE ROLL: färgsystemet i §1 är helt
-   * semantiskt — grönt betyder sparat, gult uppmärksamhet, rött fel. Ingen av
-   * dem är appens färg, och en app utan accentfärg ser billig ut oavsett hur
-   * rätt kontrasterna är. Det var Adams omdöme, och han hade rätt.
+   * ⚠️ Ersätter lime. Lime valdes 2026-08-05 för en SVART app, där en mättad
+   * neonfärg var det enda som gav liv åt skärmen. På papper läser samma färg
+   * som en varselväst.
    *
-   * VARFÖR LIME: grönt, gult och rött är upptagna av betydelser. En accent som
-   * krockar med en semantisk färg gör båda otydliga. Lime ligger tillräckligt
-   * långt från vårt gröna #3dd68c för att inte förväxlas.
-   *
-   * VAR DEN ANVÄNDS: i små mättade former — ikonrutor, chips, fyllda bockar,
+   * VAR DEN ANVÄNDS: i små mättade former — accentbricka, chips, fyllda bockar,
    * aktiv flik. ALDRIG som brödtext. Lärdomen kommer från Apple Watch-appen,
    * som är nästan helt svartvit men känns levande just därför att färgen sitter
    * i små ytor i stället för i texten. */
-  --color-accent: #bef264;      /* 16,07:1 mot bg. Svart text på den: 16,07:1 */
-  --color-accent-soft: #1e2610; /* yta bakom accentmarkerat innehåll */
+  --color-accent: #2b4570;      /* 8,08:1 mot papperet */
+  --color-accent-text: #263c63; /* 10,5:1 mot kort. Länkfärg */
 
-  /* Radie. 8 px läste som "formulär", referenserna ligger på 16–20. */
-  --radius-card: 1rem;
+  /* Tonade ytor RÄKNAS FRAM ur accenten i stället för att handplockas, så de
+   * aldrig kan glida isär från den om accenten justeras. Andelen ÄR regeln:
+   * kort 0 %, mätrutor och chips 5,5 %, genvägen 8,5 %, PB-chipet 15 %.
+   *
+   * Blandas mot VITT, inte mot papperet, eftersom tonade ytor alltid ligger på
+   * ett kort — se §1b fynd 3 och rutan längre ner. De två återstående stegen
+   * (8,5 och 15 %) läggs till när genvägen och PB-chipet byggs; att definiera
+   * dem nu vore tokens utan konsument. */
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 5.5%, #ffffff);
+
+  /* Radie. Höjd från 16 px i formvalet B4 2026-08-12. Gäller övningsytor och
+   * ark; knappar och chips är pillerformade. */
+  --radius-card: 1.125rem;
+
+  /* Kortets skugga ersätter ramen. På ljus botten läser en heldragen ram som
+   * ett formulärfält, medan en skugga läser som ett upphöjt blad — vilket är
+   * hela poängen med formen B4. */
+  --shadow-card: 0 1px 2px rgba(60, 45, 25, 0.06), 0 6px 18px rgba(60, 45, 25, 0.085);
 
   /* ------------------------------------------------------- semantiska färger
-   * Radix Colors (MIT), mörka skalor. Registrerat i docs/EXTERNT.md.
-   * Vi kopierar VÄRDEN, inte kod — ingen bundle-ökning.
+   * VÄG C, vald av Adam 2026-08-14. Radix Colors (MIT), LJUSA skalor.
+   * Registrerat i docs/EXTERNT.md. Vi kopierar VÄRDEN, inte kod.
    *
-   * Steg 11 = text, 9 = solid fyllning, 8 = kant, 3 = diskret yta.
-   * Färgad text använder ALLTID steg 11. Steg 9 är gjord för att vara en yta
-   * med text ovanpå, inte för att vara text själv.
+   * ⚠️ HELA MODELLEN ÄR EN ANNAN ÄN I DET MÖRKA TEMAT. Betydelsen bärs av
+   * YTA + KANT, och texten ovanpå är --color-fg. Det är inte en förenkling
+   * utan en följd av en mätning: §1:s stegregel — "färgad text använder alltid
+   * steg 11" — går inte att följa på ljust, där steg 11 mot vitt kort inte når
+   * 4,5:1 för gult och grönt. Att i stället lägga svart text på en tonad yta
+   * ger 15–16:1 för alla tre färgerna.
    *
-   * Samtliga texter uppmätta mot bg med WCAG:s luminansformel. Lägsta 9,40:1
-   * mot kravet 4,5:1. Marginalen är avsiktlig: skärmen läses med svettiga ögon
-   * i dålig belysning, och telefoner sänker ljusstyrkan i värme.
+   * ⚠️ TONADE YTOR LIGGER ALLTID PÅ ETT VITT KORT, aldrig direkt på papperet.
+   * Mot papperet mäter de 1,04–1,09:1 och försvinner — vilket är MINDRE än
+   * kortets egen separation på 1,19:1.
    */
 
-  /* Sparat — och bara det. Grön betyder ALDRIG "bra" i värderande mening: ett
-   * tungt set är inte grönare än ett lätt. Loggen är en logg, inte en domare. */
-  --color-ok-text: #3dd68c;   /* 10,55:1 */
-  --color-ok-solid: #30a46c;  /*  6,27:1 */
-  --color-ok-line: #2f7c57;   /*  3,90:1 */
-  --color-ok-bg: #132d21;
+  /* Ytor. Svart text på dem: 15,25–16,10:1 */
+  --color-ok-bg: #e6f6eb;
+  --color-warn-bg: #fff7c2;
+  --color-err-bg: #feebec;
 
-  /* Uppmärksamhet — kräver ett beslut av användaren. Låg konfidens från AI:n,
-   * eller ett värde långt utanför det typiska. INGET annat.
-   * Uppvärmning är en kategori och märks med tecken, inte med varningsfärg. */
-  --color-warn-text: #ffca16; /* 12,93:1 */
-  --color-warn-solid: #ffc53d;
-  --color-warn-line: #8f6424;
-  --color-warn-bg: #302008;
+  /* Kanter som BÄR betydelsen. Alla ≥3:1 mot kortet (WCAG 1.4.11) */
+  --color-ok-line: #2b9a66;   /* 3,55:1 */
+  --color-warn-line: #ab6400; /* 4,61:1 — enda gula värdet som klarar kravet */
+  --color-err-line: #dc3e42;  /* 4,37:1 */
 
-  /* Fel och destruktivt. Ska vara sällsynt — används röd för ofta slutar den
-   * betyda något. */
-  --color-err-text: #ff9592;  /*  9,40:1 */
-  --color-err-solid: #e5484d;
-  --color-err-line: #b54548;
-  --color-err-bg: #3b1219;
+  /* Fyllda ytor med VIT glyf ovanpå. Form, krav 3:1.
+   * warn har AVSIKTLIGT ingen solid: vitt på #ffc53d är 1,58:1. */
+  --color-ok-solid: #30a46c;  /* vit bock: 3,16:1 */
+  --color-err-solid: #e5484d; /* vit glyf: 3,91:1 */
 
-  /* Personbästa. Färgen bär inte budskapet ensam — den delar kulör med
-   * "sparat", så en utskriven PB-etikett följer alltid med. */
-  --color-pb-text: #b1f1cb;   /* 15,38:1 */
-  --color-pb-bg: #132d21;
+  /* UNDANTAG — färgad text UTAN yta bakom sig, t.ex. en naken "Ta bort"-knapp.
+   * Ska vara sällsynt; mönstret är svart text på tonad yta. Framräknade ur
+   * steg 11→12 tills 5,5:1 nås mot PAPPERET, som är det svårare underlaget. */
+  --color-ok-text: #1e6a49;   /* 5,50:1 papper · 6,54:1 kort */
+  --color-warn-text: #87510d; /* 5,50:1 papper · 6,54:1 kort */
+  --color-err-text: #b2262d;  /* 5,51:1 papper · 6,55:1 kort */
+
+  /* Personbästa. Färgen bär aldrig budskapet ensam — en utskriven PB-etikett
+   * följer alltid med.
+   *
+   * ✏️ --color-pb-text finns INTE längre. PB är svart text på tonad yta med
+   * kant, precis som allt annat semantiskt. En egen textfärg för PB fanns bara
+   * för att bära budskapet med kulör, vilket §1 själv förbjöd i samma stycke. */
+  --color-pb-bg: #e6f6eb;
+  --color-pb-line: #2b9a66;
 
   /* ------------------------------------------------------------- typografi
    * Namngivna efter ROLL, inte storlek. Setraden är största elementet i
@@ -123,6 +178,27 @@ body,
   /* dvh, inte vh: annars uppstår "chin gap" i standalone-läge på iOS. */
   height: 100dvh;
   overflow: hidden;
+}
+
+html {
+  /* Talar om för webbläsaren att rita SINA egna ytor ljusa — rullningslister,
+   * formulärkontroller, textmarkering. Utan den ritar en telefon i mörkt
+   * systemläge dem mörka ovanpå vårt papper. Bytt från förvalet i steg 4.1;
+   * appen var mörk fram till dess. */
+  color-scheme: light;
+}
+
+/* Sidrubriker i Fraunces. Regeln ligger på elementet och inte i en klass av
+ * samma skäl som tabular-nums nedan: en klass man måste komma ihåg att sätta
+ * blir bortglömd, och då blir en sida plötsligt satt i fel typsnitt utan att
+ * något går sönder. Rubriker är dessutom det ENDA stället Fraunces får sitta,
+ * så en regel på h1 är också en gräns. */
+h1 {
+  font-family: var(--font-title);
+  font-size: var(--text-title);
+  /* Fraunces optiska axel: större grad vill ha mindre optisk storlek än
+   * förvalet ger, annars blir rubriken bredare än raden under. */
+  font-optical-sizing: auto;
 }
 
 body {

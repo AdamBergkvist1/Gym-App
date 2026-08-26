@@ -140,7 +140,7 @@ export function TodayPage() {
   if (workout === null) {
     return (
       <section className="space-y-3">
-        <h1 className="text-title font-semibold">Pass</h1>
+        <h1 className="font-semibold">Pass</h1>
 
         <button
           type="button"
@@ -205,7 +205,7 @@ export function TodayPage() {
   return (
     <section className="space-y-3">
       <header className="flex items-baseline justify-between">
-        <h1 className="text-title font-semibold">Pass</h1>
+        <h1 className="font-semibold">Pass</h1>
         <span className="text-meta text-[var(--color-dim)] tabular-nums">
           {elapsed(workout.startedAt)}
         </span>
@@ -264,7 +264,7 @@ export function TodayPage() {
         <button
           type="button"
           onClick={() => setVisaFritext(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--color-line)] py-2 text-sm text-[var(--color-dim)]"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--color-line-strong)] py-2 text-sm text-[var(--color-dim)]"
         >
           <IkonTangentbord className="size-4" />
           Skriv i stället: &bdquo;Bänk 90x5&ldquo;
@@ -309,7 +309,7 @@ export function TodayPage() {
         <button
           type="button"
           onClick={() => void copyWorkoutIntoPlan(workout.id, previousId)}
-          className="w-full rounded-lg border border-[var(--color-line)] py-3 text-[var(--color-dim)]"
+          className="w-full rounded-lg border border-[var(--color-line-strong)] py-3 text-[var(--color-dim)]"
         >
           Kopiera förra passet
         </button>
@@ -323,7 +323,7 @@ export function TodayPage() {
             await clearPlan(workout.id);
           })()
         }
-        className="w-full rounded-lg border border-[var(--color-line)] py-3 text-[var(--color-dim)]"
+        className="w-full rounded-lg border border-[var(--color-line-strong)] py-3 text-[var(--color-dim)]"
       >
         Avsluta pass
       </button>

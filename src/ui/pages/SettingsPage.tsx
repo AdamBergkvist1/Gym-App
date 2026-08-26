@@ -55,7 +55,7 @@ export function SettingsPage() {
 
   return (
     <section>
-      <h1 className="text-2xl font-semibold">Inställningar</h1>
+      <h1 className="font-semibold">Inställningar</h1>
       <p className="mt-2 text-sm text-[var(--color-dim)]">
         Enhet, viloti­der och konto byggs senare. Här nedan syns appens tillstånd.
       </p>

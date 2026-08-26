@@ -9,12 +9,26 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#000000" />
+    <!-- Papperets färg. Speglar --color-bg och manifestets theme_color; alla
+         tre ändras i samma commit. Se DESIGN.md §0.5. -->
+    <meta name="theme-color" content="#f0ebe1" />
 
     <!-- iOS läser hemskärmsikonen härifrån, inte ur manifestet. -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- ⚠️ Ändrad från `black-translucent` i steg 4.1, som en direkt följd av
+         att temat blev ljust. `black-translucent` ritar klocka och batteri i
+         VITT ovanpå appens innehåll — läsbart mot den gamla svarta botten,
+         osynligt mot papperet #F0EBE1. `default` ger systemets egen ljusa list
+         med mörk text.
+
+         Följden för layouten är avsedd: med `default` sträcker sig innehållet
+         inte längre in under statusraden, så `env(safe-area-inset-top)` i
+         AppShell blir 0 — utrymmet reserveras nu av systemet i stället.
+
+         🔍 KAN INTE PRÖVAS I PLAYWRIGHT ELLER PÅ SKRIVBORDET. Raden gäller bara
+         iOS i standalone-läge, alltså appen startad från hemskärmen. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Gym" />
 
     <title>Gym</title>
