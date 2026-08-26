@@ -415,7 +415,33 @@ sekundärtexten till 4,37:1 och klarar inte AA.
 | `--color-fg` | `#1C1917` | **16,0:1** | Text |
 | `--color-dim` | `#6F6960` | **4,57:1** | Sekundär text. Golvet, tål ingen ljusare botten |
 | `--color-line` | `#F0ECE5` | — | Dekorativ linje |
-| `--color-line-strong` | `#C4BCB0` | — | Kant som bär betydelse |
+| `--color-line-strong` | ~~`#C4BCB0`~~ **`#8A8378`** | **3,16:1** mot papper | Kant som bär betydelse |
+
+> ### 🔄 `--color-line-strong` ändrad 2026-08-26, och VEM som ägde beslutet var oklart
+>
+> **`#C4BCB0` mättes aldrig när det valdes.** Raden hade `—` i kontrastkolumnen medan varje
+> annan token i tabellen bär ett värde. Uppmätt i efterhand under steg 4.1: **1,58:1 mot
+> papperet, 1,88:1 mot ett vitt kort** — mot de 3:1 som §1 anger för kanter som identifierar en
+> kontroll. Det gäller bekräfta-bocken på setraden, appens mest tryckta yta.
+>
+> **`#8A8378`** ger 3,16:1 / 3,75:1 och är det ljusaste värdet i samma varma familj som når
+> kravet — minsta möjliga steg bort från den valda karaktären.
+>
+> ⚠️ **Adam 2026-08-26, ordagrant:** *"det är inte jag som har satt utan jag har bara valt och
+> sagt vad jg önskar för färger men inget om kontraster … inget jag kan ta beslut om då jag
+> inte fattar siffror med kontraster och varför det behövs och när liksom."*
+>
+> **Det är en riktig invändning och den ändrar hur den här briefen ska läsas.** Kontrastkraven
+> i §0.5, §1 och §1b är införda av AI-sessioner, inte av Adam. Han har valt **färger**. Att
+> siffrorna står i hans godkända dokument gjorde att de senare citerades tillbaka till honom
+> som om de vore hans krav — det är fel, och det är så ett antagande blir osynligt.
+>
+> **Vad som gäller framåt:** kontrastvärden får presenteras som ett *förslag med sitt skäl i
+> klartext*, aldrig som ett krav Adam redan ställt. Skälet som faktiskt bär här är inte
+> efterlevnad utan bruk: skärmen läses i gymbelysning, med svett i ögonen, på en telefon som
+> sänker ljusstyrkan när den blir varm. **Vill Adam hellre ha ljusare kanter än standarden
+> tillåter är det ett giltigt beslut** — men då skrivs det in som ett medvetet avsteg, inte som
+> att kravet aldrig fanns.
 | **`--color-accent`** | **`#2B4570`** | **8,08:1** mot bg | Appens färg |
 | `--color-accent-text` | `#263C63` | **10,5:1** mot kort | Länkfärg |
 | `--color-ok` | `#2F7A55` | ⚠️ se not | Sparat. Betydelsen är upptagen |

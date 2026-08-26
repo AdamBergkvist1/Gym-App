@@ -63,9 +63,23 @@
   --color-line: #f0ece5;
 
   /* Kanter som BÄR BETYDELSE — t.ex. en obekräftad setrads tryckyta.
-   * WCAG 1.4.11 kräver 3:1 för kanter som behövs för att identifiera en
-   * komponent. Dekorativa linjer använder --color-line. */
-  --color-line-strong: #c4bcb0;
+   * Dekorativa linjer använder --color-line.
+   *
+   * 🔄 ÄNDRAD 2026-08-26 från #C4BCB0, som var Bläcks ursprungliga värde.
+   * Skälet är uppmätt: #C4BCB0 gav 1,58:1 mot papperet och 1,88:1 mot ett vitt
+   * kort. Det gäller bekräfta-bocken på setraden — appens mest tryckta kontroll
+   * — och den ska gå att träffa i gymbelysning, med svett i ögonen, på en
+   * telefon som sänkt sin ljusstyrka i värmen.
+   *
+   * #8A8378 mäter 3,16:1 mot papperet och 3,75:1 mot kortet, och är det
+   * LJUSASTE värdet i samma varma familj som når 3:1 på båda underlagen —
+   * alltså minsta möjliga steg bort från den karaktär Adam valde.
+   *
+   * ⚠️ Adam 2026-08-26, och det ska stå här: kontrastkraven är INTE hans. Han
+   * har valt färger, inte gränsvärden. 3:1 kommer ur WCAG 1.4.11 och fördes in
+   * i briefen av en tidigare session — inte av honom. Beslutet att ändra hit
+   * är hans, fattat efter att skälet förklarats utan siffror. */
+  --color-line-strong: #8a8378;
 
   /* ------------------------------------------------------------------ accent
    * Appens egen färg: marinblå. Vald av Adam 2026-08-12.
