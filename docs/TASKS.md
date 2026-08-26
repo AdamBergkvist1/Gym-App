@@ -1333,7 +1333,50 @@ nuvarande.
 
       **Kravet är flyttat, inte struket:** det gäller den commit som byter `SetRow` till
       `getSetAverages` i steg 4. Snubbeltråden ligger i `e2e/passvy.spec.ts`
-      filhuvud som en ⛔-ruta. **Adam avgör om 11B.0f ska bockas av utan den delen.**
+      filhuvud som en ⛔-ruta.
+
+      ✅ **AVGJORT 2026-08-26: rutan står obockad tills den commiten är gjord.** Adam lämnade
+      avgörandet till den som bygger, med villkoret *"så länge inget missas"* — och det
+      villkoret är hela skälet. Uppgiftens eget **Klart när** namnger vakt 5-omskrivningen som
+      ett av två kriterier. Bockas rutan av nu står det KLAR över ett ouppfyllt kriterium, och
+      då finns bara ⛔-rutan i en testfil kvar som påminnelse. **En obockad ruta är en
+      påminnelse; en bockad är det inte.**
+
+      Kostnaden är noll: 4.2 Pass är nästa kodarbete efter tokenbytet i 4.1, och det är exakt
+      den commit som stänger rutan. Funktionen är färdig och testad sedan 2026-08-25 — det som
+      återstår är inte arbete på funktionen utan på vakten som mäter den.
+
+      🧹 **`/simplify` kördes 2026-08-26, före steg 4. Sex commits.** Fyra kalla granskare
+      (återanvändning, förenkling, effektivitet, nivå). Det tyngsta fyndet var **mätt**:
+      `getSetAverages` läste hela övningens historik för att använda tre pass — 13,7 ms mot
+      1,3 ms vid 1600 rader, och linjärt där baklängesvägen är konstant. Funktionen gick från
+      **61 till 45 kodrader** medan kommentarerna växte, vilket är rätt riktning åt båda hållen.
+
+      ⏰ **TRE SAKER LÄMNADES MEDVETET TILL 4.2. De är inte glömda, de hör dit:**
+
+      1. **Skärmen får INTE räkna arbetsset på egen hand ad hoc.** Nivågranskaren pekade ut att
+         `workSetIndex` nu härleds på två ställen — i `getSetAverages` och, kommande, i
+         skärmen — med **prosa som enda koppling**. `ExerciseCard.tsx:153` skickar i dag
+         `index={i}` rakt ur `planned.sets.map()`, alltså radens plats **inklusive
+         uppvärmning**. Kopplas snittet till den ordinalen visas set 2:s snitt på set 1:s rad
+         så fort en uppvärmningsrad ligger överst. **Det är exakt samma buggklass som `e02abf1`
+         fixade, flyttad över komponentgränsen** — och den faller tyst, inget test bryts.
+         **Åtgärd i 4.2:** en delad härledning som båda sidor anropar, inte två räkningar som
+         ska råka stämma. Byggdes inte nu eftersom konsumenten inte finns än.
+      2. **Låt anroparen skicka övningsraden.** `getSetAverages` gör ett eget
+         `database.exercises.get()` för att få `equipment`. Det drar in hela `exercises`-tabellen
+         i `useLiveQuery`:s observerade mängd, så **varje skrivning dit kör om samtliga korts
+         historikskanning**. `TodayPage.tsx:73` har redan raden i minnet och skickar ner den som
+         prop till `ExerciseCard`. Latent i dag (`ensureCatalog` anropas bara från tester), men
+         fas 7:s synk-pull skriver `exercises` skarpt.
+      3. **`staleSince` är ett rått ISO-datum.** Raden ska lyda *"senast tränad i \<månad år\>"*.
+         Formateringen hör till skärmen, inte till frågan.
+
+      ✅ **Ett påstått fynd höll inte vid kontroll och avvisades.** Förenklingsaxeln föreslog att
+      `EQUIPMENT`-arrayen i `types.ts` skulle ersättas av en naken union, med motiveringen *"två
+      deklarationer att hålla i takt"*. Det stämmer inte: `Equipment` är **härledd** ur arrayen
+      med `as const`, så de kan inte glida isär. Förslaget hade dessutom ångrat `514c5e2` två
+      dagar efter att granskningen bad om den formen. Behållen.
 
       🔄 **AVRUNDNINGEN GJORDES OM 2026-08-25, efter research.** Den var 2,5 kg för allt, och
       det är fel för allt som inte är en skivstång: hantelcurl på 8, 9 och 10 kg ger snittet 9,
@@ -2936,6 +2979,34 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** noll emoji återstår i strängar som renderas, mätt över **hela `src/`**,
       och `src/timer/restTimer.test.ts` speglar det som testet på rad 106 låser.
       **Låg prioritet** — diagnosvyn är Adams felsökningsverktyg, inte en huvudskärm.
+
+- [ ] **12.35 `ScrollPicker`:s 2 px-tröskel bär nu härkomst, inte bara avstånd. Ny 2026-08-26.**
+      Hittad av nivåaxeln i `/simplify`. **Inte ett fel i dag** — och `a95b1fc`:s fix ligger på
+      rätt nivå, det är verifierat: bytet från en tidsgräns till `användarrörde` flyttade
+      spärren från *när* till *vem*, vilket var hela poängen.
+
+      **Men en tröskel överlevde och har fått en andra betydelse.** Spåra `ScrollPicker.tsx:71`:
+      när användaren själv drar hjulet går `onChange` → `value` ändras → effekten kör → hjulet
+      står redan på målet → `if (Math.abs(el.scrollTop - mål) < 2) return;` → och
+      `användarrörde.current` nollställs **inte**. Att flaggan överlever mitt i användarens gest
+      hänger alltså på att `scrollTop` råkar ligga inom 2 px av `index * ITEM_H`.
+
+      **Vad som får det att fela:** en annan `ITEM_H`, webbläsarzoom som ger bråkdels-CSS-pixlar,
+      eller en `scroll-snap`-implementation som avrundar annorlunda. Då tar effekten den andra
+      grenen mitt i gesten, nollställer flaggan, avbryter rapporten och anropar `scrollTo` mot
+      användarens finger. **Att det inte händer i dag är webbläsarens `snap-mandatory`-garanti,
+      inte vår.** Samma buggklass som just åtgärdades, återinförd genom en avståndsgräns i
+      stället för en tidsgräns.
+
+      **Föreslagen åtgärd — avsikt i stället för tröskel:** en `rapporterat`-ref som håller det
+      värde vi själva rapporterade sist. Kommer det tillbaka som prop är ändringen hjulets egen,
+      och effekten kan returnera utan att röra vare sig flaggan eller hjulet. Rad 71 blir då
+      återigen bara den optimering den utger sig för att vara.
+
+      ⛔ **Gjordes INTE i `/simplify`, med flit.** Det är en beteendeändring i en
+      kappkörning som lagades för två dagar sedan, och `/simplify` är kvalitet — inte
+      korrekthet. Ändras det ska det ske med `/diagnosing-bugs` eller `/tdd`, med ett test som
+      först är rött. `ScrollPicker.test.tsx` är rätt plats; sömmen finns redan.
 
 ---
 
