@@ -14,75 +14,91 @@ import {
 /**
  * VAKT 5 över passvyn. Uppgift 12.20, punkt 5.
  *
- * Påståendet: **`FÖRRA`-kolumnen är tom när enda tidigare setet är importerat.**
- * Filtret sitter i `getLastPerformance` (`src/db/repo.ts:336`) och är uppgift
- * 13.4 — Adams `2024 vecka 14: Bänk 90 kg` var ett 1-repsmax, och spökdatan är
- * ett minnesstöd om förra passet, inte ett rekord att matcha varje gång.
+ * Påståendet, oförändrat sedan 2026-08-13: **ett importerat set får aldrig bli
+ * referensvärde, och dess vikt får inte synas någonstans i kortet.** Uppgift
+ * 13.4 — Adams `2024 vecka 14: Bänk 90 kg` var ett 1-repsmax ur gamla
+ * anteckningar, och referensvärdet är ett minnesstöd om hur det brukar se ut,
+ * inte ett rekord att matcha varje gång.
  *
- * ⏰ **KOLUMNEN SKA BORT, OCH DEN HÄR VAKTEN MÅSTE SKRIVAS OM MED DEN.**
- * `SPEC.md` §2 ersätter `FÖRRA` med ett snitt, och `DESIGN.md` §3.1 valde formen
- * 2B: inget `setrad-forra`, utan snittvikten under vikten och snittrepsen under
- * repsen. Beräkningen finns redan — `getSetAverages` i `src/db/history.ts`,
- * byggd i 11B.0f med enhetstester som täcker 13.4-filtret.
+ * 🔄 **OMSKRIVEN 2026-08-26 i steg 4.2, i samma commit som `SetRow` bytte till
+ * `getSetAverages`.** Det var 11B.0f:s andra `Klart när`-kriterium och skälet
+ * rutan stod obockad.
  *
- * **Vakten står kvar oförändrad med flit.** Kolumnen finns fortfarande
- * (`SetRow.tsx:98`), så vakten mäter något som existerar och är därmed ärlig i
- * dag. Att skriva om den nu hade betytt påståenden om en skärm som ännu inte är
- * byggd — steg 4 bygger den.
+ * **Vad som ändrades, och vad som INTE gjorde det:**
  *
- * ⏰ **Den commit som byter `SetRow` till `getSetAverages` skriver om vakten.**
- * Det som ska överleva omskrivningen är påståendet, inte `data-testid`:t: **ett
- * importerat set får aldrig bli referensvärde, och dess vikt får inte synas
- * någonstans i kortet.**
+ * | | Före | Nu |
+ * |---|---|---|
+ * | Referensvärdet | `FÖRRA`-kolumnen, `getLastPerformance` | Snittet under värdet, `getSetAverages` |
+ * | Hur det mäts | `getByTestId('setrad-forra')` | Kg-knappens tillgängliga namn |
+ * | **Påståendet** | **oförändrat** | **oförändrat** |
  *
- * ✏️ **Här stod att vakten annars blir "grön mot en kolumn som inte finns".
- * Det stämmer inte, och rättades 2026-08-26 av `/simplify`.** Raden längre ner
- * mäter `getByTestId('setrad-forra')`. Försvinner testid:t matchar lokatorn noll
- * element och `toHaveText` **timeoutar** — vakten faller högljutt, den blir
- * aldrig tyst grön. Påståendet som bär 13.4 står dessutom redan
- * kolumnoberoende: `not.toContainText('82,5')`, opåverkad av att kolumnen går.
+ * `data-testid`:t är alltså borta, men det var aldrig påståendet — filhuvudet
+ * sa uttryckligen att det var testid:t som fick offras, inte påståendet. Det
+ * nya måttet är dessutom **starkare**: `setrad-forra` var en naken span, medan
+ * snittet nu ligger i knappens etikett (`SetRow.tsx`) och därför mäts på
+ * `role` + tillgängligt namn — projektets beslut 7, utan undantag den här gången.
  *
- * Varningen står kvar för att omskrivningen ska bli gjord — men prosa som
- * överdriver risken blir diskonterad, och då tappar de sanna varningarna i det
- * här filhuvudet i vikt.
- *
- * ⚠️ **TVÅ KODVÄGAR LÄSER `getLastPerformance`, OCH BÅDA MÄTS HÄR.** Det är inte
- * en dubblering utan hela poängen:
+ * ⚠️ **TVÅ KODVÄGAR LÄSER HISTORIKEN, OCH BÅDA MÄTS HÄR.** Det är inte en
+ * dubblering utan hela poängen:
  *
  *   1. **Planvägen** — `addExerciseToPlan` (`plan.ts:88`) förifyller setraderna
- *      när övningen läggs till. Syns i Kg-fältets tillgängliga namn.
- *   2. **Visningsvägen** — `ExerciseCard` (`ExerciseCard.tsx:46`) kör en egen
- *      `useLiveQuery` som driver `Förra`-cellen.
+ *      när övningen läggs till, och läser `getLastPerformance`. **Den vägen är
+ *      oförändrad i steg 4.2** — bara visningen bytte källa.
+ *   2. **Visningsvägen** — `ExerciseCard` kör en egen `useLiveQuery`, numera mot
+ *      `getSetAverages`, som driver snittalen.
  *
- * De är helt oberoende. Mäts bara den ena kan den andra tappa filtret utan att
- * någon grind säger ett ord — och punkt 5 namnger uttryckligen kolumnen.
+ * De är helt oberoende, och läser nu **två olika funktioner med var sitt
+ * importfilter**. Mäts bara den ena kan den andra tappa sitt filter utan att
+ * någon grind säger ett ord.
  *
  * ⚠️ **BESLUT 6 I 11B.0e: det vanliga setet skapas GENOM APPEN, som en riktig
  * användare.** Bara det importerade setet seedas rått, eftersom `source:
  * 'import'` inte går att skapa via UI:t (`repo.ts:156` hårdkodar
  * `isImported: false`). Blandfallet var oprövat före den här filen.
  *
- * ⚠️ **`workouts` SEEDAS INTE HÄR, TROTS VAD 12.20 LÄNGE PÅSTOD.**
- * `getLastPerformance` läser bara `loggedSets` (`repo.ts:325`) och slår aldrig
- * upp passet. Passen i den här filen finns för att `excludeWorkoutId` ska ha
- * något att utesluta — och de skapas genom appen, inte som fixtur.
+ * ⚠️ **`workouts` SEEDAS INTE HÄR, TROTS VAD 12.20 LÄNGE PÅSTOD.** Varken
+ * `getLastPerformance` eller `getSetAverages` slår upp passet — båda läser bara
+ * `loggedSets`. Passen i den här filen finns för att `excludeWorkoutId` ska ha
+ * något att utesluta, och de skapas genom appen, inte som fixtur.
  */
 
-function förstaFörraCellen(page: Parameters<typeof setlista>[0], övningsnamn: string) {
-  return setlista(page, övningsnamn).getByTestId('setrad-forra').first();
+/**
+ * Kg-knappen på första setraden, vars tillgängliga namn bär referensvärdet.
+ *
+ * Formen är `Vikt <inmatat> kilo för set 1, brukar vara <snitt> kilo, tryck …`
+ * — eller utan `brukar vara`-delen när det inte finns något snitt. Det är den
+ * frånvaron 5a mäter.
+ */
+function förstaKgKnappen(page: Parameters<typeof setlista>[0], övningsnamn: string) {
+  // `^Vikt` och inte bara `för set 1`: Reps-knappen på samma rad heter
+  // "5 reps för set 1, …" och hade matchat lika bra.
+  return setlista(page, övningsnamn).getByRole('button', { name: /^Vikt .*för set 1/ });
 }
 
-test('5a. FÖRRA är tom när enda tidigare setet är importerat', async ({ page }) => {
+test('5a. inget snitt visas när enda tidigare setet är importerat', async ({ page }) => {
   const konsolfel = fångaKonsolfel(page);
 
   await page.goto('/');
   // TVÅ övningar, och den andra är inte dekoration — se ankringen längst ner.
   const [importerad, riktig] = await hämtaÖvningar(page, 2);
 
+  // ⚠️ **DATUMET ÄR INTE KOSMETIK, OCH DET VAR FEL FRAM TILL 2026-08-26.**
+  // `IMPORTERAT_SET` har `performedAt: '2024-04-04'`, alltså över två år
+  // tillbaka. Det dög när kolumnen drevs av `getLastPerformance`, som inte har
+  // någon åldersgräns — men `getSetAverages` har en på åtta veckor, och då
+  // **maskerar de två filtren varandra**: saboterades importfiltret stod
+  // vakten grön ändå, eftersom åldersgränsen tog setet i stället. Vakten hade
+  // mätt fel filter utan att någon märkt det.
+  //
+  // Med setet inom åtta veckor är importfiltret det ENDA som kan hålla det
+  // borta. Kontrollerat genom sabotage: filtret borttaget → vakten faller.
+  const inomÅldersgränsen = new Date(Date.now() - 3_600_000).toISOString();
   await seedaRått(page, importerad!.id, {
     id: 'vakt-5a-importerat-set',
     weightKg: 82.5,
     reps: 5,
+    performedAt: inomÅldersgränsen,
+    updatedAt: inomÅldersgränsen,
   });
 
   // Seeda först, navigera sedan. Se filhuvudet i `hjalpare.ts`.
@@ -102,19 +118,20 @@ test('5a. FÖRRA är tom när enda tidigare setet är importerat', async ({ page
   await läggTillÖvning(page, importerad!.name);
   await läggTillÖvning(page, riktig!.name);
 
-  // ⚠️ ANKRINGEN. `Förra`-cellen drivs av en `useLiveQuery` med startvärdet
-  // `null`, och en tom cell ser likadan ut oavsett om frågan svarade "inget"
-  // eller aldrig svarade alls. Samma fälla som vakt 3b gick i.
+  // ⚠️ ANKRINGEN, OCH DEN ÖVERLEVDE OMSKRIVNINGEN OFÖRÄNDRAD I SIN FUNKTION.
+  // Snittet drivs av en `useLiveQuery` med startvärdet `null`, och ett saknat
+  // snitt ser likadant ut oavsett om frågan svarade "inget" eller aldrig
+  // svarade alls. Samma fälla som vakt 3b gick i.
   //
   // Därför står en övning med KÄND historik bredvid, renderad av samma
-  // komponent i samma ögonblick. Visar den sin spökdata har visningsvägen
-  // bevisligen löst ut — och först då betyder den tomma cellen något.
-  await expect(förstaFörraCellen(page, riktig!.name)).toHaveText(
-    new RegExp(`${loggat.vikt}\\s*×\\s*${loggat.reps}`)
+  // komponent i samma ögonblick. Visar den sitt snitt har visningsvägen
+  // bevisligen löst ut — och först då betyder frånvaron hos den andra något.
+  await expect(förstaKgKnappen(page, riktig!.name)).toHaveAccessibleName(
+    new RegExp(`brukar vara ${loggat.vikt} kilo`)
   );
 
-  // Visningsvägen: kolumnen är tom.
-  await expect(förstaFörraCellen(page, importerad!.name)).toHaveText('');
+  // Visningsvägen: inget snitt alls, eftersom det enda underlaget är importerat.
+  await expect(förstaKgKnappen(page, importerad!.name)).not.toHaveAccessibleName(/brukar vara/);
 
   // Planvägen: raderna förifylldes aldrig, alltså står vikten som ej angiven.
   // `82,5` får inte ha läckt in någonstans i kortet.
@@ -128,7 +145,7 @@ test('5a. FÖRRA är tom när enda tidigare setet är importerat', async ({ page
   expect(konsolfel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
 });
 
-test('5b. blandat: spökdatan blir det app-loggade setet, aldrig det importerade', async ({
+test('5b. blandat: snittet bygger på det app-loggade setet, aldrig på det importerade', async ({
   page,
 }) => {
   const konsolfel = fångaKonsolfel(page);
@@ -171,9 +188,9 @@ test('5b. blandat: spökdatan blir det app-loggade setet, aldrig det importerade
   await läggTillÖvning(page, övning.name);
 
   // Både påståendet och dess ankare i samma rad: syns det app-loggade setets
-  // tal har frågan löst ut OCH valt rätt set. Här behövs ingen granne.
-  await expect(förstaFörraCellen(page, övning.name)).toHaveText(
-    new RegExp(`${loggat.vikt}\\s*×\\s*${loggat.reps}`)
+  // tal har frågan löst ut OCH valt rätt underlag. Här behövs ingen granne.
+  await expect(förstaKgKnappen(page, övning.name)).toHaveAccessibleName(
+    new RegExp(`brukar vara ${loggat.vikt} kilo`)
   );
   await expect(setlista(page, övning.name)).not.toContainText('82,5');
 

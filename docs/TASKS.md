@@ -1221,7 +1221,7 @@ nuvarande.
 
       **Klart när:** ✅ uppfyllt — sömmarna står skrivna här och Adam har sagt ja.
 
-- [ ] **11B.0f Snittkolumnen ersätter `FÖRRA` i setraden. Ny 2026-08-18.**
+- [x] **11B.0f Snittkolumnen ersätter `FÖRRA` i setraden. Ny 2026-08-18. KLAR 2026-08-26.**
       Kom ur grillningen inför steg 4 och är dess viktigaste enskilda resultat. Hela
       resonemanget ligger i `SPEC.md` §2 och formen i `DESIGN.md` §3.1 — **läs dem, inte
       den här rutan.** Här står bara vad som ska byggas och hur det ska prövas.
@@ -1345,6 +1345,28 @@ nuvarande.
       Kostnaden är noll: 4.2 Pass är nästa kodarbete efter tokenbytet i 4.1, och det är exakt
       den commit som stänger rutan. Funktionen är färdig och testad sedan 2026-08-25 — det som
       återstår är inte arbete på funktionen utan på vakten som mäter den.
+
+      ✅ **STÄNGD 2026-08-26 i steg 4.2 del A. Vakt 5 är omskriven i samma commit som `SetRow`
+      bytte källa**, och påminnelsen fungerade precis som avsett: rutan pekade ut kriteriet, och
+      omskrivningen hittade **ett fel den gamla vakten hade dolt**.
+
+      🔴 **Vad omskrivningen avslöjade: två filter maskerade varandra.** `IMPORTERAT_SET` i
+      `e2e/hjalpare.ts` har `performedAt: '2024-04-04'`, alltså över två år tillbaka. Det dög
+      när kolumnen drevs av `getLastPerformance`, som saknar åldersgräns — men `getSetAverages`
+      har en på åtta veckor. **Saboterades importfiltret stod vakten grön ändå**, eftersom
+      åldersgränsen tog setet i stället. Vakten hade mätt fel filter, och 13.4 hade varit
+      oskyddad på visningsvägen utan att någon grind sagt ett ord. Rättat: setet seedas nu inom
+      åtta veckor, och båda vakterna faller vid sabotage — kontrollerat, inte antaget.
+
+      💡 **Lärdomen:** när en konsument byter datakälla ärver den källans ALLA filter, och ett
+      test som var ärligt mot den gamla källan kan bli tyst grönt mot den nya. Det syns inte i
+      ett diff. Sabotera om varje vakt vars källa bytt.
+
+      ⏰ **Ett hål i `getSetAverages` hittades när konsumenten byggdes, inte när frågan
+      skrevs:** funktionen saknade `excludeWorkoutId`, så det pågående passets egna set räknades
+      in i sitt eget referensvärde. Bockar man av dagens set på 100 kg drogs snittet uppåt av
+      det man just gjort, mitt under passet. `getLastPerformance` hade parametern och passvyn
+      skickade alltid med den. Tillagd med eget test.
 
       🧹 **`/simplify` kördes 2026-08-26, före steg 4. Sex commits.** Fyra kalla granskare
       (återanvändning, förenkling, effektivitet, nivå). Det tyngsta fyndet var **mätt**:

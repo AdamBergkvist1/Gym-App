@@ -4,7 +4,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { SetRow, SET_GRID } from './SetRow';
 import { SetAdjustSheet } from './SetAdjustSheet';
 import { IkonBock, IkonPrickar } from './icons';
-import { getLastPerformance } from '../db/repo';
+import { getSetAverages } from '../db/history';
+import { workSetIndices } from '../lib/worksets';
 import type { PlannedExercise } from '../db/plan';
 import type { LocalExercise } from '../db/types';
 
@@ -13,7 +14,16 @@ import type { LocalExercise } from '../db/types';
  *
  * Kortet äger justeringsarket för sina rader — det behöver övningens namn och
  * ska bara finnas i ett exemplar åt gången.
+ *
+ * 🔄 **Steg 4.2: kortet driver setraderna ur `getSetAverages`, inte ur
+ * `getLastPerformance`.** `SPEC.md` §2 ersatte "exakt vad du lyfte förra
+ * passet" med ett snitt över de tre senaste passen med övningen. Skälet står
+ * där — kort: en enskild mätning är brus, och en toppdag som referensvärde
+ * varje pass därefter är precis den skada snittet finns för att ta bort.
  */
+
+/** "senast tränad i oktober 2024". Formateringen hör till skärmen, inte frågan. */
+const MÅNAD_ÅR = new Intl.DateTimeFormat('sv-SE', { month: 'long', year: 'numeric' });
 
 interface Props {
   planned: PlannedExercise;
@@ -43,11 +53,20 @@ export function ExerciseCard({
   const [meny, setMeny] = useState(false);
   const [justerar, setJusterar] = useState<string | null>(null);
 
-  const ghost = useLiveQuery(
-    () => getLastPerformance(planned.exerciseId, { excludeWorkoutId: workoutId }),
+  const snitt = useLiveQuery(
+    () => getSetAverages(planned.exerciseId, undefined, { excludeWorkoutId: workoutId }),
     [planned.exerciseId, workoutId],
     null
   );
+
+  /**
+   * ⛔ **Radens plats bland ARBETSSETEN, inte i listan.** `getSetAverages`
+   * indexerar sitt svar på arbetssetnummer; räknas radens plats i stället
+   * hamnar set 2:s snitt på set 1:s rad så fort en uppvärmningsrad ligger
+   * överst — tyst, utan att något test bryts. Regeln bor i `workSetIndices`
+   * och kontraktet mellan de två sidorna mäts i `history.test.ts`.
+   */
+  const nummer = workSetIndices(planned.sets);
 
   const klara = planned.sets.filter((s) => s.loggedSetId !== null).length;
   const aktivt = planned.sets.find((s) => s.id === justerar);
@@ -69,9 +88,14 @@ export function ExerciseCard({
           <h2 className="truncate text-exercise font-semibold">
             {exercise?.name ?? 'Okänd övning'}
           </h2>
+          {/* `staleSince` är satt bara när övningen inte tränats på åtta veckor.
+              Då finns inget snitt att visa i raderna, och raden säger i stället
+              NÄR den senast gjordes. Frågan lämnar ett rått ISO-datum;
+              formateringen hör till skärmen, inte till frågan. */}
           <p className="text-meta text-[var(--color-dim)] tabular-nums">
             {klara} av {planned.sets.length} set
-            {ghost && ` · sist ${ghost.weightKg} kg × ${ghost.reps}`}
+            {snitt?.staleSince &&
+              ` · senast tränad i ${MÅNAD_ÅR.format(new Date(snitt.staleSince))}`}
           </p>
         </div>
         <button
@@ -130,9 +154,6 @@ export function ExerciseCard({
           Set
         </span>
         <span className="text-center text-[0.65rem] tracking-wide text-[var(--color-dim)] uppercase">
-          Förra
-        </span>
-        <span className="text-center text-[0.65rem] tracking-wide text-[var(--color-dim)] uppercase">
           Kg
         </span>
         <span className="text-center text-[0.65rem] tracking-wide text-[var(--color-dim)] uppercase">
@@ -150,17 +171,22 @@ export function ExerciseCard({
           mot när passet innehåller flera övningar. Utan det träffar en sökning
           efter en setrad alla kort på skärmen. */}
       <ul aria-label={`Set för ${exercise?.name ?? 'okänd övning'}`}>
-        {planned.sets.map((s, i) => (
-          <SetRow
-            key={s.id}
-            index={i}
-            set={s}
-            ghost={ghost ? { weightKg: ghost.weightKg, reps: ghost.reps } : null}
-            onOpenAdjust={() => setJusterar(s.id)}
-            onConfirm={() => onConfirmSet(s.id)}
-            onUnconfirm={() => onUnconfirmSet(s.id)}
-          />
-        ))}
+        {planned.sets.map((s, i) => {
+          const workSetIndex = nummer[i] ?? null;
+          return (
+            <SetRow
+              key={s.id}
+              workSetIndex={workSetIndex}
+              set={s}
+              // Uppvärmningen har inget setnummer och därmed inget snitt att
+              // slå upp — den jämförs inte med något.
+              average={workSetIndex === null ? null : (snitt?.sets[workSetIndex] ?? null)}
+              onOpenAdjust={() => setJusterar(s.id)}
+              onConfirm={() => onConfirmSet(s.id)}
+              onUnconfirm={() => onUnconfirmSet(s.id)}
+            />
+          );
+        })}
       </ul>
 
       <button

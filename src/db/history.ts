@@ -231,7 +231,19 @@ export interface ExerciseSetAverages {
  */
 export async function getSetAverages(
   exerciseId: string,
-  database: GymDatabase = db
+  database: GymDatabase = db,
+  options: {
+    /**
+     * Passet som INTE får bli sitt eget underlag.
+     *
+     * Passvyn skickar alltid med det pågående passet. Utan det blir
+     * referensvärdet cirkulärt: bockar man av dagens set på 100 kg dras
+     * snittet uppåt av det man just gjorde, mitt under passet. Talet ska säga
+     * *"så här brukar det se ut"*, och då kan det inte innehålla det man
+     * håller på med. Samma skäl och samma mönster som `getLastPerformance`.
+     */
+    excludeWorkoutId?: string;
+  } = {}
 ): Promise<ExerciseSetAverages> {
   // Samma tre filter som spökdatan i 13.4: raderade, uppvärmning och
   // importerade. Det sista är det viktigaste — Adams `2024 vecka 14: Bänk:
@@ -268,6 +280,7 @@ export async function getSetAverages(
     .until((s) => underlag.size >= ANTAL_PASS_I_SNITTET && !underlag.has(s.workoutId))
     .each((s) => {
       if (s.isDeleted || s.isWarmup || s.source === 'import') return;
+      if (s.workoutId === options.excludeWorkoutId) return;
       underlag.add(s.workoutId);
       rows.push(s);
     });

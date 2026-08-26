@@ -1,18 +1,19 @@
 import { formatWeight } from '../lib/steps';
 import { IkonBock } from './icons';
+import type { SetAverage } from '../db/history';
 import type { PlannedSet } from '../db/plan';
 
 /**
  * En setrad. Omgjord 2026-08-02 efter referensbilderna i `docs/Reference-pics/`,
- * och igen 2026-08-04 i fas 11B steg 4.2 efter att appen faktiskt granskats
- * visuellt (`npm run shots`).
+ * igen 2026-08-04 efter en visuell granskning, och igen 2026-08-26 i steg 4.2
+ * när `FÖRRA` ersattes av snittet i form 2B.
  *
  * VARFÖR TABELL OCH INTE FLEXRAD: två tidigare försök klipptes av på mobilskärm.
- * Referensappen löser det med en **tabell med fem smala kolumner och rubriker EN
- * gång** — `Set | Förra | Kg | Reps | ✓`. När kolumnen är namngiven i huvudet
- * behöver cellen inte bära sin egen etikett, och då räcker bredden.
+ * Referensappen löser det med en **tabell med smala kolumner och rubriker EN
+ * gång**. När kolumnen är namngiven i huvudet behöver cellen inte bära sin egen
+ * etikett, och då räcker bredden.
  *
- * VAD SKÄRMDUMPEN AVSLÖJADE, och som ingen beskrivning hade fångat:
+ * VAD SKÄRMDUMPEN AVSLÖJADE 2026-08-04, och som ingen beskrivning hade fångat:
  *
  * 1. **Setvärdena var 16 px** — mindre än sidrubriken och mindre än knappen
  *    "Lägg till övning". Siffrorna man är där för att ändra var bland det minsta
@@ -24,30 +25,53 @@ import type { PlannedSet } from '../db/plan';
  *    i". Raden påstod alltså `0 kg` där koden menade *ingenting angivet*.
  * 4. **`Förra` var radens bredaste kolumn** och visade ett streck. Det såg ut
  *    som ett renderingsfel snarare än som frånvaro av data.
+ *
+ * ⚠️ **Fynd 4 är skälet att snittet INTE visar `–` när underlag saknas helt.**
+ * `DESIGN.md` §3.1 reserverar `–` för det fallet, men den regeln skrevs när
+ * snittet var en egen kolumn som annars stod tom. I 2B är snittet en andrarad
+ * under värdet, och ett streck där skapar en rad som ser ut att bära
+ * information. Frånvaron av tal ÄR svaret. Regelns egen poäng — *"aldrig en
+ * nolla: en nolla ser ut som ett resultat"* — är oförändrat uppfylld.
  */
 
 /**
  * Delas med rubrikraden i ExerciseCard så att kolumnerna garanterat linjerar.
  *
- * Breddbudget för iPhone SE, 317 px innanför kortets padding:
- *   Set 28 + Kg 68 + Reps 40 + ✓ 48 = 184 fasta, `Förra` får resterande ~133.
- * `Kg` rymmer `102,5` i 24 px tabulärt (≈59 px) med marginal. Vakten i
- * `e2e/no-horizontal-overflow.spec.ts` mäter detta på riktigt.
+ * ⚠️ **`Förra` är borta, och dess ~133 px gick till Kg och Reps.** Fyndet ur
+ * Strong (`DESIGN.md` §0.5) var att spökdatakolumnen kostade ~⅓ av radbredden
+ * och stod tom ändå. Kvar: Set 28 + ✓ 48 = 76 px fast, resten delas lika av de
+ * två talkolumnerna. Vakten i `e2e/no-horizontal-overflow.spec.ts` mäter det på
+ * riktigt.
  */
 export const SET_GRID =
-  'grid grid-cols-[1.75rem_minmax(0,1fr)_4.25rem_2.5rem_3rem] items-center gap-1';
+  'grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1fr)_3rem] items-center gap-1';
 
 interface Props {
-  index: number;
+  /**
+   * Radens plats bland ARBETSSETEN, eller `null` för uppvärmning.
+   *
+   * ⛔ **Inte radens plats i listan.** Räknas den i stället visar en rad med
+   * uppvärmning överst set 2:s snitt på set 1:s rad, tyst. Numret kommer från
+   * `workSetIndices`, samma regel som `getSetAverages` grupperar på — se
+   * kontraktstestet i `history.test.ts`.
+   */
+  workSetIndex: number | null;
   set: PlannedSet;
-  /** Vad som lyftes senast — visas i Förra-kolumnen som jämförelse, inte i fältet. */
-  ghost: { weightKg: number; reps: number } | null;
+  /** Snittet för just det här setnumret, eller null när underlag saknas. */
+  average: SetAverage | null;
   onOpenAdjust: () => void;
   onConfirm: () => void;
   onUnconfirm: () => void;
 }
 
-export function SetRow({ index, set, ghost, onOpenAdjust, onConfirm, onUnconfirm }: Props) {
+export function SetRow({
+  workSetIndex,
+  set,
+  average,
+  onOpenAdjust,
+  onConfirm,
+  onUnconfirm,
+}: Props) {
   const confirmed = set.loggedSetId !== null;
   const dämpad = set.fromGhost && !confirmed;
 
@@ -61,8 +85,30 @@ export function SetRow({ index, set, ghost, onOpenAdjust, onConfirm, onUnconfirm
    */
   const viktSaknas = set.weightKg === 0 && !set.fromGhost && !confirmed;
 
+  /** Vad etiketterna säger. Uppvärmningen har inget nummer, den har en bokstav. */
+  const nummer = workSetIndex === null ? 'uppvärmningen' : `set ${workSetIndex + 1}`;
+
+  /**
+   * Snittet i klartext, för den som inte ser det.
+   *
+   * ⚠️ **2B skapar en tillgänglighetslucka som 2A inte hade.** Snittalen är
+   * nakna spans utan tillgängligt namn — de fanns inte alls för en skärmläsare.
+   * En egen kolumn hade åtminstone haft en rubrik. Att lägga talet i knappens
+   * etikett är billigare än att uppfinna en rubrik åt en kolumn som inte finns.
+   *
+   * Formuleringen *"brukar vara"* bär dessutom det långtrycket ska förklara för
+   * den som ser: **vad talet är.** Den öppna frågan från 2B (`DESIGN.md` §3.1)
+   * gäller alltså bara den seende vägen.
+   */
+  const brukar = (värde: string) =>
+    average
+      ? `, brukar vara ${värde}${average.workoutCount < 3 ? ` enligt ${average.workoutCount} pass` : ''}`
+      : '';
+
+  const snittVikt = average ? formatWeight(average.weightKg) : '';
+
   const cell =
-    'h-12 min-h-0 rounded-md text-center text-set tabular-nums active:bg-[var(--color-bg)]';
+    'h-14 min-h-0 rounded-md text-center tabular-nums active:bg-[var(--color-bg)]';
 
   return (
     <li
@@ -82,60 +128,51 @@ export function SetRow({ index, set, ghost, onOpenAdjust, onConfirm, onUnconfirm
           set.isWarmup ? 'font-semibold' : '',
         ].join(' ')}
       >
-        {set.isWarmup ? 'W' : index + 1}
+        {workSetIndex === null ? 'W' : workSetIndex + 1}
       </span>
 
-      {/* Förra — spökdatan som jämförelse. Saknas den visas ingenting alls:
-          ett centrerat streck i en bred kolumn läste sig som ett fel.
-
-          `data-testid` finns för att vakt 5 i 12.20 mäter just den här cellen —
-          att den är TOM när enda tidigare setet är importerat (13.4). Beslut 7
-          väljer `role` + tillgängligt namn, med `data-testid` som undantag där
-          tillgängligt namn saknas, och det gör det här: cellen är en naken span
-          vars innehåll ibland är tomma strängen. Att ge den ett aria-label vore
-          att uppfinna en etikett för skärmläsare som ingen bett om. */}
-      <span
-        data-testid="setrad-forra"
-        className="truncate text-center text-meta text-[var(--color-dim)] tabular-nums"
-      >
-        {ghost ? `${formatWeight(ghost.weightKg)} × ${ghost.reps}` : ''}
-      </span>
-
-      {/* Kg */}
+      {/* Kg — värdet stort, snittvikten litet och grått under. Form 2B, vald av
+          Adam 2026-08-19 ur `docs/mockups/11b-0g-pass.html`. Konstruktionen är
+          MacroFactors: `2108` stort, `of 2643` litet och grått under. */}
       <button
         type="button"
         onClick={onOpenAdjust}
         aria-label={
           viktSaknas
-            ? `Vikt inte angiven för set ${index + 1}, tryck för att ange`
-            : `Vikt ${formatWeight(set.weightKg)} kilo för set ${index + 1}, tryck för att ändra`
+            ? `Vikt inte angiven för ${nummer}${brukar(`${snittVikt} kilo`)}, tryck för att ange`
+            : `Vikt ${formatWeight(set.weightKg)} kilo för ${nummer}${brukar(`${snittVikt} kilo`)}, tryck för att ändra`
         }
         className={`${cell} ${dämpad || viktSaknas ? 'text-[var(--color-dim)]' : ''}`}
       >
-        {viktSaknas ? '–' : formatWeight(set.weightKg)}
+        <span className="block text-set leading-tight">
+          {viktSaknas ? '–' : formatWeight(set.weightKg)}
+        </span>
+        {average && <Snitt värde={snittVikt} pass={average.workoutCount} />}
       </button>
 
-      {/* Reps */}
+      {/* Reps — samma konstruktion. Snittrepsen står under repsen, så man aldrig
+          behöver fråga sig vilket tal som är vilket. Det var Adams eget skäl att
+          välja 2B när snittet blev två tal. */}
       <button
         type="button"
         onClick={onOpenAdjust}
-        aria-label={`${set.reps} reps för set ${index + 1}, tryck för att ändra`}
+        aria-label={`${set.reps} reps för ${nummer}${brukar(`${average?.reps} reps`)}, tryck för att ändra`}
         className={`${cell} ${dämpad ? 'text-[var(--color-dim)]' : ''}`}
       >
-        {set.reps}
+        <span className="block text-set leading-tight">{set.reps}</span>
+        {average && <Snitt värde={String(average.reps)} pass={average.workoutCount} />}
       </button>
 
       {/* ✓ — 48×48, inte 40×36. `min-h-0` används INTE här längre: regeln i
           index.css finns för att finmotoriken minskar under ansträngning, och
           att kringgå den på appens mest tryckta knapp var precis fel väg.
 
-          Obekräftad har `--color-line-strong` (3,15:1) och inte `--color-line`
-          (1,46:1): kanten är det enda som visar att rutan går att trycka på, och
-          då gäller WCAG 1.4.11. */}
+          Obekräftad har `--color-line-strong` och inte `--color-line`: kanten är
+          det enda som visar att rutan går att trycka på. */}
       <button
         type="button"
         onClick={confirmed ? onUnconfirm : onConfirm}
-        aria-label={confirmed ? `Ångra set ${index + 1}` : `Klarmarkera set ${index + 1}`}
+        aria-label={confirmed ? `Ångra ${nummer}` : `Klarmarkera ${nummer}`}
         aria-pressed={confirmed}
         className={[
           'flex h-12 w-12 items-center justify-center justify-self-center rounded-md text-set',
@@ -147,5 +184,31 @@ export function SetRow({ index, set, ghost, onOpenAdjust, onConfirm, onUnconfirm
         <IkonBock className="size-6" />
       </button>
     </li>
+  );
+}
+
+/**
+ * Snittalet under värdet. `--text-meta` och `--color-dim` — **aldrig samma
+ * storlek som det du skriver in**, se `DESIGN.md` §3.1. Talet ska viska.
+ *
+ * ⏰ **Prickarna är ett FÖRSLAG, inte ett fattat beslut.** Briefen kräver att
+ * ett snitt på tunt underlag *"visas ändå, märkt med hur många pass det bygger
+ * på"*, och mockupen som 2B valdes ur flaggade själv att märkningen *"inte får
+ * plats lika lätt här som i en kolumn"*. En prick per pass kostar ~8 px och bara
+ * när underlaget är tunt — men vilken form märkningen ska ha är Adams val, inte
+ * mitt. Långtrycket (steg 4.2 del E) är det som förklarar dem.
+ */
+function Snitt({ värde, pass }: { värde: string; pass: number }) {
+  return (
+    <span className="flex items-center justify-center gap-1 text-meta leading-tight text-[var(--color-dim)]">
+      {värde}
+      {pass < 3 && (
+        <span aria-hidden className="flex gap-0.5">
+          {Array.from({ length: pass }, (_, i) => (
+            <span key={i} className="size-1 rounded-full bg-[var(--color-dim)]" />
+          ))}
+        </span>
+      )}
+    </span>
   );
 }

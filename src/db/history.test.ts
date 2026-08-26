@@ -18,6 +18,7 @@ import {
   listTrainedExercises,
   listWorkoutSummaries,
 } from './history';
+import { workSetIndices } from '../lib/worksets';
 
 const BENK = '38433903-c5f6-41e4-b2e8-4f0587b6d0cf';
 const KNABOJ = '1c9ac04d-9226-42d1-a47e-ca9b27530e0b';
@@ -450,6 +451,69 @@ describe('11B.0f snittet per setnummer', () => {
       [0, 95],
       [1, 90],
     ]);
+  });
+
+  it('numrerar arbetsset likadant som setraden gör — KONTRAKTET mellan de två sidorna', async () => {
+    // ⚠️ VARFÖR DET HÄR TESTET FINNS, och varför det inte hör hemma i
+    // `worksets.test.ts`. `getSetAverages` indexerar sitt svar på
+    // arbetssetnummer, och `ExerciseCard` slår upp i det indexet per rad. Två
+    // sidor, samma regel — och fram till steg 4.2 var prosa i en
+    // doc-kommentar det enda som höll ihop dem. Glider de isär hamnar fel
+    // snitt på fel rad TYST: inget kastar, inget ser fel ut, talet är bara
+    // osant. Samma buggklass som `e02abf1` fixade inuti frågan, flyttad över
+    // komponentgränsen.
+    //
+    // Testet är rött om NÅGONDERA sidan ändrar regeln, vilket en delad
+    // funktion ensam inte hade garanterat — den kan anropas fel.
+    //
+    // ✅ Testet går grönt utan att implementationen ändrades, så det är
+    // kontrollerat genom sabotage 2026-08-26 — båda hållen, båda föll:
+    //   1. `workSetIndices` fick räkna uppvärmningen (`s.isWarmup ? null :`
+    //      borttaget) → raden efter uppvärmningen visade 80 i stället för 90.
+    //   2. `getSetAverages` fick sluta filtrera uppvärmning (`s.isWarmup`
+    //      borttaget ur filtret) → arbetsset 0 blev uppvärmningens 40 kg.
+    await pass(
+      [
+        [40, 10, { isWarmup: true }],
+        [90, 5],
+        [80, 5],
+      ],
+      7
+    );
+
+    const { sets } = await getSetAverages(BENK, db);
+
+    // Setraderna som skärmen renderar: samma uppvärmningsvana, uppvärmningen
+    // överst. Det är `workSetIndices` som avgör vilket snitt varje rad hämtar.
+    const nummer = workSetIndices([{ isWarmup: true }, { isWarmup: false }, { isWarmup: false }]);
+
+    // Uppvärmningsraden slår inte upp något snitt alls.
+    expect(nummer[0]).toBeNull();
+
+    // Raden EFTER uppvärmningen är passets FÖRSTA arbetsset och ska visa 90.
+    // Räknas radens plats i listan i stället visar den 80 — set 2:s snitt.
+    expect(sets[nummer[1]!]?.weightKg).toBe(90);
+    expect(sets[nummer[2]!]?.weightKg).toBe(80);
+  });
+
+  it('räknar inte det PÅGÅENDE passets egna set som underlag', async () => {
+    // ⚠️ HITTAT NÄR KONSUMENTEN BYGGDES I STEG 4.2, inte när frågan skrevs.
+    // `getLastPerformance` tog `excludeWorkoutId` och passvyn skickade alltid
+    // med det. `getSetAverages` hade ingen motsvarighet, eftersom ingen skärm
+    // ännu anropade den — och utan den blir referensvärdet cirkulärt: bockar
+    // man av dagens set på 100 kg dras snittet uppåt av det man just gjorde,
+    // mitt under passet. Talet ska säga "så här BRUKAR det se ut", och då kan
+    // det inte innehålla det man håller på med.
+    await pass([[90, 5]], 7);
+
+    vi.setSystemTime(new Date(NU.getTime() - 0));
+    const pågående = await startWorkout(db);
+    await logSet({ workoutId: pågående.id, exerciseId: BENK, weightKg: 100, reps: 5 }, db);
+
+    const { sets } = await getSetAverages(BENK, db, { excludeWorkoutId: pågående.id });
+
+    // Bara det avslutade passet. Räknas dagens 100 kg med blir svaret 95.
+    expect(sets.map((s) => s.weightKg)).toEqual([90]);
   });
 
   it('räknar inte raderade set som underlag', async () => {
