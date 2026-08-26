@@ -21,10 +21,13 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ScrollPicker } from './ScrollPicker';
+import { DIGIT_VALUES } from '../lib/digits';
+import { ITEM_H, ScrollPicker } from './ScrollPicker';
 
-const ITEM_H = 44;
-const VÄRDEN = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+declare global {
+  /** Reacts egen flagga. Deklarerad här hellre än framtvingad med `as`. */
+  var IS_REACT_ACT_ENVIRONMENT: boolean;
+}
 
 let behållare: HTMLDivElement;
 let root: Root;
@@ -53,7 +56,25 @@ function hjulet(): HTMLElement {
   return el;
 }
 
+/**
+ * Monterar entalshjulet — samma värdelista som `SetAdjustSheet` skickar in.
+ * Buggen handlade om vilket INDEX i listan hjulet rapporterade, så listan är
+ * inte kosmetik här: en egen kopia hade låtit testet påstå att fixen håller
+ * för en uppsättning appen inte längre använder.
+ */
+function rita(value: number, onChange: (v: number) => void) {
+  act(() => {
+    root.render(
+      <ScrollPicker label="Ental kilo" values={DIGIT_VALUES} value={value} onChange={onChange} />
+    );
+  });
+}
+
 beforeEach(() => {
+  // React kräver flaggan för att `act()` ska räknas som en testmiljö. Utan den
+  // passerar testerna men skriver fyra rader varning per körning — brus som
+  // döljer äkta varningar när steg 4 lägger till fler komponenttester.
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   vi.useFakeTimers();
   // jsdom saknar `Element.scrollTo` helt — utan den kastar redan monteringen.
   // Med flit en no-op: den programmatiska scrollen ska INTE flytta positionen,
@@ -73,19 +94,13 @@ afterEach(() => {
 describe('ScrollPicker rapporterar bara val användaren gjort', () => {
   it('rapporterar inte när värdet ändrats utifrån och hjulet ligger kvar på gammal position', () => {
     const onChange = vi.fn();
-    const rita = (value: number) =>
-      act(() => {
-        root.render(
-          <ScrollPicker label="Ental kilo" values={VÄRDEN} value={value} onChange={onChange} />
-        );
-      });
 
-    rita(5);
+    rita(5, onChange);
     const el = hjulet();
     riggaScroll(el, 5 * ITEM_H);
 
     // Vikten ändras utifrån av `+2,5`-knappen: entalssiffran går 5 → 7.
-    rita(7);
+    rita(7, onChange);
 
     // ⚠️ Så här såg tracen ut: spärren hann släppa (60 ms) INNAN hjulets
     // scrollhändelse dök upp, och hjulet låg fortfarande kvar på 5:ans plats.
@@ -100,11 +115,7 @@ describe('ScrollPicker rapporterar bara val användaren gjort', () => {
 
   it('rapporterar när användaren själv dragit i hjulet', () => {
     const onChange = vi.fn();
-    act(() => {
-      root.render(
-        <ScrollPicker label="Ental kilo" values={VÄRDEN} value={5} onChange={onChange} />
-      );
-    });
+    rita(5, onChange);
 
     const el = hjulet();
     const scroll = riggaScroll(el, 5 * ITEM_H);
