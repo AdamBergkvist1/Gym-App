@@ -231,6 +231,7 @@ export function ExerciseCard({
         <SetAdjustSheet
           exerciseName={exercise?.name ?? 'Övning'}
           setNumber={planned.sets.findIndex((s) => s.id === aktivt.id) + 1}
+          equipment={exercise?.equipment ?? null}
           weightKg={aktivt.weightKg}
           reps={aktivt.reps}
           isWarmup={aktivt.isWarmup}

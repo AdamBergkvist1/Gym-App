@@ -8,7 +8,7 @@ import {
   toDigits,
   withDigit,
 } from '../lib/digits';
-import { formatWeight, stepReps, stepWeight } from '../lib/steps';
+import { formatWeight, nudgeSteps, stepReps, stepWeight } from '../lib/steps';
 
 /**
  * Bottenark för att justera ett set. Uppgift 11A.3b.
@@ -28,6 +28,15 @@ interface Props {
   weightKg: number;
   reps: number;
   isWarmup: boolean;
+  /**
+   * Övningens utrustning, som styr ±-knapparnas steg.
+   *
+   * `string | null` och inte en union: egna övningar (fas 7) skapas av
+   * användaren och kan bära vad som helst. Det är katalogen som är data vi
+   * äger. Okänd utrustning faller tillbaka på hela kilon — det FINA steget,
+   * eftersom ett för grovt steg raderar vikter användaren faktiskt lyft.
+   */
+  equipment: string | null;
   onChange: (patch: { weightKg?: number; reps?: number; isWarmup?: boolean }) => void;
   onRemove: () => void;
   onClose: () => void;
@@ -43,6 +52,7 @@ export function SetAdjustSheet({
   weightKg,
   reps,
   isWarmup,
+  equipment,
   onChange,
   onRemove,
   onClose,
@@ -127,35 +137,25 @@ export function SetAdjustSheet({
             />
           </div>
 
+          {/* Stegen följer övningens utrustning: skivstången får 2,5 kg som
+              huvudsteg, allt annat 1 kg. Huvudsteget ligger innerst, närmast
+              värdet det ändrar. Se `nudgeSteps` för hela skälet — kort: hela
+              utrustningsregeln kom ur Adams fynd att hantelcurl körs i
+              enkilossteg, och knapparna hade ändå skivstångens steg. */}
           <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              onClick={() => onChange({ weightKg: stepWeight(weightKg, -1, 1) })}
-              className={NUDGE}
-            >
-              −1
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ weightKg: stepWeight(weightKg, -1) })}
-              className={NUDGE}
-            >
-              −2,5
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ weightKg: stepWeight(weightKg, 1) })}
-              className={NUDGE}
-            >
-              +2,5
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ weightKg: stepWeight(weightKg, 1, 1) })}
-              className={NUDGE}
-            >
-              +1
-            </button>
+            {nudgeSteps(equipment).map((steg) => (
+              <button
+                key={steg}
+                type="button"
+                onClick={() =>
+                  onChange({ weightKg: stepWeight(weightKg, steg < 0 ? -1 : 1, Math.abs(steg)) })
+                }
+                className={NUDGE}
+              >
+                {steg < 0 ? '−' : '+'}
+                {formatWeight(Math.abs(steg))}
+              </button>
+            ))}
           </div>
         </div>
 

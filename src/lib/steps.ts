@@ -65,6 +65,29 @@ export function weightStepFor(equipment: string | null): number {
   return equipment === SKIVSTÅNG ? WEIGHT_STEP_KG : 1;
 }
 
+/**
+ * ±-knapparnas fyra steg i visningsordning, **huvudsteget innerst**.
+ *
+ * Uppgift steg 4.2 del D. `SetAdjustSheet` hårdkodade `−1 / −2,5 / +2,5 / +1`
+ * för varje övning, alltså skivstångens steg som förstahandsval även för
+ * hantlar — och Adams eget fynd bakom hela utrustningsregeln var att *"vissa
+ * övningar som hantelcurl kör man ju enkilos grejer ibland"*.
+ *
+ * **Båda stegen finns kvar för båda utrustningarna.** En skivstång kan bära
+ * mikroplattor och en hantel kan hoppa 2,5 — det som ändras är vilket steg
+ * tummen når först, inte vad som är möjligt. Att ta bort ett steg hade gjort
+ * en vikt onåbar; att flytta det kostar ingenting.
+ *
+ * ⚠️ **Härleds ur `weightStepFor`, inte ur en egen kopia av regeln.** Skulle de
+ * två skilja sig avrundade snittet till ett steg knappen inte kan nå, vilket är
+ * precis den sortens tysta oenighet som två regler för samma sak ger.
+ */
+export function nudgeSteps(equipment: string | null): number[] {
+  const huvud = weightStepFor(equipment);
+  const andra = huvud === WEIGHT_STEP_KG ? 1 : WEIGHT_STEP_KG;
+  return [-andra, -huvud, huvud, andra];
+}
+
 /** Flyttalsavrundning så att 92,5 + 2,5 aldrig blir 95.00000000000001. */
 function round2(n: number): number {
   return Math.round(n * 100) / 100;

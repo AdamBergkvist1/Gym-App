@@ -191,12 +191,17 @@ export function SetRow({
  * Snittalet under värdet. `--text-meta` och `--color-dim` — **aldrig samma
  * storlek som det du skriver in**, se `DESIGN.md` §3.1. Talet ska viska.
  *
- * ⏰ **Prickarna är ett FÖRSLAG, inte ett fattat beslut.** Briefen kräver att
- * ett snitt på tunt underlag *"visas ändå, märkt med hur många pass det bygger
- * på"*, och mockupen som 2B valdes ur flaggade själv att märkningen *"inte får
- * plats lika lätt här som i en kolumn"*. En prick per pass kostar ~8 px och bara
- * när underlaget är tunt — men vilken form märkningen ska ha är Adams val, inte
- * mitt. Långtrycket (steg 4.2 del E) är det som förklarar dem.
+ * ✅ **Prickarna är valda av Adam 2026-08-26.** Briefen kräver att ett snitt på
+ * tunt underlag *"visas ändå, märkt med hur många pass det bygger på"*, och
+ * mockupen som 2B valdes ur flaggade själv att märkningen *"inte får plats lika
+ * lätt här som i en kolumn"*. Fyra former lades fram; en prick per pass vann
+ * för att den kostar nästan ingen bredd — samma skäl som gjorde att 2B vann.
+ *
+ * ⚠️ **Vad valet kostar, och det ska stå kvar:** en ensam prick är tyst tills
+ * någon förklarar den. **Långtrycket är den enda förklaringen** tills 11B.6
+ * bygger engångsförklaringen, och det är accepterat med öppna ögon — Adam är
+ * appens enda användare i dag. Skärmläsarvägen är oberoende: `brukar` i
+ * `SetRow` skriver ut antalet i klartext.
  */
 function Snitt({ värde, pass }: { värde: string; pass: number }) {
   return (

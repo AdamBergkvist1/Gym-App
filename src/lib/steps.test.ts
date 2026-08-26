@@ -8,6 +8,7 @@ import {
   parseWeightInput,
   stepReps,
   stepWeight,
+  nudgeSteps,
   weightStepFor,
 } from './steps';
 
@@ -134,5 +135,28 @@ describe('volymformatering (12.18)', () => {
   it('grupperar tusental så att fyrsiffriga volymer går att läsa', () => {
     // sv-SE använder hårt mellanslag som avgränsare — normaliseras för jämförelsen.
     expect(formatVolume(12345.5).replace(/\s/g, ' ')).toBe('12 345,5');
+  });
+});
+
+describe('steg 4.2 ±-knapparnas ordning följer utrustningen', () => {
+  it('ger skivstången 2,5 kg som huvudsteg och hantlarna 1 kg', () => {
+    // Huvudsteget ligger INNERST, närmast värdet det ändrar — det är den
+    // position tummen når först. Båda stegen finns kvar för båda
+    // utrustningarna: en skivstång kan bära mikroplattor, och en hantel kan
+    // hoppa 2,5. Det som ändras är vilket som är förstahandsvalet.
+    expect(nudgeSteps('skivstång')).toEqual([-1, -2.5, 2.5, 1]);
+    expect(nudgeSteps('hantlar')).toEqual([-2.5, -1, 1, 2.5]);
+  });
+
+  it('följer samma regel som snittets avrundning, inte en egen kopia av den', () => {
+    // ⚠️ VARFÖR TESTET LÄSER `weightStepFor`. Två regler för samma sak glider
+    // isär: snittet kunde avrundats till 1 kg medan knappen stegade 2,5. Här
+    // är kravet utskrivet — huvudsteget ÄR det steg snittet avrundar till,
+    // för varje utrustning katalogen har.
+    for (const utrustning of ['skivstång', 'hantlar', 'kabel', 'maskin', 'kroppsvikt', null]) {
+      const steg = nudgeSteps(utrustning);
+      expect(steg[1]).toBe(-weightStepFor(utrustning));
+      expect(steg[2]).toBe(weightStepFor(utrustning));
+    }
   });
 });
