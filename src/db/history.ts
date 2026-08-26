@@ -295,43 +295,47 @@ export async function getSetAverages(
   // lagrade `setIndex` duger inte, se `workSetIndex` i `SetAverage`. `rows` är
   // sorterad stigande, så räknaren per pass ger arbetsseten i tidsordning.
   // Raderade och importerade set lämnar därmed inte heller några hål.
+  //
+  // Varje pass fyller platserna 0, 1, 2 … i följd, så en array blir tät och
+  // stigande av sig själv. En Map hade behövt sorteras tillbaka efteråt, vilket
+  // fick ordningen att se osäker ut trots att den är garanterad.
   const arbetssetIPasset = new Map<string, number>();
-  const perSetNummer = new Map<number, LocalSet[]>();
+  const perSetNummer: LocalSet[][] = [];
   for (const s of rows) {
     const nummer = arbetssetIPasset.get(s.workoutId) ?? 0;
     arbetssetIPasset.set(s.workoutId, nummer + 1);
-    const list = perSetNummer.get(nummer);
-    if (list) list.push(s);
-    else perSetNummer.set(nummer, [s]);
+    (perSetNummer[nummer] ??= []).push(s);
   }
 
-  const sets = [...perSetNummer.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([workSetIndex, rader]) => {
-      const rått = rader.reduce((sum, s) => sum + s.weightKg, 0) / rader.length;
-      const weightKg = Math.round(rått / viktsteg) * viktsteg;
+  const sets = perSetNummer.map((rader, workSetIndex) => {
+    const rått = rader.reduce((sum, s) => sum + s.weightKg, 0) / rader.length;
+    const weightKg = Math.round(rått / viktsteg) * viktsteg;
 
-      // Repsen snittas inte — de tas från setet närmast den vikt som VISAS,
-      // inte närmast råsnittet. Paret måste hänga ihop för den som läser det:
-      // "90 kg, och på 90 kg brukar det bli 5 reps". Ett repsantal valt efter
-      // ett tal användaren aldrig ser vore godtyckligt.
-      //
-      // Vid lika avstånd vinner det senaste setet. `rader` kommer ur indexet i
-      // stigande `performedAt`, så `<=` låter det senare skriva över det
-      // tidigare. Utan regeln avgörs raden av vilken ordning databasen råkar
-      // svara i, och det senaste passet är den bättre gissningen om hur det
-      // ser ut nu.
-      const närmast = rader.reduce((bäst, s) =>
-        Math.abs(s.weightKg - weightKg) <= Math.abs(bäst.weightKg - weightKg) ? s : bäst
-      );
+    // Repsen snittas inte — de tas från setet närmast den vikt som VISAS,
+    // inte närmast råsnittet. Paret måste hänga ihop för den som läser det:
+    // "90 kg, och på 90 kg brukar det bli 5 reps". Ett repsantal valt efter
+    // ett tal användaren aldrig ser vore godtyckligt.
+    //
+    // Vid lika avstånd vinner det senaste setet. `rader` kommer ur indexet i
+    // stigande `performedAt`, så `<=` låter det senare skriva över det
+    // tidigare. Utan regeln avgörs raden av vilken ordning databasen råkar
+    // svara i, och det senaste passet är den bättre gissningen om hur det
+    // ser ut nu.
+    const närmast = rader.reduce((bäst, s) =>
+      Math.abs(s.weightKg - weightKg) <= Math.abs(bäst.weightKg - weightKg) ? s : bäst
+    );
 
-      return {
-        workSetIndex,
-        weightKg,
-        reps: närmast.reps,
-        workoutCount: new Set(rader.map((s) => s.workoutId)).size,
-      };
-    });
+    return {
+      workSetIndex,
+      weightKg,
+      reps: närmast.reps,
+      // Räknaren ovan ökar för varje set, så ett pass kan aldrig lägga två set
+      // på samma setnummer: antalet rader ÄR antalet pass. En Set här hade sett
+      // ut att skydda mot något och tvingat läsaren att bevisa att den inte gör
+      // det.
+      workoutCount: rader.length,
+    };
+  });
 
   return { sets, staleSince: null };
 }
