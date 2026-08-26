@@ -30,11 +30,21 @@ import {
  * dag. Att skriva om den nu hade betytt påståenden om en skärm som ännu inte är
  * byggd — steg 4 bygger den.
  *
- * ⛔ **Den commit som byter `SetRow` till `getSetAverages` MÅSTE skriva om
- * vakten i samma commit.** Annars är den grön mot en kolumn som inte finns
- * längre, och 13.4:s regel tappar sin enda e2e-täckning. Det som ska överleva
- * omskrivningen är påståendet, inte `data-testid`:t: **ett importerat set får
- * aldrig bli referensvärde, och dess vikt får inte synas någonstans i kortet.**
+ * ⏰ **Den commit som byter `SetRow` till `getSetAverages` skriver om vakten.**
+ * Det som ska överleva omskrivningen är påståendet, inte `data-testid`:t: **ett
+ * importerat set får aldrig bli referensvärde, och dess vikt får inte synas
+ * någonstans i kortet.**
+ *
+ * ✏️ **Här stod att vakten annars blir "grön mot en kolumn som inte finns".
+ * Det stämmer inte, och rättades 2026-08-26 av `/simplify`.** Raden längre ner
+ * mäter `getByTestId('setrad-forra')`. Försvinner testid:t matchar lokatorn noll
+ * element och `toHaveText` **timeoutar** — vakten faller högljutt, den blir
+ * aldrig tyst grön. Påståendet som bär 13.4 står dessutom redan
+ * kolumnoberoende: `not.toContainText('82,5')`, opåverkad av att kolumnen går.
+ *
+ * Varningen står kvar för att omskrivningen ska bli gjord — men prosa som
+ * överdriver risken blir diskonterad, och då tappar de sanna varningarna i det
+ * här filhuvudet i vikt.
  *
  * ⚠️ **TVÅ KODVÄGAR LÄSER `getLastPerformance`, OCH BÅDA MÄTS HÄR.** Det är inte
  * en dubblering utan hela poängen:
