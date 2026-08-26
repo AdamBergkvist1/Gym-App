@@ -983,8 +983,12 @@ nuvarande.
       första ersätts inte av en ikon utan tas bort helt:
 
       ⚠️ **Rubriken sa "sju" fram till 2026-08-14.** Rätt antal är åtta; `⌨` i
-      `TodayPage.tsx:268` saknades i tabellen nedan. Det var 12.28, nu stängd. **Sju av åtta
-      är åtgärdade** — kvar är bara 🏋, som väntar på accentbrickan i steg 4.
+      `TodayPage.tsx:268` saknades i tabellen nedan. Det var 12.28, nu stängd.
+
+      ✅ **ALLA ÅTTA ÄR ÅTGÄRDADE 2026-08-26.** Den sista, 🏋, raderades med hela ikonrutan när
+      B4:s accentbricka byggdes i steg 4.2 del B — som raden nedan sa att den skulle. `src/`
+      innehåller inte längre någon emoji som ikon. Uppmätt kontrast för 🏋 innan den gick:
+      **1,82:1** — den var dessutom det sista kontrastfelet på skärmen utöver timerchipet.
 
       | Fil | Vad | Vad som ska hända |
       |---|---|---|

@@ -205,14 +205,38 @@ html {
 /* Sidrubriker i Fraunces. Regeln ligger på elementet och inte i en klass av
  * samma skäl som tabular-nums nedan: en klass man måste komma ihåg att sätta
  * blir bortglömd, och då blir en sida plötsligt satt i fel typsnitt utan att
- * något går sönder. Rubriker är dessutom det ENDA stället Fraunces får sitta,
- * så en regel på h1 är också en gräns. */
+ * något går sönder. */
 h1 {
   font-family: var(--font-title);
   font-size: var(--text-title);
   /* Fraunces optiska axel: större grad vill ha mindre optisk storlek än
    * förvalet ger, annars blir rubriken bredare än raden under. */
   font-optical-sizing: auto;
+}
+
+/* Övningsnamnet på passkortet. Formen B4 sätter det i Fraunces
+ * (`DESIGN.md` §3 "Vad B4 är", och mockupens `.onamn`), och det är den enda
+ * plats utöver `h1` där typsnittet får sitta.
+ *
+ * ✏️ **Här stod att en regel på `h1` "också är en gräns".** Det stämde inte mot
+ * briefen, som valde Fraunces på övningsnamnet redan 2026-08-12. Gränsen finns
+ * kvar — den går bara vid de här två reglerna i stället för vid elementet.
+ *
+ * ⚠️ **Klass och inte `h2`:** `h2` bär versala etikettrubriker på fem andra
+ * skärmar (Inställningar, Historik, Övningar), och en elementregel hade satt
+ * dem alla i serif.
+ *
+ * ⚠️ **Storleken är `--text-exercise` (17 px), inte mockupens 22 px.** §2:s
+ * skala är den beslutade typografin och namnger uttryckligen tokenet
+ * "övningsnamn på kortet". Mockupen ritades för att jämföra FORM — bricka,
+ * indrag, rubrikplacering — inte för att sätta skalan. */
+.rubrik-serif {
+  font-family: var(--font-title);
+  font-optical-sizing: auto;
+  /* Fraunces saknar tabulära siffror (§0.5). Ofarligt här: ett övningsnamn
+   * innehåller inga tal som ändras. Skulle rubriken någon gång bära en siffra
+   * som räknas är det HÄR problemet uppstår. */
+  letter-spacing: -0.01em;
 }
 
 body {

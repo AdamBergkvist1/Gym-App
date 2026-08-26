@@ -5,6 +5,7 @@ import { SetRow, SET_GRID } from './SetRow';
 import { SetAdjustSheet } from './SetAdjustSheet';
 import { IkonBock, IkonPrickar } from './icons';
 import { getSetAverages } from '../db/history';
+import { formatVolume } from '../lib/steps';
 import { workSetIndices } from '../lib/worksets';
 import type { PlannedExercise } from '../db/plan';
 import type { LocalExercise } from '../db/types';
@@ -71,31 +72,60 @@ export function ExerciseCard({
   const klara = planned.sets.filter((s) => s.loggedSetId !== null).length;
   const aktivt = planned.sets.find((s) => s.id === justerar);
 
+  /**
+   * Metaradens delar: **utrustning · set · volym**, enligt B4.
+   *
+   * Byggs som en lista och fogas ihop, så att en saknad del inte lämnar en
+   * hängande separator. Katalogens `equipment` är gemener (`skivstång`) och
+   * versaliseras här — det är en visning, inte ett datavärde.
+   *
+   * ⚠️ **`staleSince` tar volymens plats när den finns.** De två utesluter inte
+   * varandra tekniskt, men en övning som inte gjorts på åtta veckor har med
+   * största sannolikhet noll volym i dag, och *"senast tränad i oktober 2024"*
+   * är det raden ska säga då. Frågan lämnar ett rått ISO-datum; formateringen
+   * hör till skärmen.
+   */
+  const volym = planned.sets
+    .filter((s) => s.loggedSetId !== null)
+    .reduce((n, s) => n + s.weightKg * s.reps, 0);
+
+  const metarad = [
+    exercise?.equipment ? exercise.equipment[0]!.toUpperCase() + exercise.equipment.slice(1) : null,
+    `${klara} av ${planned.sets.length} set`,
+    snitt?.staleSince
+      ? `senast tränad i ${MÅNAD_ÅR.format(new Date(snitt.staleSince))}`
+      : volym > 0
+        ? `${formatVolume(volym)} kg`
+        : null,
+  ].filter((d): d is string => d !== null);
+
   return (
-    <section className="overflow-hidden rounded-card border border-[var(--color-line)] bg-[var(--color-surface)]">
+    <section className="overflow-hidden rounded-card bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
       <header className="flex items-center gap-3 px-3 py-3">
-        {/* Accentfylld ikonruta. DESIGN.md §0.5, hämtad från Apple Watch-appen.
-            Det här är den enskilt viktigaste ändringen i hela riktningen: den
-            ger färg åt en skärm som annars är svartvit. Färgen bor i små mättade
-            former, inte i texten. */}
+        {/* B4:s ACCENTBRICKA — 10 × 34 px, radie 5, ingen symbol.
+            Måtten är mockupens egna (`11b-form-blandningar.html`, `.B4 .brick`).
+
+            ⛔ **Leta inte efter en skivstångsikon.** Här satt 🏋 fram till
+            2026-08-26, samma tecken för VARJE övning oavsett vad den var — och
+            det var symtomet på att ingen någonsin löst frågan "vilken ikon har
+            en lårcurl". B4 gör frågan onödig i stället för att svara på den:
+            brickan bär identitet och färg utan att påstå något om rörelsen.
+            Sista posten i 11B.0c, och den enda emoji som var kvar i `src/ui/`. */}
         <span
           aria-hidden
-          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-accent)] text-lg"
-        >
-          🏋
-        </span>
+          className="h-[34px] w-[10px] shrink-0 rounded-[5px] bg-[var(--color-accent)]"
+        />
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-exercise font-semibold">
+          <h2 className="rubrik-serif truncate text-exercise font-semibold">
             {exercise?.name ?? 'Okänd övning'}
           </h2>
-          {/* `staleSince` är satt bara när övningen inte tränats på åtta veckor.
-              Då finns inget snitt att visa i raderna, och raden säger i stället
-              NÄR den senast gjordes. Frågan lämnar ett rått ISO-datum;
-              formateringen hör till skärmen, inte till frågan. */}
-          <p className="text-meta text-[var(--color-dim)] tabular-nums">
-            {klara} av {planned.sets.length} set
-            {snitt?.staleSince &&
-              ` · senast tränad i ${MÅNAD_ÅR.format(new Date(snitt.staleSince))}`}
+          {/* B4:s METARAD. Den är inte dekoration — den kompenserar något
+              konkret: när ikonrutan försvann tappade raden sin enda visuella
+              hållpunkt utöver namnet. Metaraden ger tillbaka informationen i
+              text i stället för i en symbol, vilket dessutom säger mer.
+              Se `DESIGN.md` §3 "Metaraden är ny och kompenserar något konkret". */}
+          <p className="truncate text-meta text-[var(--color-dim)] tabular-nums">
+            {metarad.join(' · ')}
           </p>
         </div>
         <button
