@@ -1009,7 +1009,7 @@ det är den enda densitetsvinst som inte kostar träffsäkerhet.
 @theme {
   --text-set: 1.5rem;        /* 24px */
   --text-timer: 2rem;        /* 32px */
-  --text-title: 1.375rem;    /* 22px */
+  --text-title: 1.875rem;    /* 30px — se rättelsen nedan, INTE 22 */
   --text-exercise: 1.0625rem;/* 17px */
   --text-body: 0.9375rem;    /* 15px */
   --text-meta: 0.8125rem;    /* 13px */
@@ -1020,6 +1020,16 @@ det är den enda densitetsvinst som inte kostar träffsäkerhet.
 
 body { font-variant-numeric: tabular-nums; }
 ```
+
+> ✏️ **RÄTTAT 2026-08-26: blocket ovan sa `1.375rem` (22 px) för `--text-title`.**
+> Det motsade §0.5 rad 530 — *"sidrubriken går från 22 till 30 px"*, avgjort 2026-08-05 —
+> och `src/index.css`, som har haft 30 px sedan dess. **Koden hade rätt, det här blocket
+> släpade.**
+>
+> Hittat när steg 4.1 skulle läsa tokens ur briefen. Hade jag följt blocket bokstavligt hade
+> tokenbytet sänkt sidrubriken tillbaka till en storlek som redan förkastats — och det hade
+> sett ut som ett designbeslut. **Samma klass av fel som `/code-review` hittade 2026-08-25
+> när `SPEC.md` sa 2,5 kg rakt av: en brief som säger emot sig själv är sämre än ingen.**
 
 **Klart när** (11B.1): ingen komponent sätter egen textstorlek — all typografi kommer från
 token.

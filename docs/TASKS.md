@@ -1573,6 +1573,56 @@ gäller, och uppgiften skrivs om.
 > **11B.5 (rörelse) ligger utanför runda 1** — referensstöd saknas, och animationer ändrar
 > ingen struktur och kan därför läggas till i efterhand. Uppgiften står kvar oförändrad.
 
+> ### ⚠️ NUMRERINGSKROCK. Skriv alltid ut ordet "Steg"
+>
+> **`Steg 4.1` och `4.1` är två olika uppgifter i det här dokumentet.** `4.1 Typerna` på
+> rad 286 hör till **Fas 4, parsern**, och är klar sedan länge. `Steg 4.1` nedan är
+> designrundans första delsteg och kommer ur `DESIGN.md` §"Implementationsordning för steg 4".
+>
+> Krocken uppstod för att briefen numrerar sina egna steg 4.1–4.6 medan `TASKS.md` numrerar
+> faser. Den löses billigast genom att alltid skriva ut ordet — inte genom att numrera om
+> något av dem, vilket hade brutit varenda korsreferens i båda dokumenten.
+
+- [ ] **Steg 4.1 Tokens: appen byter från det mörka temat till Bläck. Ny 2026-08-26.**
+      Designrundans första delsteg. **Inget nytt designbeslut fattas här** — allt är avgjort
+      och godkänt av Adam: karaktären *Bläck* 2026-08-12 (`DESIGN.md` §0.5), semantikens
+      **väg C** 2026-08-14 (§1b), formen **B4** 2026-08-12 (§3), Fraunces 2026-08-12.
+      Uppgiften är att flytta de värdena in i koden.
+
+      ⚠️ **Appen kör i dag hela det överspelade mörka lime-temat.** `src/index.css` har
+      `--color-bg: #000000` och `--color-accent: #bef264`, alltså den riktning §0.5 uttryckligen
+      märker som historik. Det är därför tokens måste gå **före** Pass-skärmen: bygger man
+      skärmen först bygger man den mot färger som ändå ska bytas.
+
+      **Mätt före start, så omfånget inte gissas:** hela `src/` innehåller **en enda** hårdkodad
+      färg (`bg-black/60`, skärmen bakom bottenarket i `SetAdjustSheet.tsx:65`). Allt annat går
+      via tokens. 14 färgtokens refereras i koden, 8 är definierade utan att användas — och
+      `--color-pb-text`, som väg C tar bort, är en av de oanvända. Bytet är alltså ett
+      tokenbyte, inte en genomgång av varje komponent.
+
+      | Vad | Från | Till |
+      |---|---|---|
+      | Neutraler + accent | Svart/lime | Papper `#F0EBE1`, kort `#FFFFFF`, marinblå `#2B4570` |
+      | Semantiska färger | §1:s mörka skalor | §1b väg C — betydelsen bärs av **yta + kant**, texten är `--color-fg` |
+      | `--radius-card` | 16 px | **18 px** (§0.5 formspråk) |
+      | Fraunces | Fontfilen ligger i repot sedan 2026-08-12 | `@font-face` i `index.css` + token som pekar rubrikerna dit |
+      | PWA-temafärg | `#000000` på **två** ställen | Papperets färg |
+
+      ⛔ **Temafärgen bor på tre ställen och ett av dem är redan ur synk.**
+      `vite.config.ts:34-35` (manifestet) och `index.html:12` (`<meta name="theme-color">`)
+      måste båda ändras — §0.5 rad 477 säger uttryckligen *i samma commit*, annars blir
+      startskärmen och statusraden en annan färg än appen. `test/manifest.json` står kvar på
+      `#0a0a0a`, ett värde appen lämnade redan när den var mörk; **den är en död testrigg från
+      fas 3 och rörs inte här** — men den är värd en egen rad i backloggen.
+
+      ⚠️ **Tonade ytor ligger ALLTID på ett vitt kort, aldrig direkt på papperet** (§1b fynd 3).
+      Mot papperet mäter de 1,04–1,09:1 och försvinner — mindre än kortets egen separation.
+
+      **Klart när:** appen renderar i ljust tema utan kvarvarande mörka värden; alla fem grindar
+      gröna; och skärmarna är **visuellt kontrollerade i webbläsaren**, inte bara byggda. Det
+      sista är inte formalia — kontrastvärdena i briefen är uppmätta mot rätt underlag, men
+      *vilket* underlag varje token faktiskt hamnar på syns bara när sidan renderas.
+
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
       **Klart när:** skalan är definierad i `index.css` och ingen komponent sätter egen storlek.
