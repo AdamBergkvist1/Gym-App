@@ -1663,6 +1663,25 @@ gäller, och uppgiften skrivs om.
       som är det minsta steg som uppfyller kravet. **Adam avgör.** Alternativet är att skriva om
       briefens krav i stället, men då ska det stå varför.
 
+      🔴 **EN REGRESSION INFÖRDES OCH RÄTTADES I SAMMA OMGÅNG — mekanismen är värd att bära
+      vidare.** Vilotimerns utgångna läge ritade sin text med `text-[var(--color-bg)]` ovanpå
+      `--color-ok-solid`. Raden ändrades aldrig, men **tokenens innebörd bytte med temat**:
+      svart på grönt var 6,07:1, papper på grönt är **2,66:1**. Rättat till vit text enligt väg
+      C:s egen parning solid + vit glyf, uppmätt **3,16:1** — de 32 px stora siffrorna klarar
+      därmed kravet för stor text (3:1).
+
+      ⚠️ **Kvar till 4.2:** etiketten *"Vila klar"* är 14 px och ligger på **3,16:1** mot
+      kravet **4,5:1** för liten text. Det är inte en följd av tokenbytet utan av att en fylld
+      semantisk yta används som **banderollbakgrund för brödtext**, vilket väg C aldrig
+      sanktionerade — solid är till för en glyf. Timerchipet byggs om i 4.2 (`DESIGN.md` §3.1),
+      och den omskrivningen ska lösa det här, inte lämna det.
+
+      💡 **Lärdomen, som gäller bortom den här uppgiften:** ett temabyte kan gå sönder utan att
+      en enda rad i komponenten ändras. Både de tre osynliga kanterna och timern var rader som
+      var korrekta före bytet och fel efter, och **ingen av dem syns i ett diff eller fälls av
+      en grind.** Det enda som hittade dem var att rendera appen och mäta kontrasten
+      programmatiskt i DOM:en. Gör om den mätningen efter 4.2 och 4.3.
+
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
       **Klart när:** skalan är definierad i `index.css` och ingen komponent sätter egen storlek.

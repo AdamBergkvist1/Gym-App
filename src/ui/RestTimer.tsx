@@ -20,8 +20,13 @@ export function RestTimer() {
       aria-live={expired ? 'assertive' : 'off'}
       className={[
         'rounded-lg border p-3 transition-colors',
+        // VIT text på den fyllda ytan, inte --color-bg. Väg C parar alltid en
+        // solid med en vit glyf, och skälet är mätbart: mot papperet gav
+        // --color-bg bara 2,66:1 här. Mot svart, som tokenen betydde före
+        // steg 4.1, var samma rad 6,07:1 — färgen bytte innebörd med temat
+        // utan att raden ändrades.
         expired
-          ? 'border-[var(--color-ok-solid)] bg-[var(--color-ok-solid)] text-[var(--color-bg)]'
+          ? 'border-[var(--color-ok-solid)] bg-[var(--color-ok-solid)] text-white'
           : 'border-[var(--color-line)] bg-[var(--color-surface)]',
       ].join(' ')}
     >
