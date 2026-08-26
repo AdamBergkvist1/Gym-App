@@ -5,7 +5,137 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ---
 
-## 🆕 2026-08-26 — `/simplify` kördes, och appen är LJUS. Nästa jobb är steg 4.2
+## 🆕 2026-08-26 (sent) — STEG 4.2 ÄR KLAR. Pass-skärmen står i B4 + 2B. Nästa jobb är 4.3 Historik
+
+### 🔴 SEX COMMITS ÄR **INTE** PUSHADE. Det första du bör göra
+
+```bash
+git fetch origin && git status -sb
+```
+
+Vid sessionens slut svarade det `## main...origin/main [ahead 6]` — verifierat efter en färsk
+`fetch`. **Commiterna `edb1844..ed4a22e` ligger bara lokalt.** De pushades inte för att en
+push är utåtriktad och Adam inte hade bett om den; Vercel bygger om automatiskt vid push till
+`main`, så pushen är också publiceringen.
+
+**Adam har inte sett skärmen på sin telefon än.** Det är kvar att göra.
+
+### Vad som byggdes
+
+| Del | Vad | Commit |
+|---|---|---|
+| **A** | Snittet ersätter `FÖRRA`, form 2B. Delad `workSetIndices`. Vakt 5 omskriven | `15bccb7` |
+| **B** | B4:s accentbricka, metarad, skugga, Fraunces. **Sista emojin borta** | `ea9d368` |
+| **C** | Timerchipet efter väg C. Kontrastskulden betald | `d037109` |
+| **D** | `±`-knapparna följer utrustningen | `831be80` |
+| **E** | Långtryck förklarar snittalen | `ed4a22e` |
+
+**Läs `TASKS.md` `Steg 4.2` för detaljerna, inte den här filen.** Uppgiften skrevs först
+(`edb1844`) eftersom den bara fanns som utspridda beslut i tre dokument.
+
+### 🔴 DET VIKTIGASTE ATT BÄRA VIDARE: två vakter var TYSTA GRÖNA, och båda hittades genom sabotage
+
+Förra sessionens lärdom var *"rendera appen och mät"*. Den höll — men den här sessionen
+visade en andra klass av samma problem: **tester som ser ut att mäta något och inte gör det.**
+
+1. **Vakt 5 mätte fel filter.** Det seedade importerade setet låg på `2024-04-04`, alltså över
+   två år tillbaka. Det dög när kolumnen drevs av `getLastPerformance`, som saknar
+   åldersgräns — men `getSetAverages` har en på åtta veckor. **Saboterades importfiltret stod
+   vakten grön ändå**, för att åldersgränsen tog setet i stället.
+2. **Långtrycksvakten var tyst grön i sin första form**, och det dolde ett verkligt
+   designfel: infobrickans `fixed inset-0`-overlay dök upp **under fingret medan det låg
+   nere**, så `pointerup` hamnade på overlayen och `click` uteblev helt. Klickspärren blev
+   omätbar.
+
+**Regeln som faller ut, och den gäller bortom det här steget:** *när en konsument byter
+datakälla ärver den källans alla filter, och ett test som var ärligt mot den gamla källan kan
+bli tyst grönt mot den nya.* **Sabotera om varje vakt vars källa bytt.** Det syns inte i ett
+diff.
+
+### 🔴 Näst viktigast: mätskriptet ljög innan det kontrollerades
+
+Kontrastskriptet läste `oklab(0.94 … / 0.4)` med en RGB-regex och rapporterade **tre falska
+fel** på kolumnrubrikerna. Hade jag trott på det hade jag "fixat" rader som var korrekta.
+Rättat till **canvas-kompositering**, som hanterar både alfa och moderna färgrymder — sätt
+bottenfärgen, måla färgen ovanpå, läs pixeln.
+
+**Använd den varianten, inte en egen regex.** Den ligger utskriven i den här sessionens
+transkript och principen är: låt webbläsaren göra färgmatten.
+
+### ✅ Grindarna — ALLA FEM I SLUTLÄGET 2026-08-26, hemdatorn
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **302 tester i 25 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ JS **641,78 kB** (gzip 193,14), precache **722,92 KiB / 10 entries** |
+| `npm run e2e` | ✅ **66 passed**, 50,9 s |
+
+**Kontrasten uppmätt i DOM:en: noll fel på passkärmen**, med infobrickan öppen och med en
+bekräftad rad. Snittalen 5,43:1 på vitt kort och 4,85:1 på bekräftad rad — den snävaste
+marginalen i formen. *"Vila klar"* gick 3,16 → **15,61:1**.
+
+✏️ **Rättelse till `15bccb7`:s commit-meddelande.** Det säger *"301 tester"*. Rätt siffra i det
+läget var **300** — 294 + 4 (`worksets`) + 1 (kontraktstestet) + 1 (`excludeWorkoutId`).
+Historiken skrivs inte om för det; siffran står rätt här och i `TASKS.md`.
+
+### 🔜 NÄSTA JOBB: STEG 4.3 — Historik
+
+Sista delsteget i runda 1. **Runda 2 (4.4 Statistik, 4.5 Övningar, 4.6 Mer) kräver en egen
+grillning** — det är ny funktionalitet, inte omskrivning. Se rutan i `TASKS.md` 11B.
+
+**Gör om kontrastmätningen efter 4.3.** Samma metod, canvas-varianten.
+
+### ⏰ Fyra öppna trådar, alla medvetna
+
+1. **Långtrycket är enda vägen till förklaringen av snittalen** tills **11B.6** bygger
+   engångsförklaringen. Accepterat av Adam med öppna ögon — han är appens enda användare.
+2. **`--color-ok-text` används som KANT i timerchipet**, inte `--color-ok-line`. Briefens
+   kanttoken är uppmätt mot **vitt kort** (3,55:1); chipet ligger på **papperet**, där samma
+   värde ger **2,99:1** — under kravet. `--color-ok-text` ger 5,50 ut och 5,83 in. **Värt att
+   avgöra i 4.3:** ska briefen ha en egen kanttoken för element som ligger direkt på papperet?
+   Frågan kommer tillbaka så fort Historik lägger ett semantiskt element utanför ett kort.
+3. **`getSetAverages` gör fortfarande ett eget `exercises.get()`.** Punkt 2 i
+   `/simplify`-listan (11B.0f) är alltså **inte** åtgärdad. Latent i dag, skarp när fas 7:s
+   synk-pull skriver `exercises`.
+4. **Steg 4.1:s ruta står obockad.** Alla tre kriterier i dess **Klart när** ser uppfyllda ut,
+   men rutan var inte min att bocka av. Enda kandidaten till skäl:
+   `apple-mobile-web-app-status-bar-style` är fortfarande **overifierad**. Se punkten nedan.
+
+### 🖥️ Så visar du Adam något — oförändrat sedan förra sektionen
+
+- **Produktionen:** `https://adam-gym-app.vercel.app` — Vercel bygger om automatiskt vid push
+  till `main`. **Men se rutan överst: ingenting är pushat.**
+- **Skärmbilder:** webbläsarpanelen i `preset: mobile` (375×812).
+- **Xcodes simulator:** ⏰ fortfarande inte installerad. Adam kör **macOS 15.7.2**;
+  App Store-versionen kräver **26.2**. Kommandot efteråt kräver hans lösenord.
+- ⚠️ **`apple-mobile-web-app-status-bar-style` är fortfarande OVERIFIERAD.** Den gäller bara
+  iOS i standalone-läge — lägg till på hemskärmen och starta därifrån. Varken Playwright,
+  skrivbordet eller webbläsarpanelen kan pröva den. **Be Adam titta.**
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/code-review`** | ✅ Har bevisat sitt värde tre gånger. **Kör den på steg 4.2 innan 4.3 börjar** — fem commits rörde setraden, kortet, timern, arket och en ny gest |
+| **`/simplify`** | Efter 4.3. Bevisade sitt värde 2026-08-26 med ett uppmätt fynd |
+| **`/tdd`** | Till 4.3:s logik. Fungerade bra i 4.2 del A och D — men notera att de två sista `worksets`-testerna gick gröna direkt och alltså inte drev implementationen; det står utskrivet i filen |
+| **`/diagnosing-bugs`** | När något faller — även när det ser ut som flakighet |
+
+---
+
+## 2026-08-26 — `/simplify` kördes, och appen är LJUS. Nästa jobb är steg 4.2 — DELVIS ÖVERSPELAD
+
+> **⚠️ Två saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "Allt är pushat" gällde vid den sektionens slut, inte nu.** Sex commits från steg 4.2
+> ligger opushade — se sektionen överst.
+>
+> **(2) "NÄSTA JOBB: STEG 4.2" är utfört.** Steg 4.2 är klar i sin helhet, inklusive alla fem
+> punkterna i dess lista och de två extra sakerna (`staleSince` och *"Vila klar"*). Nästa jobb
+> är **4.3 Historik**. Grindtabellen längre ner i sektionen är också överspelad — 302 tester
+> och 66 e2e, inte 294 och 60.
 
 ### ✅ Allt är pushat. Kontrollera själv
 
