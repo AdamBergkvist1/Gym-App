@@ -1682,6 +1682,135 @@ gäller, och uppgiften skrivs om.
       en grind.** Det enda som hittade dem var att rendera appen och mäta kontrasten
       programmatiskt i DOM:en. Gör om den mätningen efter 4.2 och 4.3.
 
+- [ ] **Steg 4.2 Pass-skärmen mot B4 + 2B. Ny 2026-08-26.**
+      Designrundans andra delsteg, och den skärm appen används mest på. **Inget nytt
+      designbeslut fattas här** — formen **B4** valdes 2026-08-12, snittets form **2B**
+      2026-08-19, kopplingen vikt/reps och viktsteget 2026-08-25, långtrycket 2026-08-26.
+      Uppgiften är att flytta besluten in i koden.
+
+      **Läs `DESIGN.md` §3.1 och `11B.0f` ovan för *varför*, inte den här rutan.** Här står
+      vad som byggs, i vilken ordning, och vad varje del är klar när.
+
+      ⚠️ **Uppgiften byggs INTE i en commit.** Regel 3 i `CLAUDE.md` — atomära commits. De
+      fem delarna nedan är fem commits, och ordningen är inte godtycklig: A bär hela rundans
+      tyngsta ändring och den enda kvarvarande snubbeltråden, resten är renodlad form.
+
+      ---
+
+      **A. Snittet ersätter `FÖRRA` i setraden. Formen är 2B.**
+      Det här är rundans tyngsta ändring och den enda som rör datavägen.
+
+      | Vad | Från | Till |
+      |---|---|---|
+      | Kolumnen `Förra` | Egen kolumn i `SET_GRID`, driven av `getLastPerformance` | **Borta.** Snittvikten under vikten, snittrepsen under repsen (`--text-meta`, `--color-dim`) |
+      | Datakälla i kortet | `getLastPerformance` | `getSetAverages` (byggd och testad 2026-08-25) |
+      | `staleSince` | Rått ISO-datum | *"senast tränad i \<månad år\>"* — formateringen hör till skärmen, inte till frågan |
+
+      ⛔ **`workSetIndex` får INTE räknas ad hoc i skärmen.** `ExerciseCard.tsx:153` skickar
+      i dag `index={i}` rakt ur `planned.sets.map()`, alltså radens plats **inklusive
+      uppvärmning**, medan `getSetAverages` numrerar bland arbetsseten. Kopplas snittet till
+      radens ordinal visas set 2:s snitt på set 1:s rad så fort en uppvärmningsrad ligger
+      överst — **tyst, utan att ett enda test bryts.** Det är exakt buggklassen `e02abf1`
+      fixade, flyttad över komponentgränsen.
+
+      **Åtgärden är en delad härledning som båda sidor anropar**, inte två räkningar som ska
+      råka stämma. Kopplingen ska vara kod, inte prosa i en doc-kommentar. Signaturen avgörs
+      när funktionen skrivs — skälet skrivs ut i filen.
+
+      ⛔ **Vakt 5 i `e2e/passvy.spec.ts` skrivs om i SAMMA commit.** Det är det andra av
+      11B.0f:s två `Klart när`-kriterier och skälet rutan står obockad. **Det som ska överleva
+      omskrivningen är påståendet, inte `data-testid`:t:** ett importerat set får aldrig bli
+      referensvärde, och dess vikt får inte synas någonstans i kortet. Ankringen i 5a — en
+      övning med känd historik bredvid — måste överleva; utan den betyder en tom cell
+      ingenting. Vakten raderas inte.
+
+      ✅ **Bocka av 11B.0f i samma commit.** Då, och först då, är dess `Klart när` uppfyllt.
+
+      **Klart när:** kortet driver setraderna ur `getSetAverages`, `setrad-forra` finns inte
+      kvar någonstans, härledningen av arbetssetnummer har ett eget test som går rött om
+      uppvärmningsraden räknas in, vakt 5 mäter den nya formen, och `staleSince` visas som
+      månad och år.
+
+      ---
+
+      **B. Kortets form: B4, och 🏋 raderas.**
+      Sista posten i **11B.0c** — den enda emoji som är kvar i `src/ui/`.
+
+      - **Accentbricka** 10 × 34 px, radie 5 px, `--color-accent`, till vänster om namnet.
+        **Ingen symbol i den.** Hela `<span>`-rutan på `ExerciseCard.tsx:62-67` går bort;
+        leta inte efter en skivstångsikon — B4 gör frågan *"vilken ikon har en lårcurl"*
+        onödig i stället för att svara på den.
+      - **Metaraden** under namnet: `Skivstång · 3 set · 1 385 kg`. Den kompenserar något
+        konkret — när ikonrutan försvann tappade raden sin enda visuella hållpunkt utöver
+        namnet. I dag står där `{klara} av {n} set · sist 90 kg × 5`.
+      - **Ytan:** vit, radie 18 px (`--radius-card`, redan satt i 4.1), **skugga
+        `--shadow-card` i stället för ram**, indragen 16 px. Se `DESIGN.md` §"Genomgående
+        mönster" — på ljus botten bär skuggan avgränsningen, separationen mot papperet är
+        bara 1,19:1.
+      - Övningsnamnet i Fraunces.
+
+      **Klart när:** `grep -rn "🏋" src/` är tom, 11B.0c:s sista rad är därmed uppfylld, och
+      kortet ser ut som B4-skissen i `DESIGN.md` §3.1 — visuellt kontrollerat, inte antaget.
+
+      ---
+
+      **C. Timerchipet byggs om, och det löser en kontrastskuld 4.1 lämnade.**
+      Etiketten *"Vila klar"* är 14 px på `--color-ok-solid` och mäter **3,16:1** mot 4,5:1
+      för liten text. **Skulden är inte en följd av tokenbytet** utan av att en fylld semantisk
+      yta används som **banderollbakgrund för brödtext** — väg C sanktionerade solid för *en
+      glyf*, inte för en textrad. Chipet byggs om ändå (`DESIGN.md` §3.1), och omskrivningen
+      ska lösa det här, inte lämna det vidare.
+
+      Formen: **en chip i flödet, inte ett banderoll-lager** — timern får inte skymma setraden
+      man just loggat. Siffran är 32 px (`--text-timer`), alltså en *stor* chip.
+
+      **Klart när:** varje text i chipet är uppmätt i DOM:en mot sitt faktiska underlag och
+      klarar sitt krav för sin storlek — 4,5:1 under 24 px, 3:1 över.
+
+      ---
+
+      **D. `±`-knapparna följer utrustningsregeln.**
+      `SetAdjustSheet.tsx` hårdkodar `−1 / −2,5 / +2,5 / +1`. `weightStepFor` finns sedan
+      2026-08-25 (`src/lib/steps.ts:58`) och ska styra dem, så att hantelövningar får `+1`
+      som huvudsteg. Adam 2026-08-26: *"dom får vi ta när det steget kommer."*
+
+      **Klart när:** stegen härleds ur övningens `equipment` genom samma funktion som snittets
+      avrundning, och ett test visar att en hantelövning och en skivstångsövning får olika steg.
+
+      ---
+
+      **E. Långtryck förklarar snittalen.**
+      Adams beslut 2026-08-26: *"Långtryck är bra allmänt annars."* Det kostar noll permanent
+      yta, vilket är samma skäl som gjorde att 2B vann.
+
+      ⚠️ **Engångsförklaringen hör INTE hit** — den ligger i **11B.6**, och skälet är konkret:
+      ögonblicket finns inte, appen har varken registrering eller förstagångsflöde.
+      **Följden, accepterad med öppna ögon:** långtrycket är ett tag den enda vägen till
+      förklaringen, och det är osynligt tills man hittar det.
+
+      🔍 **§7.1 gäller: sök innan du bygger.** Långtryck är rundans enda *nya* funktion. Det
+      finns ingen plattformsprimitiv som gör det rakt av, men det är ett löst problem med
+      kända fällor — **den krockar med systemets egen textmarkering och med iOS
+      callout-menyn om den byggs slarvigt.** Redovisa vad sökningen gav innan första raden
+      skrivs, även om svaret blir "inget som passar".
+
+      **Klart när:** långtryck på ett snittal visar vad talet är, det fungerar med
+      pekskärmens egen textmarkering i stället för mot den, och en mus-/tangentbordsväg finns
+      för Playwright att mäta.
+
+      ---
+
+      ### Gemensamt slutvillkor för hela steg 4.2
+
+      🔴 **Mät kontrasten i DOM:en när skärmen är byggd.** Det är inte formalia. Steg 4.1
+      lämnade fyra fel som **inga av de fem grindarna fångade** — raderna var korrekta före
+      temabytet och fel efter, för att tokens *innebörd* ändrades under dem. Det enda som
+      hittade dem var att rendera appen och mäta programmatiskt med `javascript_tool`.
+      Metoden står i `Steg 4.1` ovan.
+
+      **Alla fem grindar gröna**, och skärmen **visuellt kontrollerad i `preset: mobile`**
+      (375 × 812) — inte bara byggd.
+
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
       **Klart när:** skalan är definierad i `index.css` och ingen komponent sätter egen storlek.
