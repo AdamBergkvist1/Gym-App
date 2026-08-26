@@ -6,6 +6,7 @@ import {
   endWorkout,
   ensureCatalog,
   logSet,
+  type LogSetInput,
   startWorkout,
   summarizeWorkout,
 } from './repo';
@@ -264,20 +265,29 @@ describe('11B.0f snittet per setnummer', () => {
   beforeEach(() => vi.useFakeTimers({ toFake: ['Date'], now: NU }));
   afterEach(() => vi.useRealTimers());
 
-  /** Ett avslutat pass `dagarSedan` dagar tillbaka, med seten i ordning. */
+  /**
+   * Ett avslutat pass `dagarSedan` dagar tillbaka, med seten i ordning.
+   *
+   * Tredje elementet i tupeln är `isWarmup`/`source` för det enskilda setet.
+   * Utan det skrev varje test som behövde en uppvärmning eller en importerad
+   * rad ut hela sekvensen `setSystemTime → startWorkout → logSet* → endWorkout
+   * → setSystemTime(NU)` för hand — och den sista raden är lätt att glömma i
+   * nästa kopia, vilket lämnar klockan bakåtställd för resten av filen.
+   */
   async function pass(
-    setLista: Array<[weightKg: number, reps: number]>,
+    setLista: Array<
+      [weightKg: number, reps: number, extra?: Pick<LogSetInput, 'isWarmup' | 'source'>]
+    >,
     dagarSedan: number,
     exerciseId = BENK
   ) {
     vi.setSystemTime(new Date(NU.getTime() - dagarSedan * DYGN));
     const w = await startWorkout(db);
-    for (const [weightKg, reps] of setLista) {
-      await logSet({ workoutId: w.id, exerciseId, weightKg, reps }, db);
+    for (const [weightKg, reps, extra] of setLista) {
+      await logSet({ workoutId: w.id, exerciseId, weightKg, reps, ...extra }, db);
     }
     await endWorkout(db);
     vi.setSystemTime(NU);
-    return w;
   }
 
   it('snittar vikten per setnummer, inte över alla set i en klump', async () => {
@@ -382,13 +392,14 @@ describe('11B.0f snittet per setnummer', () => {
   });
 
   it('räknar inte uppvärmningsset som underlag', async () => {
-    vi.setSystemTime(new Date(NU.getTime() - 7 * DYGN));
-    const w = await startWorkout(db);
-    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
-    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
-    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 85, reps: 5 }, db);
-    await endWorkout(db);
-    vi.setSystemTime(NU);
+    await pass(
+      [
+        [40, 10, { isWarmup: true }],
+        [90, 5],
+        [85, 5],
+      ],
+      7
+    );
 
     const { sets } = await getSetAverages(BENK, db);
 
@@ -407,12 +418,14 @@ describe('11B.0f snittet per setnummer', () => {
   it('jämför arbetsset med arbetsset även när bara det ena passet har uppvärmning', async () => {
     // Pass A: uppvärmning + två arbetsset. `logSet` numrerar uppvärmningen som
     // set 0, så arbetsseten hamnar på lagrat index 1 och 2.
-    vi.setSystemTime(new Date(NU.getTime() - 14 * DYGN));
-    const a = await startWorkout(db);
-    await logSet({ workoutId: a.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
-    await logSet({ workoutId: a.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
-    await logSet({ workoutId: a.id, exerciseId: BENK, weightKg: 85, reps: 5 }, db);
-    await endWorkout(db);
+    await pass(
+      [
+        [40, 10, { isWarmup: true }],
+        [90, 5],
+        [85, 5],
+      ],
+      14
+    );
 
     // Pass B: ingen uppvärmning. Arbetsseten hamnar på lagrat index 0 och 1.
     await pass(
@@ -440,6 +453,12 @@ describe('11B.0f snittet per setnummer', () => {
   });
 
   it('räknar inte raderade set som underlag', async () => {
+    // ⚠️ Skrivs med flit ut för hand, till skillnad från testerna ovan.
+    // `pass()` kan inte bära det här fallet: raderingen sker MITT I passet, före
+    // `endWorkout`, precis som när användaren ångrar en felskrivning där och
+    // då. Låter man hjälparen logga färdigt först flyttas raderingen efter
+    // passets slut och setets `updatedAt` blir NU — ett annat scenario än det
+    // testet påstår sig mäta.
     vi.setSystemTime(new Date(NU.getTime() - 7 * DYGN));
     const w = await startWorkout(db);
     await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
@@ -456,15 +475,13 @@ describe('11B.0f snittet per setnummer', () => {
   });
 
   it('räknar aldrig importerade set som underlag — samma regel som 13.4', async () => {
-    vi.setSystemTime(new Date(NU.getTime() - 7 * DYGN));
-    const w = await startWorkout(db);
-    await logSet(
-      { workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 1, source: 'import' },
-      db
+    await pass(
+      [
+        [90, 1, { source: 'import' }],
+        [80, 5],
+      ],
+      7
     );
-    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 80, reps: 5 }, db);
-    await endWorkout(db);
-    vi.setSystemTime(NU);
 
     const { sets } = await getSetAverages(BENK, db);
 
@@ -530,14 +547,7 @@ describe('11B.0f snittet per setnummer', () => {
   });
 
   it('ger tomt utan datum när övningens enda set är importerade — inte "senast tränad"', async () => {
-    vi.setSystemTime(new Date(NU.getTime() - 400 * DYGN));
-    const w = await startWorkout(db);
-    await logSet(
-      { workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 1, source: 'import' },
-      db
-    );
-    await endWorkout(db);
-    vi.setSystemTime(NU);
+    await pass([[90, 1, { source: 'import' }]], 400);
 
     const { sets, staleSince } = await getSetAverages(BENK, db);
 
