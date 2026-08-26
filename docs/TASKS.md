@@ -1702,13 +1702,26 @@ gäller, och uppgiften skrivs om.
       sanktionerade — solid är till för en glyf. Timerchipet byggs om i 4.2 (`DESIGN.md` §3.1),
       och den omskrivningen ska lösa det här, inte lämna det.
 
+      ✅ **LÖST 2026-08-26 i steg 4.2 del C. Uppmätt 3,16 → 15,61:1.** Det utgångna läget bär
+      nu yta + kant med `--color-fg` som text, alltså väg C:s egen regel, och det solida
+      flyttade till en fylld prick — som är vad en solid får bära.
+
+      ⏰ **RUTAN STÅR OBOCKAD, OCH DEN SOM BYGGDE 4.2 LÄT DEN VARA.** Alla tre kriterier i
+      **Klart när** ser uppfyllda ut: appen är ljus, grindarna var gröna, skärmarna
+      kontrollerades i webbläsaren. **Men rutan är inte min att bocka av** — jag vet inte om
+      föregående session lämnade den öppen med flit. Den enda kandidaten jag hittar är att
+      `apple-mobile-web-app-status-bar-style` fortfarande är **overifierad**; den gäller bara
+      iOS i standalone-läge och kan varken prövas av Playwright, skrivbordet eller
+      webbläsarpanelen. **Adam avgör:** lägg till appen på hemskärmen, starta därifrån och
+      titta på statusraden — stämmer den är rutan klar.
+
       💡 **Lärdomen, som gäller bortom den här uppgiften:** ett temabyte kan gå sönder utan att
       en enda rad i komponenten ändras. Både de tre osynliga kanterna och timern var rader som
       var korrekta före bytet och fel efter, och **ingen av dem syns i ett diff eller fälls av
       en grind.** Det enda som hittade dem var att rendera appen och mäta kontrasten
       programmatiskt i DOM:en. Gör om den mätningen efter 4.2 och 4.3.
 
-- [ ] **Steg 4.2 Pass-skärmen mot B4 + 2B. Ny 2026-08-26.**
+- [x] **Steg 4.2 Pass-skärmen mot B4 + 2B. Ny 2026-08-26. KLAR 2026-08-26.**
       Designrundans andra delsteg, och den skärm appen används mest på. **Inget nytt
       designbeslut fattas här** — formen **B4** valdes 2026-08-12, snittets form **2B**
       2026-08-19, kopplingen vikt/reps och viktsteget 2026-08-25, långtrycket 2026-08-26.
@@ -1836,6 +1849,47 @@ gäller, och uppgiften skrivs om.
 
       **Alla fem grindar gröna**, och skärmen **visuellt kontrollerad i `preset: mobile`**
       (375 × 812) — inte bara byggd.
+
+      ---
+
+      ✅ **BYGGD 2026-08-26 i fem commits, som planerat.** Grindar i slutläget: **302 tester**,
+      typecheck rent, lint **0 fel** (3 kända `react-refresh`-varningar), **e2e 66 passed**,
+      bygge **722,92 KiB precache** / JS 641,78 kB (gzip 193,14).
+
+      🔴 **MÄTNINGEN BETALADE SIG IGEN, OCH DEN HITTADE TVÅ TYSTA VAKTER — INTE BARA FÄRGER.**
+      Lärdomen från 4.1 var att rendera och mäta. I 4.2 gav samma metod tre fynd som **ingen av
+      de fem grindarna** hade fällt:
+
+      1. **Vakt 5 mätte fel filter.** Se 11B.0f ovan — två filter maskerade varandra efter
+         källbytet, och sabotage av importfiltret lämnade vakten grön.
+      2. **Långtrycksvakten var tyst grön i sin första form.** Infobrickans `fixed inset-0`-
+         overlay dök upp **under fingret medan det låg nere**, så `pointerup` hamnade på
+         overlayen och `click` uteblev helt. Klickspärren i `useLongPress` blev därmed omätbar
+         — sabotage av den ändrade ingenting. Overlayen är borttagen; brickan stängs nu av
+         nästa `pointerdown` på document, och sabotaget fäller vakten.
+      3. **Mitt eget mätskript ljög först.** Det läste `oklab(0.94 … / 0.4)` med en
+         RGB-regex och rapporterade tre falska kontrastfel på kolumnrubrikerna. Rättat till
+         canvas-kompositering, som hanterar både alfa och moderna färgrymder. **En mätning som
+         inte själv är kontrollerad är inte ett bevis** — och den hade sänt mig att "fixa"
+         rader som var korrekta.
+
+      ⏰ **Ett hål i `getSetAverages` hittades när konsumenten byggdes:** ingen
+      `excludeWorkoutId`, så det pågående passets egna set räknades in i sitt eget
+      referensvärde. Se 11B.0f. **Regeln som faller ut: en fråga utan konsument är inte
+      färdig, den är bara oprövad.**
+
+      📋 **Fyra öppna trådar lämnas vidare, alla medvetet:**
+
+      1. **Långtrycket är enda vägen till förklaringen** tills **11B.6** bygger
+         engångsförklaringen. Accepterat av Adam med öppna ögon.
+      2. **`--color-ok-text` används som kant** i timerchipet, inte `--color-ok-line`. Skälet
+         är uppmätt och står i `RestTimer.tsx` — briefens kanttoken är mätt mot vitt kort och
+         chipet ligger på papperet. **Värt att avgöra i 4.3** om briefen ska få en egen
+         kanttoken för element som ligger direkt på papperet.
+      3. **`getSetAverages` gör fortfarande ett eget `exercises.get()`** för att få
+         `equipment`. Punkt 2 i `/simplify`-listan i 11B.0f är alltså **inte** åtgärdad —
+         den är latent i dag men blir skarp när fas 7:s synk-pull skriver `exercises`.
+      4. **Steg 4.1:s ruta står obockad.** Se noten i den uppgiften.
 
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.

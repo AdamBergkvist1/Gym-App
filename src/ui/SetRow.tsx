@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { formatWeight } from '../lib/steps';
 import { IkonBock } from './icons';
+import { useLongPress } from './useLongPress';
 import type { SetAverage } from '../db/history';
 import type { PlannedSet } from '../db/plan';
 
@@ -107,14 +109,34 @@ export function SetRow({
 
   const snittVikt = average ? formatWeight(average.weightKg) : '';
 
+  /**
+   * Långtryck förklarar snittalen. Adams beslut 2026-08-26.
+   *
+   * Gesten sitter på de två talknapparna och inte på raden, eftersom det är
+   * talen den förklarar — och för att raden inte är en tryckyta.
+   *
+   * ⚠️ **Finns inget snitt finns inget att förklara**, och då ska gesten inte
+   * heller svälja klicket. `onLongPress` blir en tom funktion, men timern och
+   * klickspärren skulle ändå ha kostat ett tryck.
+   */
+  const [visarInfo, setVisarInfo] = useState(false);
+  const långtryck = useLongPress({
+    onLongPress: () => average && setVisarInfo(true),
+    onTap: onOpenAdjust,
+  });
+
+  // `select-none` och `-webkit-touch-callout` hindrar iOS egen callout-meny och
+  // textmarkering under gesten. Den första ensam räcker inte — den gäller bara
+  // länkar. Se `useLongPress` för hela fällistan.
   const cell =
-    'h-14 min-h-0 rounded-md text-center tabular-nums active:bg-[var(--color-bg)]';
+    'h-14 min-h-0 rounded-md text-center tabular-nums select-none ' +
+    '[-webkit-touch-callout:none] active:bg-[var(--color-bg)]';
 
   return (
     <li
       className={[
         SET_GRID,
-        'border-b border-[var(--color-line)] px-2 last:border-b-0',
+        'relative border-b border-[var(--color-line)] px-2 last:border-b-0',
         confirmed ? 'bg-[var(--color-ok-bg)]' : '',
       ].join(' ')}
     >
@@ -136,7 +158,7 @@ export function SetRow({
           MacroFactors: `2108` stort, `of 2643` litet och grått under. */}
       <button
         type="button"
-        onClick={onOpenAdjust}
+        {...långtryck}
         aria-label={
           viktSaknas
             ? `Vikt inte angiven för ${nummer}${brukar(`${snittVikt} kilo`)}, tryck för att ange`
@@ -155,7 +177,7 @@ export function SetRow({
           välja 2B när snittet blev två tal. */}
       <button
         type="button"
-        onClick={onOpenAdjust}
+        {...långtryck}
         aria-label={`${set.reps} reps för ${nummer}${brukar(`${average?.reps} reps`)}, tryck för att ändra`}
         className={`${cell} ${dämpad ? 'text-[var(--color-dim)]' : ''}`}
       >
@@ -183,7 +205,69 @@ export function SetRow({
       >
         <IkonBock className="size-6" />
       </button>
+
+      {visarInfo && average && (
+        <Infobricka average={average} onStäng={() => setVisarInfo(false)} />
+      )}
     </li>
+  );
+}
+
+/**
+ * Vad de små grå talen är. Visas på långtryck, aldrig av sig själv.
+ *
+ * ⚠️ **Det här är den ENDA vägen till förklaringen tills 11B.6 byggs**, och den
+ * är osynlig tills man hittar den. Accepterat med öppna ögon 2026-08-26 — Adam
+ * är appens enda användare i dag och vet vad talen betyder.
+ * Engångsförklaringen vid första passet hör till 11B.6, som redan äger samma
+ * fråga: vad appen lär ut när den öppnas första gången.
+ *
+ * `role="dialog"` vore fel — brickan tar inget fokus och stjäl ingen
+ * interaktion. `role="tooltip"` med `aria-live` säger vad den är utan att
+ * påstå att den är modal. Skärmläsare når för övrigt samma innehåll utan
+ * gesten: talen står i knapparnas egna etiketter.
+ */
+function Infobricka({ average, onStäng }: { average: SetAverage; onStäng: () => void }) {
+  const pass = average.workoutCount;
+
+  /**
+   * Stängs av nästa nedtryck var som helst.
+   *
+   * ⛔ **INGEN `fixed inset-0`-overlay, och det är ett rättat fel.** Första
+   * versionen la en heltäckande stängknapp bakom brickan. Den dök upp **under
+   * fingret medan det fortfarande låg nere**, så `pointerup` hamnade på
+   * overlayen i stället för på knappen — och då uteblir `click` helt, eftersom
+   * ned- och upptryck skedde på olika element.
+   *
+   * Följden var värre än en skönhetsfläck: **klickspärren i `useLongPress` blev
+   * omätbar.** Sabotage av spärren lämnade vakten grön, eftersom overlayen
+   * råkade göra samma jobb av fel skäl. Samma klass av tyst grön vakt som
+   * vakt 5 visade sig ha samma dag.
+   *
+   * `pointerdown` på document kan bara komma från ett NYTT nedtryck — det som
+   * öppnade brickan är per definition redan nere. Ingen tidsfördröjning behövs.
+   */
+  useEffect(() => {
+    const stäng = () => onStäng();
+    document.addEventListener('pointerdown', stäng);
+    return () => document.removeEventListener('pointerdown', stäng);
+  }, [onStäng]);
+
+  return (
+    <div
+      role="tooltip"
+      aria-live="polite"
+      className="absolute inset-x-2 top-full z-50 -mt-1 rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-3 text-meta shadow-[var(--shadow-card)]"
+    >
+      <p className="font-semibold">Så här brukar det se ut</p>
+      <p className="mt-1 text-[var(--color-dim)]">
+        {pass === 1
+          ? 'Bygger på 1 pass — det enda som finns loggat än.'
+          : `Snitt av dina ${pass} senaste pass med övningen.`}{' '}
+        Vikten är ett medelvärde. Repsen är inte snittade, utan tagna från det set som låg
+        närmast den vikten.
+      </p>
+    </div>
   );
 }
 
