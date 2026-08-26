@@ -63,8 +63,6 @@ function beskrivPass(s: WorkoutSummary): string {
   return delar.join(' · ');
 }
 
-/** Tusentalsavgränsare — 4 850 läses snabbare än 4850 med svettiga ögon. */
-
 export function TodayPage() {
   const [picker, setPicker] = useState<{ mode: 'add' | 'swap'; replacing?: string } | null>(null);
   const [visaFritext, setVisaFritext] = useState(false);

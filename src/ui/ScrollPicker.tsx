@@ -26,7 +26,7 @@ interface Props {
 // radhöjder. Höll testet en egen kopia gick det sönder med "expected 8,
 // received 7" den dag värdet ändrades — rött av rätt skäl men med ett
 // felmeddelande som pekar på rapporteringen i stället för på konstanten.
-export const ITEM_H = 44; // px — stort nog att träffa med svettiga fingrar
+export const ITEM_H = 44; // px — stort nog att träffa utan att sikta
 
 /**
  * Tre rader, inte fem. Ändrat 2026-08-04 i fas 11B steg 4.2.

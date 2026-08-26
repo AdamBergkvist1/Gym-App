@@ -35,8 +35,8 @@ förutsättning för den, inte en dokumentation av den i efterhand.
 (`SPEC.md` §1, preciserad 2026-08-03). Friktion avgör *hur* något byggs — den är inte längre
 ett argument för att låta bli att bygga det.
 
-**Bruksmiljön styr mer än estetiken.** Appen används stående, svettig, enhänt, mitt i ett set,
-ibland i dålig belysning. Därav de befintliga reglerna som inte omförhandlas här: tryckytor
+**Bruksmiljön styr mer än estetiken.** Appen används stående och enhänt, mitt i ett set, med
+delad uppmärksamhet. Därav de befintliga reglerna som inte omförhandlas här: tryckytor
 minst 48×48 px, setraden är största elementet på skärmen. ~~endast mörkt tema~~ — **struken
 2026-08-12**, se `SPEC.md` §4. Ljust är förval.
 
@@ -438,10 +438,13 @@ sekundärtexten till 4,37:1 och klarar inte AA.
 >
 > **Vad som gäller framåt:** kontrastvärden får presenteras som ett *förslag med sitt skäl i
 > klartext*, aldrig som ett krav Adam redan ställt. Skälet som faktiskt bär här är inte
-> efterlevnad utan bruk: skärmen läses i gymbelysning, med svett i ögonen, på en telefon som
-> sänker ljusstyrkan när den blir varm. **Vill Adam hellre ha ljusare kanter än standarden
-> tillåter är det ett giltigt beslut** — men då skrivs det in som ett medvetet avsteg, inte som
-> att kravet aldrig fanns.
+> efterlevnad utan att kanten runt appens mest tryckta knapp faktiskt ska gå att se. **Vill
+> Adam hellre ha ljusare kanter än standarden tillåter är det ett giltigt beslut** — men då
+> skrivs det in som ett medvetet avsteg, inte som att kravet aldrig fanns.
+>
+> ✏️ Här stod först en längre motivering om svett, gymbelysning och telefoner som sänker
+> ljusstyrkan i värmen. **Adam invände att beskrivningen var överdriven, och han hade rätt** —
+> den var dessutom delvis obelagd. Skälet ovan räcker och är det som faktiskt bär.
 | **`--color-accent`** | **`#2B4570`** | **8,08:1** mot bg | Appens färg |
 | `--color-accent-text` | `#263C63` | **10,5:1** mot kort | Länkfärg |
 | `--color-ok` | `#2F7A55` | ⚠️ se not | Sparat. Betydelsen är upptagen |
@@ -624,8 +627,9 @@ Mätt med WCAG:s relativa luminansformel mot `#0a0a0a`, 2026-08-04.
 | | kant | `red8` | `#b54548` | 3,69:1 | ≥3:1 ✓ |
 | | yta | `red3` | `#3b1219` | 1,21:1 | bakgrund |
 
-**Varje textfärg ligger över 9:1.** Kravet var 4,5:1. Marginalen är avsiktlig: skärmen läses
-med svettiga ögon i dålig belysning, och telefoner sänker ljusstyrkan automatiskt i värme.
+**Varje textfärg ligger över 9:1.** Kravet var 4,5:1. Marginalen är avsiktlig — den kostar
+ingenting här, och en text man aldrig behöver kisa på är värd mer än en som nätt och jämnt
+klarar en gräns.
 
 ### Vad varje färg betyder — och vad den inte får betyda
 
@@ -899,9 +903,8 @@ Räknat över `src/` 2026-08-04:
 **Två fynd till, som inte hörde till uppgiften men föll ut ur mätningen:**
 
 **1. Tryckytorna i setraden bryter mot projektets egen regel.** `index.css` sätter
-`min-height: 48px` på alla knappar med motiveringen i `PLAN.md` §2.3: under hård ansträngning
-minskar finmotoriken och händerna är svettiga. Men `SetRow` använder `min-h-0` för att kringgå
-den:
+`min-height: 48px` på alla knappar med motiveringen i `PLAN.md` §2.3: en knapp mitt i ett set
+ska gå att träffa utan att sikta. Men `SetRow` använder `min-h-0` för att kringgå den:
 
 | Element | I dag | Regel |
 |---|---|---|
@@ -1020,7 +1023,7 @@ som väntar — det ska gå att *läsa*, inte att *träffa*.
 
 | Tillstånd | Höjd | Motiv |
 |---|---|---|
-| Väntar | **48 px** | Ska träffas med svettiga fingrar |
+| Väntar | **48 px** | Ska gå att träffa utan att sikta |
 | Bekräftat | **40 px** | Ska läsas. Ångra sker genom att trycka på hela raden |
 
 Ångra-ytan blir 40 px hög men **hela radens bredd**, alltså långt större än 48×48 px i area.

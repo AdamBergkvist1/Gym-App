@@ -1688,8 +1688,8 @@ gäller, och uppgiften skrivs om.
 - [ ] **11B.2 `tabular-nums` överallt där siffror ändras.** Finns på setraden, saknas i
       historik och timer. Siffror som hoppar i sidled är svårlästa och känns billiga.
 - [ ] **11B.3 Vertikal rytm.** Avstånden är i dag valda per komponent. Ska följa en skala.
-- [ ] **11B.4 Tryckåterkoppling.** Ingen knapp har `:active`-tillstånd. Med svettiga fingrar
-      är omedelbar kvittens skillnaden mellan att lita på appen och att trycka igen.
+- [ ] **11B.4 Tryckåterkoppling.** Ingen knapp har `:active`-tillstånd. Omedelbar kvittens
+      är skillnaden mellan att lita på appen och att trycka igen.
       **Klart när:** varje tryckyta svarar synligt inom en bildruta.
 - [ ] **11B.5 Rörelse. OMSKRIVEN 2026-08-12 — 150 ms-regeln gällde fel saker.**
       Setraden dyker upp abrupt. En kort inanimation gör att ögat hittar den nya raden.

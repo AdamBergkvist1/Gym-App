@@ -232,8 +232,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Gymergonomi: alla tryckytor minst 48x48 px (PLAN.md §2.3). Under hård
-   ansträngning minskar finmotoriken, och händerna är svettiga eller kritade.
+/* Alla tryckytor minst 48x48 px (PLAN.md §2.3). En knapp mitt i ett set ska gå
+   att träffa utan att sikta.
 
    OBS: `min-h-0` får inte användas för att kringgå detta. Setraden gör det i
    dag och hamnar på 40x36 px för bekräfta-knappen — appens mest tryckta

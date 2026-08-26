@@ -996,9 +996,8 @@ Formulerat som krav, inte som smak, så att det går att avgöra när det är kl
 - **Tabellsiffror överallt.** `tabular-nums` finns på setraden men inte i historiken eller
   timern. Siffror som hoppar i sidled när de ändras känns billigt och gör dem svårlästa.
 - **Vertikal rytm.** Avstånden är i dag valda per komponent. De ska följa en gemensam skala.
-- **Tryckåterkoppling.** Ingen knapp har i dag ett `:active`-tillstånd. Under hård
-  ansträngning, med svettiga fingrar, är omedelbar visuell kvittens på ett tryck skillnaden
-  mellan att lita på appen och att trycka igen.
+- **Tryckåterkoppling.** Ingen knapp har i dag ett `:active`-tillstånd. Omedelbar visuell
+  kvittens på ett tryck är skillnaden mellan att lita på appen och att trycka igen.
 - **Rörelse med måtta.** Setraden dyker upp abrupt. En kort inanimation gör att ögat hittar
   den nya raden utan att leta. Allt över ~150 ms känns långsamt mitt i ett pass.
 - **Tomma tillstånd.** "Inga set ännu" är i dag en grå rad. Första passet är det enda
