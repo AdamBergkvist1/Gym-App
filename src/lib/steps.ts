@@ -11,9 +11,26 @@
  * prydligt.
  */
 
+import type { Equipment } from '../db/types';
+
 /** Minsta viktökning på en skivstång: två 1,25-skivor. */
 export const WEIGHT_STEP_KG = 2.5;
 export const REP_STEP = 1;
+
+/**
+ * Den enda utrustning med ett garanterat grovt steg — typad, så att en
+ * felstavning här fälls av bygget.
+ *
+ * Katalogens `equipment` typades av samma skäl (se `CatalogExercise`), men
+ * jämförelsen som faktiskt AVGÖR steget stod kvar som en naken strängliteral.
+ * Skyddet låg alltså en nivå för grunt: `'skivstáng'` hade gett tyst 1 kg åt
+ * varje skivstångsövning, och det enda som fångade det var ett test. Ett test
+ * kan strykas eller skrivas om av nästa författare; en typ kan det inte.
+ *
+ * `import type` raderas vid bygget, så kanten mot `db/` kostar ingenting i
+ * bundlen. `db/types.ts` importerar inget ur `lib/`, så ingen cykel uppstår.
+ */
+const SKIVSTÅNG: Equipment = 'skivstång';
 
 /**
  * Viktsteget för en övning, härlett ur dess utrustning. Uppgift 11B.0f.
@@ -39,9 +56,13 @@ export const REP_STEP = 1;
  * för det påståendet var StrongLifts, en annan app. Se rapportens läsanvisning.
  */
 export function weightStepFor(equipment: string | null): number {
+  // Parametern förblir medvetet `string | null`: egna övningar i fas 7 skapas
+  // av användaren och kan bära vad som helst. Det är KATALOGEN som är data vi
+  // äger, och det är literalen nedan som är typad.
+  //
   // Allt annat — `hantlar`, `kabel`, `maskin`, `kroppsvikt` och okänd
   // utrustning — får hela kilon.
-  return equipment === 'skivstång' ? WEIGHT_STEP_KG : 1;
+  return equipment === SKIVSTÅNG ? WEIGHT_STEP_KG : 1;
 }
 
 /** Flyttalsavrundning så att 92,5 + 2,5 aldrig blir 95.00000000000001. */
