@@ -127,8 +127,17 @@ du ändrar ett värde.
   gitignorerad. **Den går inte att lägga i scratchpad** — `@playwright/test` kan inte lösas upp
   därifrån. Radera den efteråt.
 - **Produktionen:** `https://adam-gym-app.vercel.app` — Vercel bygger om automatiskt vid push
-  till `main`, och allt nedan är pushat. ⏰ **Bygget var inte kontrollerat när sessionen tog
-  slut.** Att pushen gick fram är verifierat; att Vercel byggde grönt är det inte.
+  till `main`. ✅ **Verifierat 2026-08-27 att sessionens arbete faktiskt ligger live**, inte
+  bara att pushen gick fram: produktionen svarar HTTP 200 och serverar `index-BvwuzXIY.js`,
+  **samma asset-hash som det lokala bygget**. Det är kontrollen som skiljer *"pushat"* från
+  *"deployat"*, och den är en `curl` värd:
+
+  ```bash
+  curl -s https://adam-gym-app.vercel.app/ | grep -o 'index-[A-Za-z0-9_-]*\.js' | head -1
+  ```
+
+  Jämför med `grep -o 'index-[A-Za-z0-9_-]*\.js' dist/index.html | head -1` efter
+  `npm run build`. Skiljer de sig har Vercel inte byggt om, eller byggt något annat.
 - ⚠️ **`apple-mobile-web-app-status-bar-style` är fortfarande OVERIFIERAD.** Kräver Adams
   telefon i standalone-läge. Oförändrat sedan fyra sektioner tillbaka.
 
