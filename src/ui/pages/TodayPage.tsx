@@ -297,7 +297,7 @@ export function TodayPage() {
       <button
         type="button"
         onClick={() => setPicker({ mode: 'add' })}
-        className="w-full rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]
+        className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)]
                    py-4 text-lg font-medium active:opacity-80"
       >
         + Lägg till övning

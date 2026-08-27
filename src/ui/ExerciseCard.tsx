@@ -148,14 +148,14 @@ export function ExerciseCard({
               setMeny(false);
               onSwapExercise();
             }}
-            className="min-h-0 rounded-md border border-[var(--color-line)] px-3 py-1.5 text-sm"
+            className="min-h-0 rounded-md border border-[var(--color-line-strong)] px-3 py-1.5 text-sm"
           >
             Byt övning
           </button>
           {exercise && (
             <Link
               to={`/ovning/${exercise.id}`}
-              className="min-h-0 rounded-md border border-[var(--color-line)] px-3 py-1.5 text-sm"
+              className="min-h-0 rounded-md border border-[var(--color-line-strong)] px-3 py-1.5 text-sm"
             >
               Historik
             </Link>
@@ -166,7 +166,7 @@ export function ExerciseCard({
               setMeny(false);
               onRemoveExercise();
             }}
-            className="min-h-0 rounded-md border border-[var(--color-line)] px-3 py-1.5 text-sm text-[var(--color-warn-text)]"
+            className="min-h-0 rounded-md border border-[var(--color-line-strong)] px-3 py-1.5 text-sm text-[var(--color-warn-text)]"
           >
             Ta bort övning
           </button>

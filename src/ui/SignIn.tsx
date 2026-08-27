@@ -48,7 +48,7 @@ export function SignIn() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="min-h-0 rounded-md border border-[var(--color-line)] px-3 py-1 text-sm text-[var(--color-dim)]"
+          className="min-h-0 rounded-md border border-[var(--color-line-strong)] px-3 py-1 text-sm text-[var(--color-dim)]"
         >
           Logga ut
         </button>
@@ -80,7 +80,7 @@ export function SignIn() {
         placeholder="E-post"
         autoComplete="username"
         inputMode="email"
-        className="w-full rounded-lg border border-[var(--color-line)] bg-[var(--color-bg)] px-3"
+        className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-bg)] px-3"
       />
       <input
         type="password"
@@ -88,7 +88,7 @@ export function SignIn() {
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Lösenord"
         autoComplete="current-password"
-        className="w-full rounded-lg border border-[var(--color-line)] bg-[var(--color-bg)] px-3"
+        className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-bg)] px-3"
       />
       <button
         type="submit"

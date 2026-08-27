@@ -53,7 +53,7 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           onClick={() => void syncNow()}
-          className="min-h-0 rounded-md border border-[var(--color-line)] px-3 py-1 text-sm"
+          className="min-h-0 rounded-md border border-[var(--color-line-strong)] px-3 py-1 text-sm"
         >
           Synka nu
         </button>

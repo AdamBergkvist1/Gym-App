@@ -79,7 +79,7 @@ export function RestTimer() {
               type="button"
               onClick={() => void adjustRestTimer(-30)}
               aria-label="Minska vilotiden med 30 sekunder"
-              className="rounded-md border border-[var(--color-line)] px-3 text-sm"
+              className="rounded-md border border-[var(--color-line-strong)] px-3 text-sm"
             >
               −30
             </button>
@@ -87,7 +87,7 @@ export function RestTimer() {
               type="button"
               onClick={() => void adjustRestTimer(30)}
               aria-label="Öka vilotiden med 30 sekunder"
-              className="rounded-md border border-[var(--color-line)] px-3 text-sm"
+              className="rounded-md border border-[var(--color-line-strong)] px-3 text-sm"
             >
               +30
             </button>
@@ -104,7 +104,7 @@ export function RestTimer() {
             // solid-som-yta-fel som etiketten bredvid.
             expired
               ? 'border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-fg)]'
-              : 'border border-[var(--color-line)] text-[var(--color-dim)]',
+              : 'border border-[var(--color-line-strong)] text-[var(--color-dim)]',
           ].join(' ')}
         >
           {expired ? 'Okej' : 'Hoppa över'}
