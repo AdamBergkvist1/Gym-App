@@ -49,6 +49,18 @@ import type { PlannedSet } from '../db/plan';
 export const SET_GRID =
   'grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1fr)_3rem] items-center gap-1';
 
+/**
+ * Talknapparnas gemensamma yta. Flyttad till modulnivå i 12.47 — strängen är
+ * statisk och byggdes tidigare om vid varje render av varje rad.
+ *
+ * `select-none` och `-webkit-touch-callout` hindrar iOS egen callout-meny och
+ * textmarkering under gesten. Den första ensam räcker inte — den gäller bara
+ * länkar. Se `useLongPress` för hela fällistan.
+ */
+const CELL =
+  'h-14 min-h-0 rounded-md text-center tabular-nums select-none ' +
+  '[-webkit-touch-callout:none] active:bg-[var(--color-bg)]';
+
 interface Props {
   /**
    * Radens plats bland ARBETSSETEN, eller `null` för uppvärmning.
@@ -156,13 +168,6 @@ export function SetRow({
     onTap: onOpenAdjust,
   });
 
-  // `select-none` och `-webkit-touch-callout` hindrar iOS egen callout-meny och
-  // textmarkering under gesten. Den första ensam räcker inte — den gäller bara
-  // länkar. Se `useLongPress` för hela fällistan.
-  const cell =
-    'h-14 min-h-0 rounded-md text-center tabular-nums select-none ' +
-    '[-webkit-touch-callout:none] active:bg-[var(--color-bg)]';
-
   return (
     <li
       className={[
@@ -187,28 +192,26 @@ export function SetRow({
       {/* Kg — värdet stort, snittvikten litet och grått under. Form 2B, vald av
           Adam 2026-08-19 ur `docs/mockups/11b-0g-pass.html`. Konstruktionen är
           MacroFactors: `2108` stort, `of 2643` litet och grått under. */}
-      <button
-        type="button"
-        {...långtryck}
-        aria-label={`${viktText} för ${nummer}${brukar((a) => `${formatWeight(a.weightKg)} kilo`)}, tryck för att ${viktÅtgärd}`}
-        className={`${cell} ${dämpad || viktSaknas ? 'text-[var(--color-dim)]' : ''}`}
-      >
-        <span className="block text-set leading-tight">{viktSaknas ? '–' : vikt}</span>
-        {average && <Snitt värde={formatWeight(average.weightKg)} pass={average.workoutCount} />}
-      </button>
+      <TalKnapp
+        värde={viktSaknas ? '–' : vikt}
+        etikett={`${viktText} för ${nummer}${brukar((a) => `${formatWeight(a.weightKg)} kilo`)}, tryck för att ${viktÅtgärd}`}
+        dämpad={dämpad || viktSaknas}
+        snitt={
+          average ? { värde: formatWeight(average.weightKg), pass: average.workoutCount } : null
+        }
+        gest={långtryck}
+      />
 
       {/* Reps — samma konstruktion. Snittrepsen står under repsen, så man aldrig
           behöver fråga sig vilket tal som är vilket. Det var Adams eget skäl att
           välja 2B när snittet blev två tal. */}
-      <button
-        type="button"
-        {...långtryck}
-        aria-label={`${set.reps} reps för ${nummer}${brukar((a) => `${a.reps} reps`)}, tryck för att ändra`}
-        className={`${cell} ${dämpad ? 'text-[var(--color-dim)]' : ''}`}
-      >
-        <span className="block text-set leading-tight">{set.reps}</span>
-        {average && <Snitt värde={String(average.reps)} pass={average.workoutCount} />}
-      </button>
+      <TalKnapp
+        värde={String(set.reps)}
+        etikett={`${set.reps} reps för ${nummer}${brukar((a) => `${a.reps} reps`)}, tryck för att ändra`}
+        dämpad={dämpad}
+        snitt={average ? { värde: String(average.reps), pass: average.workoutCount } : null}
+        gest={långtryck}
+      />
 
       {/* ✓ — 48×48, inte 40×36. `min-h-0` används INTE här längre: regeln i
           index.css finns för att finmotoriken minskar under ansträngning, och
@@ -235,6 +238,54 @@ export function SetRow({
         <Infobricka average={average} onStäng={() => setVisarInfo(false)} />
       )}
     </li>
+  );
+}
+
+/**
+ * Ett tal med sitt snitt viskat under, som går att trycka och långtrycka.
+ * Uppgift 12.47 punkt 2.
+ *
+ * **Vad som är genuint delat mellan Kg och Reps:** `type="button"`,
+ * gestspridningen, `cell`-klasserna, värdespannet och `{snitt && <Snitt/>}`.
+ * Fem invarianter som stod i två exemplar.
+ *
+ * ⛔ **ETIKETTEN LIGGER MEDVETET UTANFÖR, och det är inte en förbiseelse.** De
+ * två knapparna har inte samma form på etikettnivå: vikten heter `Vikt <värde>
+ * kilo för <rad>`, repsen heter `<värde> reps för <rad>`. Fältnamnet står först i
+ * den ena och EFTER talet i den andra. Ett `fält: 'vikt' | 'reps'`-prop hade
+ * tvingat in asymmetrin här och gjort komponenten till en tvåvägsswitch förklädd
+ * till delad primitiv — alltså flyttat villkoren i stället för att ta bort dem.
+ * Samma sak gäller `snitt`: den tar ett färdigformaterat värde, inte ett
+ * `SetAverage`, eftersom Kg visar `formatWeight(weightKg)` och Reps visar `reps`.
+ *
+ * ⛔ **`useLongPress` ANROPAS INTE HÄRINNE.** Båda knapparna delar EN hook-instans
+ * i `SetRow`. Flyttades hooken hit fick varje knapp egen timer och egna refs —
+ * en beteendeändring, och gesten är det enda `langtryck.spec.ts` mäter. Den
+ * sprids som prop med flit.
+ */
+function TalKnapp({
+  värde,
+  etikett,
+  dämpad,
+  snitt,
+  gest,
+}: {
+  värde: string;
+  etikett: string;
+  dämpad: boolean;
+  snitt: { värde: string; pass: number } | null;
+  gest: ReturnType<typeof useLongPress>;
+}) {
+  return (
+    <button
+      type="button"
+      {...gest}
+      aria-label={etikett}
+      className={`${CELL} ${dämpad ? 'text-[var(--color-dim)]' : ''}`}
+    >
+      <span className="block text-set leading-tight">{värde}</span>
+      {snitt && <Snitt värde={snitt.värde} pass={snitt.pass} />}
+    </button>
   );
 }
 
