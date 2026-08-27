@@ -3916,7 +3916,8 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** ingen av de tre raderna i `DESIGN.md` motsäger koden, skälen står i briefen
       och inte bara i kodkommentarer, och `TASKS.md` `11B.0f`:s `–`-rad är rättad på samma sätt.
 
-- [ ] **12.47 Tre baslinjeluktar ur granskningen. Ny 2026-08-27. OMDÖMESFRÅGOR.**
+- [ ] **12.47 Baslinjeluktar ur granskningen. Ny 2026-08-27. OMDÖMESFRÅGOR.
+      Punkt 1 KLAR 2026-08-27; punkt 2 och 3 kvar.**
       Ingen av dem är en bugg. De ligger här för att `/simplify` annars hittar dem igen från
       noll, och för att den första har en verklig felrisk bakom sig.
 
