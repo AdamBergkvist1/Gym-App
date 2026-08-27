@@ -261,8 +261,12 @@ function Infobricka({ average, onStäng }: { average: SetAverage; onStäng: () =
     >
       <p className="font-semibold">Så här brukar det se ut</p>
       <p className="mt-1 text-[var(--color-dim)]">
+        {/* Kolon och inte tankstreck: `DESIGN.md` §0.3 förbjuder `—` i det appen
+            skriver till användaren (Adam 2026-08-12, "läser som AI-skriven text").
+            Regeln undantar uttryckligen kodkommentarer, vilket är därför den här
+            filens docblock är full av dem. */}
         {pass === 1
-          ? 'Bygger på 1 pass — det enda som finns loggat än.'
+          ? 'Bygger på 1 pass: det enda som finns loggat än.'
           : `Snitt av dina ${pass} senaste pass med övningen.`}{' '}
         Vikten är ett medelvärde. Repsen är inte snittade, utan tagna från det set som låg
         närmast den vikten.

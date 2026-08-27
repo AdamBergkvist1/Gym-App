@@ -5,7 +5,7 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ---
 
-## 🆕 2026-08-27 — 12.36 ÄR KLAR: kontrastvakten bor i repot. Den hittade tio osynliga kanter. Nästa jobb är 12.37
+## 🆕 2026-08-27 — 12.36 ÄR KLAR: kontrastvakten bor i repot. Den hittade elva osynliga kanter. Nästa jobb är 12.37
 
 ### ⛔ FEM COMMITS ÄR INTE PUSHADE. Kontrollera själv
 
@@ -18,11 +18,16 @@ git fetch origin && git status -sb
 
 ⏰ **ANLEDNINGEN ÄR EN OBESVARAD FRÅGA, INTE ETT FÖRBISEENDE.** Se rutan nedan.
 
-### 🔴 DET SOM VÄNTAR PÅ ADAM: tio kontroller ser annorlunda ut nu
+### 🔴 DET SOM VÄNTAR PÅ ADAM: elva kontroller ser annorlunda ut nu
 
-`822babd` byter kanttoken på tio kontroller — övningsmenyns tre knappar, vilotimerns
+`822babd` byter kanttoken på elva kontroller — övningsmenyns tre knappar, vilotimerns
 `−30`/`+30`/`Hoppa över`, `+ Lägg till övning`, `Synka nu`, `Logga ut` och de två
 inloggningsfälten. **Adam fick två skärmbilder och hann inte svara innan sessionen tog slut.**
+
+> ✏️ **Rättelse.** Rutan sa *"tio"* till `/code-review` räknade efter. Det är **elva** —
+> 3 i övningsmenyn, 3 i timern, 3 i `SignIn`, 1 i `SyncStatus`, 1 i `TodayPage`. Commit
+> `822babd`:s rubrik säger också tio medan dess egen uppräkning summerar till elva.
+> Historiken skrivs inte om; siffran står rätt här och i `TASKS.md`.
 
 **Ingen ny färg infördes.** `--color-line-strong` är samma token han godkände i steg 4.2.
 Skälet, utan siffror: en knapp ska gå att se **att** den är en knapp innan man rör den, och de
@@ -36,7 +41,7 @@ tonad yta i stället för kant) eller motiverade rader i `UNDANTAG`. **Höj aldr
 
 | Commit | Vad |
 |---|---|
-| `822babd` | Tio kontroller byter från den **dekorativa** kanttokenen till den som **bär betydelse** |
+| `822babd` | Elva kontroller byter från den **dekorativa** kanttokenen till den som **bär betydelse** |
 | `177ec56` | **12.36: kontrastvakten**, `e2e/kontrast.spec.ts`. Fem tester × tre bredder |
 | `4bd2ead` | Rättelse: Historik mättes tom, alltså grön av fel skäl |
 | `2499e9a` | `TASKS.md` — 12.36 stängd, **12.41 utbruten**, prioriteringsrutan omskriven |

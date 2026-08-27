@@ -1826,8 +1826,19 @@ gäller, och uppgiften skrivs om.
         bara 1,19:1.
       - Övningsnamnet i Fraunces.
 
-      **Klart när:** `grep -rn "🏋" src/` är tom, 11B.0c:s sista rad är därmed uppfylld, och
-      kortet ser ut som B4-skissen i `DESIGN.md` §3.1 — visuellt kontrollerat, inte antaget.
+      **Klart när:** ingen 🏋 **renderas** någonstans i `src/` — alltså inga träffar utanför
+      kommentarer — 11B.0c:s sista rad är därmed uppfylld, och kortet ser ut som B4-skissen i
+      `DESIGN.md` §3.1, **inklusive metaradens form och indraget**, visuellt kontrollerat.
+
+      ✏️ **KRITERIET ÄR OMSKRIVET 2026-08-27, och det är en rättelse och ingen uppmjukning.**
+      Här stod `grep -rn "🏋" src/` är tom. Det är **falskt i dag** och kommer att förbli det:
+      två kommentarer förklarar att ikonen är borttagen, och de ska stå kvar — `ExerciseCard`
+      säger uttryckligen *"Leta inte efter en skivstångsikon"*. **Ikonen ÄR borta.** Ett
+      kriterium som en korrekt kodbas inte kan uppfylla är inte en grind utan en felkälla.
+
+      **Samtidigt är kriteriet nu SVÅRARE på det som faktiskt fallerade:** *"ser ut som
+      B4-skissen"* kunde ingen falla på, och därför gled både metaraden (**12.44**) och
+      indraget (**12.45**) igenom. Se rättelserutan i den här uppgiftens rubrik.
 
       ---
 
@@ -3400,7 +3411,7 @@ och 13.1 måste vara klar före 13.6.
 >
 > | # | Vad | När |
 > |---|---|---|
-> | ~~**12.36**~~ | ~~Kontrastmätningen finns inte i repot~~ | ✅ **KLAR 2026-08-27.** `e2e/kontrast.spec.ts`. Hittade tio kontroller med osynlig kant |
+> | ~~**12.36**~~ | ~~Kontrastmätningen finns inte i repot~~ | ✅ **KLAR 2026-08-27.** `e2e/kontrast.spec.ts`. Hittade elva kontroller med osynlig kant |
 > | **12.37** | Sabotagekontrollen är en vana, inte en regel | 🔴 **NÄSTA. Före 4.3**, och 12.36 gav den två nya belägg |
 > | **12.38** | `IMPORTERAT_SET`:s datum kan maskera tidsberoende filter | **Med 12.37.** Samma familj |
 > | **12.39** | `getSetAverages` drar in hela `exercises` i sin observerade mängd | Före **fas 7** |
@@ -3463,7 +3474,15 @@ och 13.1 måste vara klar före 13.6.
       som bär vakten: *Idag utan pass*, **Idag med pågående pass och en bekräftad rad**,
       *Historik*, *Inställningar*.
 
-      🔴 **VAKTEN HITTADE TIO KONTROLLER MED OSYNLIG KANT, LAGADE I `822babd`.** Alla hade
+      ✏️ **RÄTTELSE 2026-08-27: siffran var ELVA, inte tio.** `/code-review` hittade felet.
+      `822babd` gör elva tokenbyten — 3 i övningsmenyn, 3 i timern, 3 i `SignIn`, 1 i
+      `SyncStatus`, 1 i `TodayPage` — och **commitmeddelandets egen uppräkning summerar också
+      till elva** medan dess rubrik säger tio. Historiken skrivs inte om för det; siffran står
+      rätt här, i `12.41` och i `HANDOFF.md`. **Commit `822babd`:s meddelande bär alltså en
+      siffra som aldrig stämde**, precis som `15bccb7` gör (se `Steg 4.2` ovan). Två gånger på
+      två sessioner — räkna uppräkningen innan rubriken skrivs.
+
+      🔴 **VAKTEN HITTADE ELVA KONTROLLER MED OSYNLIG KANT, LAGADE I `822babd`.** Alla hade
       `--color-line` — tokenen `index.css` uttryckligen kallar **dekorativ** — som enda
       avgränsning, uppmätt till **1,01–1,18:1** mot sitt faktiska underlag. **Det är samma fynd
       som steg 4.1 gjorde** (*"tre kontroller med `--color-line` som enda avgränsning"*);
@@ -3508,7 +3527,7 @@ och 13.1 måste vara klar före 13.6.
       ställen. Uppgiftens **Klart när** namnger Pass, Historik och Inställningar och är därmed
       uppfylld — men luckan är verklig och skriven som egen rad så den inte blir kvar i löptext.
 
-      ⏰ **Adam hade inte hunnit svara på om de tio kanterna får se ut så här** när sessionen
+      ⏰ **Adam hade inte hunnit svara på om de elva kanterna får se ut så här** när sessionen
       tog slut. **Ingenting är pushat** — se `HANDOFF.md` för hur de backas.
 
 - [ ] **12.37 Sabotagekontrollen är en vana, inte en regel. Ny 2026-08-26.**
@@ -3612,7 +3631,7 @@ och 13.1 måste vara klar före 13.6.
       fyra lägen är fyra lägen.
 
       **Vad som aldrig mäts i dag**, och alla fyra innehåller kontroller med samma
-      `--color-line`-kant som just lagades på tio andra ställen:
+      `--color-line`-kant som just lagades på elva andra ställen:
 
       | Vad | Var | Varför den inte nås |
       |---|---|---|

@@ -272,6 +272,57 @@ acceptabelt.
   skuggor) men Tailwind 4 ger oss redan det. Radix löser det vi faktiskt saknar: garanterade
   kontraststeg.
 
+### Långtryck som gest — sökningen inför steg 4.2 del E
+
+**Status: inget infört. Noll nya poster i `package.json`.** Sökningen gjordes 2026-08-26 och
+skrevs ner i docblocken överst i [`src/ui/useLongPress.ts`](../src/ui/useLongPress.ts) — **men
+inte här**, vilket `/code-review` fällde 2026-08-27. §7.2c kräver registret, inte en
+kodkommentar. Tabellen är hämtad ur den docblocken oförändrad.
+
+| Kandidat | Licens | Senast | Storlek | Beroenden | Utfall |
+|---|---|---|---|---|---|
+| [`minwork/use-long-press`](https://github.com/minwork/use-long-press) | **MIT** | **arkiverat** 2023-08-20 | 20 kB | 0 | Gör exakt rätt sak, men **arkiverat** — tar inte emot rättningar |
+| [`@use-gesture/react`](https://github.com/pmndrs/use-gesture) | **MIT** | 10.3.1 | 37 kB | 1 | Byggt för drag/pinch/wheel; långtryck är en bråkdel av ytan |
+| [`react-aria`](https://github.com/adobe/react-spectrum) (`usePress`) | **Apache-2.0** | 3.51.0 | **15,5 MB** | 9 direkta | Helt gränssnittsbibliotek |
+
+**Avgörandet var §7.1:s egen regel:** *"om alternativet till 40 egna rader är 200 kB i bundlen
+är de 40 raderna rätt svar"*, och 7.13 (bundlestorlek) är öppen.
+
+💡 **Det värdefulla ur sökningen var inte kod utan fällorna** — iOS callout-meny, `contextmenu`
+på långtryck, klicket som kommer ändå, och rörelse som måste avbryta. Alla fyra står utskrivna
+i `useLongPress.ts` och tre av dem finns bara i en riktig webbläsare.
+
+### axe-core — sökningen inför uppgift 12.36 (kontrastvakten)
+
+**Status: valt bort. Noll nya poster i `package.json`.** Sökningen gjordes 2026-08-27 innan
+första raden av `e2e/kontrast.spec.ts` skrevs. Adam fattade beslutet.
+
+| Kandidat | Licens | ⭐ | Senast | Storlek | Beroenden |
+|---|---|---|---|---|---|
+| [`axe-core`](https://github.com/dequelabs/axe-core) | ⚠️ **MPL-2.0** | 7 447 | 2026-08-27 | 3,11 MB uppackat | **0** |
+| [`@axe-core/playwright`](https://github.com/dequelabs/axe-core-npm) | ⚠️ **MPL-2.0** | — | 2026-08-23 | 47 kB | 1 (`axe-core`) |
+| [`axe-playwright`](https://github.com/abhinaba-ghosh/axe-playwright) | MIT | — | **2025-09-12** | 41 kB | drar `axe-core` ändå |
+| [`colorjs.io`](https://github.com/color-js/color.js) | MIT | — | 2026-07-24 | **15,8 MB** uppackat | 0 |
+
+⚠️ **MPL-2.0 står inte i `CLAUDE.md` §7.2b:s tabell.** Den är filnivå-copyleft: att *använda*
+den som beroende smittar inte appen, men kopieras kodrader ur den blir vår fil MPL. Som
+`devDependency` hade det varit ofarligt — men det är ett licensslag Adam inte tagit ställning
+till, och det noteras här ifall frågan återkommer.
+
+🔴 **Det diskvalificerande fyndet var dock inte licensen utan täckningen: axe-core har ingen
+regel för WCAG 1.4.11.** Regellistan innehåller bara `color-contrast` (taggad `wcag143`) och
+`color-contrast-enhanced` (`wcag146`); ingen regel bär taggen `wcag1411`, eftersom ett verktyg
+inte kan avgöra vilken grafik som bär betydelse. **Appens hela semantiska modell ligger i
+kanterna** — väg C bär betydelsen med yta + kant, och `index.css` skriver ut kravet på varje
+kanttoken. axe hade mätt den svarta texten på de tonade ytorna, som ligger på 15–16:1 och
+aldrig faller, och varit blind för just de värden `12.40` är en öppen fråga om.
+
+Till det kom §7.1:s plattformsprimitiv-regel: `canvas.fillStyle` tar emot vilken CSS-färgsträng
+som helst och låter webbläsaren tolka `oklab()`, `color-mix()` och alfa åt oss.
+
+⏰ **Villkor för att ta upp igen:** axe hittar helt andra saker vi inte mäter alls — etiketter,
+roller, fokusordning. Det är en egen uppgift och ett eget beslut, inte en del av 12.36.
+
 ### Hjälpare för e2e-sviten — sökningen §7.1 kräver, gjord i efterhand (uppgift 12.32)
 
 **Status: inget infört. Noll nya poster i `package.json`.** Sökningen gjordes 2026-08-13,
