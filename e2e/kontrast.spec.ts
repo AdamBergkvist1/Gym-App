@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { hämtaÖvning, loggaSetGenomAppen, läggTillÖvning, startaPass } from './hjalpare';
+import {
+  avslutaPass,
+  hämtaÖvning,
+  loggaSetGenomAppen,
+  läggTillÖvning,
+  startaPass,
+} from './hjalpare';
 
 /**
  * KONTRASTVAKTEN. Uppgift 12.36.
@@ -517,10 +523,27 @@ const LÄGEN = [
     },
   },
   {
-    namn: 'Historik',
+    // ⚠️ **HISTORIK MÄTS MED INNEHÅLL, OCH DET ÄR EN RÄTTELSE UNDER BYGGET.**
+    // Första versionen gick rakt till `/historik` på en tom databas och mätte
+    // därmed en tomstatusruta och en flikrad — alltså grön av fel skäl, precis
+    // den felklass hela filen finns för. Passlistan, dess datum, volymtal och
+    // radavdelare fanns inte i urvalet över huvud taget.
+    //
+    // Passet loggas GENOM APPEN och inte rått, enligt beslut 6 i 11B.0e — samma
+    // skäl som i `historiksida.spec.ts`: en fixtur mäter sig själv.
+    namn: 'Historik med ett loggat pass',
     förbered: async (page: Page) => {
+      await page.goto('/');
+      const övning = await hämtaÖvning(page);
+      await startaPass(page);
+      await läggTillÖvning(page, övning.name);
+      await loggaSetGenomAppen(page, övning.name);
+      await avslutaPass(page);
       await page.goto('/historik');
       await page.waitForLoadState('networkidle');
+      // Mätningen får inte köra mot ett tomt skal. Utan den här väntan är
+      // urvalet en kapplöpning mot useLiveQuery.
+      await expect(page.getByText('Inga pass ännu.')).toHaveCount(0);
     },
   },
   {
@@ -558,17 +581,36 @@ for (const läge of LÄGEN) {
   });
 }
 
-test('kantvägen lever och varje undantag träffar fortfarande något', async ({ page }) => {
+/**
+ * ⚠️ **EGEN KONTEXT PER LÄGE, OCH DET ÄR UPPMÄTT OCH INTE FÖRSIKTIGHET.**
+ * Lägena är ordningsberoende: *Idag med pågående pass* lämnar ett pass igång i
+ * IndexedDB, och nästa läge hittade då ingen `Starta tomt pass`-knapp och föll
+ * på en timeout. Testerna ovan får en ny kontext var av Playwright automatiskt;
+ * den här loopen måste be om det själv.
+ */
+test('kantvägen lever och varje undantag träffar fortfarande något', async ({
+  browser,
+  contextOptions,
+}) => {
   const summa = UNDANTAG.map(() => 0);
   let kanter = 0;
 
   for (const läge of LÄGEN) {
-    await läge.förbered(page);
-    const resultat = await mätSidan(page, UNDANTAG);
-    kanter += resultat.mätta.kant;
-    resultat.undantagsträffar.forEach((n, i) => {
-      summa[i]! += n;
-    });
+    // `contextOptions` och inte tomma defaults: `browser.newContext()` ärver
+    // INTE projektets `use`-block, så baseURL och viewport hade fallit bort och
+    // `goto('/')` misslyckats på en annan bredd än den vi tror oss mäta.
+    const kontext = await browser.newContext(contextOptions);
+    const sida = await kontext.newPage();
+    try {
+      await läge.förbered(sida);
+      const resultat = await mätSidan(sida, UNDANTAG);
+      kanter += resultat.mätta.kant;
+      resultat.undantagsträffar.forEach((n, i) => {
+        summa[i]! += n;
+      });
+    } finally {
+      await kontext.close();
+    }
   }
 
   // Kantvägens motsvarighet till textkontrollen per läge. Ligger samlat här
