@@ -7,18 +7,25 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ## 🆕 2026-08-26 (sent) — STEG 4.2 ÄR KLAR. Pass-skärmen står i B4 + 2B. Nästa jobb är 4.3 Historik
 
-### 🔴 SEX COMMITS ÄR **INTE** PUSHADE. Det första du bör göra
+### ✅ Allt är pushat. Kontrollera själv
 
 ```bash
 git fetch origin && git status -sb
 ```
 
-Vid sessionens slut svarade det `## main...origin/main [ahead 6]` — verifierat efter en färsk
-`fetch`. **Commiterna `edb1844..ed4a22e` ligger bara lokalt.** De pushades inte för att en
-push är utåtriktad och Adam inte hade bett om den; Vercel bygger om automatiskt vid push till
-`main`, så pushen är också publiceringen.
+**Åtta commits, `cc54451..2fdd536`, pushade 2026-08-27 på Adams begäran.** Svarar kommandot
+`## main...origin/main` utan `ahead` eller `behind` är du i fas — så såg det ut efter pushen,
+kontrollerat efter en färsk `fetch`. Vercel bygger om automatiskt vid push till `main`, så
+`https://adam-gym-app.vercel.app` bär steg 4.2.
 
-**Adam har inte sett skärmen på sin telefon än.** Det är kvar att göra.
+> ✏️ **Rättelse.** Den här rutan sa fram till pushen *"SEX COMMITS ÄR INTE PUSHADE"*. Det
+> stämde när den skrevs — men siffran hann bli **åtta** innan pushen, eftersom handoffen och
+> åtgärdsplanen (12.36–12.40) committades efteråt. Rubriken på commit `219c1dd` bär därför en
+> siffra som aldrig blev slutgiltig; historiken skrivs inte om för det.
+
+⏰ **Adam hade inte sett skärmen på sin telefon när sessionen tog slut.** Det som särskilt
+behöver hans ögon står under *"Så visar du Adam något"* nedan — statusraden i standalone-läge
+är fortfarande overifierad, och den går inte att pröva på något annat sätt.
 
 ### Vad som byggdes
 
