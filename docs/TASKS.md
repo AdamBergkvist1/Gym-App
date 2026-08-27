@@ -3353,26 +3353,30 @@ och 13.1 måste vara klar före 13.6.
       korrekthet. Ändras det ska det ske med `/diagnosing-bugs` eller `/tdd`, med ett test som
       först är rött. `ScrollPicker.test.tsx` är rätt plats; sömmen finns redan.
 
-> ### 🔴 12.36–12.40 kommer ur steg 4.2. LÄS PRIORITERINGEN INNAN DU PLOCKAR EN
+> ### 🔴 12.36–12.41 kommer ur steg 4.2. LÄS PRIORITERINGEN INNAN DU PLOCKAR EN
 >
-> Fem uppgifter, och de är **inte** lika mycket värda. Steg 4.2 hittade tre fel som ingen av
-> de fem grindarna fällde, och **två av dem var tester som såg ut att mäta något men inte
-> gjorde det.** De hittades genom att jag saboterade koden med flit — alltså av en vana, inte
-> av en process. Händer det bara när någon råkar komma på det kommer nästa tysta vakt inte
-> hittas.
+> Uppgifterna är **inte** lika mycket värda. Steg 4.2 hittade tre fel som ingen av de fem
+> grindarna fällde, och **två av dem var tester som såg ut att mäta något men inte gjorde
+> det.** De hittades genom att jag saboterade koden med flit — alltså av en vana, inte av en
+> process. Händer det bara när någon råkar komma på det kommer nästa tysta vakt inte hittas.
 >
 > | # | Vad | När |
 > |---|---|---|
-> | **12.36** | Kontrastmätningen finns inte i repot | **Före 4.3.** Det är metoden som hittat allt sedan 4.1 |
-> | **12.37** | Sabotagekontrollen är en vana, inte en regel | **Före 4.3.** Billig, och 4.3 skriver nya vakter |
+> | ~~**12.36**~~ | ~~Kontrastmätningen finns inte i repot~~ | ✅ **KLAR 2026-08-27.** `e2e/kontrast.spec.ts`. Hittade tio kontroller med osynlig kant |
+> | **12.37** | Sabotagekontrollen är en vana, inte en regel | 🔴 **NÄSTA. Före 4.3**, och 12.36 gav den två nya belägg |
 > | **12.38** | `IMPORTERAT_SET`:s datum kan maskera tidsberoende filter | **Med 12.37.** Samma familj |
 > | **12.39** | `getSetAverages` drar in hela `exercises` i sin observerade mängd | Före **fas 7** |
-> | **12.40** | Briefen saknar kanttoken för element direkt på papperet | **I 4.3**, när frågan återkommer |
+> | **12.40** | Briefen saknar kanttoken för element direkt på papperet | **I 4.3.** Frågan är nu mätbar — se raden |
+> | **12.41** | Kontrastvakten ser fyra lägen, inte hela appen | Efter 4.3. `/ovning/:id` är den allvarligaste delen |
 >
-> **12.36 och 12.37 är de enda som hindrar framtida fel.** De övriga tre är enskilda skulder.
-> Görs bara en sak, gör 12.36.
+> 🔴 **12.37 är nu den enda kvarvarande som hindrar framtida fel**, och 12.36 stärkte argumentet
+> för den: bygget av kontrastvakten producerade **en tyst grön vakt i vakten själv** (en
+> hopslagen liveness-räknare som dolde att textvägen kunde vara död) och **ett kvarglömt
+> undantag**, båda hittade genom kontroll och inte genom tur. Regeln finns fortfarande bara som
+> en vana. Görs bara en sak, gör 12.37.
 
-- [ ] **12.36 Kontrastmätningen bor i ett sessionstranskript, inte i repot. Ny 2026-08-26.**
+- [x] **12.36 Kontrastmätningen bor i ett sessionstranskript, inte i repot. Ny 2026-08-26.
+      KLAR 2026-08-27 i `e2e/kontrast.spec.ts`.**
       **Det här är det tyngsta fyndet ur steg 4.2**, och det handlar inte om en färg.
 
       Steg 4.1 lämnade fyra fel som **inga grindar fångade**, för att tokens *innebörd* ändrades
@@ -3411,6 +3415,59 @@ och 13.1 måste vara klar före 13.6.
       3:1 för kanter som bär betydelse enligt WCAG 1.4.11); den faller på ett infört fel —
       **kontrollerat genom sabotage, inte antaget**; och undantagslistan är tom eller motiverad
       post för post.
+
+      ✅ **BYGGD 2026-08-27, commit `177ec56`.** Fem tester (fyra lägen + en listgranskning) ×
+      tre viewportbredder. E2E gick 66 → **81 passed**. Fyra lägen mäts, och andra läget är det
+      som bär vakten: *Idag utan pass*, **Idag med pågående pass och en bekräftad rad**,
+      *Historik*, *Inställningar*.
+
+      🔴 **VAKTEN HITTADE TIO KONTROLLER MED OSYNLIG KANT, LAGADE I `822babd`.** Alla hade
+      `--color-line` — tokenen `index.css` uttryckligen kallar **dekorativ** — som enda
+      avgränsning, uppmätt till **1,01–1,18:1** mot sitt faktiska underlag. **Det är samma fynd
+      som steg 4.1 gjorde** (*"tre kontroller med `--color-line` som enda avgränsning"*);
+      migreringen till `--color-line-strong` blev aldrig färdig, och **steg 4.2 lade till tre
+      nya fall** i vilotimern. Noll textfynd — textsidan var alltså redan ren.
+
+      💡 **Sabotaget som är värt att bära vidare, för det bevisar metoden och inte bara vakten.**
+      `--color-dim` sattes tillfälligt till `color-mix(in oklab, #1c1917 25%, transparent)`.
+      Datorstilen blev `oklab(0.216115 0.003422 0.005081 / 0.25)`, och vakten mätte **1,70:1**
+      mot papperet — rätt. **En RGB-regex hade läst `0.216` som rödvärde, fått närmast svart,
+      rapporterat ~17:1 och gått grön.** Det är exakt felet 4.2:s första skript gjorde, nu
+      omöjligt: ingen färgsträng tolkas någonstans i filen, inte ens för att avgöra om något är
+      genomskinligt (det målas på svart och på vitt och jämförs).
+
+      ⚠️ **En tyst grön vakt byggdes in i vakten och rättades under bygget.** Första versionen
+      räknade ett enda `mätta`-tal. Eftersom kantvägen ger utslag på varje sida hade den
+      räknaren stått långt över noll **även om textvägen aldrig kört en enda mätning** — alltså
+      precis den felklass 12.37 handlar om, inbyggd i verktyget som finns för att hitta den.
+      Sorterna räknas nu var för sig. **Regeln som faller ut: en liveness-räknare som slås ihop
+      över två oberoende vägar bevisar ingen av dem.**
+
+      📋 **Undantagslistan har tre poster, alla med skälet utskrivet i filen.** En fjärde
+      (`:disabled` för kanter) **togs bort samma dag den skrevs** — granskningstestet fällde den
+      direkt, eftersom inget av de fyra lägena har en inaktiv kontroll med synlig kant. Det är
+      den rörelsen listan finns för.
+
+      ⏰ **`+ Lägg till set` är den enda kontroll som medvetet INTE bytte token**, och skälet är
+      uppmätt: knappen har bara `border-t`, alltså en avdelare mellan rader och ingen kontur. I
+      den starka tokenen blev linjen **tyngre än setradernas egna avdelare** — sämre läsbarhet
+      av en bokstavstrogen tillämpning av 1.4.11. Undantaget är därför strukturellt formulerat
+      (*en kontur har fyra sidor*) och inte en smakbedömning.
+
+      ✏️ **RÄTTELSE SAMMA DAG, `4bd2ead`: Historik mättes först TOM.** Läget gick rakt till
+      `/historik` på en tom databas, så det som mättes var en tomstatusruta och flikraden —
+      passlistan fanns aldrig i urvalet. Grön av fel skäl, i den fil som finns för att hitta
+      just det. Passet loggas nu genom appen och avslutas. **Inga nya fynd av det utökade
+      urvalet**, men vakten mäter nu det den påstår sig mäta.
+
+      ⏰ **VAD VAKTEN ÄNNU INTE SER — se 12.41.** Fyra lägen är fyra lägen, inte hela appen.
+      Bottenarket, övningsväljaren, fritextinmatningen och hela rutten `/ovning/:id` mäts inte,
+      och de innehåller kontroller med samma `--color-line`-kant som nyss lagades på tio andra
+      ställen. Uppgiftens **Klart när** namnger Pass, Historik och Inställningar och är därmed
+      uppfylld — men luckan är verklig och skriven som egen rad så den inte blir kvar i löptext.
+
+      ⏰ **Adam hade inte hunnit svara på om de tio kanterna får se ut så här** när sessionen
+      tog slut. **Ingenting är pushat** — se `HANDOFF.md` för hur de backas.
 
 - [ ] **12.37 Sabotagekontrollen är en vana, inte en regel. Ny 2026-08-26.**
       Steg 4.2 hittade **två tysta gröna vakter**, båda genom att koden de mäter saboterades
@@ -3496,11 +3553,45 @@ och 13.1 måste vara klar före 13.6.
       utanför kort, och då upprepas valet — antingen med samma tysta avsteg eller med ett eget
       beslut varje gång.
 
+      🔄 **Frågan är nu MÄTBAR, vilket den inte var när raden skrevs.** `e2e/kontrast.spec.ts`
+      (12.36) mäter varje kant mot **både** sitt inre och sitt yttre underlag och kräver 3:1 på
+      båda — alltså exakt den tabell den här uppgiften handlar om. Beslutet i 4.3 fattas därför
+      mot en körbar mätning i stället för mot handräknade tal.
+
       **Att avgöra, och det är en designfråga för Adam att godkänna:** ska §1b få en andra
       kantnivå för element på papperet (t.ex. `--color-ok-line-paper`), eller ska regeln i
       stället vara *"semantiska element ligger alltid på ett kort"* — vilket hade tvingat om
       timerchipet? **Ta det i 4.3, inte tidigare**, så beslutet fattas mot ett verkligt andra
       fall och inte mot ett hypotetiskt.
+
+- [ ] **12.41 Kontrastvakten ser fyra lägen, inte hela appen. Ny 2026-08-27.**
+      Utbruten ur 12.36 så att luckan inte blir kvar i en löptext. **Inte ett fel i vakten** —
+      12.36:s **Klart när** namnger Pass, Historik och Inställningar, och alla tre mäts. Men
+      fyra lägen är fyra lägen.
+
+      **Vad som aldrig mäts i dag**, och alla fyra innehåller kontroller med samma
+      `--color-line`-kant som just lagades på tio andra ställen:
+
+      | Vad | Var | Varför den inte nås |
+      |---|---|---|
+      | Bottenarket för setjustering | `SetAdjustSheet.tsx` | Öppnas bara av ett tryck på en setrad |
+      | Övningsväljaren | `ExercisePicker.tsx` | Egen dialog ovanpå passet |
+      | Fritextinmatningen | `QuickLog.tsx`, `ManualEntry.tsx` | Fälls ut ur genvägen |
+      | **Hela rutten `/ovning/:id`** | `ExercisePage.tsx` | Står inte i `LÄGEN` alls |
+
+      ⚠️ **Rutten är den allvarligaste av de fyra.** De tre andra är överlagringar som kräver en
+      gest; `/ovning/:id` är en vanlig sida vem som helst når från historiken, och den mäts
+      **inte alls**. Att lägga till den är två rader i `LÄGEN`.
+
+      💡 **Överlagringarna bär en egen risk vakten i dag inte kan uttrycka:** ett ark ligger
+      ovanpå annat innehåll, och lagermodellen i `bakgrundslager()` går uppåt genom
+      *förfäderskedjan* — inte genom det som råkar ligga bakom på skärmen. Så länge arket har en
+      egen ogenomskinlig bakgrund stämmer det ändå. **Det ska verifieras, inte antas**, och
+      faller det är rätt svar att rapportera elementet som omätbart snarare än att gissa.
+
+      **Klart när:** `/ovning/:id` mäts som eget läge, de tre överlagringarna mäts i öppnat
+      tillstånd, och överlagringarnas underlag är kontrollerat — antingen som korrekt mätt eller
+      som uttryckligen omätbart.
 
 ---
 
