@@ -1561,6 +1561,20 @@ utskriven differens. Dyker upp i samma ögonblick setet bockas av — den starka
 └──────────────────────────────────┘
 ```
 
+> ⚠️ **`N set` BETYDER ARBETSSET. Uppvärmningen räknas inte, någonstans i appen.**
+> Adams beslut 2026-08-27 (uppgift **12.48**), och det gäller alla tre talen på raden.
+>
+> **Skälet är raden själv, inte talet.** Fram till 12.48 uteslöt volymen uppvärmningen medan
+> setantalet räknade den — 12.16 hade avgjort så, med det fullt rimliga skälet *"de gjordes"*.
+> Men de två talen står **bredvid varandra**, och då läses de som två påståenden om samma
+> mängd. Adam reagerade på exakt den formen på övningskortet dagen innan (12.44): *"3 set ·
+> 0 volym kg"*. **Två tal ur olika mängder på en rad är värre än att ett av dem är fel**, för
+> ett fel tal kan man se; en tyst betydelseskillnad kan man inte.
+>
+> ⛔ **Skriv inte filtret själv när du bygger 4.3.** Regeln bor i `src/lib/worksets.ts`
+> (`loggadeArbetsset`, `volymAv`). Den skrevs om av varje ny konsument så länge den bara fanns
+> i frågelagret, och glömdes på fem ställen i rad.
+
 **Statistik-segmentet:**
 
 ```

@@ -363,8 +363,15 @@ export interface WorkoutSummary {
  * 2. Startskärmens "Kopiera förra passet" — i dag vet man inte vad man kopierar
  *    förrän efteråt.
  *
- * Uppvärmningsset räknas INTE i volymen. De är förberedelse, inte arbete, och
- * att blanda in dem gör siffran obrukbar för jämförelser mellan pass.
+ * Uppvärmningsset räknas INTE. De är förberedelse, inte arbete, och att blanda
+ * in dem gör siffran obrukbar för jämförelser mellan pass.
+ *
+ * ✏️ **Gällde bara volymen fram till 12.48.** Nu gäller det alla tre talen, och
+ * för `setCount`/`exerciseCount` är skälet ett annat än jämförbarhet: **de bär
+ * ett löfte.** Etiketten på *"Kopiera förra passet"* säger vad knappen kommer
+ * att hämta, och `copyWorkoutIntoPlan` hoppar över uppvärmning — en övning man
+ * bara värmt upp på följer alltså inte med alls. Räknades den med lovade
+ * etiketten mer än knappen levererade. Kontraktet mäts i `history.test.ts`.
  */
 export async function summarizeWorkout(
   workoutId: string,
@@ -377,8 +384,8 @@ export async function summarizeWorkout(
   const arbetsset = sets.filter((s) => !s.isWarmup);
 
   return {
-    setCount: sets.length,
-    exerciseCount: new Set(sets.map((s) => s.exerciseId)).size,
+    setCount: arbetsset.length,
+    exerciseCount: new Set(arbetsset.map((s) => s.exerciseId)).size,
     volumeKg: arbetsset.reduce((sum, s) => sum + volumeKg(s.weightKg, s.reps), 0),
     startedAt: workout.startedAt,
   };

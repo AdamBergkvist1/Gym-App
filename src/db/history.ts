@@ -15,7 +15,15 @@ import type { LocalSet, LocalWorkout } from './types';
 
 export interface WorkoutSummary {
   workout: LocalWorkout;
-  /** Alla loggade set, uppvärmning inräknad — de gjordes. */
+  /**
+   * Bara arbetsset. Uppvärmning är förberedelse, inte arbete.
+   *
+   * ✏️ **HÄR STOD "uppvärmning inräknad — de gjordes" fram till 12.48.** 12.16
+   * avgjorde det, och det var inte fel då. Men historikraden visar `N set · M kg`
+   * bredvid varandra, och när 12.44 hittade samma form på övningskortet blev
+   * mönstret tydligt: **två tal ur olika mängder på samma rad är värre än att ett
+   * av dem är fel.** Adam avgjorde 2026-08-27 att regeln ska vara densamma överallt.
+   */
   setCount: number;
   /** Bara arbetsset. Uppvärmning är förberedelse, inte arbete. */
   totalVolumeKg: number;
@@ -101,7 +109,7 @@ export async function listWorkoutSummaries(
 
     return {
       workout,
-      setCount: rows.length,
+      setCount: arbetsset.length,
       // Avrundas INTE. Halvkilon är verkliga vikter (2,5 kg-skivor), och 12.18
       // avgjorde att de ska synas. `summarizeWorkout` i repo.ts returnerar också
       // orörd summa — divergerar de igen fångas det av testet i history.test.ts.
@@ -375,7 +383,15 @@ export async function getSetAverages(
   return { sets, staleSince: null };
 }
 
-/** Övningar användaren faktiskt har loggat, nyast först. Driver historiklistan. */
+/**
+ * Övningar användaren faktiskt har loggat, nyast först. Driver historiklistan.
+ *
+ * `setCount` räknar **arbetsset**, som resten av filen. Uppvärmningen togs bort
+ * ur talet i 12.48: listan ligger i samma vy som passraderna, och två `N set` i
+ * samma vy får inte betyda olika saker. Datumet däremot räknas ur ALLA set —
+ * en dag man bara värmde upp är fortfarande en dag man rörde övningen, och
+ * `lastPerformedAt` svarar på när, inte på hur mycket.
+ */
 export async function listTrainedExercises(
   database: GymDatabase = db
 ): Promise<Array<{ exerciseId: string; lastPerformedAt: string; setCount: number }>> {
@@ -383,9 +399,10 @@ export async function listTrainedExercises(
   const map = new Map<string, { lastPerformedAt: string; setCount: number }>();
   for (const s of rows) {
     const current = map.get(s.exerciseId);
-    if (!current) map.set(s.exerciseId, { lastPerformedAt: s.performedAt, setCount: 1 });
+    const räknas = s.isWarmup ? 0 : 1;
+    if (!current) map.set(s.exerciseId, { lastPerformedAt: s.performedAt, setCount: räknas });
     else {
-      current.setCount++;
+      current.setCount += räknas;
       if (s.performedAt > current.lastPerformedAt) current.lastPerformedAt = s.performedAt;
     }
   }

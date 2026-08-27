@@ -18,6 +18,7 @@ import {
   listTrainedExercises,
   listWorkoutSummaries,
 } from './history';
+import { copyWorkoutIntoPlan } from './plan';
 import { workSetIndices } from '../lib/worksets';
 
 const BENK = '38433903-c5f6-41e4-b2e8-4f0587b6d0cf';
@@ -106,16 +107,19 @@ describe('9.1 passhistorik', () => {
     expect(s?.totalVolumeKg).toBe(450);
   });
 
-  it('räknar inte uppvärmningsset i volymen, men räknar dem i setCount', async () => {
+  it('räknar inte uppvärmningsset — varken i volymen eller i setCount', async () => {
     const w = await startWorkout(db);
     await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
     await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
 
     const [s] = await listWorkoutSummaries(50, db);
 
-    // Setet gjordes, så det räknas. Men uppvärmning är förberedelse, inte arbete:
-    // 400 kg får inte smyga in i volymen och göra passet ojämförbart med andra.
-    expect(s?.setCount).toBe(2);
+    // ✏️ HÄR STOD `toBe(2)`. 12.16 avgjorde att setet skulle räknas — "de gjordes"
+    // — medan volymen uteslöt det. Adam vände på det 2026-08-27 (12.48): raden i
+    // historiken visar `N set · M kg` bredvid varandra, och två tal ur olika
+    // mängder på samma rad är precis vad han reagerade på i 12.44. Nu kommer båda
+    // ur arbetsseten.
+    expect(s?.setCount).toBe(1);
     expect(s?.totalVolumeKg).toBe(450);
   });
 
@@ -133,6 +137,53 @@ describe('9.1 passhistorik', () => {
     // igen är det den här raden som säger till, inte en användare som undrar.
     expect(historik?.totalVolumeKg).toBe(passvy?.volumeKg);
     expect(historik?.totalVolumeKg).toBe(962.5);
+  });
+
+  it('läser noll set för ett pass man bara värmde upp på — följden av 12.48, nedskriven', async () => {
+    // ⚠️ DET HÄR ÄR INGEN BUGG, DET ÄR PRISET FÖR ADAMS BESLUT, och det ska stå
+    // någonstans. Före 12.48 hade raden sagt "1 set · 0 kg"; nu säger den
+    // "0 set · 0 kg". Passet syns fortfarande i listan, med övningens namn, så
+    // det är inte borta — men båda talen är noll.
+    //
+    // Det är den konsekventa läsningen: uppvärmning är förberedelse, och ett pass
+    // som bara var förberedelse innehåller inget arbete. Ändras det någon gång är
+    // det den här raden som ska falla först, inte Adam som ska undra på skärmen.
+    const w = await startWorkout(db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
+    await endWorkout(db);
+
+    const [s] = await listWorkoutSummaries(50, db);
+    expect(s?.setCount).toBe(0);
+    expect(s?.totalVolumeKg).toBe(0);
+    expect(s?.exerciseIds).toEqual([BENK]);
+  });
+
+  it('lovar inte fler set än "Kopiera förra passet" faktiskt kopierar — kontrakt mot copyWorkoutIntoPlan', async () => {
+    // ⛔ DET HÄR ÄR INTE ETT TAL SOM SER FEL UT, DET ÄR ETT LÖFTE SOM BRYTS.
+    // `beskrivPass` sätter "N övningar · M set" på knappen "Kopiera förra passet"
+    // för att man ska se vad man får INNAN man trycker. `copyWorkoutIntoPlan`
+    // hoppar över uppvärmning (`plan.ts`), så räknar sammanfattningen med den
+    // lovar etiketten mer än knappen levererar. Knäböjen nedan har BARA en
+    // uppvärmning — den övningen följer alltså inte med alls.
+    //
+    // Förväntan hämtas från andra sidan av kontraktet i stället för att skrivas
+    // som en siffra här: det är planen som är facit, och divergerar de igen
+    // faller raden oavsett vilken av de två som ändrats.
+    const w = await startWorkout(db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+    await logSet(
+      { workoutId: w.id, exerciseId: KNABOJ, weightKg: 60, reps: 8, isWarmup: true },
+      db
+    );
+    await endWorkout(db);
+
+    const löfte = await summarizeWorkout(w.id, db);
+    const nytt = await startWorkout(db);
+    const plan = await copyWorkoutIntoPlan(nytt.id, w.id, db);
+
+    expect(löfte?.exerciseCount).toBe(plan.exercises.length);
+    expect(löfte?.setCount).toBe(plan.exercises.reduce((n, e) => n + e.sets.length, 0));
   });
 
   it('ger null som längd för ett pågående pass i stället för att gissa', async () => {
@@ -640,5 +691,17 @@ describe('tränade övningar', () => {
     const rader = await listTrainedExercises(db);
     expect(rader).toHaveLength(2); // inte 45 — bara de tränade
     expect(rader[0]!.exerciseId).toBe(KNABOJ);
+  });
+
+  it('räknar inte uppvärmningsset i övningens setantal', async () => {
+    // Historiksidans övningslista visar `N set` per övning, i samma vy som
+    // passraderna ovan visar `N set · M kg`. Räknade den här uppvärmningen skulle
+    // två tal i SAMMA vy betyda olika saker — det är exakt vad 12.48 avgjorde bort.
+    const w = await startWorkout(db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+
+    const [rad] = await listTrainedExercises(db);
+    expect(rad?.setCount).toBe(1);
   });
 });
