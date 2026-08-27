@@ -1240,7 +1240,19 @@ nuvarande.
       | Avrundning | Närmaste viktsteg för övningens **utrustning** — `skivstång` 2,5 kg, allt annat 1 kg. **Ändrad 2026-08-25**, se rutan längst ner |
       | Åldersgräns | **8 veckor**, annars *"senast tränad i \<månad år\>"* |
       | Filter | Raderade, uppvärmningsset **och importerade** — samma tre som 13.4 |
-      | Färre än 3 pass | Visa ändå, märkt med antalet. `–` bara när underlag saknas helt |
+      | Färre än 3 pass | Visa ändå, märkt med antalet — **en prick per pass**, valt av Adam 2026-08-26 |
+      | Inget underlag alls | **Visa ingenting.** ✏️ Här stod `–`; ändrat 2026-08-27, se rutan nedan |
+
+      > ✏️ **RÄTTELSE 2026-08-27 (uppgift 12.46): raden ovan sa `–` bara när underlag saknas
+      > helt.** Koden gör inte det — `SetRow` renderar `{average && <Snitt …>}`, alltså
+      > ingenting. **Koden har rätt och den här raden hade fel**, och skälet står nu utskrivet i
+      > `DESIGN.md` §"Färre än tre pass": `–`-regeln skrevs när snittet var en egen kolumn som
+      > annars stod tom, och form 2B gjorde snittet till en andrarad under värdet där ett streck
+      > i stället *ser ut att bära information*.
+      >
+      > ⛔ **Ändringen skedde i steg 4.2 del A utan att den här raden rättades**, och skälet
+      > låg bara i en kodkommentar. Det är ett regel 1-brott även när koden blev rätt — briefen
+      > ska ändras först. `/code-review` hittade det.
 
       ⚠️ **Formuleringen "de tre senaste passen" är den fälla uppgiften finns för att undvika.**
       Adam preciserade den själv: kör man bänk på måndagen och ben tisdag till torsdag
@@ -3761,7 +3773,20 @@ och 13.1 måste vara klar före 13.6.
       del B säger samma sak som koden. **Mät med `e2e/no-horizontal-overflow.spec.ts` efteråt** —
       4 px mer padding på 375 px är den bredd som är minst.
 
-- [ ] **12.46 `DESIGN.md` påstår tre saker koden motsäger. Ny 2026-08-27. REGEL 1.**
+- [x] **12.46 `DESIGN.md` påstår tre saker koden motsäger. Ny 2026-08-27. REGEL 1.
+      KLAR 2026-08-27.**
+
+      ✅ **Alla tre rättade, och i alla tre fallen var det dokumentet som ändrades — inte
+      koden.** Skälen fanns redan och var goda; de låg bara på fel ställe. Punkt 3 är
+      **inte avgjord**, bara nedskriven som öppen, eftersom beslutet tillhör `12.40`.
+      `TASKS.md` `11B.0f`:s `–`-rad är rättad på samma sätt, med rättelseruta.
+
+      💡 **Det gemensamma mönstret i alla tre är värt mer än rättelserna:** ändringen gjordes i
+      koden, skälet skrevs i en kodkommentar, och briefen lämnades. Kodkommentaren är rätt
+      plats för *hur*, men `DESIGN.md` §0.1 säger att den som ändrar ett värde skriver **varför
+      i samma commit** — och regel 1 vilar på att briefen är sanningskällan. **En brief som
+      halkar efter koden slutar vara en brief och blir en logg.**
+
       🔴 **Den här ligger först av granskningens fynd**, och skälet är inte städning: så länge
       briefen är osann är den inte längre sanningskällan, och `CLAUDE.md` regel 1 vilar på att
       den är det. `DESIGN.md` §0.1 säger dessutom uttryckligen att *"den som ändrar ett värde

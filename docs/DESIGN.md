@@ -803,6 +803,35 @@ kan vara gul, en gul linje mot vitt kan inte samtidigt vara gul och synlig.
 > beslutad token. Filen är rättad i samma commit, med felet utskrivet i den — ett
 > beslutsunderlag som tyst korrigeras är inte längre ett underlag.
 
+⏰ **TABELLEN OVAN MÄTER ENBART MOT VITT KORT, OCH DET RÄCKER INTE FÖR ALLA ELEMENT.
+Noterat 2026-08-27; frågan avgörs i `TASKS.md` 12.40, inte här.**
+
+Kolumnen *"Vald kant"* vilar på fynd 3: tonade ytor ligger alltid på ett kort. Men `§3.1` säger
+samtidigt att **vilotimern ska vara en chip i flödet**, alltså ett semantiskt element **direkt
+på papperet** — och där mäter samma token annorlunda:
+
+| Token | Mot papper (ut) | Mot `ok-bg` (in) |
+|---|---|---|
+| `--color-ok-line` | **2,99** ⛔ | 3,17 ✓ |
+| `--color-ok-text` | **5,50** ✓ | 5,83 ✓ |
+
+**[RestTimer.tsx](../src/ui/RestTimer.tsx) använder därför `--color-ok-text` som kant sedan
+steg 4.2 del C** — vilket fungerar men är fel namn på rätt värde: tokenen föddes som textfärg.
+Avsteget är medvetet och skälet står utskrivet i komponenten.
+
+⛔ **Frågan är öppen och ska INTE avgöras här:** ska §1b få en andra kantnivå för element som
+ligger direkt på papperet, eller ska regeln i stället vara *"semantiska element ligger alltid
+på ett kort"* — vilket hade tvingat om timerchipet? **`TASKS.md` 12.40 äger beslutet och tar
+det i steg 4.3**, mot ett verkligt andra fall i stället för ett hypotetiskt.
+
+✅ **Frågan är numera mätbar.** `e2e/kontrast.spec.ts` (uppgift 12.36) mäter varje kant mot
+**både** sitt inre och sitt yttre underlag och kräver 3:1 på båda — alltså exakt den här
+tabellen, körd av sig själv vid varje `npm run e2e`.
+
+> ✏️ **Avsteget fanns i koden från 2026-08-26 utan att stå här.** `/code-review` hittade det
+> 2026-08-27 (uppgift **12.46**). Raden ovan är tillagd för att briefen inte ska påstå att
+> tabellen täcker alla fall när den inte gör det.
+
 ### Tokens — väg C. Detta är det som gäller
 
 ```css
@@ -1309,11 +1338,19 @@ tryck på `+1`. Ett för grovt raderar det värde användaren faktiskt lyfte.
 det står där. Typografin är oförändrad: `--text-meta`, `--color-dim`, aldrig samma storlek som
 det du skriver in.
 
-💡 **Öppen följdfråga, inte avgjord:** `±`-knapparna i justeringsarket är hårdkodade till
-`−1 / −2,5 / +2,5 / +1` ([SetAdjustSheet.tsx](../src/ui/SetAdjustSheet.tsx)). Samma
-utrustningsregel skulle kunna styra dem, så att hantelövningar får `+1` som huvudsteg i
-stället för `+2,5`. **Det är en UI-ändring i en komponent steg 4 bygger om**, och den ligger
-därför kvar som förslag tills Adam sagt till.
+✅ **`±`-knapparna följer samma utrustningsregel. Avgjort och byggt 2026-08-26**, i steg 4.2
+del D. Adam: *"dom får vi ta när det steget kommer."* Stegen i justeringsarket härleds nu ur
+övningens `equipment` genom `weightStepFor` — samma funktion som styr snittets avrundning — så
+att en hantelövning får `+1` som huvudsteg och en skivstångsövning `+2,5`.
+Se [SetAdjustSheet.tsx](../src/ui/SetAdjustSheet.tsx) och `src/lib/steps.ts`.
+
+> ✏️ **Här stod fram till 2026-08-27 att frågan var *"öppen följdfråga, inte avgjord"* och
+> att `±`-knapparna var hårdkodade till `−1 / −2,5 / +2,5 / +1`.** Det var sant när det skrevs
+> och **osant från och med steg 4.2 del D**, som byggde regeln utan att rätta den här raden.
+> `/code-review` hittade det 2026-08-27 (uppgift **12.46**). `DESIGN.md` §0.1 kräver att den
+> som ändrar ett värde skriver varför **i samma commit** — det gjordes inte, och briefen var
+> därmed osann i ett dygn. **Det är inte en skönhetsfläck: regel 1 vilar på att den här filen
+> är sanningskällan.**
 
 **Typografin är inte en detalj, den är hela poängen.** Mönstret är MacroFactors `av`-konstruktion:
 `2108` stort, `of 2643` litet och grått under. Referensvärdet finns, men det viskar. Skälet att
@@ -1322,9 +1359,29 @@ sätt som en toppdag gör. **Att både jämna ut värdet och gömma det vore att
 två gånger, och då syns aldrig det värde som efterfrågades.**
 
 ⚠️ **Färre än tre pass: visa snittet ändå, märkt med hur många pass det bygger på.** Det är det
-tillstånd som kommer att synas *mest*, eftersom appen tas i bruk från nästan noll. `–` reserveras
-för när underlag saknas helt — samma regel som §3.3 redan har: *"aldrig en nolla: en nolla ser ut
-som ett resultat."*
+tillstånd som kommer att synas *mest*, eftersom appen tas i bruk från nästan noll. **Märkningen
+är en prick per pass**, vald av Adam 2026-08-26 ur fyra former; den kostar nästan ingen bredd,
+vilket är samma skäl som gjorde att 2B vann.
+
+🔄 **När underlag saknas HELT visas ingenting — inte `–`. Ändrat 2026-08-27.**
+
+> ✏️ **Här stod att *"`–` reserveras för när underlag saknas helt"*.** Den regeln skrevs när
+> snittet var en **egen kolumn** som annars stod tom, och i det läget var den riktig: en tom
+> cell i en namngiven kolumn ser ut som ett renderingsfel. **Form 2B ändrade förutsättningen.**
+> Snittet är där en andrarad *under värdet*, och ett streck på den raden skapar en rad som ser
+> ut att bära information. **Frånvaron av tal ÄR svaret.**
+>
+> Regelns egen poäng — §3.3:s *"aldrig en nolla: en nolla ser ut som ett resultat"* — är
+> oförändrat uppfylld, och starkare så: `–` var på väg att bli precis en sådan nolla.
+>
+> **Skälet kommer ur en mätning och inte ur smak.** Fynd 4 i skärmdumpsgenomgången 2026-08-04:
+> *"`Förra` var radens bredaste kolumn och visade ett streck. Det såg ut som ett renderingsfel
+> snarare än som frånvaro av data."* Se docblocken i [SetRow.tsx](../src/ui/SetRow.tsx).
+>
+> ⛔ **Ändringen gjordes i koden i steg 4.2 del A utan att den här raden rättades**, och skälet
+> stod bara i en kodkommentar. `/code-review` hittade det 2026-08-27 (uppgift **12.46**).
+> Koden hade rätt; dokumentet hade fel. **Det är ändå ett regel 1-brott** — briefen ska ändras
+> först, inte i efterhand.
 
 ### ✅ FORMEN: 2B "under värdet", vald av Adam 2026-08-19
 
