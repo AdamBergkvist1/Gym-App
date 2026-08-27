@@ -1721,7 +1721,45 @@ gäller, och uppgiften skrivs om.
       en grind.** Det enda som hittade dem var att rendera appen och mäta kontrasten
       programmatiskt i DOM:en. Gör om den mätningen efter 4.2 och 4.3.
 
-- [x] **Steg 4.2 Pass-skärmen mot B4 + 2B. Ny 2026-08-26. KLAR 2026-08-26.**
+- [x] **Steg 4.2 Pass-skärmen mot B4 + 2B. Ny 2026-08-26. KLAR 2026-08-26 —
+      MEN TRE KRITERIER VAR INTE UPPFYLLDA. Se rutan direkt nedan.**
+
+      > ### ⛔ RÄTTELSE 2026-08-27: rutan bockades av för tidigt
+      >
+      > `/code-review` mot `cc54451...HEAD` granskade steg 4.2 för första gången — förra
+      > sessionen bad om den granskningen och den kördes aldrig. **Fem spec-fynd och två
+      > standardbrott sitter i den här uppgiften**, alla verifierade mot koden 2026-08-27.
+      >
+      > **Bocken står kvar med flit.** Delarna A–E ÄR byggda och de fem commitarna är verkliga;
+      > att avbocka hade gjort historien osann åt andra hållet. Men **den som läser rutan som
+      > "klart" utan att läsa vidare får fel bild**, och därför står rättelsen i rubriken.
+      >
+      > | Del | Vad som INTE blev gjort | Uppgift |
+      > |---|---|---|
+      > | **A** | Härledningen är **inte delad**. `history.ts:315-319` räknar arbetsset själv, parallellt med `workSetIndices`. Specen: *"Kopplingen ska vara kod, inte prosa i en doc-kommentar"* | **12.42** |
+      > | **B** | Metaraden bär fortfarande `{klara} av {n} set` — **precis den form specen pekade ut som "i dag"** | **12.44** |
+      > | **B** | Kortet är indraget **12 px**, inte 16 som specen säger | **12.45** |
+      > | **C** | Chipet är ingen chip. `rounded-lg border p-3`, full radbredd. `DESIGN.md:511`: *"Knappar och chips: pillerform"* | **12.43** |
+      > | **D** | `DESIGN.md` 1312–1316 säger fortfarande att `±`-stegen *"ligger kvar som förslag tills Adam sagt till"*. Del D avgjorde det | **12.46** |
+      >
+      > 🔴 **Den gemensamma orsaken är värd mer än fynden.** Tre av de fem gled igenom för att
+      > **delens `Klart när` mätte något annat än delens brödtext.** Del C:s brödtext beställer
+      > en **form** (*"en chip i flödet … Siffran är 32 px, alltså en stor chip"*) men dess
+      > `Klart när` mäter bara **kontrast** — så formen blev aldrig grindad, och delen såg
+      > uppfylld ut. Samma sak i B: brödtexten beställer en metarad och ett indrag, `Klart när`
+      > kräver bara att en emoji är borta och att kortet *"ser ut som B4-skissen"*, vilket ingen
+      > kan falla på.
+      >
+      > > **Regeln som faller ut, och den gäller varje uppgift som skrivs härefter:** *ett
+      > > `Klart när` som inte kan falla på uppgiftens egen brödtext är ingen grind — det är en
+      > > sammanfattning.* Skriv kriteriet mot det svåraste kravet i texten, inte mot det
+      > > lättaste att mäta.
+      >
+      > ⚠️ **Del B:s kriterium `grep -rn "🏋" src/` är tom — är fortfarande falskt, men inte
+      > ett fel.** Två träffar återstår och **båda är kommentarer** som förklarar att ikonen är
+      > borttagen. Ikonen ÄR borta. Kriteriet är för bokstavligt formulerat; det är samma
+      > sjuka som ovan, sedd från andra hållet. Ingen uppgift — noterat här och inget mer.
+
       Designrundans andra delsteg, och den skärm appen används mest på. **Inget nytt
       designbeslut fattas här** — formen **B4** valdes 2026-08-12, snittets form **2B**
       2026-08-19, kopplingen vikt/reps och viktsteget 2026-08-25, långtrycket 2026-08-26.
@@ -3374,6 +3412,10 @@ och 13.1 måste vara klar före 13.6.
 > hopslagen liveness-räknare som dolde att textvägen kunde vara död) och **ett kvarglömt
 > undantag**, båda hittade genom kontroll och inte genom tur. Regeln finns fortfarande bara som
 > en vana. Görs bara en sak, gör 12.37.
+>
+> ⏰ **12.42–12.47 tillkom 2026-08-27 ur `/code-review` och har en egen ruta längre ner.**
+> **12.46 går före 12.37**, och skälet är att den är en regel 1-skuld: `DESIGN.md` påstår tre
+> saker koden motsäger, och så länge det gäller är briefen inte sanningskällan.
 
 - [x] **12.36 Kontrastmätningen bor i ett sessionstranskript, inte i repot. Ny 2026-08-26.
       KLAR 2026-08-27 i `e2e/kontrast.spec.ts`.**
@@ -3592,6 +3634,161 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** `/ovning/:id` mäts som eget läge, de tre överlagringarna mäts i öppnat
       tillstånd, och överlagringarnas underlag är kontrollerat — antingen som korrekt mätt eller
       som uttryckligen omätbart.
+
+> ### 🔍 12.42–12.47 kommer ur `/code-review` 2026-08-27, basen `cc54451`
+>
+> Första granskningen av **steg 4.2** — förra sessionen bad om den och den kördes aldrig. Två
+> kalla agenter, en per axel (Standards / Spec), enligt `.claude/skills/code-review`.
+> **Tolv fynd, alla verifierade mot koden innan de skrevs hit.** Ett av dem var mitt (12.36:s
+> "tio kontroller" är elva); fem spec-fynd och två standardbrott satt i steg 4.2.
+>
+> | # | Vad | Sort | När |
+> |---|---|---|---|
+> | **12.42** | Del A:s härledning är inte delad | Spec | Före **fas 7** |
+> | **12.43** | Timerchipet är ingen chip | Spec, **synlig** | Kräver Adams ja |
+> | **12.44** | Metaraden bär fortfarande `{klara} av {n}` | Spec, **synlig** | Kräver Adams ja |
+> | **12.45** | Kortets indrag är 12 px, inte 16 | Spec, **synlig** | Kräver Adams ja |
+> | **12.46** | `DESIGN.md` är osann på tre punkter | Standard, **regel 1** | 🔴 **Först** |
+> | **12.47** | Tre baslinjeluktar ur granskningen | Omdöme | Med `/simplify` |
+>
+> ✅ **Fyra fynd åtgärdades direkt 2026-08-27 och blev därför aldrig uppgifter:** em-dashen i
+> `SetRow.tsx:265` (`DESIGN.md` §0.3), felsiffran *"tio"* → *"elva"* i tre dokument,
+> `EXTERNT.md`:s saknade **Övervägt**-rader för axe-core och långtryckspaketen, och del B:s
+> för bokstavliga emoji-kriterium.
+>
+> 🔴 **12.46 ligger först och det är inte en smaksak.** Så länge `DESIGN.md` påstår saker koden
+> motsäger är briefen inte längre sanningskällan, och `CLAUDE.md` regel 1 vilar på att den är
+> det. De tre andra spec-fynden är synliga ändringar Adam ska godkänna.
+
+- [ ] **12.42 Del A:s härledning är inte delad — `history.ts` räknar arbetsset själv.
+      Ny 2026-08-27.**
+      Steg 4.2 del A säger: *"**Åtgärden är en delad härledning som båda sidor anropar**, inte
+      två räkningar som ska råka stämma. **Kopplingen ska vara kod, inte prosa i en
+      doc-kommentar.**"*
+
+      `src/lib/worksets.ts` finns och `ExerciseCard` anropar den. Men
+      [history.ts:315-319](../src/db/history.ts) räknar fortfarande själv:
+
+      ```
+      const arbetssetIPasset = new Map<string, number>();
+      … const nummer = arbetssetIPasset.get(s.workoutId) ?? 0;
+      ```
+
+      **Två implementationer av samma regel, precis vad delen förbjöd.** Kopplingen är i dag ett
+      kontraktstest i `history.test.ts` — bättre än prosa, men det är fortfarande *"två räkningar
+      som ska råka stämma"*, med ett test som larmar i efterhand.
+
+      ⚠️ **Varför det inte är en trivial utbytning, och det ska stå här:** formerna skiljer sig.
+      `workSetIndices` mappar en **array** i ett pass; `getSetAverages` räknar löpande över en
+      **ström av set från flera pass**, grupperade på `workoutId`. En delad härledning måste
+      alltså vara en primitiv båda kan bygga på — en räknare per pass — inte den nuvarande
+      arraysignaturen. **Det är designarbete, inte en flytt.**
+
+      **Klart när:** regeln "vilket arbetssetnummer har det här setet" finns på **ett** ställe,
+      båda konsumenterna anropar det, och kontraktstestet i `history.test.ts` blir överflödigt
+      eller skrivs om till att mäta primitivet.
+
+- [ ] **12.43 Timerchipet är ingen chip. Ny 2026-08-27. SYNLIG — kräver Adams ja.**
+      Steg 4.2 del C:s brödtext: *"Formen: **en chip i flödet, inte ett banderoll-lager** —
+      timern får inte skymma setraden man just loggat. Siffran är 32 px (`--text-timer`), alltså
+      en *stor* chip."* `DESIGN.md:511`: *"Knappar och chips: pillerform."*
+
+      `RestTimer.tsx:54` är `'rounded-lg border p-3'` — **full radbredd, radie 8 px.**
+
+      ✅ **Halva kravet ÄR uppfyllt:** chipet ligger i flödet och är inget banderoll-lager, så
+      den del som handlade om att inte skymma setraden är löst. **Formen är det som saknas.**
+
+      ⛔ **Delen såg uppfylld ut för att dess `Klart när` bara mätte kontrast.** Se rättelserutan
+      i `Steg 4.2`. Formen grindades aldrig.
+
+      ⚠️ **Att göra den pillerformad är inte gratis, och därför är det Adams beslut:** chipet
+      bär i dag en 32 px-siffra, en etikett, två `±`-knappar och en avbrytknapp på samma rad.
+      En pillerform som inte äter hela raden rymmer inte allt det på 375 px. **Antingen** krymper
+      innehållet, **eller** så gäller pillerformen bara det utgångna läget (som har färre
+      knappar), **eller** så ändras `DESIGN.md` så att timern uttryckligen undantas från
+      chip-regeln. Alla tre är försvarbara; ingen av dem är min att välja.
+
+      **Klart när:** Adam har valt väg, `DESIGN.md` §3.1 säger samma sak som koden, och
+      kontrastvakten är fortfarande grön efter ändringen.
+
+- [ ] **12.44 Metaraden bär fortfarande `{klara} av {n} set`. Ny 2026-08-27. SYNLIG.**
+      Steg 4.2 del B: *"**Metaraden** under namnet: `Skivstång · 3 set · 1 385 kg`. … I dag står
+      där `{klara} av {n} set · sist 90 kg × 5`."*
+
+      [ExerciseCard.tsx:94](../src/ui/ExerciseCard.tsx) producerar
+      `` `${klara} av ${planned.sets.length} set` ``, alltså **`Skivstång · 0 av 3 set · 1 385 kg`**.
+      Volymen lades till och `sist 90 kg × 5` togs bort — men `{klara} av {n}`, den enda del
+      specen uttryckligen kallade *"i dag"*, blev kvar.
+
+      ⚠️ **Det är inte självklart att specen har rätt, och det ska sägas.** `0 av 3 set` bär
+      **framdrift** — hur långt man kommit i övningen — vilket `3 set` inte gör. Specen kan ha
+      förbisett det. **Frågan är alltså inte "följ specen" utan "vilken av de två vill du ha".**
+      Mockupens tomfall (`Kabel · inga set än`) finns inte heller i koden.
+
+      **Klart när:** Adam har valt form, `TASKS.md` och `DESIGN.md` säger samma sak som koden,
+      och tomfallet är hanterat.
+
+- [ ] **12.45 Kortets indrag är 12 px, inte 16 som specen säger. Ny 2026-08-27. SYNLIG.**
+      Steg 4.2 del B: *"**Ytan:** vit, radie 18 px … indragen **16 px**."*
+      [AppShell.tsx:26](../src/ui/AppShell.tsx) sätter `px-3` = **12 px**.
+
+      ⚠️ **Paddingen sitter på `<main>`, inte på kortet.** Ändras den till `px-4` flyttas
+      **allt innehåll på alla skärmar** — Historik, Inställningar, Övningar, flikraden ligger
+      utanför. Det är alltså en app-bred layoutändring och inte den lokala kortjustering specen
+      lät som. Alternativet är ett eget indrag på övningskortet, vilket bryter linjeringen mot
+      allt annat på passkärmen.
+
+      **Klart när:** Adam har valt mellan app-brett 16 px och att lämna 12 px, och `TASKS.md`
+      del B säger samma sak som koden. **Mät med `e2e/no-horizontal-overflow.spec.ts` efteråt** —
+      4 px mer padding på 375 px är den bredd som är minst.
+
+- [ ] **12.46 `DESIGN.md` påstår tre saker koden motsäger. Ny 2026-08-27. REGEL 1.**
+      🔴 **Den här ligger först av granskningens fynd**, och skälet är inte städning: så länge
+      briefen är osann är den inte längre sanningskällan, och `CLAUDE.md` regel 1 vilar på att
+      den är det. `DESIGN.md` §0.1 säger dessutom uttryckligen att *"den som ändrar ett värde
+      skriver varför i samma commit"* — det gjordes inte i någon av de tre.
+
+      | # | `DESIGN.md` säger | Koden gör | Sedan |
+      |---|---|---|---|
+      | 1 | Rad 1312–1316: `±`-stegen är *"öppen följdfråga, inte avgjord … ligger kvar som förslag tills Adam sagt till"* | `SetAdjustSheet` härleder dem ur `weightStepFor` | Steg 4.2 **del D** |
+      | 2 | Rad ~1326: *"`–` reserveras för när underlag saknas helt"* | `SetRow` visar **ingenting** — `{average && <Snitt …>}` | Steg 4.2 **del A** |
+      | 3 | §1b: kanttokens är mätta **mot vitt kort** | `RestTimer` använder `--color-ok-text` som kant för att chipet ligger på papperet | Steg 4.2 **del C** |
+
+      💡 **I alla tre fallen har koden sannolikt rätt och dokumentet fel.** Skälen är utskrivna
+      och goda — särskilt nr 2, där `SetRow.tsx:31-36` förklarar att `–`-regeln skrevs när
+      snittet var en egen kolumn som annars stod tom, och att ett streck under värdet i form 2B
+      *"skapar en rad som ser ut att bära information"*. **Åtgärden är alltså att flytta skälen
+      till briefen, inte att ändra koden.**
+
+      ⛔ Nr 3 ska **inte** avgöras här — den är `12.40`, som hör till steg 4.3. Skriv in att
+      avsteget finns och att frågan är öppen; avgör den inte.
+
+      **Klart när:** ingen av de tre raderna i `DESIGN.md` motsäger koden, skälen står i briefen
+      och inte bara i kodkommentarer, och `TASKS.md` `11B.0f`:s `–`-rad är rättad på samma sätt.
+
+- [ ] **12.47 Tre baslinjeluktar ur granskningen. Ny 2026-08-27. OMDÖMESFRÅGOR.**
+      Ingen av dem är en bugg. De ligger här för att `/simplify` annars hittar dem igen från
+      noll, och för att den första har en verklig felrisk bakom sig.
+
+      1. 🔴 **Tröskeln `3` är kopierad, inte delad.** `ANTAL_PASS_I_SNITTET = 3` är **modullokal**
+         i [history.ts:169](../src/db/history.ts), medan `SetRow` skriver talet rått på **två**
+         ställen: `average.workoutCount < 3` (rad 107, skärmläsartexten) och `pass < 3` (rad 294,
+         prickarna). **Ändras tröskeln i frågan slutar prickarna och skärmläsartexten stämma,
+         tyst.** Exportera konstanten. Det är den enda av de tre som kan ge ett verkligt fel.
+      2. **De två talknapparna i `SetRow` är samma form** — `{...långtryck}` + `<span className=
+         "block text-set leading-tight">` + `{average && <Snitt/>}`, en gång för Kg och en för
+         Reps. En `TalKnapp` vill födas.
+      3. **E2E-lokatorn `/^Vikt .*för set 1/` står på tre ställen** — två i `langtryck.spec.ts`,
+         en i `passvy.spec.ts` — trots att `hjalpare.ts` redan äger `setlista`.
+
+      💡 **Granskaren flaggade också *Shotgun Surgery* på kanttokenen** (`822babd` rör fem filer
+      för en logisk ändring) **och dubblerad uppsättning i `kontrast.spec.ts`** (staleness-testet
+      kör om alla fyra lägen). Båda är noterade och **avfärdade med skäl**: den första är en
+      tokenändring utan naturlig gemensam hemvist så länge Tailwind-klasser står i JSX, och den
+      andra är priset för att granskningen ska vara oberoende av de fyra lägestesterna.
+
+      **Klart när:** punkt 1 är åtgärdad. Punkt 2 och 3 är `/simplify`-material och behöver inte
+      göras här.
 
 ---
 
