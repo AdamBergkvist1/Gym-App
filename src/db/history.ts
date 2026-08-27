@@ -165,8 +165,20 @@ export async function getPersonalRecords(
   return { exerciseId, heaviest, bestE1rm, totalSets: rows.length };
 }
 
-/** `SPEC.md` §2: snittet bygger på de tre senaste passen med övningen. */
-const ANTAL_PASS_I_SNITTET = 3;
+/**
+ * `SPEC.md` §2: snittet bygger på de tre senaste passen med övningen.
+ *
+ * ⚠️ **EXPORTERAD MED FLIT, OCH DET ÄR EN RÄTTELSE.** Talet var modullokalt, och
+ * `SetRow` skrev en egen `3` på två ställen — i skärmläsartexten (*"enligt N
+ * pass"*) och i prickarna som märker ett tunt underlag. **Ändrades tröskeln här
+ * slutade båda stämma, tyst och utan att någon grind sa ett ord**: frågan hade
+ * levererat fyra pass medan skärmen fortsatte kalla det tunt underlag.
+ *
+ * Det är samma sorts kopierade regel som `nudgeSteps` egen docblock varnar för,
+ * och `/code-review` hittade den 2026-08-27 (uppgift 12.47). En regel som bor på
+ * ett ställe kan inte glida isär med sig själv.
+ */
+export const ANTAL_PASS_I_SNITTET = 3;
 
 /** Åtta veckor. Äldre underlag än så är inte längre ett normalläge. */
 const ÅLDERSGRÄNS_MS = 56 * 24 * 60 * 60 * 1000;

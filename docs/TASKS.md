@@ -3814,11 +3814,19 @@ och 13.1 måste vara klar före 13.6.
       Ingen av dem är en bugg. De ligger här för att `/simplify` annars hittar dem igen från
       noll, och för att den första har en verklig felrisk bakom sig.
 
-      1. 🔴 **Tröskeln `3` är kopierad, inte delad.** `ANTAL_PASS_I_SNITTET = 3` är **modullokal**
-         i [history.ts:169](../src/db/history.ts), medan `SetRow` skriver talet rått på **två**
-         ställen: `average.workoutCount < 3` (rad 107, skärmläsartexten) och `pass < 3` (rad 294,
-         prickarna). **Ändras tröskeln i frågan slutar prickarna och skärmläsartexten stämma,
-         tyst.** Exportera konstanten. Det är den enda av de tre som kan ge ett verkligt fel.
+      1. ✅ **KLAR 2026-08-27. Tröskeln `3` var kopierad, inte delad.** `ANTAL_PASS_I_SNITTET`
+         var **modullokal** i [history.ts](../src/db/history.ts), medan `SetRow` skrev talet
+         rått på **två** ställen: `average.workoutCount < 3` (skärmläsartexten) och `pass < 3`
+         (prickarna). **Ändrades tröskeln i frågan slutade båda stämma, tyst** — frågan hade
+         levererat fyra pass medan skärmen fortsatte kalla underlaget tunt. Konstanten är nu
+         exporterad och alla fyra användningar går via den.
+
+         💡 **Inget sabotage gjordes här, och det är ett medvetet val värt att skriva ut.**
+         Felläget var **divergens mellan två tal**, och den är nu omöjlig per konstruktion —
+         det finns bara ett tal. `npm run typecheck` bevisar att referenserna löser ut; ett
+         sabotage hade bara visat att en konstant är en konstant. **Sabotage är rätt verktyg
+         när en vakt påstår sig mäta något; det är fel verktyg mot en strukturell garanti.**
+         Jämför 12.37, som handlar om det förra.
       2. **De två talknapparna i `SetRow` är samma form** — `{...långtryck}` + `<span className=
          "block text-set leading-tight">` + `{average && <Snitt/>}`, en gång för Kg och en för
          Reps. En `TalKnapp` vill födas.

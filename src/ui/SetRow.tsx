@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { formatWeight } from '../lib/steps';
 import { IkonBock } from './icons';
 import { useLongPress } from './useLongPress';
+import { ANTAL_PASS_I_SNITTET } from '../db/history';
 import type { SetAverage } from '../db/history';
 import type { PlannedSet } from '../db/plan';
 
@@ -104,7 +105,7 @@ export function SetRow({
    */
   const brukar = (värde: string) =>
     average
-      ? `, brukar vara ${värde}${average.workoutCount < 3 ? ` enligt ${average.workoutCount} pass` : ''}`
+      ? `, brukar vara ${värde}${average.workoutCount < ANTAL_PASS_I_SNITTET ? ` enligt ${average.workoutCount} pass` : ''}`
       : '';
 
   const snittVikt = average ? formatWeight(average.weightKg) : '';
@@ -295,7 +296,7 @@ function Snitt({ värde, pass }: { värde: string; pass: number }) {
   return (
     <span className="flex items-center justify-center gap-1 text-meta leading-tight text-[var(--color-dim)]">
       {värde}
-      {pass < 3 && (
+      {pass < ANTAL_PASS_I_SNITTET && (
         <span aria-hidden className="flex gap-0.5">
           {Array.from({ length: pass }, (_, i) => (
             <span key={i} className="size-1 rounded-full bg-[var(--color-dim)]" />
