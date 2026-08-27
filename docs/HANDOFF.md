@@ -1,11 +1,170 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-27 (sent). Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-27 (natt). Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-27 (sent) — `/code-review` KÖRD PÅ STEG 4.2. Elva av tolv fynd åtgärdade. Nästa jobb är 12.48
+## 🆕 2026-08-27 (natt) — FYRA UPPGIFTER STÄNGDA: 12.48, 12.37, 12.47 p2–3, 12.49
+
+**Allt är pushat och deployat.** Kontrollera själv:
+
+```bash
+git fetch origin && git status -sb
+```
+
+Svarar den `## main...origin/main` utan `ahead`/`behind` är du i fas. Sessionen började på
+`d1e98fb`; **räkna commitarna med `git log d1e98fb..HEAD --oneline`** i stället för att lita på
+en siffra här — det är fjärde gången i rad ett skrivet antal blivit fel, se rättelsen nedan.
+
+⚠️ **Pushat är inte deployat.** Kontrollen är gjord: produktionen serverar
+`index-u2BpdIAf.js`, **samma asset-hash som det lokala bygget**. Kommandot står under
+*"Så visar du Adam något"* i sektionen under.
+
+### 🔴 DET VIKTIGASTE ATT BÄRA VIDARE: regeln fällde sin egen författare, två gånger
+
+`12.37` skrev in sabotagekontrollen i `CLAUDE.md` regel 2. **Inom samma session fällde den två
+påståenden jag själv hade skrivit några timmar tidigare**, båda formulerade med full
+självsäkerhet och båda falska:
+
+| Vad jag skrev | Vad sabotaget visade |
+|---|---|
+| *"`^`-ankaret skiljer Kg- från Reps-knappen"* (`hjalpare.ts`) | Ankaret borttaget: **allt grönt**. Ordet `Vikt` borttaget: *strict mode violation, resolved to 2 elements*. **Ordet vaktar; ankaret gör det inte** |
+| Kg-etiketten är vaktad av e2e (`SetRow.tsx`) | Bara **början**. `viktText` omkastad → 3 röda. Verbet i slutet ändrat till `JUSTERA` → **allt grönt** |
+
+> **Regeln som faller ut, och den är sessionens tyngsta:** *ett påstående om vad en vakt mäter
+> är inte mindre en gissning för att den som skriver det nyss byggde vakten.* Båda dessa hade
+> passerat en granskning — de lät rimliga, låg i en kommentar, och ingen grind mäter en
+> kommentar. **Det enda som skilde dem från sanning var att någon körde sabotaget.**
+
+Regeln namnger nu **tre** tillfällen, inte de två uppgiften bad om. Det tredje är mitt tillägg
+och står utskrivet som mitt i `TASKS.md` 12.37: **(c) den röda fasen föll på att något saknades
+(`is not defined`)** — det bevisar att funktionen inte fanns, inte att villkoret inuti den
+vaktas. Belägget kom ur 12.48 samma dag, och det hände **igen** i 12.49.
+
+### 🔴 Näst viktigast: två buggar överlevde för att ingen vakt hade en uppvärmningsrad
+
+`12.49` var synlig, verklig och trivial att reproducera — och hade överlevt **tre**
+granskningar inklusive `/code-review`. Skälet är en enda mening värd att bära:
+
+> ⛔ **`isWarmup` fanns bara som `false` i `e2e/hjalpare.ts`:s fixtur. Hela uppvärmningsvägen
+> var omätt end-to-end.** Buggen kräver att en rad faktiskt ÄR uppvärmning för att synas alls.
+
+`e2e/uppvarmning.spec.ts` är sviten **första** vakt som växlar en rad till uppvärmning.
+**Fråga dig var motsvarande hål finns i nästa område du rör.**
+
+### Vad som gjordes — `git log d1e98fb..HEAD --oneline`
+
+Uppgifternas innehåll står i `docs/TASKS.md`; här bara vad som är vad.
+
+| Commit | Vad |
+|---|---|
+| `1980706` | **12.48:** `loggadeArbetsset` + `volymAv` i `src/lib/worksets.ts` |
+| `459741f` | **Adams beslut:** uppvärmning räknas inte i NÅGOT setantal — och knappen slutar ljuga |
+| `13b6eae` | 12.48 stängd, 12.16:s sista mening rättad |
+| `a503f37` | **12.37:** sabotagekontrollen är en regel i `CLAUDE.md` nu |
+| `58cc8a3` | **12.47 p3:** radens identitetsfras är primitiven |
+| `ee137fa` | 12.47: `SetRow`:s tre härledningar |
+| `f6e298e` | **12.47 p2:** `TalKnapp` |
+| `0ff91af` | 12.47 stängd + de sex fynd som INTE gjordes |
+| `f7bb335` | **12.49:** arket och raden numrerade samma rad olika |
+
+### ✅ FEM BESLUT ADAM FATTADE. Riv inte upp dem utan att fråga
+
+| Beslut | Vad han valde | Var det bor |
+|---|---|---|
+| Setantalet | **Uppvärmning räknas inte i NÅGOT setantal**, överallt i appen | `12.48`, `DESIGN.md` §3.2 |
+| Vakten för 12.48 | Delad härledning + enhetstester. **Inte** ett härlett fält på typen | `12.48` |
+| `/simplify` | **Kör skillen som föreskrivet, fyra agenter** — även när fynden redan var kända | `12.47` |
+| Arkets text | **`uppvärmningen`, exakt som raden.** Att numrera uppvärmningarna valdes bort | `12.49` |
+| Vakten för 12.49 | Delad härledning **plus** e2e-vakt, inte det ena eller det andra | `12.49` |
+
+### ✅ Grindarna — ALLA FEM, hemdatorn, efter sista commiten
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **310 tester i 24 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ JS **642,04 kB** (gzip 193,33), precache **723,18 KiB / 10 entries** |
+| `npm run e2e` | ✅ **84 passed**, 31,0 s |
+
+⚠️ **E2E-sviten tog 53–55 s hela dagen och 30–31 s efter kvällens ändringar. Orsaken är INTE
+utredd.** Den enda avsiktliga tidsändringen (`LÅNGTRYCK_MS + 250`) ger 700 ms precis som den
+hårdkodade `700` gjorde, alltså noll. **Behandla halveringen som oförklarad, inte som en
+vinst** — den kan lika gärna vara maskinens tillstånd. Vill du veta, mät före/efter på samma
+commit.
+
+### 🔜 NÄSTA JOBB
+
+1. 🔴 **Steg 4.3 Historik — och uppgiften är FORTFARANDE INTE SKRIVEN.** Regel 1 kräver det
+   före kod. **`12.40` avgörs där** (kanttoken för element direkt på papperet), och frågan är
+   mätbar tack vare kontrastvakten. `DESIGN.md` §3.2 har fått en ruta som säger vad `N set`
+   betyder — **läs den innan du bygger historikraden**, den skrevs i 12.48 just för 4.3.
+2. ⚠️ **Skriv 4.3:s `Klart när` mot det svåraste kravet i brödtexten**, inte mot det lättaste
+   att mäta. Den lärdomen kostade fem spec-fynd i steg 4.2 och står oförändrad.
+3. **`12.41`** — kontrastvakten mäter fyra lägen. `/ovning/:id` mäts inte alls, och att lägga
+   till den är två rader i `LÄGEN`. Hör ihop med 4.3.
+
+⛔ **Gör INTE om kontrastmätningen för hand.** Kör `npm run e2e`.
+
+### ⏰ Öppna trådar
+
+1. **`12.38` hör ihop med `12.31`, INTE med 12.37** trots vad prioriteringsrutan länge sa.
+   Rutan är rättad. Uppgiftens egen text: *"gör dem i samma commit, det är samma rad."*
+2. **`12.39`** — `getSetAverages` drar in hela `exercises` i sin observerade mängd. Latent till
+   fas 7. **`/simplify` bekräftade den oberoende** den här sessionen.
+3. **Sex `/simplify`-fynd gjordes medvetet INTE**, alla med skäl i `TASKS.md` 12.47. Det
+   tyngsta: `React.memo`/`useCallback`-kedjan TodayPage → ExerciseCard → SetRow. **Halvvägs ger
+   noll** — varje prop är ny per render hela vägen upp. Kräver mätning först, och är en egen
+   uppgift, inte en förenkling.
+4. **`radnamn` kallar VARJE uppvärmningsrad `uppvärmningen`.** Har man två på samma övning
+   heter de likadant, i både raden och arket. Det var sant före 12.49 också — rättningen ärvde
+   tvetydigheten. **Adam valde medvetet bort att numrera dem**, eftersom det hade ändrat radens
+   egen etikett. Ingen uppgift finns.
+5. **`Steg 4.1`:s ruta står fortfarande obockad**, nu fjärde sessionen. Enda kvarvarande
+   kandidat till skäl är `apple-mobile-web-app-status-bar-style`, som kräver Adams telefon.
+   **Rutan är hans att bocka av, inte min.**
+6. **Långtrycket är enda vägen till förklaringen av snittalen** tills `11B.6` byggs. Accepterat
+   av Adam med öppna ögon.
+
+### ✏️ Rättelse att inte upprepa
+
+**Commit `f6e298e`:s meddelande säger `641,93 kB`. Rätt siffra är `642,01 kB`.** Jag skrev talet
+innan jag byggde. **Fjärde gången i samma familj** efter de tre off-by-one-felen i sektionen
+nedan — alla av samma sort: *ett tal nedskrivet innan det fanns något att mäta.* Historiken
+skrivs inte om; siffran står rätt i `TASKS.md` 12.47.
+
+> **Regeln, nu utvidgad:** skriv aldrig ett tal i en commit-text som du inte redan har mätt.
+> Det gäller commitantal, testantal **och bundlestorlekar**.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/tdd`** | 🔴 **Till steg 4.3:s logik.** Fungerade väl i både 12.48 och 12.49 — men läs `CLAUDE.md` regel 2 punkt (c) först: en röd fas som föll på `is not defined` bevisar ingenting om villkoret inuti |
+| **`/code-review`** | Efter 4.3, och **innan** rutan bockas av. Steg 4.2 visade vad som händer när den skjuts upp |
+| **`/diagnosing-bugs`** | När något faller — även när det ser ut som flakighet |
+| **`/simplify`** | Inte nu. Den kördes just, och de sex kvarvarande fynden är noterade med skäl |
+
+---
+
+## 2026-08-27 (sent) — `/code-review` KÖRD PÅ STEG 4.2. Elva av tolv fynd åtgärdade — DELVIS ÖVERSPELAD
+
+> **⚠️ Fyra saker i sektionen nedan gäller inte längre.** Se sektionen överst.
+>
+> **(1) Rubrikens *"Nästa jobb är 12.48"* och hela rutan *"🔜 NÄSTA JOBB"* är avklarade.**
+> 12.48, 12.37 och 12.47 punkt 2–3 är alla gjorda 2026-08-27 (sent kväll).
+>
+> **(2) Grindsiffrorna är inaktuella.** 302 tester → **310**, 81 e2e → **84**,
+> bygget 642,01 kB → **642,04 kB**.
+>
+> **(3) Raden *"`/simplify` — näst på tur efter 12.37"* i Suggested skills är utförd.**
+> Båda luktarna är åtgärdade, och granskningen gav sex fynd till som medvetet INTE gjordes —
+> de står med skäl i `TASKS.md` 12.47.
+>
+> **(4) Sessionens slutcommit `3c4fbfe` är inte längre HEAD.** Räkna med
+> `git log 3c4fbfe..HEAD --oneline`.
 
 **Sessionen avslutades här på Adams begäran.** Inget arbete ligger halvgjort, inget väntar på
 hans svar, och allt är pushat och verifierat live.
