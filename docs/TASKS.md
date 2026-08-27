@@ -3460,7 +3460,7 @@ och 13.1 måste vara klar före 13.6.
 > fel siffror eller fel utseende nu.
 >
 > ⏰ **12.42–12.48 tillkom 2026-08-27 ur `/code-review` och Adams fråga, och har en egen ruta
-> längre ner.** Alla utom 12.47 är stängda. **12.46 gick före 12.37**, och skälet var att den
+> längre ner.** Alla sju är nu stängda. **12.46 gick före 12.37**, och skälet var att den
 > var en regel 1-skuld: `DESIGN.md` påstod tre saker koden motsade, och så länge det gällde var
 > briefen inte sanningskällan.
 
@@ -3734,7 +3734,7 @@ och 13.1 måste vara klar före 13.6.
 > | ~~**12.44**~~ | ~~Metaraden bär `{klara} av {n}`~~ | Spec, synlig | ✅ **KLAR.** Adams fråga hittade **uppvärmningsbuggen** granskningen missade |
 > | ~~**12.45**~~ | ~~Kortets indrag är 12 px, inte 16~~ | Spec, synlig | ✅ **KLAR.** Adam behöll 12 px; specen rättad |
 > | ~~**12.46**~~ | ~~`DESIGN.md` är osann på tre punkter~~ | Standard, regel 1 | ✅ **KLAR.** Alla tre var dokumentfel, inte kodfel |
-> | **12.47** | Två baslinjeluktar kvar (punkt 1 klar) | Omdöme | Med `/simplify` |
+> | ~~**12.47**~~ | ~~Två baslinjeluktar kvar (punkt 1 klar)~~ | Omdöme | ✅ **KLAR 2026-08-27** med `/simplify`. Punkt 3 var **elva** ställen, inte tre |
 > | ~~**12.48**~~ | ~~*"Uppvärmning räknas inte"* skrivs om av varje konsument~~ | 🔴 **Verkligt fel** | ✅ **KLAR.** Det var **fem** ställen, inte tre — se uppgiften |
 >
 > ✅ **12.48 var den enda kvarvarande som kunde ge fel siffror**, och den var inte ett
@@ -3958,7 +3958,7 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** ingen av de tre raderna i `DESIGN.md` motsäger koden, skälen står i briefen
       och inte bara i kodkommentarer, och `TASKS.md` `11B.0f`:s `–`-rad är rättad på samma sätt.
 
-- [ ] **12.47 Baslinjeluktar ur granskningen. Ny 2026-08-27. OMDÖMESFRÅGOR.
+- [x] **12.47 Baslinjeluktar ur granskningen. Ny 2026-08-27. OMDÖMESFRÅGOR.
       Punkt 1 KLAR 2026-08-27; punkt 2 och 3 kvar.**
       Ingen av dem är en bugg. De ligger här för att `/simplify` annars hittar dem igen från
       noll, och för att den första har en verklig felrisk bakom sig.
@@ -3990,6 +3990,67 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** punkt 1 är åtgärdad. Punkt 2 och 3 är `/simplify`-material och behöver inte
       göras här.
+
+      **Punkt 2 och 3 åtgärdade 2026-08-27 med `/simplify`**, fyra kalla agenter (återanvändning,
+      förenkling, effektivitet, rätt djup) mot `SetRow.tsx` och de tre e2e-filerna.
+
+      > 🔴 **PUNKT 3 VAR ELVA STÄLLEN, INTE TRE — och `hjalpare.ts` var själv fem av dem.**
+      > Filen som äger `setlista` byggde alltså sina egna setradslokatorer inline.
+      >
+      > **Den mindre primitiven är radens identitetsfras**, inte lokatorn. Alla elva blandade
+      > ihop två frågor: *vilken knapp* (övning, rad, fält) och *vad den visar just nu*
+      > (`inte angiven` / `10 kilo`). Bakas tillståndet in i identiteten måste varje anropsplats
+      > kunna hela etikettgrammatiken — även `langtryck.spec.ts`, som inte behöver veta något om
+      > vikter. `talknapp`, `bockknapp` och `justeringsarket` adresserar; tillståndet assertas
+      > med `toHaveAccessibleName`. Samma rörelse som `worksets.ts` gjorde i 12.42.
+
+      **Regeln som föll ut och är värd mer än fyndet:** *fixturer binds till appen, påståenden
+      stavas självständigt.* Därför exporteras `LÅNGTRYCK_MS` och vakten håller nere fingret
+      `+250` (tröskeln är en fixtur den ska överskrida), medan etikettsträngarna fortsätter
+      stavas för hand i `e2e/` (de är påståendet — importeras de mäter sviten sin egen import).
+
+      ⚠️ **TVÅ SABOTAGE RÄTTADE PÅSTÅENDEN JAG SJÄLV HADE SKRIVIT.** Båda hade passerat som
+      sanna utan kontrollen, och det är precis vad `12.37` handlar om:
+
+      | Vad jag skrev | Vad sabotaget visade |
+      |---|---|
+      | *"`^`-ankaret är det som skiljer Kg- från Reps-knappen"* | Ankaret borttaget: **allt grönt.** Ordet `Vikt` borttaget: *strict mode violation, resolved to 2 elements.* **Ordet vaktar, ankaret gör det inte** |
+      | Kg-etiketten är vaktad av e2e | Bara **början** är. `viktText`-grenarna omkastade → 3 röda. Verbet i slutet ändrat till `JUSTERA` → **allt grönt**, eftersom sviten ankrar sina regexar i etikettens början |
+
+      Båda står nu utskrivna i koden, som `worksets.test.ts` gör med tomma-listan-fallet.
+
+      ✏️ **Commit `f6e298e`:s meddelande säger `641,93 kB`. Rätt siffra är `642,01 kB`.** Jag
+      skrev talet innan jag byggde. **Fjärde gången i samma familj** — jämför de tre
+      off-by-one-felen i `HANDOFF.md`, alla av samma sort: ett tal nedskrivet innan det fanns
+      något att mäta. Historiken skrivs inte om; siffran står rätt här.
+
+      **Punkt 2:** `TalKnapp` bär fem invarianter som stod i två exemplar. **Etiketten ligger
+      utanför med flit** — de två knapparna har inte samma form på etikettnivå (`Vikt <värde>
+      kilo för <rad>` mot `<värde> reps för <rad>`; fältet står först i den ena och efter talet
+      i den andra), så ett `fält`-prop hade flyttat ternärerna i stället för att ta bort dem.
+      `useLongPress` anropas inte inuti: båda knapparna delar **en** hook-instans, och en egen
+      per knapp vore en beteendeändring smugglad in i en förenkling. **Båda avgränsningarna kom
+      från två granskare oberoende av varandra.**
+
+      ⏰ **FYND SOM INTE ÅTGÄRDADES, med skäl.** Granskningen gav långt mer än punkt 2 och 3:
+
+      | Fynd | Varför inte nu |
+      |---|---|
+      | `React.memo` + `useCallback`-kedjan (TodayPage → ExerciseCard → SetRow) | Prestanda som kräver **mätning först**. Halvvägs ger noll: varje prop är ny per render hela vägen upp, så `React.memo` ensamt skär inget arbete. Egen uppgift, inte en förenkling |
+      | Exponera Dexie-instansen för `skrivRått`, batcha sådder | Ändrar testinfrastrukturen och kräver en mätning av att `useLiveQuery` verkligen väcks innan en `goto` tas bort |
+      | Ersätt handrullat långtryck med `locator.click({ delay })` | Rör gest-timing, alltså det enda `langtryck.spec.ts` mäter. Frestande enligt §7.1, men inte i samma svep som en lokatoromskrivning |
+      | `passMedLoggatSet`-hjälpare (sekvensen står på **fem** ställen) | **Två granskare oberoende.** Verklig, men två av de fem ligger i `kontrast.spec.ts` och `historiksida.spec.ts`, utanför granskningens mål. Halv adoption vore en egen lukt |
+      | `getSetAverages` läser `exercises` | **Är redan `12.39`** — granskningen bekräftade den oberoende |
+      | Predikatet `< ANTAL_PASS_I_SNITTET` på två ställen | Två granskare. Litet, men rör `db/history.ts` och hör ihop med `12.40`/4.3 |
+
+      🔴 **En korrekthetsbugg hittades och lämnades medvetet:** `ExerciseCard.tsx:277` skickar
+      radens plats i LISTAN till `SetAdjustSheet`, medan raden själv numreras bland arbetsseten.
+      Med en uppvärmningsrad överst säger raden *"set 2"* och arket *"set 3"*. **Två granskare
+      oberoende.** `/simplify` letar inte buggar — den hör till `/code-review`, och den är
+      utbruten som egen uppgift.
+
+      **Verifierat 2026-08-27:** 308 tester i 24 filer, typecheck rent, lint 0 fel, bygget
+      **642,01 kB** (gzip 193,28), 81 e2e gröna.
 
 - [x] **12.48 "Uppvärmning räknas inte" är en regel varje konsument skriver om själv.
       Ny 2026-08-27.**
