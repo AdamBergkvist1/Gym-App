@@ -1838,9 +1838,16 @@ gäller, och uppgiften skrivs om.
         början hur många set man vill köra på en övning. Borde ju bara öka 1x per set som man
         faktiskt kör."* Tomfallet är mockupens `Kabel · inga set än`. Se **12.44**.
       - **Ytan:** vit, radie 18 px (`--radius-card`, redan satt i 4.1), **skugga
-        `--shadow-card` i stället för ram**, indragen 16 px. Se `DESIGN.md` §"Genomgående
+        `--shadow-card` i stället för ram**, indragen **12 px**. Se `DESIGN.md` §"Genomgående
         mönster" — på ljus botten bär skuggan avgränsningen, separationen mot papperet är
         bara 1,19:1.
+
+        ✏️ **Här stod 16 px, efter mockupen. Ändrat till 12 px av Adam 2026-08-27 (12.45), och
+        koden är oförändrad.** Skälet är att indraget inte är kortets: det kommer ur `px-3` på
+        `<main>` i [AppShell.tsx](../src/ui/AppShell.tsx) och gäller **alla skärmar**. Att
+        följa mockupen hade flyttat Historik, Inställningar och Övningar också, för 4 px — och
+        på iPhone SE är det den bredd som är minst. Ett eget indrag på bara övningskortet hade
+        i stället brutit linjeringen mot allt annat på passkärmen.
       - Övningsnamnet i Fraunces.
 
       **Klart när:** ingen 🏋 **renderas** någonstans i `src/` — alltså inga träffar utanför
@@ -3678,14 +3685,20 @@ och 13.1 måste vara klar före 13.6.
 > **Tolv fynd, alla verifierade mot koden innan de skrevs hit.** Ett av dem var mitt (12.36:s
 > "tio kontroller" är elva); fem spec-fynd och två standardbrott satt i steg 4.2.
 >
-> | # | Vad | Sort | När |
+> | # | Vad | Sort | Utfall |
 > |---|---|---|---|
-> | **12.42** | Del A:s härledning är inte delad | Spec | Före **fas 7** |
-> | **12.43** | Timerchipet är ingen chip | Spec, **synlig** | Kräver Adams ja |
-> | **12.44** | Metaraden bär fortfarande `{klara} av {n}` | Spec, **synlig** | Kräver Adams ja |
-> | **12.45** | Kortets indrag är 12 px, inte 16 | Spec, **synlig** | Kräver Adams ja |
-> | **12.46** | `DESIGN.md` är osann på tre punkter | Standard, **regel 1** | 🔴 **Först** |
-> | **12.47** | Tre baslinjeluktar ur granskningen | Omdöme | Med `/simplify` |
+> | ~~**12.42**~~ | ~~Del A:s härledning är inte delad~~ | Spec | ✅ **KLAR.** Delad räknare, saboterad i båda riktningarna |
+> | ~~**12.43**~~ | ~~Timerchipet är ingen chip~~ | Spec, synlig | ✅ **KLAR.** Adam undantog timern i briefen; koden orörd |
+> | ~~**12.44**~~ | ~~Metaraden bär `{klara} av {n}`~~ | Spec, synlig | ✅ **KLAR.** Adams fråga hittade **uppvärmningsbuggen** granskningen missade |
+> | ~~**12.45**~~ | ~~Kortets indrag är 12 px, inte 16~~ | Spec, synlig | ✅ **KLAR.** Adam behöll 12 px; specen rättad |
+> | ~~**12.46**~~ | ~~`DESIGN.md` är osann på tre punkter~~ | Standard, regel 1 | ✅ **KLAR.** Alla tre var dokumentfel, inte kodfel |
+> | **12.47** | Två baslinjeluktar kvar (punkt 1 klar) | Omdöme | Med `/simplify` |
+> | **12.48** | *"Uppvärmning räknas inte"* skrivs om av varje konsument | 🔴 **Verkligt fel** | Utbruten ur 12.44 |
+>
+> 🔴 **12.48 är den enda kvarvarande som kan ge fel siffror**, och den är inte ett
+> granskningsfynd — den kommer ur **Adams fråga** *"vart kommer det ifrån?"*. Samma regel har
+> nu glömts på tre ställen (12.16, och två i 12.44). Två granskaragenter läste hela diffen och
+> såg ingen av dem, eftersom de mätte mot specen — och specen hade fel tillsammans med koden.
 >
 > ✅ **Fyra fynd åtgärdades direkt 2026-08-27 och blev därför aldrig uppgifter:** em-dashen i
 > `SetRow.tsx:265` (`DESIGN.md` §0.3), felsiffran *"tio"* → *"elva"* i tre dokument,
@@ -3750,7 +3763,21 @@ och 13.1 måste vara klar före 13.6.
       båda konsumenterna anropar det, och kontraktstestet i `history.test.ts` blir överflödigt
       eller skrivs om till att mäta primitivet.
 
-- [ ] **12.43 Timerchipet är ingen chip. Ny 2026-08-27. SYNLIG — kräver Adams ja.**
+- [x] **12.43 Timerchipet är ingen chip. Ny 2026-08-27. SYNLIG.
+      KLAR 2026-08-27 — briefen rättad, koden orörd.**
+
+      ✅ **Adams beslut: undanta timern i `DESIGN.md`.** Halva kravet var redan uppfyllt —
+      timern ligger i flödet och skymmer ingenting, vilket var problemet meningen skrevs för
+      att lösa. **Formdelen visade sig ogenomförbar när innehållet fanns:** chipet bär 32
+      px-siffran, etiketten, `−30`, `+30` och avbryt på samma rad, och på 375 px finns ingen
+      pillerform som rymmer det utan att äta raden. De tre knapparna är dessutom hur man
+      justerar vilan mitt i ett pass och får inte kosta ett extra tryck.
+
+      💡 **Lärdomen ligger ett steg före del C:s `Klart när`.** Meningen *"utan att äta en hel
+      rad"* skrevs i en skiss **innan chipets innehåll var bestämt**. **Ett formkrav utan
+      innehållet framför sig är en gissning**, och den gissningen överlevde sedan hela vägen
+      till en uppgift och en granskning innan någon prövade den mot fem knappar på 375 px.
+
       Steg 4.2 del C:s brödtext: *"Formen: **en chip i flödet, inte ett banderoll-lager** —
       timern får inte skymma setraden man just loggat. Siffran är 32 px (`--text-timer`), alltså
       en *stor* chip."* `DESIGN.md:511`: *"Knappar och chips: pillerform."*
@@ -3770,8 +3797,8 @@ och 13.1 måste vara klar före 13.6.
       knappar), **eller** så ändras `DESIGN.md` så att timern uttryckligen undantas från
       chip-regeln. Alla tre är försvarbara; ingen av dem är min att välja.
 
-      **Klart när:** Adam har valt väg, `DESIGN.md` §3.1 säger samma sak som koden, och
-      kontrastvakten är fortfarande grön efter ändringen.
+      ✅ **Vägen som valdes var den tredje:** `DESIGN.md` undantar timern uttryckligen, både i
+      §3.1 och i §"Formspråk"-listan. Koden är orörd, så kontrastvakten är oförändrat grön.
 
 - [x] **12.44 Metaraden bär fortfarande `{klara} av {n} set`. Ny 2026-08-27. SYNLIG.
       KLAR 2026-08-27 — och Adams fråga hittade en bugg granskningen missade.**
@@ -3826,7 +3853,19 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** Adam har valt form, `TASKS.md` och `DESIGN.md` säger samma sak som koden,
       och tomfallet är hanterat.
 
-- [ ] **12.45 Kortets indrag är 12 px, inte 16 som specen säger. Ny 2026-08-27. SYNLIG.**
+- [x] **12.45 Kortets indrag är 12 px, inte 16 som specen säger. Ny 2026-08-27. SYNLIG.
+      KLAR 2026-08-27 — specen rättad, koden orörd.**
+
+      ✅ **Adams beslut: behåll 12 px.** Skälet är att indraget aldrig var kortets. Det kommer
+      ur `px-3` på `<main>` i `AppShell.tsx` och gäller **alla skärmar**, så mockupens 16 px
+      hade flyttat hela appen för 4 px — och på iPhone SE är det den bredd som är minst.
+      Alternativet, ett eget indrag på bara övningskortet, hade brutit linjeringen mot allt
+      annat på passkärmen.
+
+      💡 **Fyndet var ändå värt något:** specen beskrev ett *korts* egenskap som i själva
+      verket är en *layoutkonstant för hela appen*. Nästa gång ett indrag skrivs in i en
+      uppgift ska det stå vilket av de två det är.
+
       Steg 4.2 del B: *"**Ytan:** vit, radie 18 px … indragen **16 px**."*
       [AppShell.tsx:26](../src/ui/AppShell.tsx) sätter `px-3` = **12 px**.
 

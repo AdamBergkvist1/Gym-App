@@ -510,6 +510,9 @@ annars blir startskärmen och statusraden en annan svärta än appen.
 
 - **Radie 18 px** på övningsytor och ark (`--radius-card`). Knappar och chips: pillerform.
   Höjt från 16 px i formvalet.
+  ⚠️ **Ett undantag: vilotimern.** Den bär fem kontroller på en rad och följer därför inte
+  pillerformen. Skälet är utskrivet i §3.1 under *"Vilotimern är en chip i flödet"*, avgjort
+  av Adam 2026-08-27.
 - **Accentbricka per övning:** 10 × 34 px, radie 5 px, fylld med accentfärgen, till vänster om
   övningsnamnet.
 - **Navigeringen flyter:** pillerformad, indragen från kanterna, med accentfylld markering av
@@ -1515,6 +1518,25 @@ bara "0 min · 0 set" i en liten rad — volym är appens bästa mått på ett p
 problem vi har: timern får inte skymma setraden man just loggat. **Men den ska vara 32 px
 enligt §2** — den är alltså en *stor* chip, inte en liten. Läsbar från en bänk, utan att äta
 en hel rad.
+
+> 🔄 **UNDANTAG, avgjort av Adam 2026-08-27 (uppgift 12.43): timern äter en hel rad, och den
+> följer INTE pillerformen i §"Formspråk".**
+>
+> **Halva kravet ovan gäller oförändrat och är uppfyllt:** timern ligger i flödet, inte som ett
+> lager, och skymmer ingenting. Det var problemet meningen skrevs för att lösa.
+>
+> **Formdelen visade sig ogenomförbar när innehållet fanns.** Chipet bär fem saker på samma
+> rad: 32 px-siffran, etiketten, `−30`, `+30` och avbrytknappen. På 375 px finns ingen
+> pillerform som rymmer det utan att äta raden — och de tre knapparna är hur man justerar vilan
+> mitt i ett pass, alltså inget som får kosta ett extra tryck.
+>
+> ⚠️ **Meningen *"utan att äta en hel rad"* skrevs innan chipets innehåll var bestämt**, och är
+> därför ett krav på en form som aldrig prövades mot sitt innehåll. Det är samma sjuka som
+> `Steg 4.2` del C:s `Klart när`, fast ett steg tidigare i kedjan: **ett formkrav utan
+> innehållet framför sig är en gissning.**
+>
+> Det som faktiskt bär timerns avgränsning är dess **kant och yta**, inte dess radie — se
+> `RestTimer.tsx` och `12.40`.
 
 **PB-chip bredvid timern** (11B.8). `--color-pb-text` på `--color-pb-bg`, med trofé och
 utskriven differens. Dyker upp i samma ögonblick setet bockas av — den starkaste
