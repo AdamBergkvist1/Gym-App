@@ -1832,6 +1832,11 @@ gäller, och uppgiften skrivs om.
       - **Metaraden** under namnet: `Skivstång · 3 set · 1 385 kg`. Den kompenserar något
         konkret — när ikonrutan försvann tappade raden sin enda visuella hållpunkt utöver
         namnet. I dag står där `{klara} av {n} set · sist 90 kg × 5`.
+
+        🔄 **PRECISERAT 2026-08-27 av Adam: talet är LOGGADE ARBETSSET, inte planerade.**
+        Raden ovan sa bara `3 set` utan att säga *vilka* tre. Adam: *"man vet ju inte till en
+        början hur många set man vill köra på en övning. Borde ju bara öka 1x per set som man
+        faktiskt kör."* Tomfallet är mockupens `Kabel · inga set än`. Se **12.44**.
       - **Ytan:** vit, radie 18 px (`--radius-card`, redan satt i 4.1), **skugga
         `--shadow-card` i stället för ram**, indragen 16 px. Se `DESIGN.md` §"Genomgående
         mönster" — på ljus botten bär skuggan avgränsningen, separationen mot papperet är
@@ -3768,7 +3773,43 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** Adam har valt väg, `DESIGN.md` §3.1 säger samma sak som koden, och
       kontrastvakten är fortfarande grön efter ändringen.
 
-- [ ] **12.44 Metaraden bär fortfarande `{klara} av {n} set`. Ny 2026-08-27. SYNLIG.**
+- [x] **12.44 Metaraden bär fortfarande `{klara} av {n} set`. Ny 2026-08-27. SYNLIG.
+      KLAR 2026-08-27 — och Adams fråga hittade en bugg granskningen missade.**
+
+      ✅ **Formen är `N set`, där N är LOGGADE ARBETSSET.** Adams beslut, med hans eget skäl:
+      *"man vet ju inte till en början hur många set man vill köra på en övning. Borde ju bara
+      öka 1x per set som man faktiskt kör."* Tomfallet är mockupens `inga set än`.
+
+      🔴 **BUGGEN INGEN AV GRANSKARNA SÅG: båda talen räknade uppvärmningen som ett set.**
+      Adam frågade *"vart kommer det ifrån?"* om nämnaren, och svaret blottade två fel:
+
+      1. **Nämnaren var appens gissning.** `startExercise` (`plan.ts`) skapar lika många rader
+         som förra passets arbetsset, eller tre tomma utan historik. *"1 av 4 set"* påstod
+         alltså ett mål användaren aldrig satt.
+      2. **Täljaren OCH nämnaren räknade uppvärmning.** Ett pass med uppvärmning + tre
+         arbetsset läste `av 4 set`, och bockades uppvärmningen av stod det `2 av 4`.
+         **Resten av appen räknar konsekvent arbetsset** — `getSetAverages`, `workSetIndices`,
+         `summarizeWorkout`, `getExerciseHistory`, `getPersonalRecords` filtrerar alla bort
+         den. Volymen på **samma rad** gjorde det också, så raden bar två tal ur olika mängder.
+
+      ⏰ **Tredje förekomsten hittades i samma andetag:** passets sammanfattningsruta i
+      `TodayPage` läste `3 SET · 0 VOLYM KG` för ett pass med uppvärmning + två arbetsset —
+      antalet räknade uppvärmningen, volymen bredvid inte. Rättad i samma commit. **Mönstret är
+      utbrutet som 12.48.**
+
+      ✅ **Uppmätt, inte antaget** (`skarmdumpar/`-körning, WebKit 375 px):
+
+      | Steg | Metaraden | Före |
+      |---|---|---|
+      | Uppvärmningen avbockad | `Skivstång · inga set än` | `Skivstång · 1 av 4 set` |
+      | Arbetsset 1 avbockat | `Skivstång · 1 set` | `2 av 4 set` |
+      | Arbetsset 2 avbockat | `Skivstång · 2 set` | `3 av 4 set` |
+
+      💡 **Lärdomen är inte om uppvärmning.** Två granskaragenter läste hela diffen och såg att
+      formen avvek från specen; **ingen av dem frågade vad talet betydde.** Adams *"jag förstår
+      inte vart det kommer ifrån"* gjorde det, och det var den frågan som hittade felet. En
+      granskning mäter mot specen — den kan inte upptäcka att specen och koden har fel
+      tillsammans.
       Steg 4.2 del B: *"**Metaraden** under namnet: `Skivstång · 3 set · 1 385 kg`. … I dag står
       där `{klara} av {n} set · sist 90 kg × 5`."*
 
@@ -3867,6 +3908,44 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** punkt 1 är åtgärdad. Punkt 2 och 3 är `/simplify`-material och behöver inte
       göras här.
+
+- [ ] **12.48 "Uppvärmning räknas inte" är en regel varje konsument skriver om själv.
+      Ny 2026-08-27.**
+      Utbruten ur 12.44, där samma fel hittades på **två ställen samtidigt** — och det var
+      tredje gången totalt.
+
+      **Regeln finns redan i frågelagret**, tre gånger: `getExerciseHistory`,
+      `getPersonalRecords` och `summarizeWorkout` filtrerar alla `isWarmup`, och `history.ts`
+      skriver ut skälet — *"De är förberedelse, inte arbete, och att blanda in dem gör siffran
+      obrukbar för jämförelser mellan pass."*
+
+      ⛔ **Men den som räknar i en SKÄRM måste minnas den själv**, och tre av tre glömde:
+
+      | Var | Vad som räknades fel | Rättat |
+      |---|---|---|
+      | Startskärmens volym | Uppvärmning räknades in | **12.16** |
+      | Övningskortets metarad + volym | Båda räknade uppvärmning | **12.44** |
+      | Passets sammanfattningsruta (`klaraSet`) | Antalet räknade uppvärmning, volymen inte | **12.44** |
+
+      💡 **Det är inte slarv tre gånger, det är en saknad söm.** Ett `planned.sets.filter(...)`
+      i en komponent har ingen aning om att `isWarmup` bär en regel; typen tillåter det lika
+      gärna. Frågelagret har skyddet, skärmlagret har det inte — och det är skärmlagret som
+      räknar.
+
+      **Möjliga vägar, ingen vald:**
+      1. En härledning i `src/lib/` — `loggadeArbetsset(sets)` och `volymAv(sets)` — som
+         skärmarna anropar. Samma rörelse som **12.42** gjorde för arbetssetnumret, och den
+         lyckades där.
+      2. Låta `PlannedSet` bära ett härlett fält, så att den som filtrerar fel syns.
+      3. Ett test som går igenom varje skärm som visar ett setantal. Svagast — det fångar
+         dagens tre, inte nästa.
+
+      ⚠️ **Väg 1 är den som redan bevisat sig i det här projektet**, men den löser inte att en
+      ny komponent kan låta bli att anropa den. Det är samma gräns som `12.42`:s kontraktstest
+      pekar ut: *"en delad funktion garanterar inte att den anropas rätt."*
+
+      **Klart när:** regeln finns på ett ställe skärmlagret kan nå, de tre kända ställena går
+      via den, och det står utskrivet vad som INTE skyddas av valet.
 
 ---
 

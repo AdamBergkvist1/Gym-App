@@ -69,7 +69,24 @@ export function ExerciseCard({
    */
   const nummer = workSetIndices(planned.sets);
 
-  const klara = planned.sets.filter((s) => s.loggedSetId !== null).length;
+  /**
+   * De arbetsset som faktiskt är loggade. **Uppvärmning räknas inte.**
+   *
+   * 🔄 **BÅDA VILLKOREN ÄNDRADES 2026-08-27, och båda kommer ur Adams fråga
+   * *"vart kommer det ifrån?"* om metaradens andra tal.**
+   *
+   * 1. **`!s.isWarmup` är en ren buggrättning.** Talet räknade uppvärmningen som
+   *    ett set, medan resten av appen konsekvent räknar arbetsset —
+   *    `getSetAverages`, `workSetIndices` och `listWorkoutSummaries` filtrerar
+   *    alla bort den. Ett pass med uppvärmning + tre arbetsset läste `av 4 set`.
+   *    **Ingen av `/code-review`:s två agenter såg det**; det krävde frågan
+   *    "varför står det fyra".
+   * 2. **Namnet säger nu vad talet är.** `klara` beskrev en bock; det här
+   *    beskriver arbetsset man gjort, vilket är det metaraden ska bära.
+   */
+  const klaraArbetsset = planned.sets.filter(
+    (s) => !s.isWarmup && s.loggedSetId !== null
+  ).length;
   const aktivt = planned.sets.find((s) => s.id === justerar);
 
   /**
@@ -84,14 +101,38 @@ export function ExerciseCard({
    * största sannolikhet noll volym i dag, och *"senast tränad i oktober 2024"*
    * är det raden ska säga då. Frågan lämnar ett rått ISO-datum; formateringen
    * hör till skärmen.
+   *
+   * ⚠️ **Volymen utesluter uppvärmning sedan 2026-08-27, av samma skäl som
+   * setantalet ovan.** Annars hade raden sagt *"3 set · 862,5 kg"* där kilona
+   * bar fyra set — två tal ur olika mängder bredvid varandra, vilket är värre
+   * än att ett av dem är fel.
    */
   const volym = planned.sets
-    .filter((s) => s.loggedSetId !== null)
+    .filter((s) => !s.isWarmup && s.loggedSetId !== null)
     .reduce((n, s) => n + s.weightKg * s.reps, 0);
 
   const metarad = [
     exercise?.equipment ? exercise.equipment[0]!.toUpperCase() + exercise.equipment.slice(1) : null,
-    `${klara} av ${planned.sets.length} set`,
+    /**
+     * ⚠️ **TALET ÄR DET DU KÖRT, INTE DET APPEN GISSAT. Adams beslut
+     * 2026-08-27**, och skälet är hans eget: *"man vet ju inte till en början
+     * hur många set man vill köra på en övning. Borde ju bara öka 1x per set
+     * som man faktiskt kör."*
+     *
+     * ✏️ **Här stod `${klara} av ${planned.sets.length} set`.** Nämnaren var
+     * **appens gissning**: `startExercise` skapar lika många rader som förra
+     * passets arbetsset (`plan.ts`), eller tre tomma utan historik. Användaren
+     * har aldrig sagt fyra, så *"1 av 4 set"* påstod ett mål hen inte satt.
+     *
+     * 💡 **Det gjorde raden inkonsekvent på ett andra sätt också:** talet var
+     * planerat medan volymen bredvid var loggad. Nu kommer båda ur samma
+     * mängd — loggade arbetsset — och raden läser som en beskrivning av vad
+     * som hänt.
+     *
+     * Tomfallet är mockupens (`Kabel · inga set än`) och behövs just för att
+     * talet nu kan vara noll; tidigare stod det alltid `0 av N`.
+     */
+    klaraArbetsset > 0 ? `${klaraArbetsset} set` : 'inga set än',
     snitt?.staleSince
       ? `senast tränad i ${MÅNAD_ÅR.format(new Date(snitt.staleSince))}`
       : volym > 0

@@ -195,8 +195,26 @@ export function TodayPage() {
   }
 
   const övningar = plan?.exercises ?? [];
+  /**
+   * Loggade **arbetsset** i hela passet. Uppvärmning räknas inte.
+   *
+   * 🔄 **`!s.isWarmup` tillagt 2026-08-27, och det är en rättning av en ruta som
+   * motsade sig själv.** Volymen bredvid utesluter uppvärmning — `history.ts`
+   * skriver ut skälet: *"De är förberedelse, inte arbete, och att blanda in dem
+   * gör siffran obrukbar för jämförelser mellan pass."* Setantalet gjorde det
+   * inte, så ett pass med uppvärmning + två arbetsset läste **`3 SET · 0 VOLYM
+   * KG`**: två tal ur olika mängder, sida vid sida i samma ruta.
+   *
+   * ⚠️ **Det är tredje förekomsten av samma fel i samma familj.** 12.16 rättade
+   * volymen (historiken och startskärmen visade olika tal för samma pass),
+   * övningskortets metarad rättades i den här commiten — och den här rutan var
+   * kvar. **Regeln finns i tre frågor och skrivs ändå av varje ny konsument:**
+   * `getExerciseHistory`, `getPersonalRecords` och `summarizeWorkout` filtrerar
+   * alla `isWarmup`, men den som räknar i skärmen måste minnas det själv. Se
+   * `TASKS.md` 12.48.
+   */
   const klaraSet = övningar.reduce(
-    (n, e) => n + e.sets.filter((s) => s.loggedSetId !== null).length,
+    (n, e) => n + e.sets.filter((s) => !s.isWarmup && s.loggedSetId !== null).length,
     0
   );
 
