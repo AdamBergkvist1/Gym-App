@@ -2609,6 +2609,14 @@ och 13.1 måste vara klar före 13.6.
       `history.ts` filtrerar nu `!s.isWarmup` före summeringen, som repo.ts och som de två
       andra ställena i samma fil. `setCount` räknar fortfarande alla set — de gjordes.
 
+      > ✏️ **RÄTTELSE 2026-08-27 (uppgift 12.48): sista meningen gäller inte längre.**
+      > `setCount` räknar numera bara arbetsset, både i `listWorkoutSummaries` och i
+      > `summarizeWorkout`. **Beslutet var inte fel när det fattades** — "de gjordes" är ett
+      > hållbart svar på frågan isolerat. Det som ändrade svaret var att 12.44 visade vad
+      > talet står BREDVID: historikraden lyder `N set · M kg`, och när bara det ena talet
+      > utesluter uppvärmningen läses raden som två påståenden om samma mängd. Adam avgjorde
+      > 2026-08-27 att regeln ska vara densamma överallt.
+
       Testet skrevs först och var rött med **1350 mot 950**; differensen 400 var exakt
       uppvärmningssetets 40×10. Två tester tillkom: ett för regeln, ett som jämför
       `listWorkoutSummaries` mot `summarizeWorkout` direkt så att en framtida divergens
@@ -3693,12 +3701,12 @@ och 13.1 måste vara klar före 13.6.
 > | ~~**12.45**~~ | ~~Kortets indrag är 12 px, inte 16~~ | Spec, synlig | ✅ **KLAR.** Adam behöll 12 px; specen rättad |
 > | ~~**12.46**~~ | ~~`DESIGN.md` är osann på tre punkter~~ | Standard, regel 1 | ✅ **KLAR.** Alla tre var dokumentfel, inte kodfel |
 > | **12.47** | Två baslinjeluktar kvar (punkt 1 klar) | Omdöme | Med `/simplify` |
-> | **12.48** | *"Uppvärmning räknas inte"* skrivs om av varje konsument | 🔴 **Verkligt fel** | Utbruten ur 12.44 |
+> | ~~**12.48**~~ | ~~*"Uppvärmning räknas inte"* skrivs om av varje konsument~~ | 🔴 **Verkligt fel** | ✅ **KLAR.** Det var **fem** ställen, inte tre — se uppgiften |
 >
-> 🔴 **12.48 är den enda kvarvarande som kan ge fel siffror**, och den är inte ett
-> granskningsfynd — den kommer ur **Adams fråga** *"vart kommer det ifrån?"*. Samma regel har
-> nu glömts på tre ställen (12.16, och två i 12.44). Två granskaragenter läste hela diffen och
-> såg ingen av dem, eftersom de mätte mot specen — och specen hade fel tillsammans med koden.
+> ✅ **12.48 var den enda kvarvarande som kunde ge fel siffror**, och den var inte ett
+> granskningsfynd — den kom ur **Adams fråga** *"vart kommer det ifrån?"*. Två granskaragenter
+> läste hela diffen och såg ingen av förekomsterna, eftersom de mätte mot specen — och specen
+> hade fel tillsammans med koden.
 >
 > ✅ **Fyra fynd åtgärdades direkt 2026-08-27 och blev därför aldrig uppgifter:** em-dashen i
 > `SetRow.tsx:265` (`DESIGN.md` §0.3), felsiffran *"tio"* → *"elva"* i tre dokument,
@@ -3949,7 +3957,7 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** punkt 1 är åtgärdad. Punkt 2 och 3 är `/simplify`-material och behöver inte
       göras här.
 
-- [ ] **12.48 "Uppvärmning räknas inte" är en regel varje konsument skriver om själv.
+- [x] **12.48 "Uppvärmning räknas inte" är en regel varje konsument skriver om själv.
       Ny 2026-08-27.**
       Utbruten ur 12.44, där samma fel hittades på **två ställen samtidigt** — och det var
       tredje gången totalt.
@@ -3986,6 +3994,57 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** regeln finns på ett ställe skärmlagret kan nå, de tre kända ställena går
       via den, och det står utskrivet vad som INTE skyddas av valet.
+
+      **Åtgärdad 2026-08-27. Väg 1, enligt Adams beslut.** Regeln bor i `src/lib/worksets.ts`
+      som `loggadeArbetsset(sets)` och `volymAv(sets)`, med egna tester. `ExerciseCard` och
+      `TodayPage` anropar dem i stället för att skriva om filtret.
+
+      > 🔴 **DET VAR FEM STÄLLEN, INTE TRE. Två till hittades under arbetet**, och det ena var
+      > allvarligare än de tre kända:
+      >
+      > | Var | Vad som var fel |
+      > |---|---|
+      > | **Knappen "Kopiera förra passet"** (`beskrivPass`) | Etiketten säger *"N övningar · M set"* om vad knappen kommer att hämta — men `copyWorkoutIntoPlan` hoppar över uppvärmning. **En övning man bara värmt upp på följde inte med alls**, och etiketten räknade den ändå. Talet var inte skevt, det var ett löfte som bröts |
+      > | **Historiksidan** (`setCount`, båda listorna) | `N set · M kg` bredvid varandra där bara volymen uteslöt uppvärmningen |
+      >
+      > **Historiksidan var Adams att avgöra och inte min**, eftersom `setCount` där var ett
+      > medvetet beslut från **12.16** (*"de gjordes"*) — inte ett förbiseende. Han valde
+      > **samma regel överallt** 2026-08-27. Knappen rättades utan att fråga: där finns inget
+      > val, bara ett tal som ljuger om vad knappen gör.
+
+      **Vad som INTE skyddas av valet — läs det här innan du litar på sömmen:**
+
+      1. ⛔ **En ny komponent kan låta bli att anropa `loggadeArbetsset`** och skriva
+         `sets.filter(s => s.loggedSetId !== null)` precis som förut. Ingenting hindrar det;
+         typen tillåter det lika gärna som den alltid gjort. Det är samma gräns som `12.42`:s
+         kontraktstest pekar ut — *"en delad funktion garanterar inte att den anropas rätt"* —
+         och den är accepterad, inte löst.
+      2. ⛔ **Frågelagret delar inte funktionen.** `history.ts` och `repo.ts` har kvar sina egna
+         `filter(s => !s.isWarmup)`. Det är avsiktligt: predikatet skiljer sig mellan lagren —
+         planens rader måste dessutom vara avbockade (`loggedSetId !== null`), databasens rader
+         är per definition redan loggade. Att pressa ihop dem hade gett en funktion vars
+         betydelse berodde på anroparen. **Frågelagret är inte heller det som gick sönder** —
+         alla fem förekomsterna satt i tal som visas på en skärm.
+      3. ⛔ **Att volymen summeras via `volumeKg` vaktas inte av något test.** Vikter kommer i
+         halvkilosteg och reps i heltal, så avrundningen kan inte skilja sig från en rå
+         multiplikation på något värde appen kan producera. Delegeringen är ett val om var
+         regeln bor, inte ett beteende ett test kan falla på. Det står också i testet.
+      4. ⏰ **Ett pass man BARA värmde upp på läser nu `0 set · 0 kg`.** Uppmätt, inte antaget —
+         raden står som ett test i `history.test.ts`. Passet försvinner inte: `exerciseIds`
+         räknar fortfarande alla set, så övningens namn syns kvar i raden. Det är den
+         konsekventa läsningen av Adams beslut (förberedelse är inte arbete, och ett pass som
+         bara var förberedelse innehåller inget arbete) — **men det är en följd han inte
+         uttryckligen valde**, och den är värd att titta på när 4.3 bygger historikraden.
+
+      **Testerna:** `loggadeArbetsset` fick **röd fas per villkor**, inte en samlad — filtret
+      byggdes i två steg så att både uppvärmnings- och avbockningsvillkoret hade ett eget
+      fallande test, och det första saboterades dessutom till grönt-genom-att-släppa-igenom-allt
+      för att visa att det verkligen vaktar. Knappens löfte mäts som **kontrakt mot
+      `copyWorkoutIntoPlan`** i stället för mot en handskriven siffra: planen är facit, och
+      divergerar de igen faller raden oavsett vilken sida som ändrats.
+
+      **Verifierat 2026-08-27:** 308 tester i 24 filer, typecheck rent, lint 0 fel, bygget
+      grönt, 81 e2e-tester gröna.
 
 ---
 
