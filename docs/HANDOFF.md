@@ -1,11 +1,170 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-26. Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-27. Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-26 (sent) — STEG 4.2 ÄR KLAR. Pass-skärmen står i B4 + 2B. Nästa jobb är 4.3 Historik
+## 🆕 2026-08-27 — 12.36 ÄR KLAR: kontrastvakten bor i repot. Den hittade tio osynliga kanter. Nästa jobb är 12.37
+
+### ⛔ FEM COMMITS ÄR INTE PUSHADE. Kontrollera själv
+
+```bash
+git fetch origin && git status -sb
+```
+
+`822babd`, `177ec56`, `4bd2ead`, `2499e9a` och den här handoffen. **`origin/main` står kvar på
+`9f5eb3b`**, alltså bär `https://adam-gym-app.vercel.app` fortfarande bara steg 4.2.
+
+⏰ **ANLEDNINGEN ÄR EN OBESVARAD FRÅGA, INTE ETT FÖRBISEENDE.** Se rutan nedan.
+
+### 🔴 DET SOM VÄNTAR PÅ ADAM: tio kontroller ser annorlunda ut nu
+
+`822babd` byter kanttoken på tio kontroller — övningsmenyns tre knappar, vilotimerns
+`−30`/`+30`/`Hoppa över`, `+ Lägg till övning`, `Synka nu`, `Logga ut` och de två
+inloggningsfälten. **Adam fick två skärmbilder och hann inte svara innan sessionen tog slut.**
+
+**Ingen ny färg infördes.** `--color-line-strong` är samma token han godkände i steg 4.2.
+Skälet, utan siffror: en knapp ska gå att se **att** den är en knapp innan man rör den, och de
+här hade en kant som knappt syntes mot sitt underlag.
+
+⚠️ **Gillar han det inte går det INTE att bara backa `822babd`** — då blir kontrastvakten röd,
+eftersom fynden är verkliga. Rätt svar är då antingen en annan behandling av kontrollerna (t.ex.
+tonad yta i stället för kant) eller motiverade rader i `UNDANTAG`. **Höj aldrig tröskeln.**
+
+### Vad som byggdes
+
+| Commit | Vad |
+|---|---|
+| `822babd` | Tio kontroller byter från den **dekorativa** kanttokenen till den som **bär betydelse** |
+| `177ec56` | **12.36: kontrastvakten**, `e2e/kontrast.spec.ts`. Fem tester × tre bredder |
+| `4bd2ead` | Rättelse: Historik mättes tom, alltså grön av fel skäl |
+| `2499e9a` | `TASKS.md` — 12.36 stängd, **12.41 utbruten**, prioriteringsrutan omskriven |
+
+**Läs `TASKS.md` 12.36 för detaljerna, inte den här filen.** Vakten är dessutom sin egen
+dokumentation — docblocken i `e2e/kontrast.spec.ts` bär metoden och skälen.
+
+### 🔴 DET VIKTIGASTE ATT BÄRA VIDARE: jag byggde in en tyst grön vakt i vakten mot tysta gröna vaktar
+
+Det låter som en kuriositet. Det är det inte — det är **tredje sessionen i rad** som samma
+felklass dyker upp, och den här gången i det verktyg som byggdes för att fånga den.
+
+Kontrastvakten räknade först ett enda `mätta`-tal för att bevisa att den inte mätte tomma
+mängder. Men den mäter **två oberoende vägar**, text och kanter, och kantvägen ger utslag på
+varenda element med en ram. **Räknaren hade alltså stått långt över noll även om textvägen
+aldrig kört en enda mätning.** Textvägen gav dessutom noll fynd i skarpt läge, så ingenting
+hade sett fel ut.
+
+> **Regeln som faller ut, och den gäller bortom den här filen:** *en liveness-räknare som slås
+> ihop över två oberoende kodvägar bevisar ingen av dem.* Räkna varje väg för sig, annars bär
+> den starkare vägen den svagares bevisbörda.
+
+Samma session gav ett andra belägg: **ett undantag var kvarglömt samma dag det skrevs.** Jag
+skrev en `:disabled`-post för kanter på ren rutin; granskningstestet fällde den direkt, för
+inget av lägena har en inaktiv kontroll med synlig kant. Utan det testet hade posten legat kvar
+och tystat en riktig kant den dagen någon lade till en.
+
+**Båda hittades av kontroll, inte av tur. 12.37 finns för att göra det till en regel.**
+
+### 🔴 Näst viktigast: sabotaget som bevisar metoden, inte bara vakten
+
+`--color-dim` sattes tillfälligt till `color-mix(in oklab, #1c1917 25%, transparent)`.
+Datorstilen blev `oklab(0.216115 0.003422 0.005081 / 0.25)` — **exakt formen som lurade
+mätskriptet i steg 4.2** — och vakten mätte 1,70:1 mot papperet, vilket stämmer med handräkning.
+
+**En RGB-regex hade läst `0.216` som rödvärde, fått närmast svart, rapporterat ~17:1 och gått
+grön.** Canvas-metoden kan inte göra det felet: ingen färgsträng tolkas någonstans i filen, inte
+ens för att avgöra om något är genomskinligt — det målas på svart och på vitt och jämförs.
+
+Det andra sabotaget: `--color-dim` gjord ljus gav **0 → 21 textfynd**, med rätt tröskel per
+storlek (24 px krävde 3:1, `0.65rem` krävde 4,5:1). **Båda mätvägarna är alltså prövade var för
+sig, inte antagna.**
+
+### ✅ Grindarna — ALLA FEM I SLUTLÄGET 2026-08-27, hemdatorn
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **302 tester i 24 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ JS **641,86 kB** (gzip 193,14), precache **723,00 KiB / 10 entries** |
+| `npm run e2e` | ✅ **81 passed** (från 66), 54,9 s |
+
+### 🔜 NÄSTA JOBB: 12.37, sedan steg 4.3 Historik
+
+**12.37 är billig och den enda kvarvarande som hindrar framtida fel.** Den ska skriva in
+sabotagekontrollen i `CLAUDE.md` och namnge de två tillfällen den gäller. **Den här sessionen
+gav den två nya belägg** — den hopslagna räknaren och det kvarglömda undantaget — och de hör
+hemma i uppgiftens motivering.
+
+Därefter **steg 4.3 Historik**, sista delsteget i runda 1. Uppgiften är **fortfarande inte
+skriven** i `TASKS.md`; den behöver skrivas först enligt regel 1. **12.40 ska avgöras i 4.3**,
+och frågan är nu mätbar — vakten mäter varje kant mot både inre och yttre underlag.
+
+⛔ **Gör INTE om kontrastmätningen för hand efter 4.3.** Det stod i förra sektionen och gäller
+inte längre. Kör `npm run e2e` — det är hela poängen med 12.36.
+
+### ⏰ Vad vakten ännu INTE ser — `TASKS.md` 12.41
+
+Fyra lägen är fyra lägen. Bottenarket, övningsväljaren, fritextinmatningen och **hela rutten
+`/ovning/:id`** mäts inte, och alla bär samma `--color-line`-kant som just lagades på tio andra
+ställen. Rutten är allvarligast: den är en vanlig sida man når från historiken, inte en
+överlagring bakom en gest. **Att lägga till den är två rader i `LÄGEN`.**
+
+### 📋 Beslut fattade den här sessionen, med skäl
+
+1. **Ingen axe-core.** Sökningen enligt §7.1 gjordes och redovisades. Diskvalificerande fynd:
+   **axe har ingen regel för WCAG 1.4.11** — bara `color-contrast` (`wcag143`) och
+   `color-contrast-enhanced` (`wcag146`). Appens semantik ligger i **kanterna** (väg C: yta +
+   kant), så axe hade varit blind för just det. Adam valde egen bygge. Licensen (MPL-2.0) står
+   inte i §7.2b:s tabell och blev aldrig en fråga.
+2. **`+ Lägg till set` bytte INTE token**, och det är uppmätt: knappen har bara `border-t`,
+   alltså en avdelare. I den starka tokenen blev linjen tyngre än setradernas egna avdelare.
+   Undantaget är strukturellt formulerat — *en kontur har fyra sidor* — och inte en smakåsikt.
+3. **Båda sidor av en kant kräver 3:1**, inte den bästa av två. Det är projektets egen läsning
+   och den var redan tillämpad: `RestTimer.tsx` underkänner `--color-ok-line` på 2,99:1 utåt.
+
+**Ingen post i `docs/EXTERNT.md`** — ingenting utifrån kopierades. Canvas-kompositering är en
+plattformsprimitiv, inte lånad kod.
+
+### 🖥️ Så visar du Adam något — oförändrat
+
+- **Produktionen:** `https://adam-gym-app.vercel.app`. **Men se rutan överst: ingenting är
+  pushat**, så den bär inte den här sessionens arbete.
+- **Skärmbilder:** webbläsarpanelen i `preset: mobile` (375×812). Fungerade bra den här
+  sessionen — `.claude/launch.json` har `gym-dev` färdig.
+- **Xcodes simulator:** ⏰ fortfarande inte installerad. Adam kör **macOS 15.7.2**;
+  App Store-versionen kräver **26.2**.
+- ⚠️ **`apple-mobile-web-app-status-bar-style` är fortfarande OVERIFIERAD**, och den kan inte
+  prövas av vare sig Playwright, skrivbordet eller webbläsarpanelen. **Be Adam titta** — lägg
+  till på hemskärmen och starta därifrån. Detta är oförändrat sedan tre sektioner tillbaka.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/code-review`** | 🔴 **Kör den först.** Den föreslogs för steg 4.2 och kördes aldrig — så nu ligger *nio* commits ogranskade, varav fyra rör en ny mätmekanism som andra kommer lita på |
+| **`/tdd`** | Till 12.37 är den fel verktyg (det är en textändring), men rätt till **steg 4.3:s** logik |
+| **`/simplify`** | Efter 4.3. `e2e/kontrast.spec.ts` är ny och lång — den är en rimlig kandidat, men **läs docblocken innan något kortas**: flera stycken är skäl som kostat en session att lära sig |
+| **`/diagnosing-bugs`** | När något faller — även när det ser ut som flakighet |
+
+---
+
+## 2026-08-26 (sent) — STEG 4.2 ÄR KLAR. Pass-skärmen står i B4 + 2B — DELVIS ÖVERSPELAD
+
+> **⚠️ Fyra saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "Allt är pushat" gällde när den skrevs, inte nu.** Fem commits från 2026-08-27 ligger
+> opushade — se sektionen överst.
+>
+> **(2) 12.36 är KLAR.** Åtgärdsplanens tabell längre ner listar den som öppen. Kontrastvakten
+> finns i `e2e/kontrast.spec.ts` sedan `177ec56`. **12.37 är nu den enda kvarvarande som
+> hindrar framtida fel.**
+>
+> **(3) Grindsiffrorna är överspelade.** E2E är **81 passed**, inte 66. Testantalet 302 stämmer
+> fortfarande, men **filantalet är 24 och inte 25** — den siffran var fel redan när den skrevs.
+>
+> **(4) "NÄSTA JOBB: STEG 4.3" gäller fortfarande, men 12.37 ligger före.**
 
 ### ✅ Allt är pushat. Kontrollera själv
 
