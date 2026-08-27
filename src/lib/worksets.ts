@@ -111,3 +111,32 @@ export function volymAv(
 ): number {
   return loggadeArbetsset(sets).reduce((n, s) => n + volumeKg(s.weightKg, s.reps), 0);
 }
+
+/**
+ * Vad raden HETER i etiketterna — `uppvärmningen`, eller `set N` räknat från ett.
+ *
+ * ⛔ **FRASEN BYGGDES PÅ TVÅ STÄLLEN OCH DE RÄKNADE OLIKA. Uppgift 12.49.**
+ * `SetRow` byggde den ur `workSetIndex`, alltså platsen bland arbetsseten.
+ * `ExerciseCard` byggde arkets variant ur `findIndex(...) + 1`, alltså platsen i
+ * LISTAN. Med planen `[uppvärmning, arbetsset, arbetsset]` sa raden *"set 2"* och
+ * arket som öppnades från den *"set 3"* — om exakt samma rad. Uppvärmningsraden
+ * sa *"uppvärmningen"* i raden och *"set 1"* i arket.
+ *
+ * 💡 **Det är tredje gången samma familj:** 12.42 (arbetssetnumret räknades på två
+ * ställen), 12.48 (uppvärmningsfiltret skrevs om av varje skärm), och nu frasen
+ * som numret sitter i. Varje gång ägde `src/lib` regeln medan skärmlagret hade en
+ * egen kopia.
+ *
+ * **Översättningen från nollbaserat till människors räkning bor här.** `+ 1` låg
+ * tidigare på två ställen, och det är precis en sådan rad som ser för enkel ut
+ * för att kunna vara fel.
+ *
+ * ⚠️ **`e2e/hjalpare.ts` har en egen `radnamn` med samma innehåll, och de ska
+ * INTE delas.** Sviten stavar sina påståenden självständigt — importerade den
+ * frasen härifrån hade den mätt sin egen import och en ändrad etikett gått grön.
+ * Se regeln i `hjalpare.ts`: *fixturer binds till appen, påståenden stavas
+ * självständigt.*
+ */
+export function radnamn(workSetIndex: number | null): string {
+  return workSetIndex === null ? 'uppvärmningen' : `set ${workSetIndex + 1}`;
+}

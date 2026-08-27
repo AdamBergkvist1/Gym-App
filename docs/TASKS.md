@@ -3459,8 +3459,8 @@ och 13.1 måste vara klar före 13.6.
 > latent till fas 7, 12.40 avgörs i 4.3 och 12.41 utvidgar kontrastvakten. Ingen av dem ger
 > fel siffror eller fel utseende nu.
 >
-> ⏰ **12.42–12.48 tillkom 2026-08-27 ur `/code-review` och Adams fråga, och har en egen ruta
-> längre ner.** Alla sju är nu stängda. **12.46 gick före 12.37**, och skälet var att den
+> ⏰ **12.42–12.49 tillkom 2026-08-27 ur `/code-review`, Adams fråga och `/simplify`, och har
+> en egen ruta längre ner.** Alla åtta är nu stängda. **12.46 gick före 12.37**, och skälet var att den
 > var en regel 1-skuld: `DESIGN.md` påstod tre saker koden motsade, och så länge det gällde var
 > briefen inte sanningskällan.
 
@@ -3736,6 +3736,7 @@ och 13.1 måste vara klar före 13.6.
 > | ~~**12.46**~~ | ~~`DESIGN.md` är osann på tre punkter~~ | Standard, regel 1 | ✅ **KLAR.** Alla tre var dokumentfel, inte kodfel |
 > | ~~**12.47**~~ | ~~Två baslinjeluktar kvar (punkt 1 klar)~~ | Omdöme | ✅ **KLAR 2026-08-27** med `/simplify`. Punkt 3 var **elva** ställen, inte tre |
 > | ~~**12.48**~~ | ~~*"Uppvärmning räknas inte"* skrivs om av varje konsument~~ | 🔴 **Verkligt fel** | ✅ **KLAR.** Det var **fem** ställen, inte tre — se uppgiften |
+> | ~~**12.49**~~ | ~~Arket och raden numrerade samma rad olika~~ | 🔴 **Verkligt fel, synligt** | ✅ **KLAR.** Utbruten ur `/simplify` av 12.47. **Sviten hade aldrig en uppvärmningsrad** — därför överlevde den |
 >
 > ✅ **12.48 var den enda kvarvarande som kunde ge fel siffror**, och den var inte ett
 > granskningsfynd — den kom ur **Adams fråga** *"vart kommer det ifrån?"*. Två granskaragenter
@@ -4140,6 +4141,53 @@ och 13.1 måste vara klar före 13.6.
 
       **Verifierat 2026-08-27:** 308 tester i 24 filer, typecheck rent, lint 0 fel, bygget
       grönt, 81 e2e-tester gröna.
+
+- [x] **12.49 Arket och raden numrerade samma rad olika. Ny 2026-08-27. SYNLIG BUGG.**
+      Hittad under `/simplify` av 12.47, av **två granskare oberoende av varandra**, och
+      medvetet lämnad utanför den uppgiften: `/simplify` letar inte korrekthetsfel.
+
+      `ExerciseCard` skickade `planned.sets.findIndex(...) + 1` till `SetAdjustSheet` — alltså
+      radens plats i **listan**. `SetRow` numrerar bland **arbetsseten** och har ett ⛔ i sin
+      docblock om att listplatsen vore fel svar.
+
+      | Planen `[uppvärmning, arbetsset, arbetsset]` | Raden sa | Arket sa |
+      |---|---|---|
+      | Andra arbetssetet | `set 2` | **`set 3`** |
+      | Uppvärmningsraden | `uppvärmningen` | **`set 1`** |
+
+      💡 **Tredje gången i samma familj:** `12.42` (arbetssetnumret räknades på två ställen),
+      `12.48` (uppvärmningsfiltret skrevs om av varje skärm), och nu frasen numret sitter i.
+      Varje gång ägde `src/lib` regeln medan skärmlagret bar en egen kopia.
+
+      🔴 **VARFÖR DEN ÖVERLEVDE TRE GRANSKNINGAR — och det är fyndet värt mest här:**
+      **ingen e2e-vakt i hela sviten hade någonsin en uppvärmningsrad.** `isWarmup` fanns bara
+      som `false` i `hjalpare.ts`:s fixtur, så hela uppvärmningsvägen var omätt end-to-end.
+      Buggen kräver att en rad faktiskt ÄR uppvärmning för att synas alls.
+
+      **Adams beslut:** arket säger `uppvärmningen`, exakt som raden. Vägen: delad härledning
+      **plus** en e2e-vakt, inte det ena eller det andra.
+
+      **Åtgärdat.** `radnamn(workSetIndex)` i `src/lib/worksets.ts` äger frasen; `SetRow` och
+      `ExerciseCard` anropar den. `SetAdjustSheet`:s prop bytte från `setNumber: number` till
+      `radnamn: string` — **typen var själva buggen**: ett tal kan inte uttrycka
+      *"uppvärmningen"*, så anroparen tvingades hitta på ett.
+
+      **`e2e/uppvarmning.spec.ts` är sviten första vakt som växlar en rad till uppvärmning.**
+      Den var röd mot den gamla räkningen, kontrollerat genom att buggen återinfördes.
+
+      💡 **Ett kvitto föll ut av testets egen konstruktion.** Första versionen band arkets
+      lokator till `Justera set 1` och behöll den över växlingen till uppvärmning. Den föll på
+      timeout — vilket i sig bevisade att rubriken byter namn i samma ögonblick som raden gör
+      det. Omadresseringen står kvar i testet som ett påstående, inte som en omständlighet.
+
+      ⏰ **KVAR, och det är Adams att avgöra om det ska bli en uppgift:** `radnamn` kallar
+      **varje** uppvärmningsrad `uppvärmningen`. Har man två på samma övning heter de likadant,
+      i både raden och arket. Det var sant före den här rättningen också — den ärvde
+      tvetydigheten, den skapade den inte. Adam valde medvetet bort att numrera uppvärmningarna
+      här, eftersom det hade ändrat radens egen etikett och alltså varit mer än buggen bad om.
+
+      **Verifierat 2026-08-27:** **310 tester** i 24 filer, typecheck rent, lint 0 fel, bygget
+      **642,04 kB** (gzip 193,33), **84 e2e-tester gröna**.
 
 ---
 

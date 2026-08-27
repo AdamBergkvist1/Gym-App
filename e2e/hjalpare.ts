@@ -338,12 +338,16 @@ export function bockknapp(page: Page, övningsnamn: string, set: Setnummer = 1):
 /**
  * Justeringsarket för en setrad.
  *
- * ⚠️ **ARKETS NUMMER KOMMER INTE UR SAMMA RÄKNING SOM RADENS.** `ExerciseCard`
- * skickar radens plats i LISTAN (`findIndex(...) + 1`) medan raden själv numreras
- * bland arbetsseten. Med en uppvärmningsrad överst heter knappen `… för set 1`
- * medan arket den öppnar heter `Justera set 2`. Ingen vakt i sviten har en
- * uppvärmningsrad, så kedjan håller i dag — men den håller av tur.
- * **Buggen är nedskriven som egen uppgift; fixa den inte här.**
+ * ✏️ **RUTAN HÄR VARNADE FÖR ATT ARKETS NUMMER INTE KOM UR SAMMA RÄKNING SOM
+ * RADENS. Det är rättat i 12.49.** `ExerciseCard` skickade radens plats i LISTAN
+ * (`findIndex(...) + 1`) medan raden numrerades bland arbetsseten, så en
+ * uppvärmningsrad överst gav knappen `… för set 1` och arket `Justera set 2`.
+ * Båda sidor läser nu `radnamn` i `src/lib/worksets.ts`.
+ *
+ * Rutan sa också att kedjan *"håller av tur"* eftersom ingen vakt hade en
+ * uppvärmningsrad. **Det stämmer inte längre heller:** `uppvarmning.spec.ts` är
+ * sviten första vakt som faktiskt växlar en rad till uppvärmning, och den var
+ * röd mot den gamla räkningen.
  */
 export function justeringsarket(page: Page, övningsnamn: string, set: Setnummer = 1): Locator {
   return page.getByRole('dialog', { name: `Justera ${radnamn(set)}, ${övningsnamn}` });

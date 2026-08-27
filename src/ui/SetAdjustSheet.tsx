@@ -24,7 +24,20 @@ import { formatWeight, nudgeSteps, stepReps, stepWeight } from '../lib/steps';
 
 interface Props {
   exerciseName: string;
-  setNumber: number;
+  /**
+   * Vad raden HETER — `set 2` eller `uppvärmningen`. Färdig fras, inte ett tal.
+   *
+   * ✏️ **HÄR STOD `setNumber: number` FRAM TILL 12.49, och typen var själva
+   * buggen.** Ett tal kan inte uttrycka *"uppvärmningen"*, så `ExerciseCard`
+   * tvingades hitta på ett: den skickade radens plats i LISTAN. Med en
+   * uppvärmningsrad överst hette knappen `… för set 1` medan arket den öppnade
+   * hette `Justera set 2`, och uppvärmningsraden själv hette `uppvärmningen` i
+   * raden men `set 1` i arket.
+   *
+   * Frasen kommer från `radnamn` (`src/lib/worksets.ts`), samma härledning som
+   * raden använder. **Räkna inte fram den här.**
+   */
+  radnamn: string;
   weightKg: number;
   reps: number;
   isWarmup: boolean;
@@ -48,7 +61,7 @@ const NUDGE =
 
 export function SetAdjustSheet({
   exerciseName,
-  setNumber,
+  radnamn,
   weightKg,
   reps,
   isWarmup,
@@ -64,7 +77,7 @@ export function SetAdjustSheet({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Justera set ${setNumber}, ${exerciseName}`}
+      aria-label={`Justera ${radnamn}, ${exerciseName}`}
       className="fixed inset-0 z-50 flex flex-col justify-end"
     >
       {/* Tryck utanför för att stänga. Ändringarna är redan sparade. */}
@@ -88,7 +101,7 @@ export function SetAdjustSheet({
             man drar. Den fanns här redan, men i 14 px och utanför skärmen. */}
         <header className="shrink-0 px-4 pt-2 pb-1">
           <p className="truncate text-meta text-[var(--color-dim)]">
-            {exerciseName} · set {setNumber}
+            {exerciseName} · {radnamn}
           </p>
           <p className="text-timer font-semibold tabular-nums">
             {formatWeight(weightKg)}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loggadeArbetsset, volymAv, workSetIndices } from './worksets';
+import { loggadeArbetsset, radnamn, volymAv, workSetIndices } from './worksets';
 
 describe('steg 4.2 arbetssetets nummer', () => {
   it('numrerar arbetsseten 0, 1, 2 i den ordning de står', () => {
@@ -102,5 +102,23 @@ describe('12.48 volymen av en plans loggade arbetsset', () => {
     expect(
       volymAv([rad(true, true, 40, 10), rad(false, true, 92.5, 5), rad(false, false, 100, 5)])
     ).toBe(462.5);
+  });
+});
+
+describe('12.49 radens namn i etiketterna', () => {
+  it('kallar uppvärmningsraden vid namn i stället för att ge den ett nummer', () => {
+    // ⛔ HELA SKÄLET ATT FUNKTIONEN FINNS. `SetRow` och `SetAdjustSheet` byggde
+    // frasen var för sig, och arket räknade radens plats i LISTAN medan raden
+    // räknade bland arbetsseten. Med en uppvärmning överst sa raden "set 2" och
+    // arket "set 3" — om samma rad.
+    expect(radnamn(null)).toBe('uppvärmningen');
+  });
+
+  it('numrerar arbetssetet från ett, inte från noll', () => {
+    // `workSetIndices` är nollbaserad eftersom `getSetAverages` indexerar sitt
+    // svar så. Människor räknar från ett. Översättningen sker HÄR och ingen
+    // annanstans — den låg tidigare som `+ 1` på två ställen.
+    expect(radnamn(0)).toBe('set 1');
+    expect(radnamn(2)).toBe('set 3');
   });
 });

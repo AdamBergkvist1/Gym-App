@@ -6,7 +6,7 @@ import { SetAdjustSheet } from './SetAdjustSheet';
 import { IkonBock, IkonPrickar } from './icons';
 import { getSetAverages } from '../db/history';
 import { formatVolume } from '../lib/steps';
-import { loggadeArbetsset, volymAv, workSetIndices } from '../lib/worksets';
+import { loggadeArbetsset, radnamn, volymAv, workSetIndices } from '../lib/worksets';
 import type { PlannedExercise } from '../db/plan';
 import type { LocalExercise } from '../db/types';
 
@@ -88,7 +88,17 @@ export function ExerciseCard({
    * med sina egna tester; den här raden är en anropare, inte en kopia.
    */
   const klaraArbetsset = loggadeArbetsset(planned.sets).length;
-  const aktivt = planned.sets.find((s) => s.id === justerar);
+  /**
+   * Raden arket är öppet för, och dess plats i listan.
+   *
+   * ⚠️ **PLATSEN ANVÄNDS FÖR ATT SLÅ UPP I `nummer`, ALDRIG SOM SETNUMMER.**
+   * Fram till 12.49 skickades `findIndex(...) + 1` rakt in i arket som just ett
+   * setnummer — alltså radens plats i listan, uppvärmningen inräknad. Det är
+   * exakt den räkning `SetRow`:s docblock förbjuder, och den gjorde att arket
+   * sa *"set 3"* om en rad som själv hette *"set 2"*.
+   */
+  const aktivtIndex = planned.sets.findIndex((s) => s.id === justerar);
+  const aktivt = aktivtIndex === -1 ? undefined : planned.sets[aktivtIndex];
 
   /**
    * Metaradens delar: **utrustning · set · volym**, enligt B4.
@@ -274,7 +284,12 @@ export function ExerciseCard({
       {aktivt && (
         <SetAdjustSheet
           exerciseName={exercise?.name ?? 'Övning'}
-          setNumber={planned.sets.findIndex((s) => s.id === aktivt.id) + 1}
+          /* ✏️ HÄR STOD `setNumber={planned.sets.findIndex(...) + 1}` — radens
+             plats i LISTAN, alltså exakt den räkning `SetRow`:s docblock
+             förbjuder. Arket får nu samma fras som raden, ur samma härledning:
+             `nummer` är `workSetIndices(planned.sets)` och räknades redan på
+             rad 70. Uppgift 12.49. */
+          radnamn={radnamn(nummer[aktivtIndex] ?? null)}
           equipment={exercise?.equipment ?? null}
           weightKg={aktivt.weightKg}
           reps={aktivt.reps}

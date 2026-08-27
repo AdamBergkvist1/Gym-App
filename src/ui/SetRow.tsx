@@ -3,6 +3,7 @@ import { formatWeight } from '../lib/steps';
 import { IkonBock } from './icons';
 import { useLongPress } from './useLongPress';
 import { ANTAL_PASS_I_SNITTET } from '../db/history';
+import { radnamn } from '../lib/worksets';
 import type { SetAverage } from '../db/history';
 import type { PlannedSet } from '../db/plan';
 
@@ -100,8 +101,15 @@ export function SetRow({
    */
   const viktSaknas = set.weightKg === 0 && !set.fromGhost && !confirmed;
 
-  /** Vad etiketterna säger. Uppvärmningen har inget nummer, den har en bokstav. */
-  const nummer = workSetIndex === null ? 'uppvärmningen' : `set ${workSetIndex + 1}`;
+  /**
+   * Vad etiketterna säger. Uppvärmningen har inget nummer, den har ett namn.
+   *
+   * 🔄 **Frasen byggdes här fram till 12.49, och `ExerciseCard` byggde arkets
+   * variant på sitt eget vis — ur radens plats i listan.** De två sa olika saker
+   * om samma rad så fort en uppvärmning låg överst. Regeln bor i `radnamn`;
+   * **skriv inte tillbaka ternären hit.**
+   */
+  const nummer = radnamn(workSetIndex);
 
   /**
    * Snittet i klartext, för den som inte ser det.
