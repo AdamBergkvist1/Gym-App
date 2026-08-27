@@ -1,13 +1,14 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import {
   avslutaPass,
   fångaKonsolfel,
   hämtaÖvning,
   loggaSetGenomAppen,
   läggTillÖvning,
-  setlista,
   startaPass,
+  talknapp,
 } from './hjalpare';
+import { LÅNGTRYCK_MS } from '../src/ui/useLongPress';
 
 /**
  * VAKT över långtrycket som förklarar snittalen. Uppgift steg 4.2 del E.
@@ -24,8 +25,16 @@ import {
  * förklaringen — bara ett ark hen inte bad om.
  */
 
-/** Håller ner fingret på ett element tillräckligt länge för att gesten ska lösa ut. */
-async function långtryck(locator: ReturnType<typeof setlista>, ms = 700) {
+/**
+ * Håller ner fingret på ett element tillräckligt länge för att gesten ska lösa ut.
+ *
+ * Marginalen är härledd ur appens egen tröskel i stället för att stå som en naken
+ * `700`. Höjs `LÅNGTRYCK_MS` följer vakten med; tidigare hade den tyst börjat
+ * mäta ett kort tryck. Typen är `Locator` och inte `ReturnType<typeof setlista>`
+ * — helparen får i praktiken en KNAPP, alltså en ättling till listan, och det
+ * gamla skrivsättet påstod något annat.
+ */
+async function långtryck(locator: Locator, ms = LÅNGTRYCK_MS + 250) {
   const ruta = await locator.boundingBox();
   if (!ruta) throw new Error('elementet har ingen yta att trycka på');
   const x = ruta.x + ruta.width / 2;
@@ -54,9 +63,7 @@ test('långtryck på ett snittal förklarar vad talet är', async ({ page }) => 
   await startaPass(page);
   await läggTillÖvning(page, övning.name);
 
-  const kgKnappen = setlista(page, övning.name).getByRole('button', {
-    name: /^Vikt .*för set 1/,
-  });
+  const kgKnappen = talknapp(page, övning.name, 'vikt');
 
   // ANKRING: knappen bär snittet innan vi rör den. Löser gesten inte ut vet vi
   // att det är gesten som fallerat och inte underlaget.
@@ -89,9 +96,7 @@ test('ett kort tryck öppnar justeringsarket som förut', async ({ page }) => {
   // som redan öppnade arket, och hela gesthanteringen ersatte knappens `onClick`.
   // Går spärren i `useLongPress` sönder åt andra hållet slutar det korta
   // trycket fungera — alltså appens vanligaste väg att ändra en vikt.
-  await setlista(page, övning.name)
-    .getByRole('button', { name: /^Vikt .*för set 1/ })
-    .click();
+  await talknapp(page, övning.name, 'vikt').click();
 
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('tooltip')).toBeHidden();

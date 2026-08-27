@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import type { LocalSet, LocalWorkout } from '../src/db/types';
 
 /**
@@ -265,6 +265,91 @@ export function setlista(page: Page, övningsnamn: string) {
 }
 
 /**
+ * Vilken rad. `SetRow.tsx:92` bygger samma fras — uppvärmningen har inget
+ * nummer, den har ett namn.
+ */
+export type Setnummer = number | 'uppvärmning';
+
+/**
+ * Radens identitetsfras, så som den står i VARJE etikett på raden.
+ *
+ * ⛔ **DEN HÄR FRASEN ÄR PRIMITIVEN, INTE LOKATORERNA.** Fram till 12.47 punkt 3
+ * stavade elva anropsplatser ut radens identitet för hand, och alla elva blandade
+ * ihop två frågor som inte är samma fråga: **vilken knapp** (övning, rad, fält)
+ * och **vad den visar just nu** (`inte angiven` / `10 kilo`). Bakas tillståndet in
+ * i identiteten måste varje anropsplats kunna hela etikettgrammatiken — även de
+ * som bara vill trycka på knappen. Samma rörelse som `src/lib/worksets.ts` gjorde
+ * när arraysignaturen visade sig vara ett enpassfall av en räknare.
+ *
+ * ⚠️ **STAVAS SJÄLVSTÄNDIGT MED FLIT.** Frasen importeras INTE från `src/` — då
+ * hade sviten mätt sin egen import och en ändrad etikett gått grön. Det är samma
+ * skäl som `SåddSet` har motsatt behandling: **fixturer binds till appen,
+ * påståenden stavas självständigt.**
+ */
+function radnamn(set: Setnummer): string {
+  return set === 'uppvärmning' ? 'uppvärmningen' : `set ${set}`;
+}
+
+/**
+ * Kg- eller Reps-knappen på en setrad. **Adresserar bara — påstår ingenting.**
+ *
+ * Vill du veta vad knappen visar, assertera det med `toHaveAccessibleName`. Då
+ * säger ett fel *"namnet var fel"* i stället för *"locator resolved to 0
+ * elements"*, vilket läser som att kortet aldrig renderades.
+ *
+ * ⚠️ **Asymmetrin i regexarna är etiketternas, inte vår.** Vikten heter
+ * `Vikt <värde> kilo för <rad>`, repsen heter `<värde> reps för <rad>` — fältet
+ * står först i den ena och efter talet i den andra.
+ *
+ * ✏️ **DET SOM SKILJER KNAPPARNA ÅT ÄR ORDET `Vikt`, INTE `^`-ANKARET.** Den här
+ * kommentaren påstod motsatsen tills den saboterades 2026-08-27: `^` togs bort
+ * och båda vakterna förblev gröna, medan ordet `Vikt` borttaget gav *"strict mode
+ * violation … resolved to 2 elements"* direkt. Ankaret är alltså **inte bärande i
+ * dagens grammatik** — det står kvar för att en framtida etikett skulle kunna bära
+ * `Vikt` mitt i strängen, och det ska läsas som en försiktighetsåtgärd, inte som
+ * en vakt. Formuleringen i `passvy.spec.ts` menade `^Vikt` mot enbart `för set 1`;
+ * jag läste den som ett påstående om ankaret och skrev fel.
+ */
+export function talknapp(
+  page: Page,
+  övningsnamn: string,
+  fält: 'vikt' | 'reps',
+  set: Setnummer = 1
+): Locator {
+  const rad = radnamn(set);
+  return setlista(page, övningsnamn).getByRole('button', {
+    name: fält === 'vikt' ? new RegExp(`^Vikt .*för ${rad}`) : new RegExp(` reps för ${rad}`),
+  });
+}
+
+/**
+ * Bocken på en setrad, i båda lägena.
+ *
+ * Namnet växlar mellan `Klarmarkera` och `Ångra`, så lokatorn tar båda och
+ * lämnar tillståndet till `aria-pressed` (`SetRow.tsx:199`). Annars vore ett
+ * namnbyte omöjligt att skilja från en försvunnen knapp.
+ */
+export function bockknapp(page: Page, övningsnamn: string, set: Setnummer = 1): Locator {
+  return setlista(page, övningsnamn).getByRole('button', {
+    name: new RegExp(`^(Klarmarkera|Ångra) ${radnamn(set)}$`),
+  });
+}
+
+/**
+ * Justeringsarket för en setrad.
+ *
+ * ⚠️ **ARKETS NUMMER KOMMER INTE UR SAMMA RÄKNING SOM RADENS.** `ExerciseCard`
+ * skickar radens plats i LISTAN (`findIndex(...) + 1`) medan raden själv numreras
+ * bland arbetsseten. Med en uppvärmningsrad överst heter knappen `… för set 1`
+ * medan arket den öppnar heter `Justera set 2`. Ingen vakt i sviten har en
+ * uppvärmningsrad, så kedjan håller i dag — men den håller av tur.
+ * **Buggen är nedskriven som egen uppgift; fixa den inte här.**
+ */
+export function justeringsarket(page: Page, övningsnamn: string, set: Setnummer = 1): Locator {
+  return page.getByRole('dialog', { name: `Justera ${radnamn(set)}, ${övningsnamn}` });
+}
+
+/**
  * Loggar ett riktigt set genom UI:t: justera vikten, bocka av raden.
  * Returnerar vikten som loggades, så att anroparen slipper upprepa talet.
  *
@@ -281,10 +366,17 @@ export async function loggaSetGenomAppen(
   page: Page,
   övningsnamn: string
 ): Promise<{ vikt: number; reps: number }> {
-  const raderna = setlista(page, övningsnamn);
-  await raderna.getByRole('button', { name: /^Vikt inte angiven för set 1/ }).click();
+  const kg = talknapp(page, övningsnamn, 'vikt');
 
-  const arket = page.getByRole('dialog', { name: `Justera set 1, ${övningsnamn}` });
+  // ⚠️ FÖRUTSÄTTNINGEN ASSERTAS I STÄLLET FÖR ATT LIGGA I LOKATORN. Raden måste
+  // vara tom — annars ger fyra `+2,5` en annan vikt än 10, och returvärdet nedan
+  // vore en lögn. Låg villkoret i lokatorn (`/^Vikt inte angiven …/`) föll en
+  // förifylld rad i stället som "locator resolved to 0 elements", vilket läser
+  // som att kortet aldrig renderades.
+  await expect(kg).toHaveAccessibleName(/^Vikt inte angiven/);
+  await kg.click();
+
+  const arket = justeringsarket(page, övningsnamn);
   for (let i = 0; i < 4; i++) await arket.getByRole('button', { name: '+2,5' }).click();
   // `Klar`, inte `Stäng`. Den senare finns också och heter rätt, men den är
   // bakgrundsytan bakom arket (`absolute inset-0`) — tryck-utanför-för-att-
@@ -293,10 +385,19 @@ export async function loggaSetGenomAppen(
   await arket.getByRole('button', { name: 'Klar' }).click();
   await expect(arket).toHaveCount(0);
 
-  await expect(raderna.getByRole('button', { name: /^Vikt 10 kilo för set 1/ })).toBeVisible();
-  await expect(raderna.getByRole('button', { name: /^8 reps för set 1/ })).toBeVisible();
-  await raderna.getByRole('button', { name: 'Klarmarkera set 1' }).click();
-  await expect(raderna.getByRole('button', { name: 'Ångra set 1' })).toBeVisible();
+  // Talen assertas som NAMN, inte som lokator. Samma styrka på påståendet —
+  // vikten och repsen måste fortfarande vara 10 och 8 för att raden ska passera —
+  // men ett fel säger nu vilket tal som blev fel i stället för att knappen inte
+  // fanns.
+  await expect(kg).toHaveAccessibleName(/^Vikt 10 kilo/);
+  await expect(talknapp(page, övningsnamn, 'reps')).toHaveAccessibleName(/^8 reps/);
+
+  const bock = bockknapp(page, övningsnamn);
+  await bock.click();
+  // `aria-pressed`, inte namnbytet till `Ångra`. Tillståndet finns redan som
+  // attribut (`SetRow.tsx:199`), och mätt på namnet går ett namnbyte inte att
+  // skilja från en försvunnen knapp.
+  await expect(bock).toHaveAttribute('aria-pressed', 'true');
 
   return { vikt: 10, reps: 8 };
 }

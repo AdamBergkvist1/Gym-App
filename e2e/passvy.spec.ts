@@ -9,6 +9,7 @@ import {
   seedaRått,
   setlista,
   startaPass,
+  talknapp,
 } from './hjalpare';
 
 /**
@@ -63,17 +64,16 @@ import {
  */
 
 /**
- * Kg-knappen på första setraden, vars tillgängliga namn bär referensvärdet.
+ * ✏️ **`förstaKgKnappen` bodde här fram till 12.47 punkt 3.** Den hade redan rätt
+ * form — adressera knappen, assertera namnet separat — men låg privat i den här
+ * filen medan `langtryck.spec.ts` skrev om samma lokator två gånger utan
+ * motiveringen om `^`-ankaret. Den är nu `talknapp` i `hjalpare.ts`, med
+ * setnumret och fältet i signaturen i stället för inbakade i namnet.
  *
- * Formen är `Vikt <inmatat> kilo för set 1, brukar vara <snitt> kilo, tryck …`
- * — eller utan `brukar vara`-delen när det inte finns något snitt. Det är den
- * frånvaron 5a mäter.
+ * Formen den adresserar är oförändrad: `Vikt <inmatat> kilo för set 1, brukar
+ * vara <snitt> kilo, tryck …` — eller utan `brukar vara`-delen när det inte finns
+ * något snitt. Det är den frånvaron 5a mäter.
  */
-function förstaKgKnappen(page: Parameters<typeof setlista>[0], övningsnamn: string) {
-  // `^Vikt` och inte bara `för set 1`: Reps-knappen på samma rad heter
-  // "5 reps för set 1, …" och hade matchat lika bra.
-  return setlista(page, övningsnamn).getByRole('button', { name: /^Vikt .*för set 1/ });
-}
 
 test('5a. inget snitt visas när enda tidigare setet är importerat', async ({ page }) => {
   const konsolfel = fångaKonsolfel(page);
@@ -126,20 +126,18 @@ test('5a. inget snitt visas när enda tidigare setet är importerat', async ({ p
   // Därför står en övning med KÄND historik bredvid, renderad av samma
   // komponent i samma ögonblick. Visar den sitt snitt har visningsvägen
   // bevisligen löst ut — och först då betyder frånvaron hos den andra något.
-  await expect(förstaKgKnappen(page, riktig!.name)).toHaveAccessibleName(
+  await expect(talknapp(page, riktig!.name, 'vikt')).toHaveAccessibleName(
     new RegExp(`brukar vara ${loggat.vikt} kilo`)
   );
 
   // Visningsvägen: inget snitt alls, eftersom det enda underlaget är importerat.
-  await expect(förstaKgKnappen(page, importerad!.name)).not.toHaveAccessibleName(/brukar vara/);
+  await expect(talknapp(page, importerad!.name, 'vikt')).not.toHaveAccessibleName(/brukar vara/);
 
   // Planvägen: raderna förifylldes aldrig, alltså står vikten som ej angiven.
   // `82,5` får inte ha läckt in någonstans i kortet.
-  await expect(
-    setlista(page, importerad!.name).getByRole('button', {
-      name: /^Vikt inte angiven för set 1/,
-    })
-  ).toBeVisible();
+  await expect(talknapp(page, importerad!.name, 'vikt')).toHaveAccessibleName(
+    /^Vikt inte angiven/
+  );
   await expect(setlista(page, importerad!.name)).not.toContainText('82,5');
 
   expect(konsolfel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
@@ -189,15 +187,20 @@ test('5b. blandat: snittet bygger på det app-loggade setet, aldrig på det impo
 
   // Både påståendet och dess ankare i samma rad: syns det app-loggade setets
   // tal har frågan löst ut OCH valt rätt underlag. Här behövs ingen granne.
-  await expect(förstaKgKnappen(page, övning.name)).toHaveAccessibleName(
+  await expect(talknapp(page, övning.name, 'vikt')).toHaveAccessibleName(
     new RegExp(`brukar vara ${loggat.vikt} kilo`)
   );
   await expect(setlista(page, övning.name)).not.toContainText('82,5');
 
   // Planvägen ska ha förifyllt ur samma set.
-  await expect(
-    setlista(page, övning.name).getByRole('button', { name: /^Vikt 10 kilo för set 1/ })
-  ).toBeVisible();
+  //
+  // ✏️ HÄR STOD `10` HÅRDKODAT. `loggaSetGenomAppen` returnerar vikten just för
+  // att anroparen inte ska upprepa talet — och raden sju rader upp använde redan
+  // `loggat.vikt` korrekt. Ändrades stegningen i hjälparen förblev den grön medan
+  // den här raden föll, på ett påstående som inte handlar om stegningen alls.
+  await expect(talknapp(page, övning.name, 'vikt')).toHaveAccessibleName(
+    new RegExp(`^Vikt ${loggat.vikt} kilo`)
+  );
 
   expect(konsolfel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
 });

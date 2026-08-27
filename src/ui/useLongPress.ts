@@ -43,8 +43,20 @@ import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent }
  * blev.
  */
 
-/** Hur länge fingret ska ligga still. iOS egen callout ligger på ~500 ms. */
-const LÅNGTRYCK_MS = 450;
+/**
+ * Hur länge fingret ska ligga still. iOS egen callout ligger på ~500 ms.
+ *
+ * **Exporterad för e2e-sviten**, som måste hålla ner fingret längre än tröskeln.
+ * Stod tidigare som en naken `700` i `langtryck.spec.ts` med sambandet som ett
+ * tyst antagande om att 700 > 450. Höjdes tröskeln hit mätte vakten plötsligt ett
+ * KORT tryck, och föll på raden `expect(bricka).toBeVisible()` — alltså med ett
+ * fel som sa att brickan inte visas, medan felet var att gesten aldrig löste ut.
+ *
+ * ⚠️ **Att binda tröskeln är rätt; att binda etiketterna vore fel.** Tröskeln är
+ * en fixtur vakten ska överskrida. Etiketterna är det vakten PÅSTÅR, och
+ * importeras de mäter sviten sin egen import.
+ */
+export const LÅNGTRYCK_MS = 450;
 
 /** Rörelse i px som avbryter. En scroll som börjar på knappen är inte ett tryck. */
 const RÖRELSEGRÄNS = 10;
