@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { formatVolume } from '../../lib/steps';
+import { loggadeArbetsset } from '../../lib/worksets';
 import { db } from '../../db/db';
 import {
   createExercise,
@@ -205,18 +206,15 @@ export function TodayPage() {
    * inte, så ett pass med uppvärmning + två arbetsset läste **`3 SET · 0 VOLYM
    * KG`**: två tal ur olika mängder, sida vid sida i samma ruta.
    *
-   * ⚠️ **Det är tredje förekomsten av samma fel i samma familj.** 12.16 rättade
+   * ⚠️ **Det var tredje förekomsten av samma fel i samma familj.** 12.16 rättade
    * volymen (historiken och startskärmen visade olika tal för samma pass),
-   * övningskortets metarad rättades i den här commiten — och den här rutan var
-   * kvar. **Regeln finns i tre frågor och skrivs ändå av varje ny konsument:**
-   * `getExerciseHistory`, `getPersonalRecords` och `summarizeWorkout` filtrerar
-   * alla `isWarmup`, men den som räknar i skärmen måste minnas det själv. Se
-   * `TASKS.md` 12.48.
+   * övningskortets metarad rättades samma dag — och den här rutan var kvar.
+   *
+   * ✅ **12.48 stängde sömmen.** Regeln skrevs om av varje konsument så länge
+   * den bara fanns i frågelagret; nu bor den i `loggadeArbetsset` och den här
+   * raden anropar den. **Skriv inte tillbaka filtret hit.**
    */
-  const klaraSet = övningar.reduce(
-    (n, e) => n + e.sets.filter((s) => !s.isWarmup && s.loggedSetId !== null).length,
-    0
-  );
+  const klaraSet = övningar.reduce((n, e) => n + loggadeArbetsset(e.sets).length, 0);
 
   return (
     <section className="space-y-3">

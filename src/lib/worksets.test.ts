@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { workSetIndices } from './worksets';
+import { loggadeArbetsset, volymAv, workSetIndices } from './worksets';
 
 describe('steg 4.2 arbetssetets nummer', () => {
   it('numrerar arbetsseten 0, 1, 2 i den ordning de står', () => {
@@ -45,5 +45,62 @@ describe('steg 4.2 arbetssetets nummer', () => {
     // en kontraktsgräns anroparen lutar sig mot. Står det inte utskrivet läser
     // nästa person den som en vakt och tror att fallet är skyddat.
     expect(workSetIndices([])).toEqual([]);
+  });
+});
+
+describe('12.48 loggade arbetsset ur en plan', () => {
+  /**
+   * Formen `ExerciseCard` och `TodayPage` faktiskt har: planens rader, där
+   * `loggedSetId` är satt först när raden bockats av.
+   */
+  const rad = (isWarmup: boolean, loggad: boolean, weightKg = 100, reps = 5) => ({
+    isWarmup,
+    loggedSetId: loggad ? 'set-1' : null,
+    weightKg,
+    reps,
+  });
+
+  it('räknar inte ett avbockat uppvärmningsset som ett arbetsset', () => {
+    // ⚠️ DET HÄR ÄR BUGGEN, TRE GÅNGER OM: 12.16, och två i 12.44. Ett avbockat
+    // uppvärmningsset ser ut precis som ett arbetsset för den som bara tittar på
+    // `loggedSetId`, och typen tillåter det lika gärna. Raden nedan är den enda
+    // skillnaden mellan `av 4 set` och `3 set`.
+    expect(loggadeArbetsset([rad(true, true), rad(false, true), rad(false, true)])).toHaveLength(2);
+  });
+
+  it('räknar inte en spökrad som ännu inte bockats av', () => {
+    // Planen fylls med förra passets siffror INNAN de gjorts (`plan.ts`,
+    // spökdata). De raderna är appens gissning om vad du ska göra, inte något
+    // du gjort — och det var precis förväxlingen 12.44 rättade när `av 4 set`
+    // visade sig ha en nämnare användaren aldrig satt.
+    expect(loggadeArbetsset([rad(false, true), rad(false, false), rad(false, false)])).toHaveLength(
+      1
+    );
+  });
+});
+
+describe('12.48 volymen av en plans loggade arbetsset', () => {
+  const rad = (isWarmup: boolean, loggad: boolean, weightKg: number, reps: number) => ({
+    isWarmup,
+    loggedSetId: loggad ? 'set-1' : null,
+    weightKg,
+    reps,
+  });
+
+  it('summerar bara det som räknas som arbete — inte uppvärmningen, inte spöket', () => {
+    // Talen är valda så att varje bortfiltrerad rad ger ett SYNLIGT fel om den
+    // smyger in: uppvärmningen bär 400 kg (samma differens som gjorde 12.16:s
+    // test rött med 1350 mot 950), spöket 500. Passerar en av dem blir svaret
+    // 862,5 eller 962,5 i stället för 462,5, och testet säger vilken.
+    //
+    // ⚠️ ATT SUMMAN GÅR VIA `volumeKg` VAKTAS INTE HÄR, och det ska stå utskrivet.
+    // Vikter kommer i halvkilosteg och reps i heltal, så produkten har aldrig mer
+    // än en decimal — `volumeKg`:s avrundning kan alltså inte skilja sig från en
+    // rå multiplikation på något värde appen kan producera. Delegeringen är ett
+    // val om var regeln bor, inte ett beteende ett test kan falla på. 92,5 står
+    // kvar för att halvkilot ska synas i talet, inte för att det bevisar något.
+    expect(
+      volymAv([rad(true, true, 40, 10), rad(false, true, 92.5, 5), rad(false, false, 100, 5)])
+    ).toBe(462.5);
   });
 });

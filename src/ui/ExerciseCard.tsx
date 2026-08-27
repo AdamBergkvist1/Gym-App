@@ -6,7 +6,7 @@ import { SetAdjustSheet } from './SetAdjustSheet';
 import { IkonBock, IkonPrickar } from './icons';
 import { getSetAverages } from '../db/history';
 import { formatVolume } from '../lib/steps';
-import { workSetIndices } from '../lib/worksets';
+import { loggadeArbetsset, volymAv, workSetIndices } from '../lib/worksets';
 import type { PlannedExercise } from '../db/plan';
 import type { LocalExercise } from '../db/types';
 
@@ -75,18 +75,19 @@ export function ExerciseCard({
    * 🔄 **BÅDA VILLKOREN ÄNDRADES 2026-08-27, och båda kommer ur Adams fråga
    * *"vart kommer det ifrån?"* om metaradens andra tal.**
    *
-   * 1. **`!s.isWarmup` är en ren buggrättning.** Talet räknade uppvärmningen som
-   *    ett set, medan resten av appen konsekvent räknar arbetsset —
-   *    `getSetAverages`, `workSetIndices` och `listWorkoutSummaries` filtrerar
-   *    alla bort den. Ett pass med uppvärmning + tre arbetsset läste `av 4 set`.
-   *    **Ingen av `/code-review`:s två agenter såg det**; det krävde frågan
-   *    "varför står det fyra".
+   * 1. **Att uppvärmningen inte räknas är en ren buggrättning.** Talet räknade
+   *    den som ett set, medan resten av appen konsekvent räknar arbetsset.
+   *    Ett pass med uppvärmning + tre arbetsset läste `av 4 set`. **Ingen av
+   *    `/code-review`:s två agenter såg det**; det krävde frågan "varför står
+   *    det fyra".
    * 2. **Namnet säger nu vad talet är.** `klara` beskrev en bock; det här
    *    beskriver arbetsset man gjort, vilket är det metaraden ska bära.
+   *
+   * ⛔ **SKRIV INTE OM FILTRET HÄR.** Villkoret satt inline fram till 12.48 och
+   * glömdes då på tre ställen i tur och ordning. Regeln bor i `loggadeArbetsset`
+   * med sina egna tester; den här raden är en anropare, inte en kopia.
    */
-  const klaraArbetsset = planned.sets.filter(
-    (s) => !s.isWarmup && s.loggedSetId !== null
-  ).length;
+  const klaraArbetsset = loggadeArbetsset(planned.sets).length;
   const aktivt = planned.sets.find((s) => s.id === justerar);
 
   /**
@@ -106,10 +107,12 @@ export function ExerciseCard({
    * setantalet ovan.** Annars hade raden sagt *"3 set · 862,5 kg"* där kilona
    * bar fyra set — två tal ur olika mängder bredvid varandra, vilket är värre
    * än att ett av dem är fel.
+   *
+   * 🔄 **Går via `volymAv` sedan 12.48**, som summerar genom `volumeKg` precis
+   * som frågelagret. Här stod en egen multiplikation — samma tal, ett annat
+   * räknesätt, och det är så en divergens börjar.
    */
-  const volym = planned.sets
-    .filter((s) => !s.isWarmup && s.loggedSetId !== null)
-    .reduce((n, s) => n + s.weightKg * s.reps, 0);
+  const volym = volymAv(planned.sets);
 
   const metarad = [
     exercise?.equipment ? exercise.equipment[0]!.toUpperCase() + exercise.equipment.slice(1) : null,

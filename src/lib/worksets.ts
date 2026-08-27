@@ -1,3 +1,5 @@
+import { volumeKg } from './oneRepMax';
+
 /**
  * Arbetssetets nummer — EN regel, ett ställe. Uppgift steg 4.2 del A.
  *
@@ -62,4 +64,50 @@ const ETT_ENDA_PASS = 'setlistan';
 export function workSetIndices(sets: readonly { isWarmup: boolean }[]): (number | null)[] {
   const nästaNummer = skapaArbetssetRäknare();
   return sets.map((s) => nästaNummer(ETT_ENDA_PASS, s.isWarmup));
+}
+
+/**
+ * Ett set i planen, sett från den som räknar. Bara de två fälten som avgör om
+ * raden är ett gjort arbete — resten av `PlannedSet` angår inte regeln, och en
+ * smalare typ gör funktionen anropbar från vilken vy av planen som helst.
+ */
+interface PlanradSomKanRäknas {
+  isWarmup: boolean;
+  loggedSetId: string | null;
+}
+
+/**
+ * Planens rader som faktiskt är **gjort arbete**: avbockade, och inte uppvärmning.
+ *
+ * ⛔ **DEN HÄR FUNKTIONEN FINNS FÖR ATT REGELN GLÖMDES TRE GÅNGER.** Uppgift
+ * 12.48. Frågelagret har alltid vetat att uppvärmning inte räknas — `history.ts`
+ * skriver till och med ut skälet: *"De är förberedelse, inte arbete, och att
+ * blanda in dem gör siffran obrukbar för jämförelser mellan pass."* Men den som
+ * räknar i en SKÄRM måste minnas det själv, och tre av tre glömde: startskärmens
+ * volym (12.16), övningskortets metarad och passets sammanfattningsruta (båda
+ * 12.44). Symtomet var varje gång **två tal ur olika mängder bredvid varandra** —
+ * `3 SET · 0 VOLYM KG`.
+ *
+ * 💡 **Det var aldrig slarv, det var en saknad söm.** Ett `sets.filter(s =>
+ * s.loggedSetId !== null)` i en komponent har ingen aning om att `isWarmup` bär
+ * en regel; typen tillåter det lika gärna. Regeln bor här nu, och skärmarna
+ * anropar den i stället för att skriva om den.
+ */
+export function loggadeArbetsset<T extends PlanradSomKanRäknas>(sets: readonly T[]): T[] {
+  return sets.filter((s) => !s.isWarmup && s.loggedSetId !== null);
+}
+
+
+/**
+ * Volymen av planens loggade arbetsset — appens mått på hur tungt något var.
+ *
+ * ⚠️ **Summerar via `volumeKg` och inte med en egen multiplikation**, så att
+ * skärmen och frågelagret avrundar likadant. `history.ts` och `repo.ts` går
+ * redan den vägen; övningskortet gjorde det inte, och två räknesätt för samma
+ * tal är samma sorts glapp som 12.18 fick lösa en gång.
+ */
+export function volymAv(
+  sets: readonly (PlanradSomKanRäknas & { weightKg: number; reps: number })[]
+): number {
+  return loggadeArbetsset(sets).reduce((n, s) => n + volumeKg(s.weightKg, s.reps), 0);
 }
