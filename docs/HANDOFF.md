@@ -7,15 +7,26 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ## 🆕 2026-08-27 (sent) — `/code-review` KÖRD PÅ STEG 4.2. Tolv fynd, tio åtgärdade. Nästa jobb är 12.37
 
-### ⛔ TOLV COMMITS ÄR INTE PUSHADE
+### ✅ ALLT ÄR PUSHAT. Kontrollera själv
 
 ```bash
 git fetch origin && git status -sb
 ```
 
-`origin/main` står kvar på `9f5eb3b`. Vercel bär alltså varken 12.36 eller granskningens
-rättelser. **Skälet är inte längre en obesvarad fråga** — Adam har svarat på alla tre synliga
-ändringarna. Ingen har bett om en push, det är allt.
+**Tretton commits, `9f5eb3b..26884f5`, pushade 2026-08-27 på Adams begäran.** Svarar kommandot
+`## main...origin/main` utan `ahead` eller `behind` är du i fas — så såg det ut efter pushen,
+kontrollerat efter en färsk `fetch`. Vercel bygger om automatiskt vid push till `main`, så
+`https://adam-gym-app.vercel.app` bär nu både 12.36 och granskningens rättelser.
+
+> ✏️ **Rättelse.** Rutan sa fram till pushen *"TOLV COMMITS ÄR INTE PUSHADE"* och att
+> `origin/main` stod kvar på `9f5eb3b`. Det stämde när det skrevs — men siffran var **tolv och
+> blev tretton** i samma stund handoff-commiten skrevs, alltså raden efter. **Tredje
+> off-by-one-felet på tre sessioner**, alla av samma sort: ett antal skrivet innan sista
+> commiten fanns. `15bccb7` (testantalet), `822babd` (elva kanter, se `12.36`) och nu den här.
+>
+> ⚠️ **Regeln som borde ha dragits redan efter den andra:** *skriv aldrig ett commitantal i
+> texten — hänvisa till `git log origin/main..HEAD` och låt läsaren räkna.* Ett tal som ska
+> stämma efter nästa commit är fel innan bläcket torkat.
 
 ### 🔴 DET VIKTIGASTE ATT BÄRA VIDARE: Adams fråga hittade det två granskaragenter missade
 
@@ -115,7 +126,9 @@ du ändrar ett värde.
 - Behöver du ett läge skriptet inte täcker: lägg en engångs-`.mjs` i **`skarmdumpar/`**, som är
   gitignorerad. **Den går inte att lägga i scratchpad** — `@playwright/test` kan inte lösas upp
   därifrån. Radera den efteråt.
-- **Produktionen:** `https://adam-gym-app.vercel.app`. **Bär inte den här sessionens arbete.**
+- **Produktionen:** `https://adam-gym-app.vercel.app` — Vercel bygger om automatiskt vid push
+  till `main`, och allt nedan är pushat. ⏰ **Bygget var inte kontrollerat när sessionen tog
+  slut.** Att pushen gick fram är verifierat; att Vercel byggde grönt är det inte.
 - ⚠️ **`apple-mobile-web-app-status-bar-style` är fortfarande OVERIFIERAD.** Kräver Adams
   telefon i standalone-läge. Oförändrat sedan fyra sektioner tillbaka.
 
