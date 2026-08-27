@@ -102,13 +102,43 @@ export function SetRow({
    * Formuleringen *"brukar vara"* bär dessutom det långtrycket ska förklara för
    * den som ser: **vad talet är.** Den öppna frågan från 2B (`DESIGN.md` §3.1)
    * gäller alltså bara den seende vägen.
+   *
+   * 🔄 **TAR EN FORMATERARE SEDAN 12.47, INTE EN FÄRDIG STRÄNG.** Anroparen
+   * tvingades tidigare bygga värdet även när det inte fanns något snitt: raden
+   * med repsen evaluerade `` `${average?.reps} reps` `` och producerade strängen
+   * `"undefined reps"`, som sedan kastades bort. Den nådde aldrig skärmen — men
+   * bara för att `brukar` råkade slänga argumentet, och det gick inte att avgöra
+   * lokalt. Formateringen skedde på fel sida om frågan *"finns det ett snitt?"*.
+   * Nu är `average` icke-null inuti, så `?.` behövs inte.
    */
-  const brukar = (värde: string) =>
+  const brukar = (formatera: (a: SetAverage) => string) =>
     average
-      ? `, brukar vara ${värde}${average.workoutCount < ANTAL_PASS_I_SNITTET ? ` enligt ${average.workoutCount} pass` : ''}`
+      ? `, brukar vara ${formatera(average)}${average.workoutCount < ANTAL_PASS_I_SNITTET ? ` enligt ${average.workoutCount} pass` : ''}`
       : '';
 
-  const snittVikt = average ? formatWeight(average.weightKg) : '';
+  /**
+   * Vikten formaterad en gång. Stod tidigare två gånger — i etiketten och i
+   * spannet — med samma indata och samma svar.
+   */
+  const vikt = formatWeight(set.weightKg);
+
+  /**
+   * Kg-etikettens två rörliga delar. Båda grenarna bar tidigare hela meningen,
+   * ordagrant lika från `för ${nummer}` och framåt; bara prefixet och verbet
+   * skilde. En missad kopia hade gett två olika etiketter för samma knapp
+   * beroende på om vikten var angiven — och etiketten är e2e-sviten mätyta
+   * (beslut 7), inte bara text.
+   *
+   * ⚠️ **BARA `viktText` ÄR VAKTAD. `viktÅtgärd` ÄR DET INTE.** Uppmätt genom
+   * sabotage 2026-08-27: grenarna i `viktText` omkastade gav **tre röda** e2e,
+   * medan verbet ändrat till `JUSTERA` i båda grenarna lämnade **allt grönt**.
+   * Skälet är att sviten ankrar sina regexar i etikettens BÖRJAN
+   * (`/^Vikt inte angiven/`, `/^Vikt 10 kilo/`), så allt efter `brukar`-delen är
+   * omätt. Det står här för att nästa läsare inte ska tro att hela grammatiken
+   * är skyddad — den är det inte, och den som ändrar verbet gör det utan nät.
+   */
+  const viktText = viktSaknas ? 'Vikt inte angiven' : `Vikt ${vikt} kilo`;
+  const viktÅtgärd = viktSaknas ? 'ange' : 'ändra';
 
   /**
    * Långtryck förklarar snittalen. Adams beslut 2026-08-26.
@@ -160,17 +190,11 @@ export function SetRow({
       <button
         type="button"
         {...långtryck}
-        aria-label={
-          viktSaknas
-            ? `Vikt inte angiven för ${nummer}${brukar(`${snittVikt} kilo`)}, tryck för att ange`
-            : `Vikt ${formatWeight(set.weightKg)} kilo för ${nummer}${brukar(`${snittVikt} kilo`)}, tryck för att ändra`
-        }
+        aria-label={`${viktText} för ${nummer}${brukar((a) => `${formatWeight(a.weightKg)} kilo`)}, tryck för att ${viktÅtgärd}`}
         className={`${cell} ${dämpad || viktSaknas ? 'text-[var(--color-dim)]' : ''}`}
       >
-        <span className="block text-set leading-tight">
-          {viktSaknas ? '–' : formatWeight(set.weightKg)}
-        </span>
-        {average && <Snitt värde={snittVikt} pass={average.workoutCount} />}
+        <span className="block text-set leading-tight">{viktSaknas ? '–' : vikt}</span>
+        {average && <Snitt värde={formatWeight(average.weightKg)} pass={average.workoutCount} />}
       </button>
 
       {/* Reps — samma konstruktion. Snittrepsen står under repsen, så man aldrig
@@ -179,7 +203,7 @@ export function SetRow({
       <button
         type="button"
         {...långtryck}
-        aria-label={`${set.reps} reps för ${nummer}${brukar(`${average?.reps} reps`)}, tryck för att ändra`}
+        aria-label={`${set.reps} reps för ${nummer}${brukar((a) => `${a.reps} reps`)}, tryck för att ändra`}
         className={`${cell} ${dämpad ? 'text-[var(--color-dim)]' : ''}`}
       >
         <span className="block text-set leading-tight">{set.reps}</span>
