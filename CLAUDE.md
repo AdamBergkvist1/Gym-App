@@ -10,6 +10,8 @@ För att vanliga träningsappar har för hög kognitiv friktion. Användaren vil
 YOU MUST följa dessa regler utan undantag:
 1. **Spec-Driven Development:** Koda INGET förrän `docs/SPEC.md` och `docs/PLAN.md` är uppdaterade och godkända av användaren. Arbeta därefter strikt utifrån `TASKS.md`.
 2. **Diagnos före fix:** Gissa ALDRIG varför en bugg uppstår. Begär konsol-output, loggar eller skärmdumpar innan du ändrar kod. Kan felet reproduceras i Playwright är det den vägen som gäller — inte att be Adam ladda om på telefonen.
+   - **Sabotera vakten innan du litar på den.** Ett grönt test ser likadant ut oavsett om det mäter något. Bryt det testet påstår sig vakta och se att det blir rött. **Obligatoriskt vid tre tillfällen:** **(a)** testet gick grönt utan att implementationen ändrats · **(b)** en konsument bytte datakälla, eftersom den då ärver källans alla filter · **(c)** den röda fasen föll på att något saknades (`is not defined`) — det bevisar att funktionen inte fanns, inte att villkoret inuti den vaktas.
+   - **Kan ett test inte bli rött är det dokumentation, inte en vakt** — skriv ut det i testet. Samma sak för en liveness-räknare som slås ihop över två oberoende vägar: den bevisar ingen av dem. Beläggen bor i `TASKS.md` 12.37.
 3. **En ändring i taget:** Gör endast atomära commits. Blanda aldrig refaktorering med nya funktioner.
 4. **Säkerhet (Kritisk):**
    - Supabase Row Level Security (RLS) MÅSTE vara aktiverat för alla tabeller.

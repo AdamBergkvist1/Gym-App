@@ -3444,21 +3444,25 @@ och 13.1 måste vara klar före 13.6.
 > | # | Vad | När |
 > |---|---|---|
 > | ~~**12.36**~~ | ~~Kontrastmätningen finns inte i repot~~ | ✅ **KLAR 2026-08-27.** `e2e/kontrast.spec.ts`. Hittade elva kontroller med osynlig kant |
-> | **12.37** | Sabotagekontrollen är en vana, inte en regel | 🔴 **NÄSTA. Före 4.3**, och 12.36 gav den två nya belägg |
-> | **12.38** | `IMPORTERAT_SET`:s datum kan maskera tidsberoende filter | **Med 12.37.** Samma familj |
+> | ~~**12.37**~~ | ~~Sabotagekontrollen är en vana, inte en regel~~ | ✅ **KLAR 2026-08-27.** Regel 2 i `CLAUDE.md`, **tre** tillfällen, fem belägg |
+> | **12.38** | `IMPORTERAT_SET`:s datum kan maskera tidsberoende filter | **Med 12.31**, inte med 12.37 — det är samma rad |
 > | **12.39** | `getSetAverages` drar in hela `exercises` i sin observerade mängd | Före **fas 7** |
 > | **12.40** | Briefen saknar kanttoken för element direkt på papperet | **I 4.3.** Frågan är nu mätbar — se raden |
 > | **12.41** | Kontrastvakten ser fyra lägen, inte hela appen | Efter 4.3. `/ovning/:id` är den allvarligaste delen |
 >
-> 🔴 **12.37 är nu den enda kvarvarande som hindrar framtida fel**, och 12.36 stärkte argumentet
-> för den: bygget av kontrastvakten producerade **en tyst grön vakt i vakten själv** (en
-> hopslagen liveness-räknare som dolde att textvägen kunde vara död) och **ett kvarglömt
-> undantag**, båda hittade genom kontroll och inte genom tur. Regeln finns fortfarande bara som
-> en vana. Görs bara en sak, gör 12.37.
+> ✅ **12.37 var den enda kvarvarande som hindrade FRAMTIDA fel, och den är gjord.** Regeln bor
+> i `CLAUDE.md` regel 2 sedan 2026-08-27 och namnger tre tillfällen då sabotagekontrollen är
+> obligatorisk. **Att den var en vana och inte en process var hela problemet** — fem belägg
+> hann samlas innan den skrevs ner, och tabellen i uppgiften listar alla fem.
 >
-> ⏰ **12.42–12.47 tillkom 2026-08-27 ur `/code-review` och har en egen ruta längre ner.**
-> **12.46 går före 12.37**, och skälet är att den är en regel 1-skuld: `DESIGN.md` påstår tre
-> saker koden motsäger, och så länge det gäller är briefen inte sanningskällan.
+> ⛔ **Kvarvarande i rutan hindrar inga fel i dag.** 12.38 är en fälla för nästa vakt, 12.39 är
+> latent till fas 7, 12.40 avgörs i 4.3 och 12.41 utvidgar kontrastvakten. Ingen av dem ger
+> fel siffror eller fel utseende nu.
+>
+> ⏰ **12.42–12.48 tillkom 2026-08-27 ur `/code-review` och Adams fråga, och har en egen ruta
+> längre ner.** Alla utom 12.47 är stängda. **12.46 gick före 12.37**, och skälet var att den
+> var en regel 1-skuld: `DESIGN.md` påstod tre saker koden motsade, och så länge det gällde var
+> briefen inte sanningskällan.
 
 - [x] **12.36 Kontrastmätningen bor i ett sessionstranskript, inte i repot. Ny 2026-08-26.
       KLAR 2026-08-27 i `e2e/kontrast.spec.ts`.**
@@ -3562,7 +3566,7 @@ och 13.1 måste vara klar före 13.6.
       ⏰ **Adam hade inte hunnit svara på om de elva kanterna får se ut så här** när sessionen
       tog slut. **Ingenting är pushat** — se `HANDOFF.md` för hur de backas.
 
-- [ ] **12.37 Sabotagekontrollen är en vana, inte en regel. Ny 2026-08-26.**
+- [x] **12.37 Sabotagekontrollen är en vana, inte en regel. Ny 2026-08-26.**
       Steg 4.2 hittade **två tysta gröna vakter**, båda genom att koden de mäter saboterades
       med flit:
 
@@ -3590,6 +3594,36 @@ och 13.1 måste vara klar före 13.6.
       💡 **Sidoiakttagelse värd att bära med:** ett test som *inte kan* bli rött är inte
       värdelöst, men det ska stå utskrivet att det är dokumentation och inte en vakt. Se
       `worksets.test.ts`, tomma-listan-fallet.
+
+      **Åtgärdad 2026-08-27.** Regeln står i `CLAUDE.md` som två punktsatser under regel 2
+      (*Diagnos före fix*), inte som en egen regel 7 — HOW-listan slutar på 6 och kapitelrubrikerna
+      fortsätter på 7, så en sjunde listpunkt hade kolliderat i numreringen. Rule 2 är dessutom
+      rätt hem i sak: *"gissa aldrig varför en bugg uppstår"* och *"gissa aldrig att ett grönt
+      test mäter något"* är samma sats.
+
+      ⚠️ **REGELN NAMNGER TRE TILLFÄLLEN, INTE TVÅ. Det tredje är mitt tillägg och inte Adams**,
+      så det ska synas här: **(c) den röda fasen föll på att något saknades (`is not defined`)**.
+      Belägget kom ur `12.48` samma dag. Första testet för `loggadeArbetsset` var rött — men
+      rött för att funktionen inte fanns, inte för att villkoret inuti den mättes. Filtret
+      byggdes därför i två steg så att båda villkoren fick var sitt fallande test. **En röd fas
+      som föll på fel sak är samma tomma bevis som en grön som inte mäter något**, bara
+      speglad, och den är lättare att missa eftersom den ser ut som en korrekt TDD-cykel.
+
+      **Fem belägg, alla uppmätta genom sabotage och inte antagna:**
+
+      | # | Var | Vad sabotaget visade |
+      |---|---|---|
+      | 1 | Vakt 5, steg 4.2 (`11B.0f`) | Konsumenten bytte datakälla och ärvde en åldersgräns. Setet föll på åldern även när importfiltret saboterades |
+      | 2 | Långtrycksvakten, steg 4.2 del E | Overlayen dök upp under fingret, så `click` uteblev och klickspärren blev omätbar |
+      | 3 | Kontrastvakten, `12.36` | En hopslagen liveness-räknare stod över noll även om textvägen aldrig kört en mätning — felklassen inbyggd i verktyget som finns för att hitta den |
+      | 4 | `12.42` | Testerna gick gröna direkt. Sabotage åt två håll visade att båda konsumenterna bar regeln |
+      | 5 | `12.48` | Den röda fasen föll på `is not defined`. Se rutan ovan |
+
+      **Ingen kodändring, ingen grind rörd.** `CLAUDE.md` är instruktion, inte källkod.
+
+      ⏰ **`12.38` står kvar och är inte gjord här**, trots att tabellen längre upp säger
+      *"Med 12.37"*. Dess egen text pekar på `12.31` i stället: *"gör dem i samma commit, det är
+      samma rad."* Den hör alltså ihop med 12.31, inte med den här.
 
 - [ ] **12.38 `IMPORTERAT_SET`:s datum kan maskera tidsberoende filter. Ny 2026-08-26.**
       Utbruten ur vakt 5-omskrivningen i steg 4.2. Mallen i `e2e/hjalpare.ts:56` har
