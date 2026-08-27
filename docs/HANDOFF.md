@@ -1,11 +1,146 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-27. Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-27 (sent). Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
 
-## 🆕 2026-08-27 — 12.36 ÄR KLAR: kontrastvakten bor i repot. Den hittade elva osynliga kanter. Nästa jobb är 12.37
+## 🆕 2026-08-27 (sent) — `/code-review` KÖRD PÅ STEG 4.2. Tolv fynd, tio åtgärdade. Nästa jobb är 12.37
+
+### ⛔ TOLV COMMITS ÄR INTE PUSHADE
+
+```bash
+git fetch origin && git status -sb
+```
+
+`origin/main` står kvar på `9f5eb3b`. Vercel bär alltså varken 12.36 eller granskningens
+rättelser. **Skälet är inte längre en obesvarad fråga** — Adam har svarat på alla tre synliga
+ändringarna. Ingen har bett om en push, det är allt.
+
+### 🔴 DET VIKTIGASTE ATT BÄRA VIDARE: Adams fråga hittade det två granskaragenter missade
+
+`/code-review` kördes mot basen `cc54451`, alltså **steg 4.2 plus 12.36** — förra sessionen bad
+om den granskningen och den kördes aldrig. Två kalla agenter, en per axel. **Tolv fynd, alla
+verifierade mot koden innan de skrevs ner.**
+
+Men det tyngsta fyndet kom inte från dem. När jag lade fram metaradens form som ett val svarade
+Adam att han föredrog specens `4 set` — **och tillade att han inte förstod var fyran kom
+ifrån**, eftersom man inte vet i förväg hur många set man ska köra.
+
+Det visade sig att **båda talen i `1 av 4 set` var fel:**
+
+1. **Nämnaren var appens gissning.** `startExercise` skapar lika många rader som förra passets
+   arbetsset. Raden påstod ett mål användaren aldrig satt.
+2. **Båda talen räknade uppvärmningen som ett set** — och volymen på *samma rad* gjorde det
+   inte. Två tal ur olika mängder, sida vid sida.
+3. **Passets sammanfattningsruta hade samma fel:** `3 SET · 0 VOLYM KG`.
+
+> **Regeln som faller ut, och den är den här sessionens tyngsta:** *en granskning mäter kod mot
+> spec. Den kan inte upptäcka att specen och koden har fel tillsammans.* Båda agenterna såg att
+> formen avvek från specen; **ingen av dem frågade vad talet betydde.** Den frågan kom från den
+> som ska använda appen, och det är inte en slump — han är den ende som läser raden som ett
+> påstående om verkligheten i stället för som en implementation av ett krav.
+
+**Följden är uppgift `12.48`**, den enda kvarvarande som kan ge fel siffror.
+
+### 🔴 Näst viktigast: tre av fem spec-fynd gled igenom för att `Klart när` mätte fel sak
+
+Del C:s brödtext beställer en **form** (*"en chip i flödet … en stor chip"*), men dess
+`Klart när` mäter **kontrast**. Formen grindades alltså aldrig, och delen såg uppfylld ut.
+Samma sak i del B, vars kriterium bara krävde att en emoji var borta.
+
+> **Regeln:** *ett `Klart när` som inte kan falla på uppgiftens egen brödtext är ingen grind —
+> det är en sammanfattning.* Skriv kriteriet mot det svåraste kravet i texten, inte mot det
+> lättaste att mäta.
+
+Rättelserutan står i `TASKS.md` under `Steg 4.2`. **Bocken står kvar med flit** — delarna
+byggdes, och att avbocka hade gjort historien osann åt andra hållet.
+
+### Vad som gjordes — tolv commits
+
+| Commit | Vad |
+|---|---|
+| `822babd` | Elva kontroller byter till den betydelsebärande kanttokenen |
+| `177ec56` | **12.36: kontrastvakten**, `e2e/kontrast.spec.ts` |
+| `4bd2ead` | Rättelse: Historik mättes tom |
+| `2499e9a` | 12.36 stängd, 12.41 utbruten |
+| `3bfb93c` | Föregående handoff |
+| `659a770` | **Granskningens tolv fynd nedskrivna**, steg 4.2 rättad, 12.42–12.47 |
+| `c576df2` | Fyra direktfynd: em-dash, felsiffra, härkomstregistret, kriteriet |
+| `d744a12` | **12.46:** `DESIGN.md` påstod tre saker koden motsäger |
+| `17c8b45` | **12.47 p1:** tröskeln `3` bor på ett ställe |
+| `363dcab` | **12.42:** arbetssetnumret räknas på ett ställe |
+| `ce47d87` | **12.44:** metaraden visar set du kört — och uppvärmningsbuggen |
+| `dbf78da` | **12.43 + 12.45:** båda var dokumentfel, ingen kodändring |
+
+### 💡 Mönstret i granskningens utfall, värt att veta innan nästa körning
+
+**Fem av tolv fynd var dokumentfel där koden hade rätt.** `DESIGN.md` påstod att `±`-stegen var
+oavgjorda, att `–` visas utan underlag, att kanttabellen täcker alla fall; specen krävde en
+pillerform som inte rymdes och ett indrag som inte var kortets. **I samtliga fall var åtgärden
+att flytta ett skäl från en kodkommentar till briefen.**
+
+⚠️ **Det är inte ett tecken på att granskningen hade fel — tvärtom.** Men det säger något om
+var skulden faktiskt sitter i det här projektet: **ändringar landar i koden med sitt skäl i en
+docblock, och `DESIGN.md` halkar efter.** `DESIGN.md` §0.1 kräver samma commit. Läs den innan
+du ändrar ett värde.
+
+### ✅ Grindarna — ALLA FEM I SLUTLÄGET 2026-08-27, hemdatorn
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **302 tester i 24 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ JS **642,01 kB** (gzip 193,21), precache **723,15 KiB / 10 entries** |
+| `npm run e2e` | ✅ **81 passed**, 55,6 s |
+
+### 🔜 NÄSTA JOBB
+
+1. **12.37** — sabotagekontrollen som regel i `CLAUDE.md`. Den har nu **fyra** belägg: två från
+   steg 4.2, plus två från den här sessionen (den hopslagna liveness-räknaren i kontrastvakten,
+   och att 12.42:s tester gick gröna direkt och krävde sabotage åt två håll).
+2. **12.48** — enda kvarvarande fyndet som kan ge fel siffror.
+3. **Steg 4.3 Historik.** Uppgiften är **fortfarande inte skriven**; regel 1 kräver det först.
+   **12.40 avgörs där**, och frågan är nu mätbar.
+
+⛔ **Gör INTE om kontrastmätningen för hand.** Kör `npm run e2e`.
+
+### 🖥️ Så visar du Adam något
+
+- **`npm run shots`** är rätt verktyg, inte webbläsarpanelen. Panelen vägrade ta emot klick hela
+  den här sessionen (*"the Browser pane is currently hidden"*) — den kan fotograferas men inte
+  styras. Skriptet finns just för det; läs dess docblock. **Skärmbilder gick ändå att ta genom
+  panelen**, så den duger till att titta men inte till att navigera.
+- Behöver du ett läge skriptet inte täcker: lägg en engångs-`.mjs` i **`skarmdumpar/`**, som är
+  gitignorerad. **Den går inte att lägga i scratchpad** — `@playwright/test` kan inte lösas upp
+  därifrån. Radera den efteråt.
+- **Produktionen:** `https://adam-gym-app.vercel.app`. **Bär inte den här sessionens arbete.**
+- ⚠️ **`apple-mobile-web-app-status-bar-style` är fortfarande OVERIFIERAD.** Kräver Adams
+  telefon i standalone-läge. Oförändrat sedan fyra sektioner tillbaka.
+
+### Suggested skills
+
+| Skill | När, och varför just den |
+|---|---|
+| **`/simplify`** | 🔴 **Näst på tur efter 12.37.** `12.47` har två luktar kvar som uttryckligen lämnades dit: `TalKnapp`-duplikationen i `SetRow` och e2e-lokatorn på tre ställen |
+| **`/tdd`** | Till **steg 4.3:s** logik, och till **12.48** — den senare är precis ett fall där ett rött test först hade visat vilken form regeln ska ha |
+| **`/code-review`** | Efter 4.3. **Kör den innan uppgiften bockas av, inte efter** — den här sessionen visade vad som händer när den skjuts upp |
+| **`/diagnosing-bugs`** | När något faller — även när det ser ut som flakighet |
+
+---
+
+## 2026-08-27 (tidigare) — 12.36 ÄR KLAR: kontrastvakten bor i repot — DELVIS ÖVERSPELAD
+
+> **⚠️ Tre saker i sektionen nedan gäller inte längre.**
+>
+> **(1) "Fem commits" är nu tolv.** Se sektionen överst.
+>
+> **(2) Rutan *"DET SOM VÄNTAR PÅ ADAM"* är besvarad.** Adam godkände de elva kanterna
+> 2026-08-27 och avgjorde dessutom tre andra synliga frågor (12.43, 12.44, 12.45).
+>
+> **(3) Grindsiffrorna är justerade.** Bygget är **642,01 kB** / precache **723,15 KiB**, och
+> e2e tar 55,6 s. Testantalet 302 i 24 filer är oförändrat.
 
 ### ⛔ FEM COMMITS ÄR INTE PUSHADE. Kontrollera själv
 
