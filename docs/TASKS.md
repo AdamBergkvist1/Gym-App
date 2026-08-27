@@ -3691,8 +3691,34 @@ och 13.1 måste vara klar före 13.6.
 > motsäger är briefen inte längre sanningskällan, och `CLAUDE.md` regel 1 vilar på att den är
 > det. De tre andra spec-fynden är synliga ändringar Adam ska godkänna.
 
-- [ ] **12.42 Del A:s härledning är inte delad — `history.ts` räknar arbetsset själv.
-      Ny 2026-08-27.**
+- [x] **12.42 Del A:s härledning är inte delad — `history.ts` räknar arbetsset själv.
+      Ny 2026-08-27. KLAR 2026-08-27.**
+
+      ✅ **`skapaArbetssetRäknare` i `src/lib/worksets.ts` är nu regeln, och båda sidor anropar
+      den.** `history.ts`:s egna `Map<string, number>` är borta.
+
+      💡 **Det som löste knuten var att hitta den MINDRE primitiven.** Arraysignaturen
+      (`workSetIndices`) var aldrig regeln — den var ett **specialfall** av den, med ett enda
+      pass. Regeln är en *räknare*: anropas en gång per set, svarar med numret eller `null` för
+      uppvärmning. `workSetIndices` är numera byggd på den, och `getSetAverages` kan använda
+      den utan att ge upp sin baklängesgång genom indexet. **När två konsumenter inte kan dela
+      en funktion är frågan ofta inte "vem böjer sig" utan "vilken mindre sak är båda
+      specialfall av".**
+
+      ✅ **SABOTERAD I BÅDA RIKTNINGARNA, alltså inte antagen grön** — testerna gick nämligen
+      gröna direkt, vilket är den signal 12.37 handlar om:
+      1. Räknaren slutade hoppa över uppvärmning → **3 röda**, ett i `history.test.ts`
+         (kontraktstestet) och två i `worksets.test.ts`. Båda konsumenterna alltså bärande.
+      2. Räknaren ignorerade pass-nyckeln (en global räknare) → **6 röda i `history.test.ts`**
+         och **noll i `worksets.test.ts`**. Det senare är rätt och inte en lucka: en setlista
+         innehåller per definition ett enda pass, så nyckeln kan inte observeras där.
+
+      ⏰ **Kontraktstestet i `history.test.ts` behölls, tvärtemot vad den här uppgiften först
+      gissade.** Dess egen kommentar bär skälet: *"Testet är rött om NÅGONDERA sidan ändrar
+      regeln, vilket en delad funktion ensam inte hade garanterat — **den kan anropas fel**."*
+      Det är sant även nu: `getSetAverages` måste fortfarande filtrera i rätt ordning och
+      `ExerciseCard` slå upp med rätt nummer. **En delad regel tar bort risken att två
+      implementationer glider isär, inte risken att en av dem används fel.**
       Steg 4.2 del A säger: *"**Åtgärden är en delad härledning som båda sidor anropar**, inte
       två räkningar som ska råka stämma. **Kopplingen ska vara kod, inte prosa i en
       doc-kommentar.**"*

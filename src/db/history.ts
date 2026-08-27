@@ -9,6 +9,7 @@
 
 import { epley1RM, volumeKg } from '../lib/oneRepMax';
 import { weightStepFor } from '../lib/steps';
+import { skapaArbetssetRäknare } from '../lib/worksets';
 import { db, type GymDatabase } from './db';
 import type { LocalSet, LocalWorkout } from './types';
 
@@ -324,11 +325,20 @@ export async function getSetAverages(
   // Varje pass fyller platserna 0, 1, 2 … i följd, så en array blir tät och
   // stigande av sig själv. En Map hade behövt sorteras tillbaka efteråt, vilket
   // fick ordningen att se osäker ut trots att den är garanterad.
-  const arbetssetIPasset = new Map<string, number>();
+  //
+  // 🔄 **RÄKNANDET ÄR DELAT MED SETRADEN SEDAN 2026-08-27, inte längre eget.**
+  // Här stod en egen `Map<string, number>` som gjorde exakt det
+  // `skapaArbetssetRäknare` gör. Del A krävde *"en delad härledning som båda
+  // sidor anropar, inte två räkningar som ska råka stämma"*, och den här sidan
+  // hade aldrig bytts om. `/code-review` hittade det (uppgift 12.42).
+  const nästaNummer = skapaArbetssetRäknare();
   const perSetNummer: LocalSet[][] = [];
   for (const s of rows) {
-    const nummer = arbetssetIPasset.get(s.workoutId) ?? 0;
-    arbetssetIPasset.set(s.workoutId, nummer + 1);
+    const nummer = nästaNummer(s.workoutId, s.isWarmup);
+    // `rows` är redan filtrerad på `isWarmup`, så `null` kan inte nås här.
+    // Kontrollen finns för typerna — och för att en framtida ändring av filtret
+    // ovan inte tyst ska börja räkna uppvärmningar som arbetsset.
+    if (nummer === null) continue;
     (perSetNummer[nummer] ??= []).push(s);
   }
 
