@@ -5,18 +5,24 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ---
 
-## 🆕 2026-08-27 (sent) — `/code-review` KÖRD PÅ STEG 4.2. Tolv fynd, tio åtgärdade. Nästa jobb är 12.37
+## 🆕 2026-08-27 (sent) — `/code-review` KÖRD PÅ STEG 4.2. Elva av tolv fynd åtgärdade. Nästa jobb är 12.48
 
-### ✅ ALLT ÄR PUSHAT. Kontrollera själv
+**Sessionen avslutades här på Adams begäran.** Inget arbete ligger halvgjort, inget väntar på
+hans svar, och allt är pushat och verifierat live.
+
+### ✅ ALLT ÄR PUSHAT OCH DEPLOYAT. Kontrollera själv
 
 ```bash
 git fetch origin && git status -sb
 ```
 
-**Tretton commits, `9f5eb3b..26884f5`, pushade 2026-08-27 på Adams begäran.** Svarar kommandot
-`## main...origin/main` utan `ahead` eller `behind` är du i fas — så såg det ut efter pushen,
-kontrollerat efter en färsk `fetch`. Vercel bygger om automatiskt vid push till `main`, så
-`https://adam-gym-app.vercel.app` bär nu både 12.36 och granskningens rättelser.
+Svarar kommandot `## main...origin/main` utan `ahead` eller `behind` är du i fas — så såg det ut
+vid sessionens slut, kontrollerat efter en färsk `fetch`. Sessionen började på `9f5eb3b` och
+slutade på `3c4fbfe`; **räkna commitarna med `git log 9f5eb3b..HEAD --oneline` i stället för att
+lita på en siffra här** — se rättelserutan nedan för varför.
+
+⚠️ **Pushat är inte samma sak som deployat.** Den kontrollen står under *"Så visar du Adam
+något"* och tar tjugo sekunder. Den gjordes 2026-08-27 och produktionen bar rätt bygge.
 
 > ✏️ **Rättelse.** Rutan sa fram till pushen *"TOLV COMMITS ÄR INTE PUSHADE"* och att
 > `origin/main` stod kvar på `9f5eb3b`. Det stämde när det skrevs — men siffran var **tolv och
@@ -67,7 +73,7 @@ Samma sak i del B, vars kriterium bara krävde att en emoji var borta.
 Rättelserutan står i `TASKS.md` under `Steg 4.2`. **Bocken står kvar med flit** — delarna
 byggdes, och att avbocka hade gjort historien osann åt andra hållet.
 
-### Vad som gjordes — tolv commits
+### Vad som gjordes — `git log 9f5eb3b..HEAD --oneline`
 
 | Commit | Vad |
 |---|---|
@@ -75,7 +81,7 @@ byggdes, och att avbocka hade gjort historien osann åt andra hållet.
 | `177ec56` | **12.36: kontrastvakten**, `e2e/kontrast.spec.ts` |
 | `4bd2ead` | Rättelse: Historik mättes tom |
 | `2499e9a` | 12.36 stängd, 12.41 utbruten |
-| `3bfb93c` | Föregående handoff |
+| `3bfb93c` | Handoff, mitt i sessionen |
 | `659a770` | **Granskningens tolv fynd nedskrivna**, steg 4.2 rättad, 12.42–12.47 |
 | `c576df2` | Fyra direktfynd: em-dash, felsiffra, härkomstregistret, kriteriet |
 | `d744a12` | **12.46:** `DESIGN.md` påstod tre saker koden motsäger |
@@ -83,6 +89,31 @@ byggdes, och att avbocka hade gjort historien osann åt andra hållet.
 | `363dcab` | **12.42:** arbetssetnumret räknas på ett ställe |
 | `ce47d87` | **12.44:** metaraden visar set du kört — och uppvärmningsbuggen |
 | `dbf78da` | **12.43 + 12.45:** båda var dokumentfel, ingen kodändring |
+| `26884f5` | Handoff |
+| `da48534` | Handoff-rättelse: allt pushat, off-by-one nedskrivet |
+| `3c4fbfe` | Handoff-rättelse: deployen verifierad, inte bara pushen |
+
+### 📊 Granskningens tolv fynd — vad som hände med varje
+
+| Fynd | Utfall |
+|---|---|
+| Em-dash i apptext (`SetRow`) | ✅ Rättad, `c576df2` |
+| `DESIGN.md` osann efter del D | ✅ **12.46** |
+| `EXTERNT.md` saknade Övervägt-rader | ✅ Rättad, `c576df2` |
+| Tröskeln `3` kopierad | ✅ **12.47 p1** |
+| `TalKnapp`-duplikationen i `SetRow` | ⏰ **Kvar** — `/simplify`-material, 12.47 p2 |
+| E2E-lokatorn på tre ställen | ⏰ **Kvar** — `/simplify`-material, 12.47 p3 |
+| Del A:s härledning inte delad | ✅ **12.42** |
+| Timerchipet ingen chip | ✅ **12.43**, dokumentfel |
+| Indraget 12 px, inte 16 | ✅ **12.45**, dokumentfel |
+| `grep 🏋` inte tom | ✅ Kriteriet omskrivet, `c576df2` |
+| Metaraden `{klara} av {n}` | ✅ **12.44** + uppvärmningsbuggen |
+| `–`-regeln motsagd | ✅ **12.46** |
+| *"Tio kontroller"* är elva | ✅ Rättad, `c576df2` |
+
+⚠️ **Två fynd avfärdades med skäl i stället för att åtgärdas** — *Shotgun Surgery* på
+kanttokenen och dubblerad uppsättning i `kontrast.spec.ts`. Skälen står i `TASKS.md` 12.47.
+**Läs dem innan du "fixar" något av dem**; båda är medvetna.
 
 ### 💡 Mönstret i granskningens utfall, värt att veta innan nästa körning
 
@@ -106,16 +137,53 @@ du ändrar ett värde.
 | `npm run build` | ✅ JS **642,01 kB** (gzip 193,21), precache **723,15 KiB / 10 entries** |
 | `npm run e2e` | ✅ **81 passed**, 55,6 s |
 
-### 🔜 NÄSTA JOBB
+### 🔜 NÄSTA JOBB, i den här ordningen
 
-1. **12.37** — sabotagekontrollen som regel i `CLAUDE.md`. Den har nu **fyra** belägg: två från
+1. 🔴 **12.48 — den enda kvarvarande som kan ge FEL SIFFROR i appen.** *"Uppvärmning räknas
+   inte"* finns tre gånger i frågelagret, men skärmlagret måste minnas regeln själv — och tre
+   av tre glömde (12.16, plus två som 12.44 rättade). Uppgiften listar tre möjliga vägar och
+   **väljer ingen**; väg 1 är den som redan bevisat sig i 12.42. Läs varningen i uppgiften om
+   vad ingen av vägarna skyddar mot.
+2. **12.37** — sabotagekontrollen som regel i `CLAUDE.md`. Den har nu **fyra** belägg: två från
    steg 4.2, plus två från den här sessionen (den hopslagna liveness-räknaren i kontrastvakten,
    och att 12.42:s tester gick gröna direkt och krävde sabotage åt två håll).
-2. **12.48** — enda kvarvarande fyndet som kan ge fel siffror.
-3. **Steg 4.3 Historik.** Uppgiften är **fortfarande inte skriven**; regel 1 kräver det först.
-   **12.40 avgörs där**, och frågan är nu mätbar.
+3. **Steg 4.3 Historik**, sista delsteget i runda 1. ⛔ **Uppgiften är FORTFARANDE INTE SKRIVEN**
+   — regel 1 kräver det först, och steg 4.2 skrevs av samma skäl (`edb1844`). **12.40 avgörs
+   där**, och frågan är nu mätbar tack vare kontrastvakten. **Runda 2 (4.4–4.6) kräver en egen
+   grillning** — se rutan i `TASKS.md` 11B.
 
-⛔ **Gör INTE om kontrastmätningen för hand.** Kör `npm run e2e`.
+⚠️ **Skriv 4.3:s `Klart när` mot det svåraste kravet i brödtexten.** Det är den här sessionens
+näst tyngsta lärdom och den kostade fem spec-fynd — se rutan ovan.
+
+⛔ **Gör INTE om kontrastmätningen för hand.** Kör `npm run e2e`. Metoden lever i
+`e2e/kontrast.spec.ts` sedan `177ec56` och det var hela poängen med 12.36.
+
+⏰ **12.41 är också öppen och hör ihop med 4.3:** kontrastvakten mäter fyra lägen, inte hela
+appen. **Rutten `/ovning/:id` mäts inte alls**, och att lägga till den är två rader i `LÄGEN`.
+
+### ✅ FEM BESLUT ADAM FATTADE 2026-08-27. Riv inte upp dem utan att fråga
+
+Alla är synliga i appen eller styr hur den byggs, och alla står med skäl i `TASKS.md`.
+
+| Beslut | Vad han valde | Var det bor |
+|---|---|---|
+| Kontrastvakten | **Bygg själva, noll paket.** axe-core valdes bort — den saknar regel för WCAG 1.4.11, och appens semantik ligger i kanterna | `12.36`, `EXTERNT.md` |
+| Kanttokenen | **Ja till att elva kontroller får synlig kant.** `--color-line-strong`, ingen ny färg | `12.36` |
+| Timerns form | **Undanta timern från pillerformen** i stället för att krympa innehållet | `12.43`, `DESIGN.md` §3.1 |
+| Metaraden | **`N set` = set du faktiskt kört.** Inte appens gissning, och uppvärmning räknas inte | `12.44` |
+| Indraget | **Behåll 12 px.** 16 px hade flyttat alla skärmar för 4 px | `12.45` |
+
+### ⏰ Öppna trådar utan uppgift, alla medvetna
+
+1. **`Steg 4.1`:s ruta står fortfarande obockad**, nu tredje sessionen i rad. Alla tre kriterier
+   i dess **Klart när** ser uppfyllda ut. Enda kvarvarande kandidaten till skäl är
+   `apple-mobile-web-app-status-bar-style`, som kräver Adams telefon — se nedan. **Rutan är
+   hans att bocka av, inte min.**
+2. **Långtrycket är enda vägen till förklaringen av snittalen** tills `11B.6` bygger
+   engångsförklaringen. Accepterat av Adam med öppna ögon; han är appens enda användare.
+3. **`12.40`** — kanttoken för element direkt på papperet. Avgörs i **4.3**, mot ett verkligt
+   andra fall. `RestTimer` bär avsteget i dag, och skälet står både i komponenten och i
+   `DESIGN.md` §1b.
 
 ### 🖥️ Så visar du Adam något
 
