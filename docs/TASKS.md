@@ -2084,8 +2084,14 @@ gäller, och uppgiften skrivs om.
       - **Sidrubriken:** `Historik` med sammanfattningen **till höger på samma rad** i
         `--text-meta`. I dag ligger den på egen rad under. Briefen är uttrycklig: *"Rubriken tar
         aldrig en egen rad för sig själv; skärmhöjd är dyrare än luft."* `h1` bär redan Fraunces
-        och `--text-title` via elementregeln i `index.css`; `font-semibold` på den är kvar från
-        det mörka temat och ska bort.
+        och `--text-title` via elementregeln i `index.css`.
+
+        ✏️ **HÄR STOD ATT `font-semibold` PÅ `h1` SKA BORT. Det var fel, och kontrollerat
+        2026-08-28 innan det följdes.** `DESIGN.md` §2:s skala ger `--text-title` **vikt 600**,
+        alltså är halvfet den beslutade vikten — inte en rest från det mörka temat.
+        `TodayPage` sätter den likadant. **Klassen står kvar.** Att vikten sätts med en klass i
+        stället för i `h1`-regeln är däremot samma sorts *ihågkommen* regel som `tabular-nums`
+        och `font-family` redan slipper — noterat som **12.50**, inte gjort här.
       - ⛔ **`N pass` i sammanfattningen har ett tak på 50 och blir en lögn som aldrig ändrar
         sig.** Talet är `workouts.length` på en lista `listWorkoutSummaries(50)` redan kapat. Det
         syns inte i dag; efter ett år av loggning står det `50 pass` för alltid. Talet ska

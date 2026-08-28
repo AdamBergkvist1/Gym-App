@@ -17,6 +17,7 @@ import {
   getWorkoutSets,
   listTrainedExercises,
   listWorkoutSummaries,
+  summarizeHistory,
 } from './history';
 import { copyWorkoutIntoPlan } from './plan';
 import { workSetIndices } from '../lib/worksets';
@@ -226,6 +227,56 @@ describe('9.1 passhistorik', () => {
 
   it('ger tom lista när ingenting loggats — inte ett fel', async () => {
     expect(await listWorkoutSummaries(50, db)).toEqual([]);
+  });
+
+  describe('steg 4.3 del B: sidrubrikens totaler', () => {
+    it('räknar hela historiken, inte bara de pass listan visar', async () => {
+      // ⛔ DET HÄR ÄR HELA SKÄLET TILL FUNKTIONEN. Rubriken räknade tidigare
+      // längden på den KAPADE listan, så talet slutade röra sig vid limiten —
+      // och ett tal som står stilla ser ut som ett faktum, inte som ett fel.
+      //
+      // Limiten sätts till 2 i stället för att seeda 51 pass: påståendet är att
+      // totalen är oberoende av limiten, och det mäts lika skarpt med tre pass
+      // och limit 2 som med femtioett och limit 50 — fast på en tiondel av tiden.
+      for (const vikt of [90, 95, 100]) {
+        const w = await startWorkout(db);
+        await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: vikt, reps: 5 }, db);
+        await endWorkout(db);
+      }
+
+      expect(await listWorkoutSummaries(2, db)).toHaveLength(2);
+      expect(await summarizeHistory(db)).toEqual({ workoutCount: 3, workSetCount: 3 });
+    });
+
+    it('räknar uppvärmning lika lite som resten av appen gör', async () => {
+      const w = await startWorkout(db);
+      await logSet(
+        { workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true },
+        db
+      );
+      await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+      await endWorkout(db);
+
+      expect(await summarizeHistory(db)).toEqual({ workoutCount: 1, workSetCount: 1 });
+    });
+
+    it('beskriver samma historik som listan — utan importerade pass', async () => {
+      // Divergerar filtren sammanfattar rubriken en annan historik än den man
+      // ser under den, och det är fel igen — fast tystare.
+      await db.workouts.add(importeratPass('totaler-importerat'));
+      await db.loggedSets.add(importeratSet('totaler-importerat-set', 'totaler-importerat'));
+
+      const w = await startWorkout(db);
+      await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+      await endWorkout(db);
+
+      expect(await listWorkoutSummaries(50, db)).toHaveLength(1);
+      expect(await summarizeHistory(db)).toEqual({ workoutCount: 1, workSetCount: 1 });
+    });
+
+    it('svarar noll för en tom historik i stället för att kasta', async () => {
+      expect(await summarizeHistory(db)).toEqual({ workoutCount: 0, workSetCount: 0 });
+    });
   });
 
   it('hämtar setet i ett enskilt pass i loggningsordning', async () => {

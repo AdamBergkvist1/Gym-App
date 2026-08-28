@@ -154,6 +154,40 @@ export async function listWorkoutSummaries(
   });
 }
 
+/** Hela historikens totaler — det sidrubriken sammanfattar. */
+export interface HistoryTotals {
+  workoutCount: number;
+  /** Arbetsset. Uppvärmning räknas inte, samma regel som överallt (12.48). */
+  workSetCount: number;
+}
+
+/**
+ * Totalerna över **hela** historiken, oberoende av hur många pass listan visar.
+ *
+ * ⛔ **DEN HÄR FUNKTIONEN FINNS FÖR ATT SIDRUBRIKEN LJÖG. Uppgift steg 4.3 del B.**
+ * `HistoryPage` räknade `workouts.length` på resultatet av
+ * `listWorkoutSummaries(50)` — alltså en lista som redan var kapad. Med färre än
+ * 50 pass syns det inte alls, och det är hela problemet: efter ett år av loggning
+ * hade rubriken stannat på `50 pass` och aldrig ändrat sig igen. Ett tal som
+ * slutar röra sig ser inte ut som ett fel, det ser ut som ett faktum.
+ *
+ * ⚠️ **Samma mängd som passlistan, med flit:** inte raderade, inte importerade.
+ * Rubriken sammanfattar det man ser under den. Divergerar filtren beskriver
+ * rubriken en annan historik än listan — och då är den fel igen, fast tystare.
+ */
+export async function summarizeHistory(database: GymDatabase = db): Promise<HistoryTotals> {
+  const workouts = (await database.workouts.toArray()).filter(
+    (w) => !w.isDeleted && !w.isImported
+  );
+  const ids = new Set(workouts.map((w) => w.id));
+  const sets = await database.loggedSets.toArray();
+
+  return {
+    workoutCount: workouts.length,
+    workSetCount: sets.filter((s) => !s.isDeleted && !s.isWarmup && ids.has(s.workoutId)).length,
+  };
+}
+
 export async function getWorkoutSets(
   workoutId: string,
   database: GymDatabase = db
