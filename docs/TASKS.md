@@ -1672,7 +1672,22 @@ gäller, och uppgiften skrivs om.
       underlag**, och det syns inte i ett diff. Åtgärdat: de tre bär nu `--color-line-strong`,
       alltså briefens egen token för kanter som identifierar en kontroll.
 
-      ⏰ **ÖPPEN FRÅGA TILL ADAM — `--color-line-strong` klarar inte sitt eget krav.**
+      ✅ **AVGJORD AV ADAM 2026-08-26: `#8A8378`. Rutan nedan stod kvar som "öppen fråga" i två
+      dagar efter att den var stängd.** Beslutet ligger i `7daa2ab`, värdet ligger i
+      `index.css:82`, och `DESIGN.md:418` bär det uppmätta talet — **men `TASKS.md` rördes inte
+      i den commiten**, så det här dokumentet fortsatte be om ett beslut som redan var fattat
+      och kalla `#C4BCB0` för "nuvarande" när koden inte hade det värdet längre.
+      **Texten nedan står kvar och beskriver läget före beslutet** — bara ordet *nuvarande* i
+      tabellen är rättat till *dåvarande*, eftersom det var det enda som var direkt falskt om
+      koden. Resten, inklusive `⛔ Ändras INTE på eget bevåg`, är hur frågan såg ut när den var
+      öppen och ska läsas så.
+
+      💡 **Varför det är värt en rad och inte en tyst rättelse:** det är samma familj som
+      **12.46** — koden hade rätt och dokumentet hade fel, alltså regel 1 åt fel håll. Skillnaden
+      är att här bad dokumentet dessutom Adam om ett beslut han redan fattat, och det är den
+      dyraste sortens osanning ett uppgiftsdokument kan bära.
+
+      ⏰ ~~**ÖPPEN FRÅGA TILL ADAM**~~ — **`--color-line-strong` klarade inte sitt eget krav.**
       Briefen definierar tokenen som *"kanter som BÄR BETYDELSE — t.ex. en obekräftad setrads
       tryckyta"* och skriver ut **WCAG 1.4.11: 3:1** som kravet. Det mörka temats värde mätte
       3,37:1. Bläcks `#C4BCB0` mäter:
@@ -1691,15 +1706,20 @@ gäller, och uppgiften skrivs om.
 
       | Värde | Mot papper | Mot kort | Klarar 3:1 på båda |
       |---|---|---|---|
-      | `#C4BCB0` (nuvarande) | 1,58 | 1,88 | ❌ |
+      | `#C4BCB0` (dåvarande) | 1,58 | 1,88 | ❌ |
       | `#9A9186` | 2,61 | 3,10 | ❌ |
-      | **`#8A8378`** | **3,16** | **3,75** | ✅ ljusaste som klarar |
+      | **`#8A8378`** ← **valt** | **3,16** | **3,75** | ✅ ljusaste som klarar |
       | `#7D766C` | 3,78 | 4,49 | ✅ |
 
       ⛔ **Ändras INTE på eget bevåg.** `#C4BCB0` är valt av Adam 2026-08-12 och en mörkare kant
       är en synlig karaktärsändring — papperet blir strängare. Rekommendationen är `#8A8378`,
       som är det minsta steg som uppfyller kravet. **Adam avgör.** Alternativet är att skriva om
       briefens krav i stället, men då ska det stå varför.
+
+      ✅ **Han valde `#8A8378`, och invände samtidigt mot vem kravet tillhörde:** *"det är inte
+      jag som har satt utan jag har bara valt och sagt vad jg önskar för färger men inget om
+      kontraster."* Invändningen är riktig och står i `7daa2ab`:s commitmeddelande —
+      **kontrastkraven är mina, färgvalen hans.**
 
       🔴 **EN REGRESSION INFÖRDES OCH RÄTTADES I SAMMA OMGÅNG — mekanismen är värd att bära
       vidare.** Vilotimerns utgångna läge ritade sin text med `text-[var(--color-bg)]` ovanpå
