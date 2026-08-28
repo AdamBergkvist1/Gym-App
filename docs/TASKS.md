@@ -1964,6 +1964,174 @@ gäller, och uppgiften skrivs om.
          den är latent i dag men blir skarp när fas 7:s synk-pull skriver `exercises`.
       4. **Steg 4.1:s ruta står obockad.** Se noten i den uppgiften.
 
+- [ ] **Steg 4.3 Historik mot §3.2. Ny 2026-08-28.**
+      Runda 1:s sista delsteg. **Ingen ny form uppfinns här** — B4 valdes 2026-08-12, väg C
+      2026-08-14, och skissen står i `DESIGN.md` §3.2. Tre beteendefrågor var öppna; Adam
+      avgjorde dem 2026-08-28. Resten är att flytta besluten in i koden.
+
+      **Läs `DESIGN.md` §3.2 och "Genomgående mönster" för *varför*, inte den här rutan.**
+      Här står vad som byggs, i vilken ordning, och vad varje del är klar när.
+
+      ### ✅ Adams tre beslut 2026-08-28
+
+      | Fråga | Valet | Skälet |
+      |---|---|---|
+      | Segmentet `Pass` / `Statistik`, när Statistik byggs först i 4.4 | **Byggs nu, med en tom Statistikvy** | *"om det går att bygga det nu även fast den är lite tom. men layouten är rätt så kanske det kan göras ändå."* |
+      | Passkortets andra rad | **Muskelgrupper, som skissen** | Skissens form framför övningsnamnen |
+      | Övningslistan längst ner | **Ligger kvar tills 4.5** | Den är enda vägen till en övnings historik för övningar som inte ingår i ett pågående pass |
+
+      ⚠️ **Segmentfrågan ställdes med rekommendationen att vänta, och Adam byggde ändå.** Hans
+      svar började med *"vet inte exakt"*, och **skälet han gav är layouten — inte innehållet.**
+      Bygg därför den tomma vyn så att den är billig att ändra åsikt om: en vy, ingen
+      rutt-struktur som 4.4 måste riva först.
+
+      ⚠️ **Uppgiften byggs INTE i en commit.** Regel 3 — A, B och C är tre commits, och
+      ordningen är inte godtycklig: A är den enda delen som rör datavägen, B och C är form.
+
+      ---
+
+      **A. Passraden: skissens tre rader, och `övn`-talet som inte finns.**
+
+      | Rad | I dag | §3.2 |
+      |---|---|---|
+      | 1 | `tis 2 aug` till vänster, allt annat till höger | **`Tisdag 2 aug`** vänster, **`58 min`** höger |
+      | 2 | övningsnamnen, `truncate` | **muskelgrupperna**, `--text-meta` |
+      | 3 | finns inte | **`18 set · 5 210 kg · 5 övn`**, `--color-dim` |
+
+      ⛔ **`5 övn` får INTE räknas ur `exerciseIds` som den ser ut i dag.** `history.ts:90-91`
+      bygger listan ur **alla** setrader, uppvärmningar inräknade, medan `setCount` och
+      `totalVolumeKg` åtta rader längre ner räknar utan dem (`history.ts:98`). En övning man
+      bara värmt upp på och lämnat räknas alltså som en övning men bidrar med noll set och noll
+      kilo — **tre tal ur två olika mängder på samma rad.** Det är exakt formen Adam förbjöd i
+      **12.48** och exakt det §3.2:s egen varningsruta pekar på.
+
+      **Åtgärden ligger i frågelagret, inte i skärmen.** `loggadeArbetsset` i
+      `src/lib/worksets.ts` tar planrader (`loggedSetId`) och passar inte rakt av på `LocalSet`
+      — antingen hittas den mindre primitiven, som i 12.42, eller så filtrerar
+      `listWorkoutSummaries` **en gång** och härleder alla tre talen ur samma mängd.
+      **Ett filter, tre tal.** Skriv inte om regeln i komponenten.
+
+      **Muskelgruppsraden — källa och ordning:**
+      - `primaryMuscle` för de övningar som har **loggade arbetsset** i passet. Samma mängd som
+        `övn`-talet räknar: en mängd, tre tal och en rad, annars är vi tillbaka i samma fel.
+      - Ordning: flest arbetsset först, lika antal bryts av vilken som kom först i passet.
+        Raden ska säga vad passet **mest** var.
+
+      **Formen — valen är mina, skälen skrivna, och Adam får ändra dem:**
+
+      | Passets grupper | Raden |
+      |---|---|
+      | en | `Bröst` |
+      | två | `Bröst och triceps` |
+      | tre | `Bröst, triceps och axlar` |
+      | fler än tre | `Bröst, triceps, axlar och 2 till` |
+      | bara egna övningar | `Övrigt` — `createExercise` sätter `primaryMuscle: 'övrigt'` (`repo.ts:104`) |
+      | inga arbetsset | raden utelämnas. Se nollregeln nedan |
+
+      **Taket på tre namn är inte mätt, och det ska det bli.** Hela invändningen mot
+      övningsnamnen var att de kapas mitt i ett ord; ett tak som ändå kapar löser ingenting.
+      **Mät raden på 375 px när skärmen är byggd — kapas den, är taket två.**
+
+      ⛔ **Ett pass utan arbetsset får inte visa `0 set · 0 kg · 0 övn`.** §3.3:s regel gäller:
+      *"aldrig en nolla: en nolla ser ut som ett resultat"*. Tillståndet är verkligt — starta
+      pass, värm upp, gå hem — och blir vanligare, inte ovanligare, när **10.4** körs på riktigt.
+      Passet visar då datum, tid och **en** fras (`Inga arbetsset`) i stället för tre nollor.
+
+      **Pågående pass har ingen längd.** I dag står `Pågår` i `--color-ok-text` på en egen rad
+      under rad 1. Det flyttar till **längdens plats till höger på rad 1** — det svarar på samma
+      fråga och kostar ingen rad. Det ligger inne på det vita kortet, alltså väg C:s normalfall.
+
+      **Klart när:** `listWorkoutSummaries` härleder set, volym och övningsantal ur **en** mängd,
+      och ett enhetstest med ett pass där en övning bara har uppvärmningsset går **rött** om
+      övningsantalet räknar den; muskelgruppsraden har ett test per rad i formtabellen ovan,
+      `övrigt` och tomfallet inräknade; vakten i `e2e/historiksida.spec.ts` mäter fortfarande
+      sitt påstående efter omskrivningen; och ett pass utan arbetsset visar ingen nolla.
+
+      ⚠️ **Regel 2 (b) gäller här: raden byter datakälla, alltså är sabotaget obligatoriskt.**
+      Den ärver hela källans filter, och ett grönt test bevisar ingenting förrän det setts bli
+      rött. `historiksida.spec.ts` ankrar i dag på texten `80 kg`; överlever den formeln
+      omskrivningen mäter den fortfarande sin sak — **det ska prövas, inte antas.**
+
+      ---
+
+      **B. Ytorna: kortet, sidrubriken, och sammanfattningen som har ett tak.**
+
+      - **Passkortet:** vit yta, `--radius-card` (18 px), `--shadow-card`, **ingen ram**. I dag
+        `rounded-lg border border-[var(--color-line)]`. Se "Genomgående mönster": separationen
+        mot papperet är bara 1,19:1, och det är skuggan som bär avgränsningen på ljus botten.
+      - **Indraget rörs inte.** Det kommer ur `px-3` på `<main>` i `AppShell.tsx` och gäller
+        alla skärmar — Adams beslut i **12.45**.
+      - **Sidrubriken:** `Historik` med sammanfattningen **till höger på samma rad** i
+        `--text-meta`. I dag ligger den på egen rad under. Briefen är uttrycklig: *"Rubriken tar
+        aldrig en egen rad för sig själv; skärmhöjd är dyrare än luft."* `h1` bär redan Fraunces
+        och `--text-title` via elementregeln i `index.css`; `font-semibold` på den är kvar från
+        det mörka temat och ska bort.
+      - ⛔ **`N pass` i sammanfattningen har ett tak på 50 och blir en lögn som aldrig ändrar
+        sig.** Talet är `workouts.length` på en lista `listWorkoutSummaries(50)` redan kapat. Det
+        syns inte i dag; efter ett år av loggning står det `50 pass` för alltid. Talet ska
+        antingen räknas utan att gå via listan, eller sägas vara vad det är.
+      - **Övningslistan ligger kvar** (Adams beslut) men **får samma formspråk**. Den bär i dag
+        `rounded-lg border border-[var(--color-line)]`, alltså den ramade formen kortet just
+        lämnat. Två kortspråk på en skärm är sämre än en gammal skärm.
+
+      **Klart när:** inget element på `/historik` ritar en yta med `border-[var(--color-line)]`;
+      rubrik och sammanfattning delar rad; `font-semibold` finns inte kvar på `h1`; och ett test
+      med **fler pass än frågans limit** går rött om sammanfattningens tal fortfarande är kapat.
+
+      ---
+
+      **C. Segmentkontrollen, och en tom vy som inte ser trasig ut.**
+
+      Formen: **piller, hela bredden, aktivt segment `--color-fg` på `--color-surface`**
+      ("Genomgående mönster"). `SPEC.md` §2b har hela tiden sagt två segment; det är
+      implementationen som saknats.
+
+      ⚠️ **Kontrollen hamnar på samma skärm som bottennavigeringens piller**, som också är ett
+      piller i `--color-surface` men märker sitt aktiva val med `--color-accent`
+      (`AppShell.tsx`). Två pillerkontroller med olika innebörd av *aktiv*. Briefen har redan
+      skilt dem åt på färgen — **kontrollera att skillnaden syns i den renderade appen**, för
+      det är den sortens fel bara ett öga hittar.
+
+      🔍 **§7.1 gäller: sök innan du bygger.** Segmentkontrollen är delstegets enda nya kontroll.
+      **Plattformsprimitiven är förstahandsvalet och ska prövas först:** en `radiogroup` av
+      `<input type="radio">` med etiketter ger tangentbord, skärmläsare och `:checked` utan en
+      rad JavaScript, och §7.1 säger uttryckligen att en primitiv slår ett bibliotek som gör
+      samma sak. **Redovisa ändå vad sökningen gav** innan första raden skrivs, även om svaret
+      blir "inget som passar".
+
+      **Den tomma Statistikvyn:** Adam valde layouten, inte innehållet. Vyn ska säga vad som
+      kommer och inte se ut som ett fel eller som något användaren orsakat.
+      ⛔ **Flytta inte in sidsammanfattningen eller något annat "riktigt" för att fylla ut den.**
+      4.4 ligger i runda 2 och kräver en egen grillning; det som byggs här utan den grillningen
+      är sådant 4.4 får riva.
+
+      **Klart när:** segmentet växlar vy; valet är **adresserbart** — Playwright ska nå
+      Statistikvyn utan att klicka sig dit, och en omladdning ska landa på samma segment (rutt
+      eller frågeparameter avgörs när den skrivs, skälet skrivs i filen); kontrollen går att
+      använda med tangentbord; och den tomma vyn säger vad som kommer.
+
+      ---
+
+      ### Gemensamt slutvillkor för hela steg 4.3
+
+      🔴 **Mät kontrasten i DOM:en — men nu finns vakten.** `e2e/kontrast.spec.ts` (12.36) mäter
+      redan *Historik med ett loggat pass* som ett av fyra lägen. **Två saker gäller ändå:**
+      filens egen kommentar säger att Historiks enda kanter är dekorativa avdelare och att
+      kanträknaren därför är legitimt noll där — **det slutar gälla i samma stund
+      segmentkontrollen finns.** Och **Statistiksegmentets vy är ett femte läge som inte mäts
+      alls** om ingen lägger till det.
+
+      ⏰ **12.40 avgörs här — men bara om fallet uppstår.** Frågan är om briefen behöver en
+      kanttoken för semantiska element **direkt på papperet**. **Mätt före start: fallet uppstår
+      antagligen inte.** Skärmens enda semantiska element är `Pågår`, och det ligger inne på ett
+      vitt kort, alltså väg C:s normalfall. Uppstår inget andra fall ska **det skrivas ut i
+      12.40** att 4.3 inte gav ett, och beslutet vänta till 4.4. Att fatta det mot ett enda fall
+      är precis vad 12.40 ber oss låta bli.
+
+      **Alla fem grindar gröna**, och skärmen visuellt kontrollerad i `preset: mobile`
+      (375 × 812) i **tre tillstånd**: tomt, ett vanligt pass, och ett pass där en övning har
+      uppvärmning som enda set. Det tredje är inte formalia — det är tillståndet del A finns för.
+
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
       **Klart när:** skalan är definierad i `index.css` och ingen komponent sätter egen storlek.
