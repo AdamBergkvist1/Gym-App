@@ -82,7 +82,10 @@ describe('9.1 passhistorik', () => {
     expect(sammanfattning?.setCount).toBe(3);
     // 90*5 + 90*4 + 100*5 = 450 + 360 + 500
     expect(sammanfattning?.totalVolumeKg).toBe(1310);
-    expect(sammanfattning?.exerciseIds).toEqual([BENK, KNABOJ]);
+    expect(sammanfattning?.workExercises).toEqual([
+      { exerciseId: BENK, setCount: 2 },
+      { exerciseId: KNABOJ, setCount: 1 },
+    ]);
   });
 
   it('listar nyaste passet först', async () => {
@@ -142,12 +145,17 @@ describe('9.1 passhistorik', () => {
   it('läser noll set för ett pass man bara värmde upp på — följden av 12.48, nedskriven', async () => {
     // ⚠️ DET HÄR ÄR INGEN BUGG, DET ÄR PRISET FÖR ADAMS BESLUT, och det ska stå
     // någonstans. Före 12.48 hade raden sagt "1 set · 0 kg"; nu säger den
-    // "0 set · 0 kg". Passet syns fortfarande i listan, med övningens namn, så
-    // det är inte borta — men båda talen är noll.
+    // "0 set · 0 kg". Passet syns fortfarande i listan, med datum och längd, så
+    // det är inte borta — men det har inget arbete att beskriva.
     //
     // Det är den konsekventa läsningen: uppvärmning är förberedelse, och ett pass
     // som bara var förberedelse innehåller inget arbete. Ändras det någon gång är
     // det den här raden som ska falla först, inte Adam som ska undra på skärmen.
+    //
+    // ✏️ HÄR STOD `exerciseIds` `toEqual([BENK])` fram till steg 4.3 del A —
+    // alltså EN övning bredvid noll set och noll kilo. Det gick an så länge
+    // listan bara radade upp namn; §3.2 sätter talen bredvid varandra och då är
+    // det tre tal ur två mängder. Övningen räknas inte längre.
     const w = await startWorkout(db);
     await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 40, reps: 10, isWarmup: true }, db);
     await endWorkout(db);
@@ -155,7 +163,31 @@ describe('9.1 passhistorik', () => {
     const [s] = await listWorkoutSummaries(50, db);
     expect(s?.setCount).toBe(0);
     expect(s?.totalVolumeKg).toBe(0);
-    expect(s?.exerciseIds).toEqual([BENK]);
+    expect(s?.workExercises).toEqual([]);
+  });
+
+  it('räknar samma antal övningar som startskärmen — kontrakt mot summarizeWorkout', async () => {
+    // ⛔ DE TVÅ DIVERGERADE, OCH INGEN GRIND MÄTTE DET. `summarizeWorkout` i
+    // repo.ts har alltid räknat `exerciseCount` ur arbetsseten; passlistan
+    // byggde sin lista ur ALLA rader. Knäböjen nedan har bara en uppvärmning
+    // och är därför skillnaden mellan de två svaren — utan den raden mäter
+    // testet ingenting, precis som volymtestet ovan behöver sin 92,5.
+    //
+    // Facit hämtas från andra sidan av kontraktet i stället för att skrivas som
+    // en siffra: divergerar de igen faller raden oavsett vilken som ändrats.
+    const w = await startWorkout(db);
+    await logSet({ workoutId: w.id, exerciseId: BENK, weightKg: 90, reps: 5 }, db);
+    await logSet(
+      { workoutId: w.id, exerciseId: KNABOJ, weightKg: 60, reps: 8, isWarmup: true },
+      db
+    );
+    await endWorkout(db);
+
+    const [historik] = await listWorkoutSummaries(50, db);
+    const passvy = await summarizeWorkout(w.id, db);
+
+    expect(historik?.workExercises).toHaveLength(passvy!.exerciseCount);
+    expect(historik?.workExercises).toEqual([{ exerciseId: BENK, setCount: 1 }]);
   });
 
   it('lovar inte fler set än "Kopiera förra passet" faktiskt kopierar — kontrakt mot copyWorkoutIntoPlan', async () => {

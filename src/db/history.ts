@@ -27,9 +27,33 @@ export interface WorkoutSummary {
   setCount: number;
   /** Bara arbetsset. Uppvärmning är förberedelse, inte arbete. */
   totalVolumeKg: number;
-  /** Övningsnamn i den ordning de först dök upp i passet. */
-  exerciseIds: string[];
+  /**
+   * Övningarna som fick **minst ett loggat arbetsset**, i den ordning de först
+   * dök upp, med antal arbetsset var.
+   *
+   * ✏️ **HÄR STOD `exerciseIds: string[]`, byggd ur ALLA setrader — och det var
+   * ett fel. Uppgift steg 4.3 del A.** En övning man bara värmt upp på och
+   * lämnat räknades som en övning men bidrog med noll set och noll kilo. Så
+   * länge listan bara radade upp namn syntes det inte; `DESIGN.md` §3.2 sätter
+   * talen **bredvid varandra** (`18 set · 5 210 kg · 5 övn`), och där blir det
+   * tre tal ur två olika mängder — exakt formen Adam förbjöd i **12.48**.
+   *
+   * `repo.ts`:s `summarizeWorkout` räknade redan rätt (`exerciseCount` ur
+   * arbetsseten). De två divergerade alltså, och ingen grind mätte det.
+   *
+   * ⚠️ **Antalet arbetsset per övning bär muskelgruppsraden.** Den väger
+   * grupper mot varandra, inte övningar — se `src/lib/muskelgrupper.ts`. Utan
+   * talet hade skärmen fått räkna om samma sak själv, vilket är den vana
+   * 12.42, 12.48 och 12.49 alla kom ur.
+   */
+  workExercises: WorkExercise[];
   durationMinutes: number | null;
+}
+
+/** En övning i ett pass, med sitt antal loggade arbetsset. */
+export interface WorkExercise {
+  exerciseId: string;
+  setCount: number;
 }
 
 export interface ExercisePoint {
@@ -87,8 +111,6 @@ export async function listWorkoutSummaries(
 
   return workouts.map((workout) => {
     const rows = (perWorkout.get(workout.id) ?? []).sort(byPerformedAt);
-    const exerciseIds: string[] = [];
-    for (const s of rows) if (!exerciseIds.includes(s.exerciseId)) exerciseIds.push(s.exerciseId);
 
     // Uppvärmningsset räknas INTE i volymen — samma regel som `summarizeWorkout`
     // i repo.ts och som `getExerciseHistory`/`getPersonalRecords` längre ner i den
@@ -97,6 +119,18 @@ export async function listWorkoutSummaries(
     // historiken och startskärmen olika volym för samma pass.
     const arbetsset = rows.filter((s) => !s.isWarmup);
     const totalVolumeKg = arbetsset.reduce((sum, s) => sum + volumeKg(s.weightKg, s.reps), 0);
+
+    // ⛔ **ETT FILTER, TRE TAL.** Antal set, volym och antal övningar härleds ur
+    // `arbetsset` och ingen annanstans ifrån. Historikraden sätter dem bredvid
+    // varandra, och två tal ur olika mängder på en rad är värre än att ett av
+    // dem är fel — ett fel tal kan man se, en tyst betydelseskillnad kan man
+    // inte (Adam 2026-08-27, uppgift 12.48).
+    //
+    // `Map` bevarar insättningsordningen, och `rows` är sorterad på tid, så
+    // listan blir "i den ordning de först dök upp" utan en egen sortering.
+    const perÖvning = new Map<string, number>();
+    for (const s of arbetsset) perÖvning.set(s.exerciseId, (perÖvning.get(s.exerciseId) ?? 0) + 1);
+
     const durationMinutes =
       workout.endedAt === null
         ? null
@@ -114,7 +148,7 @@ export async function listWorkoutSummaries(
       // avgjorde att de ska synas. `summarizeWorkout` i repo.ts returnerar också
       // orörd summa — divergerar de igen fångas det av testet i history.test.ts.
       totalVolumeKg,
-      exerciseIds,
+      workExercises: [...perÖvning].map(([exerciseId, setCount]) => ({ exerciseId, setCount })),
       durationMinutes,
     };
   });
