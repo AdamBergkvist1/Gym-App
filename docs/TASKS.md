@@ -4366,6 +4366,28 @@ och 13.1 måste vara klar före 13.6.
       `radnamn: string` — **typen var själva buggen**: ett tal kan inte uttrycka
       *"uppvärmningen"*, så anroparen tvingades hitta på ett.
 
+- [ ] **12.50 Sidrubrikens VIKT är ihågkommen, inte strukturell. Ny 2026-08-28.**
+      Hittad i steg 4.3 del B, genom att en påstådd rest kontrollerades innan den togs bort.
+      **Inget fel på skärmen i dag** — alla `h1` bär rätt vikt.
+
+      `index.css` sätter Fraunces och `--text-title` på **elementet** `h1`, och skriver ut
+      skälet: *"en klass man måste komma ihåg att sätta blir bortglömd, och då blir en sida
+      plötsligt satt i fel typsnitt utan att något går sönder."* Exakt samma argument som
+      `tabular-nums` bär i samma fil.
+
+      **Men vikten 600 — som `DESIGN.md` §2:s skala anger för `--text-title` — sätts av en
+      `font-semibold`-klass på varje `h1` för sig.** Två av tre egenskaper är strukturella,
+      den tredje är en vana. En ny sida med `<h1>Statistik</h1>` får rätt typsnitt och rätt
+      storlek men fel vikt, tyst.
+
+      ⚠️ **Det är en enradsändring med bred yta.** Regeln träffar varje `h1` i appen, och
+      klasserna blir då redundanta men oskadliga. Städas de i samma svep blir det en
+      blandad commit; städas de inte står det kvar två sanningar. **Ta ställning till vilket
+      innan raden skrivs**, och gör det inte mitt i en annan uppgift.
+
+      **Klart när:** vikten kommer ur `index.css` och en `h1` utan klasser renderar i
+      briefens vikt — mätt i DOM:en, inte antaget.
+
       **`e2e/uppvarmning.spec.ts` är sviten första vakt som växlar en rad till uppvärmning.**
       Den var röd mot den gamla räkningen, kontrollerat genom att buggen återinfördes.
 
