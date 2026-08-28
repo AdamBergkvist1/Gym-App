@@ -5,6 +5,60 @@ Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som 
 
 ---
 
+# 🧭 VAR PROJEKTET STÅR
+
+> ⚠️ **DEN HÄR RUTAN ÄR STÅENDE OCH UPPDATERAS PÅ PLATS. Stapla den inte.**
+> Allt annat i filen är en logg där nyaste sektionen läggs överst; **den här rutan är ett
+> nuläge och ska skrivas om, inte dupliceras.** Den finns för att sessionsloggen svarar på
+> *"vad hände sist"* men aldrig på *"var är vi"* — och det var precis frågan Adam ställde
+> 2026-08-27, efter tre sessioner där han inte kunde se det ur dokumenten.
+> **Uppdatera den innan du skriver din egen sessionssektion.** `CLAUDE.md` regel 5.
+
+**Appen är färdig som app och ligger live.** Inmatning, fritexttolkning, databas, synk,
+offline, historik och importen av Adams gamla anteckningar är byggda och i produktion.
+**Det som återstår är hur appen ser ut och känns.**
+
+| | |
+|---|---|
+| **Fas** | **11 — Gränssnittet.** 17 punkter klara, 10 öppna |
+| **Faser klara** | 0–9 och 13. Fas 10 har tre öppna som kräver Adam |
+| **Var i fas 11** | Designomgångens **runda 1**: Steg 4.1 ✅ byggd (rutan obockad), 4.2 ✅ klar, **4.3 nästa** |
+| **Nästa jobb** | **Skriv** Steg 4.3 Historik. Regel 1 kräver uppgiften före kod |
+| **Blockerar** | Adams telefon och ett riktigt gympass. Se nedan |
+
+### ⛔ Fas 12 är en LÅDA, inte ett steg. Låt inte numren lura dig
+
+Nästan allt arbete de senaste sessionerna heter `12.xx` — 12.36, 12.44, 12.48, 12.49. **Det
+betyder inte att vi är i fas 12.** Fas 12 är backloggen: dit går allt som hittas på vägen och
+inte hör hemma i uppgiften som pågår — en bugg, ett dokument som blivit osant, en idé till
+senare. **Numren delas ut i upptäcktsordning, inte i arbetsordning.**
+
+De som betats av var verkliga fel; flera visade fel siffror på skärmen. Men **fasen är 11.**
+
+### 🔴 Tre saker står stilla och väntar på Adam. Ingen är kod
+
+| # | Vad | Varför det spelar roll |
+|---|---|---|
+| **10.4** | **Kör ett helt riktigt pass i gymmet, utan nät** | 🔴 **Den viktigaste.** Pass-skärmen har polerats i två sessioner utan att någon kört ett pass på den. Allt annat är mätt i en simulator |
+| **10.3** | Installera appen på telefonen från produktions-URL:en | Avgör också sista obockade detaljen i `Steg 4.1` (`apple-mobile-web-app-status-bar-style`) |
+| **10.5** | Städa de dubbla Vercel-projekten | Ofarligt i dag, en fälla vid nästa deployfelsökning |
+
+⛔ **Fråga inte Adam om dessa varje session.** De står här för att de ska vara synliga, inte
+för att bli en påminnelse han får varje gång. Nämn dem när de faktiskt blockerar dig.
+
+### 📍 Så hittar du resten
+
+| Fråga | Var svaret bor |
+|---|---|
+| Vad appen ska göra | `docs/SPEC.md` |
+| Hur den är byggd | `docs/PLAN.md` |
+| Hur den ska se ut | `docs/DESIGN.md` — **§3.2 innan du bygger historikraden** |
+| Vad som ska göras, i ordning | `docs/TASKS.md` |
+| Hur du ska arbeta | `CLAUDE.md` — **regel 2:s underpunkter är nya och ofta relevanta** |
+| Vad som hände sist | Sektionen direkt nedan |
+
+---
+
 ## 🆕 2026-08-27 (natt) — FYRA UPPGIFTER STÄNGDA: 12.48, 12.37, 12.47 p2–3, 12.49
 
 **Allt är pushat och deployat.** Kontrollera själv:
