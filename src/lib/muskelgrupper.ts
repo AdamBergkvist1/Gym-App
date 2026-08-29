@@ -28,9 +28,26 @@ export interface ÖvningIPasset {
 /**
  * Hur många grupper som namnges innan resten blir *"och N till"*.
  *
- * ⏰ **TALET ÄR VALT, INTE UPPMÄTT.** Hela invändningen mot övningsnamnen var att
- * de kapades mitt i ett ord, och ett tak som ändå kapar löser ingenting. Mät
- * raden på 375 px när skärmen är byggd — kapas den, är taket två. Se steg 4.3.
+ * ✅ **UPPMÄTT PÅ 375 px 2026-08-29, efter att `/code-review` påpekade att
+ * mätningen aldrig gjorts.** Talet var valt, inte mätt, och hela invändningen mot
+ * övningsnamnen var att de kapades mitt i ett ord — ett tak som ändå kapar löser
+ * ingenting.
+ *
+ * | Längsta möjliga rad | scrollWidth | clientWidth |
+ * |---|---|---|
+ * | `Baksida lår, framsida lår och axlar` | 327 | 327 |
+ * | `Baksida lår, framsida lår, triceps och 2 till` | 327 | 327 |
+ *
+ * Ingen av dem kapas. **Taket på tre håller**, och det gäller värsta fallet:
+ * katalogens två längsta gruppnamn (`framsida lår`, `baksida lår`) plus det
+ * tredje längsta, med svansen påhängd.
+ *
+ * ⚠️ **Mätningen kontrollerades själv** — en påtvingad orimligt lång sträng i
+ * samma element gav 575 mot 327 och `kapas: true`. Utan den kontrollen hade
+ * "ingenting kapas" lika gärna kunnat betyda att ingenting mättes.
+ *
+ * ⛔ **Blir gruppnamnen längre gäller mätningen inte längre.** Den bygger på
+ * katalogens nuvarande ordlista; en ny grupp med ett långt namn kräver om.
  */
 const NAMNGES_MEST = 3;
 

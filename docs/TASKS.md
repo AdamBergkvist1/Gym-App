@@ -2012,8 +2012,35 @@ gäller, och uppgiften skrivs om.
       > 4.2:s mätskript, i ny förklädnad. Kontrollera att sabotaget träffade koden.
       >
       > **Grindar i slutläget:** 329 tester i 26 filer · typecheck rent · lint 0 fel (3 kända
-      > `react-refresh`-varningar) · **e2e 102 passed** · bygge **727,78 KiB** precache,
+      > `react-refresh`-varningar) · **e2e 105 passed** · bygge **727,78 KiB** precache,
       > JS 645,45 kB (gzip 194,48). Visuellt kontrollerat på 375 px i alla tre tillstånden.
+      >
+      > ✏️ **Här stod `e2e 102 passed`. Rätt tal är 105** — rutan skrevs innan nollregelns vakt
+      > lades till, och uppdaterades inte. Hittat av `/code-review` 2026-08-29. **Det är sjätte
+      > gången i rad ett skrivet antal blivit fel i det här projektet**; kör grinden själv.
+      >
+      > ### 🔍 `/code-review` kördes 2026-08-29, efter avbockningen
+      >
+      > Två kalla agenter mot `76dc2a6..HEAD`. **Åtta fynd, varav ett falskt.** De två axlarna
+      > hittade **samma tyngsta fynd oberoende av varandra:** mätningen av muskelradens tak
+      > gjordes aldrig, trots att uppgiften beställde den. Den är gjord nu — taket håller — och
+      > det ändrar inte att rutan bockades av med ett obockat kriterium i sig.
+      >
+      > | # | Fynd | Utfall |
+      > |---|---|---|
+      > | 1 | Muskelradens tak aldrig mätt (**båda axlarna**) | ✅ Mätt 2026-08-29, taket håller |
+      > | 2 | `summarizeHistory` upprepar passfiltret från `listWorkoutSummaries` (**båda axlarna**) | ⏰ **12.51** |
+      > | 3 | Utfallsrutan sa `e2e 102`, rätt är 105 | ✅ Rättat ovan |
+      > | 4 | Del B:s `Klart när` motsade sin egen brödtext | ✅ Omskrivet |
+      > | 5 | `2b65caa` blandar funktion, vaktlagning och tryckytefix — regel 3 | ⏰ **12.51** |
+      > | 6 | `EN_DYGN_MS` ska heta `ETT_DYGN_MS` | ⏰ **12.51** |
+      > | 7 | `foga()`: `grupper[0]!` mot otypat `.at(-1)` | ⏰ **12.51** |
+      > | 8 | ~~Muskelraden saknar `--color-dim`~~ | ❌ **FALSKT** — §3.2:s skiss annoterar rad 2 `--text-meta` och rad 3 `--color-dim`. Koden följer skissen |
+      >
+      > 💡 **Fynd 8 är värt lika mycket som de sanna.** En granskare läste en radannotering i en
+      > ASCII-skiss som om den gällde hela blocket. **Verifiera varje fynd mot koden innan det
+      > blir en uppgift** — annars hade rätt kod ändrats för att blidka en felläsning, vilket är
+      > samma fälla som steg 4.2:s mätskript.
 
       Runda 1:s sista delsteg. **Ingen ny form uppfinns här** — B4 valdes 2026-08-12, väg C
       2026-08-14, och skissen står i `DESIGN.md` §3.2. Tre beteendefrågor var öppna; Adam
@@ -2082,6 +2109,13 @@ gäller, och uppgiften skrivs om.
       övningsnamnen var att de kapas mitt i ett ord; ett tak som ändå kapar löser ingenting.
       **Mät raden på 375 px när skärmen är byggd — kapas den, är taket två.**
 
+      ✅ **MÄTT 2026-08-29 — taket håller.** Längsta möjliga rad,
+      `Baksida lår, framsida lår, triceps och 2 till`, ger `scrollWidth` **327** mot
+      `clientWidth` **327**: ingen kapning. Mätningen kontrollerades själv (påtvingad lång
+      sträng gav 575/327). Talen bor i `src/lib/muskelgrupper.ts`.
+      ⛔ **Mätningen gjordes INTE när rutan bockades av** — den kom först när `/code-review`
+      påpekade det. Se rättelserutan i rubriken.
+
       ⛔ **Ett pass utan arbetsset får inte visa `0 set · 0 kg · 0 övn`.** §3.3:s regel gäller:
       *"aldrig en nolla: en nolla ser ut som ett resultat"*. Tillståndet är verkligt — starta
       pass, värm upp, gå hem — och blir vanligare, inte ovanligare, när **10.4** körs på riktigt.
@@ -2130,9 +2164,17 @@ gäller, och uppgiften skrivs om.
         `rounded-lg border border-[var(--color-line)]`, alltså den ramade formen kortet just
         lämnat. Två kortspråk på en skärm är sämre än en gammal skärm.
 
-      **Klart när:** inget element på `/historik` ritar en yta med `border-[var(--color-line)]`;
-      rubrik och sammanfattning delar rad; `font-semibold` finns inte kvar på `h1`; och ett test
-      med **fler pass än frågans limit** går rött om sammanfattningens tal fortfarande är kapat.
+      **Klart när:** inget **kort** på `/historik` ritar sin yta med `border-[var(--color-line)]`;
+      rubrik och sammanfattning delar rad; `h1` bär briefens vikt; och ett test med **fler pass
+      än frågans limit** går rött om sammanfattningens tal fortfarande är kapat.
+
+      ✏️ **KRITERIET ÄR OMSKRIVET 2026-08-29 efter `/code-review`, och båda ändringarna är
+      rättelser — inga uppmjukningar.** Här stod *"inget element … ritar en yta"* (avdelarna
+      inuti övningslistan ritar med `--color-line` och **ska** göra det — bara kortens egna
+      kanter var fel) och *"`font-semibold` finns inte kvar på `h1`"*, vilket uppgiften själv
+      hade vänt på tio rader längre upp: `DESIGN.md` §2 ger `--text-title` vikt 600, alltså ska
+      klassen vara kvar. **Ett kriterium som motsäger sin egen brödtext är värre än inget** —
+      granskningen läste dem som två motstridiga krav, precis som en människa hade gjort.
 
       ---
 
@@ -4415,6 +4457,44 @@ och 13.1 måste vara klar före 13.6.
       `ExerciseCard` anropar den. `SetAdjustSheet`:s prop bytte från `setNumber: number` till
       `radnamn: string` — **typen var själva buggen**: ett tal kan inte uttrycka
       *"uppvärmningen"*, så anroparen tvingades hitta på ett.
+
+- [ ] **12.51 Fyra fynd ur `/code-review` av steg 4.3. Ny 2026-08-29.**
+      Granskningen kördes **efter** att rutan bockats av, vilket två handoff-sektioner
+      uttryckligen bad om att slippa. De två fynd som gick att stänga direkt är stängda i
+      uppgiften; de fyra nedan är kod och får inte blandas in i en annan ändring.
+
+      **1. 🔴 `summarizeHistory` upprepar passfiltret — båda axlarna hittade det oberoende.**
+      `!w.isDeleted && !w.isImported` står nu på `history.ts:96` och `:180`, och båda läser
+      `loggedSets.toArray()`. Doc-kommentaren säger *"samma mängd som passlistan, med flit"* —
+      alltså **prosa där det ska vara kod**, exakt vad `12.42` avgjorde: *"en delad härledning
+      som båda sidor anropar … Kopplingen ska vara kod, inte prosa i en doc-kommentar."*
+
+      ⚠️ **Det som gör fyndet värt en egen uppgift är varför det uppstod.** `loggadeArbetsset`
+      i `src/lib/worksets.ts` går **inte** att anropa här: den typas på planrader
+      (`isWarmup`, `loggedSetId`), inte på `LocalSet`. Regeln har alltså ingen hemvist för
+      databasrader, och `!s.isWarmup` står redan på fem ställen i `history.ts` — fyra av dem
+      äldre än den här diffen. **Nästa konsument skriver om den igen**, precis som 12.42, 12.48
+      och 12.49 alla gjorde. Frågan att avgöra: en `synligaPass()`-härledning, eller en
+      arbetssetregel som är typad på `LocalSet`.
+
+      **2. `2b65caa` är inte atomär.** Regel 3. Den blandar ny funktion (`SegmentedControl`),
+      en **rättelse av en delad vakt** (kontrastvaktens undantagslista) och en tryckytefix
+      `h-10 → h-12`. **Vaktlagningen är seriens mest återanvändbara ändring och ligger begravd
+      i en featurecommit.** Går inte att dela i efterhand utan att skriva om historien — raden
+      finns för att nästa likadana ändring ska gå i egen commit.
+
+      **3. `EN_DYGN_MS` heter fel.** `src/lib/passdatum.ts:11`. Ett dygn är neutrum:
+      `ETT_DYGN_MS`. Huset skriver svenska domännamn korrekt.
+
+      **4. `foga()` blandar två sätt att hantera samma invariant.** `src/lib/muskelgrupper.ts`:
+      `grupper[0]!` använder icke-null-försäkran medan `grupper.at(-1)` lämnas otypad mot
+      `undefined`. Bryts invarianten skriver den senare **`undefined` i raden** i stället för
+      att fela. Anroparen garanterar i dag minst ett element, så det är inte en bugg — men två
+      svar på samma fråga i fyra rader.
+
+      **Klart när:** punkt 1 har en delad härledning båda sidor anropar, med sabotage åt båda
+      hållen; 3 och 4 är åtgärdade; punkt 2 är ingen åtgärd utan en lärdom och bockas med de
+      andra.
 
 - [ ] **12.50 Sidrubrikens VIKT är ihågkommen, inte strukturell. Ny 2026-08-28.**
       Hittad i steg 4.3 del B, genom att en påstådd rest kontrollerades innan den togs bort.
