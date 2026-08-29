@@ -65,16 +65,23 @@ för att bli en påminnelse han får varje gång. Nämn dem när de faktiskt blo
 
 ## 🆕 2026-08-29 — STEG 4.3 HISTORIK: skriven, byggd, granskad och stängd. RUNDA 1 ÄR KLAR
 
-**Fjorton commits, `76dc2a6..HEAD`** — sju för steg 4.3, sedan `/code-review` och `12.51`.
-Räkna dem själv i stället för att lita på siffran:
+**Femton commits, `76dc2a6..3105563`** — sju för steg 4.3, sedan `/code-review`, `12.51` och
+den här sektionen. Räkna dem själv i stället för att lita på siffran:
 
 ```bash
 git log 76dc2a6..HEAD --oneline
 ```
 
-⚠️ **Inget är pushat.** Sessionen slutade lokalt; `git status -sb` säger hur långt före
-`origin/main` du ligger. **Deployen är alltså inte heller verifierad** — förra sessionens
-rutin (jämför asset-hash mot produktionen) är inte körd, för det finns inget att jämföra med.
+✅ **ALLT ÄR PUSHAT OCH DEPLOYEN ÄR VERIFIERAD.** `origin/main` är `3105563`, och
+produktionen serverar **`index-BBruQon1.js` — samma asset-hash som det lokala bygget**,
+HTTP 200. Det är kontrollen som skiljer *"pushat"* från *"deployat"*:
+
+```bash
+curl -s https://adam-gym-app.vercel.app/ | grep -o 'index-[A-Za-z0-9_-]*\.js' | head -1
+```
+
+> ✏️ **Här stod "Inget är pushat", skrivet innan Adam bad om pushen.** Rättat på plats i
+> samma session. Rutan längre ner under *"EN SAK SOM INTE GJORDES"* är rättad likadant.
 
 ### 🔴 DET VIKTIGASTE ATT BÄRA VIDARE: vakten ursäktade sin egen kontroll
 
@@ -205,9 +212,14 @@ importfiltret, nollregeln och segmentets kant.
 
 **`12.51` är skriven och stängd** — de fyra kodfynden, i fyra commits.
 
-### ⛔ EN SAK SOM INTE GJORDES
+### ✅ PUSHAT OCH DEPLOYAT
 
-**Inget är pushat.** Se rutan högst upp i sektionen. Fjorton commits ligger lokalt.
+Se rutan högst upp i sektionen: `origin/main` är `3105563` och asset-hashen i produktionen
+stämmer med det lokala bygget. **Steg 4.3 ligger live** — Historik har nu segmentkontrollen,
+muskelgruppsraden och de tre talen ur en mängd.
+
+> ✏️ **Rubriken var *"EN SAK SOM INTE GJORDES: inget är pushat"*.** Adam bad om pushen efter
+> att sektionen skrivits, och den kördes med grindarna gröna på exakt den commit som pushades.
 
 ### Föreslagna skills för nästa session
 
