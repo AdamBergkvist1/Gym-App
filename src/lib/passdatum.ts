@@ -8,7 +8,7 @@
  * märker ingenting förrän Adam ser det på telefonen.
  */
 
-const EN_DYGN_MS = 86_400_000;
+const ETT_DYGN_MS = 86_400_000;
 
 function sammaDag(a: Date, b: Date): boolean {
   return a.toDateString() === b.toDateString();
@@ -23,7 +23,7 @@ function sammaDag(a: Date, b: Date): boolean {
 export function passdatum(iso: string, nu: Date = new Date()): string {
   const d = new Date(iso);
   if (sammaDag(d, nu)) return 'I dag';
-  if (sammaDag(d, new Date(nu.getTime() - EN_DYGN_MS))) return 'I går';
+  if (sammaDag(d, new Date(nu.getTime() - ETT_DYGN_MS))) return 'I går';
 
   // Veckodagen skrivs ut. Den korta formen (`tis`) valdes när datumet delade
   // rad med tre tal; i §3.2 har raden bara längden till höger om sig, och
