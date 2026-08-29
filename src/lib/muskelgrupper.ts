@@ -82,10 +82,25 @@ export function muskelrad(övningar: readonly ÖvningIPasset[]): string | null {
   return versalisera(kvar > 0 ? `${namngivna.join(', ')} och ${kvar} till` : foga(namngivna));
 }
 
-/** `a` · `a och b` · `a, b och c`. Sista skarven är ett *och*, resten kommatecken. */
+/**
+ * `a` · `a och b` · `a, b och c`. Sista skarven är ett *och*, resten kommatecken.
+ *
+ * ✏️ **SKRIVEN UTAN ICKE-NULL-FÖRSÄKRAN 2026-08-29 (12.51, fynd ur `/code-review`).**
+ * Här stod `grupper[0]!` bredvid ett otypat `grupper.at(-1)` — två svar på samma
+ * invariant i två rader. Det farliga var det senare: bryts invarianten skriver
+ * `!` ett fel medan `at(-1)` tyst skriver **`undefined` i raden**, alltså ordet
+ * på skärmen. Nu kan varken hända: funktionen är total.
+ *
+ * Den tomma listan är onåbar via `muskelrad`, som svarar `null` innan den kommer
+ * hit. Den hanteras ändå, för det kostar en rad och tar bort en invariant som
+ * annars bara finns i en kommentar.
+ */
 function foga(grupper: readonly string[]): string {
-  if (grupper.length === 1) return grupper[0]!;
-  return `${grupper.slice(0, -1).join(', ')} och ${grupper.at(-1)}`;
+  const sista = grupper.at(-1);
+  if (sista === undefined) return '';
+
+  const utomSista = grupper.slice(0, -1);
+  return utomSista.length === 0 ? sista : `${utomSista.join(', ')} och ${sista}`;
 }
 
 /**
