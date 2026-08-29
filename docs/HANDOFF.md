@@ -63,9 +63,10 @@ för att bli en påminnelse han får varje gång. Nämn dem när de faktiskt blo
 
 ---
 
-## 🆕 2026-08-29 — STEG 4.3 HISTORIK: skriven, byggd och stängd. RUNDA 1 ÄR KLAR
+## 🆕 2026-08-29 — STEG 4.3 HISTORIK: skriven, byggd, granskad och stängd. RUNDA 1 ÄR KLAR
 
-**Sju commits, `76dc2a6..HEAD`.** Räkna dem själv i stället för att lita på siffran:
+**Fjorton commits, `76dc2a6..HEAD`** — sju för steg 4.3, sedan `/code-review` och `12.51`.
+Räkna dem själv i stället för att lita på siffran:
 
 ```bash
 git log 76dc2a6..HEAD --oneline
@@ -114,6 +115,12 @@ Innehållet står i `docs/TASKS.md` (`Steg 4.3`, med en utfallsruta överst). H�
 | `c473f5b` | **12.50** — rubrikens vikt är ihågkommen, inte strukturell |
 | `2b65caa` | **Del C:** segmentkontrollen, och hålet i kontrastvakten |
 | `0bd1f95` | Uppgiften stängd, plus vakten som saknades för nollregeln |
+| `ee075c3` | **Efter `/code-review`:** mätningen som saknades, två doc-osanningar |
+| `5403549` | **12.51 p1:** `synligaPass` — filtret granskningen fann |
+| `4f57ca5` | **12.51 p1, orsaken:** `räknasSomArbete` — regelns hemvist för databasrader |
+| `c0bf0e2` | **12.51 p3:** `ETT_DYGN_MS` |
+| `23ecd69` | **12.51 p4:** `foga()` är total |
+| `7e4c0dd` | 12.51 stängd |
 
 ⚠️ **`0bd1f95`:s commitmeddelande säger "331 tester". Rätt siffra är 329**, kontrollerad
 efteråt. Meddelandet går inte att rätta utan att skriva om historien, så rättelsen står här.
@@ -170,21 +177,45 @@ importfiltret, nollregeln och segmentets kant.
 4. **Steg 4.1:s ruta står fortfarande obockad.** Enda kvarvarande kandidaten är
    `apple-mobile-web-app-status-bar-style`, som bara går att pröva på Adams telefon (10.3).
 
-### ⛔ TVÅ SAKER SOM INTE GJORDES, OCH SOM TVÅ ÄLDRE SEKTIONER BAD OM
+### ✅ `/code-review` KÖRDES — efter avbockningen, och den hade fyra saker att säga
 
-1. 🔴 **`/code-review` kördes ALDRIG, och rutan bockades av ändå.** Två sektioner nedan säger
-   uttryckligen *"kör den innan uppgiften bockas av, inte efter"*, skrivet efter att steg 4.2
-   gav **fem spec-fynd** när granskningen till slut kördes en session för sent.
-   **Steg 4.3 är ogranskad på exakt samma sätt.** Rutan står avbockad för att delarna ÄR
-   byggda och varje `Klart när` är kontrollerat — men **läs den som "byggd", inte som
-   "granskad"**. Kör `/code-review` mot `76dc2a6..HEAD` innan något byggs ovanpå.
-2. **Inget är pushat.** Se rutan högst upp i sektionen.
+> ✏️ **Här stod att granskningen ALDRIG kördes och att rutan bockades av ändå.** Adam bad om
+> den direkt efteråt, så den halvan är inte längre sann — men **ordningen var fel och det
+> ändras inte av att den kördes till slut.** Rutan bockades av före granskningen, vilket är
+> precis det två sektioner nedan bad om att slippa.
+
+**Två kalla agenter, `76dc2a6..HEAD`, åtta fynd — varav ett falskt.** Fullständig tabell i
+`TASKS.md` (`Steg 4.3`:s utfallsruta). Det som är värt att bära vidare:
+
+1. 🔴 **Båda axlarna hittade samma tyngsta fynd oberoende av varandra:** mätningen av
+   muskelradens tak gjordes aldrig, trots att uppgiften uttryckligen beställde den. Gjord nu —
+   taket håller, 327 av 327 px i längsta möjliga form — men **ett obockat kriterium i en
+   avbockad uppgift är exakt vad granskningen finns för att fånga.**
+2. 🔴 **Fyndet var mindre än orsaken.** Granskningen såg ETT upprepat passfilter, för det låg i
+   diffen. Under det låg att arbetssetregeln hade **fem stavningar** i `history.ts` och ingen
+   hemvist för databasrader — fyra av dem äldre än steg 4.3. **Läs fynd som symtom, inte som
+   åtgärdslistor.** `räknasSomArbete` i `src/lib/worksets.ts` är regeln nu, och sabotage av den
+   ger åtta röda tester i fem olika konsumenter.
+3. ⚠️ **Ett av åtta fynd var falskt** — en granskare läste en radannotering i en ASCII-skiss
+   som om den gällde hela blocket, och rapporterade att muskelraden saknar `--color-dim`.
+   §3.2 annoterar rad 2 `--text-meta` och rad 3 `--color-dim`. **Verifiera varje fynd mot
+   koden innan det blir en uppgift** — annars ändras rätt kod för att blidka en felläsning.
+4. **Två osanningar i mitt eget dokument** hittades: utfallsrutan sa `e2e 102` (rätt: 105), och
+   del B:s `Klart när` motsade sin egen brödtext om `font-semibold`. Båda rättade.
+
+**`12.51` är skriven och stängd** — de fyra kodfynden, i fyra commits.
+
+### ⛔ EN SAK SOM INTE GJORDES
+
+**Inget är pushat.** Se rutan högst upp i sektionen. Fjorton commits ligger lokalt.
 
 ### Föreslagna skills för nästa session
 
-- **`/code-review`** mot `76dc2a6..HEAD` — **först.** Se punkt 1 ovan.
 - **`/wayfinder`** eller **`grilling`** — runda 2 kräver en grillning innan uppgiften skrivs.
   `DESIGN.md` säger det uttryckligen; 4.4 är ny funktionalitet, inte omskrivning.
+- **`/code-review` igen, men FÖRE avbockningen den här gången.** Två sessioner i rad har nu
+  bockat av först och granskat sedan, och båda gångerna satt fynden i det som redan var
+  "klart".
 
 ---
 
