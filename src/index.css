@@ -209,6 +209,15 @@ html {
 h1 {
   font-family: var(--font-title);
   font-size: var(--text-title);
+  /* Vikten hör hit av exakt samma skäl som de två raderna ovan — och den låg
+   * fram till 12.50 i en `font-semibold`-klass på varje h1 för sig. Två av tre
+   * egenskaper var strukturella, den tredje var en vana.
+   *
+   * ⚠️ Talet är `DESIGN.md` §2:s skala för `--text-title`, inte en smakvikt.
+   * Utan raden renderar en klasslös h1 i 400: Tailwinds preflight nollställer
+   * webbläsarens egen rubrikfetstil, så den ärvda vikten är normal. Mätt i
+   * `e2e/rubrikvikt.spec.ts`, som var rött på just 400. */
+  font-weight: 600;
   /* Fraunces optiska axel: större grad vill ha mindre optisk storlek än
    * förvalet ger, annars blir rubriken bredare än raden under. */
   font-optical-sizing: auto;
