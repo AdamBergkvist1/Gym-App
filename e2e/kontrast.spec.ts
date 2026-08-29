@@ -106,6 +106,49 @@ interface Undantag {
   skäl: string;
 }
 
+/**
+ * **Roller vars innebörd ÄR "det här är inte en kontroll" — 12.52.**
+ *
+ * Undantaget för dekorativa kanter gäller allt utom kontroller, och listan nedan
+ * är den enda plats där ett `role` ändå får läsas som dekoration. Den är skriven
+ * som ett **negativt** urval med flit: en roll som inte står här behandlas som en
+ * kontroll, så en ARIA-roll ingen tänkt på faller åt det håll som ger ett rött
+ * fynd i stället för en tyst grön mätning. Det var precis motsatsen som gjorde
+ * att steg 4.3:s `fieldset` slank igenom.
+ *
+ * Tre sorter, alla med samma egenskap: de identifierar inget man kan använda.
+ * **Dekoration** (`presentation`, `none`), **utgångar** som skriver text till
+ * användaren (`status`, `alert`, `log`, `timer`, `marquee`) och **innehåll**
+ * (`img`, `note`, `tooltip`, `figure`, `separator`).
+ *
+ * ⚠️ `timer` står här efter en mätning, inte i förväg: vilotimerns kort
+ * (`RestTimer.tsx`) föll som fynd när regeln först skrevs utan listan. Kortet är
+ * en yta med knappar inuti — knapparna identifieras av sina egna etiketter, och
+ * kortkanten ritar ingen kontroll.
+ */
+const ICKE_KONTROLLROLLER = [
+  'presentation',
+  'none',
+  'img',
+  'note',
+  'tooltip',
+  'figure',
+  'separator',
+  'status',
+  'alert',
+  'log',
+  'timer',
+  'marquee',
+];
+
+/**
+ * Vad som räknas som en kontroll. Taggnamnen är de element som är interaktiva
+ * **utan** att behöva ett `role`; allt annat avgörs av rollen.
+ */
+const KONTROLL =
+  'button, input, select, textarea, a, fieldset, label, details, summary, ' +
+  `[role]:not(${ICKE_KONTROLLROLLER.map((r) => `[role="${r}"]`).join(', ')})`;
+
 const UNDANTAG: Undantag[] = [
   {
     selektor: ':disabled, [aria-disabled="true"]',
@@ -129,15 +172,21 @@ const UNDANTAG: Undantag[] = [
     // gräns är den dekorativa tokenen ska fällas, inte ursäktas. Därför räknas
     // knappar, fält och länkar bort ur undantaget.
     //
-    // 🔴 **GRUPPERNA LADES TILL 2026-08-29, EFTER ATT ETT SABOTAGE AVSLÖJADE
-    // HÅLET.** Steg 4.3 del C byggde segmentkontrollen som en `<fieldset>` med
-    // radioknappar — och en `--color-line`-kant på den gick **grön**, eftersom
-    // en `fieldset` inte stod i listan ovan och därmed lästes som dekoration.
-    // Kontrollens kant är det enda som skiljer den från papperet (1,09:1), så
-    // vakten hade tystat exakt den felklass den byggdes för. **Rutorna inuti är
-    // `sr-only`, så det är gruppen som ÄR kontrollen visuellt.**
-    selektor:
-      ':not(button, input, select, textarea, a, fieldset, [role="button"], [role="link"], [role="group"], [role="radiogroup"])',
+    // 🔴 **HÅLET SOM GAV REGELN NEDAN.** Steg 4.3 del C byggde segmentkontrollen
+    // som en `<fieldset>` med radioknappar — och en `--color-line`-kant på den
+    // gick **grön**, eftersom `fieldset` inte stod i listan och därmed lästes som
+    // dekoration. Kontrollens kant är det enda som skiljer den från papperet
+    // (1,09:1), så vakten hade tystat exakt den felklass den byggdes för.
+    // **Rutorna inuti är `sr-only`, så det är gruppen som ÄR kontrollen visuellt.**
+    //
+    // 🔴 **DÄRFÖR RÄKNAR RADEN INTE LÄNGRE UPP ROLLER — 12.52.** Först stod fyra
+    // enskilda (`button`, `link`, `group`, `radiogroup`), och då ärvde varje roll
+    // utanför listan samma hål: `tablist`, `switch`, `tab`. Urvalet är vänt nu —
+    // se `KONTROLL` och `ICKE_KONTROLLROLLER` ovan.
+    //
+    // ⚠️ Vaktas av testet **"en författardeklarerad roll ursäktas inte som
+    // dekoration"** sist i filen, som var rött mot den gamla uppräkningen.
+    selektor: `:not(${KONTROLL})`,
     sort: 'kant',
     variabel: '--color-line',
     skäl:
@@ -656,4 +705,87 @@ test('kantvägen lever och varje undantag träffar fortfarande något', async ({
       'En kvarglömd post är en ursäkt ingen längre kan motivera, och den döljer nästa fel. ' +
       'Ta bort den.'
   ).toEqual([]);
+});
+
+/**
+ * **VAKT FÖR VAKTEN. Uppgift 12.52.**
+ *
+ * Testerna ovan mäter appen som den ser ut i dag. Det här testet mäter i stället
+ * *undantagets räckvidd*, och det gör det på element som inte finns i appen —
+ * för att frågan gäller kontrollen som byggs i morgon.
+ *
+ * 🔴 **Skälet är ett faktiskt missat fel.** Steg 4.3 del C byggde
+ * segmentkontrollen som en `<fieldset>`, och dess 1,09:1-kant gick grön: taggen
+ * stod inte i undantagets kontrollista och lästes som dekoration. Den luckan
+ * hittades av ett sabotage, inte av vakten. Varje roll som inte råkar stå i
+ * listan ärvde samma lucka — och det är den ärvningen som mäts här.
+ *
+ * ⚠️ **Elementen injiceras och ingår därför inte i appens egen mätning.** De
+ * läggs sist i `body`, ovanpå papperet, och tas bort med sidan när testet slutar.
+ */
+test('en författardeklarerad roll ursäktas inte som dekoration', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+
+  await page.evaluate(() => {
+    const lägg = (tagg: string, klass: string, roll: string | null) => {
+      const el = document.createElement(tagg);
+      el.className = klass;
+      if (roll !== null) el.setAttribute('role', roll);
+      // `--color-line` och inget annat: det är den token undantaget gäller, och
+      // en hårdkodad färg hade mätt något annat än regeln.
+      el.style.cssText = 'width:120px;height:24px;border:1px solid var(--color-line);';
+      document.body.append(el);
+    };
+    // `tablist` är vald för att den inte stod i den gamla uppräkningen och
+    // inte heller i `ICKE_KONTROLLROLLER`. Byts den mot en roll som står i
+    // någondera mäter testet ingenting.
+    lägg('div', 'prov-roll', 'tablist');
+    lägg('div', 'prov-utgang', 'status');
+    lägg('div', 'prov-dekor', null);
+    // ⚠️ **Taggnamnshalvan av `KONTROLL` mäts INTE av appen i dag, och det är
+    // uppmätt:** `fieldset` togs bort ur listan som sabotage och alla lägen
+    // förblev gröna. Segmentkontrollen — den kontroll raden skrevs för — bär
+    // sedan lagningen `--color-line-strong`, och undantagsposten gäller bara
+    // `--color-line`. Raden hade alltså blivit ovaktad utan det här elementet.
+    lägg('fieldset', 'prov-fieldset', null);
+  });
+
+  const resultat = await mätSidan(page, UNDANTAG);
+  const kantfynd = (klass: string) =>
+    resultat.fynd.filter((f) => f.sort === 'kant' && f.element.includes(klass));
+
+  expect(
+    kantfynd('prov-roll'),
+    'En `--color-line`-kant på `[role="tablist"]` ursäktades som dekoration.\n' +
+      'Undantaget avgör tillhörighet på taggnamn och en handfull uppräknade roller, ' +
+      'så varje kontrolltyp utanför listan ärver hålet från steg 4.3.\n' +
+      `Alla fynd:\n${rapport(resultat.fynd)}`
+  ).toHaveLength(1);
+
+  // Andra halvan av påståendet, och den är inte en formalitet: en regel som
+  // fäller ALLT skulle klara raden ovan och samtidigt göra undantaget dött.
+  expect(
+    kantfynd('prov-dekor'),
+    'En kantad `div` utan roll fälldes — då är undantaget för dekorativa ' +
+      'avdelare inte längre ett undantag.'
+  ).toEqual([]);
+
+  // `ICKE_KONTROLLROLLER` är den enda plats där ett `role` ändå läses som
+  // dekoration, och utan den här raden kan listan tömmas utan att något test
+  // säger ifrån. Den är uppmätt: vilotimerns kort (`role="timer"`) föll som
+  // fynd innan listan fanns.
+  expect(
+    kantfynd('prov-utgang'),
+    'En `--color-line`-kant på `[role="status"]` fälldes. En utgång som skriver ' +
+      'text till användaren identifierar ingen kontroll, och kravet gäller det ' +
+      'som IDENTIFIERAR en komponent.'
+  ).toEqual([]);
+
+  expect(
+    kantfynd('prov-fieldset'),
+    'En `--color-line`-kant på en `<fieldset>` ursäktades som dekoration. Det är ' +
+      'steg 4.3:s ursprungliga hål, återöppnat — en kontrollgrupp vars enda ' +
+      'avgränsning är den dekorativa tokenen.'
+  ).toHaveLength(1);
 });

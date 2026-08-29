@@ -4565,7 +4565,7 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** vikten kommer ur `index.css` och en `h1` utan klasser renderar i
       briefens vikt — mätt i DOM:en, inte antaget.
 
-- [ ] **12.52 Kontrastvaktens undantag räknar upp element där det borde beskriva en roll. Ny 2026-08-29.**
+- [x] **12.52 Kontrastvaktens undantag räknar upp element där det borde beskriva en roll. Ny 2026-08-29. KLAR samma dag.**
       Kommer ur steg 4.3 del C, där ett sabotage avslöjade att en `<fieldset>` med
       1,09:1-kant gick grön. `fieldset`, `[role="group"]` och `[role="radiogroup"]` lades
       till i undantagets kontrollista då — **men listan är fortfarande en uppräkning.**
@@ -4596,6 +4596,31 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** en `--color-line`-kant på ett element med en författardeklarerad roll som
       *inte* står uppräknad i dagens lista fälls av vakten, bevisat med ett test som var rött
       före ändringen. Staleness-testet ska fortsätta se posten som levande.
+
+      > ### ✅ Utfall 2026-08-29
+      >
+      > **Urvalet är vänt.** `KONTROLL` i `e2e/kontrast.spec.ts` är nu native-interaktiva
+      > taggar plus `[role]`, med `ICKE_KONTROLLROLLER` som enda plats där ett `role` ändå
+      > läses som dekoration. En roll ingen tänkt på faller därmed åt det håll som ger ett
+      > rött fynd. Nästlad `:not()` fungerar i WebKit — en ogiltig selektor hade kastat i
+      > `el.matches` och fällt mätningen, så den gröna körningen är beviset.
+      >
+      > 🔴 **`[role]` rakt av var för brett, och appen sa det direkt.** Vilotimerns kort
+      > (`RestTimer.tsx`, `role="timer"`) föll som fynd: `border-top` 1,01:1 utåt. Kortet är
+      > en yta med knappar inuti — knapparna identifieras av sina egna etiketter. Därav
+      > `ICKE_KONTROLLROLLER`, som **kom ur en mätning och inte ur en förhandsgissning**:
+      > dekoration, utgångar (`status`, `alert`, `log`, `timer`, `marquee`) och innehåll.
+      >
+      > 🔴 **Ett andra fynd på köpet: taggnamnshalvan var ovaktad.** `fieldset` togs bort ur
+      > listan som sabotage och **alla lägen förblev gröna** — segmentkontrollen bär sedan
+      > lagningen `--color-line-strong`, och undantagsposten gäller bara `--color-line`.
+      > Raden som steg 4.3 lade till kunde alltså tas bort utan att något test sa ifrån.
+      > Testet injicerar nu en `<fieldset>`, och samma sabotage är rött.
+      >
+      > **Tre sabotage, tre röda på rätt rad:** `role="tablist"` (röda fasen), `'status'` ur
+      > `ICKE_KONTROLLROLLER`, `fieldset` ur `KONTROLL`. Grindar: 329 tester, typecheck rent,
+      > lint 0 fel, **e2e 108** (105 + det nya testet på tre viewporter), bygget 727,74 KiB
+      > precache.
 
       **`e2e/uppvarmning.spec.ts` är sviten första vakt som växlar en rad till uppvärmning.**
       Den var röd mot den gamla räkningen, kontrollerat genom att buggen återinfördes.
