@@ -4543,7 +4543,7 @@ och 13.1 måste vara klar före 13.6.
       hållen; 3 och 4 är åtgärdade; punkt 2 är ingen åtgärd utan en lärdom och bockas med de
       andra.
 
-- [ ] **12.50 Sidrubrikens VIKT är ihågkommen, inte strukturell. Ny 2026-08-28.**
+- [x] **12.50 Sidrubrikens VIKT är ihågkommen, inte strukturell. Ny 2026-08-28. KLAR 2026-08-29.**
       Hittad i steg 4.3 del B, genom att en påstådd rest kontrollerades innan den togs bort.
       **Inget fel på skärmen i dag** — alla `h1` bär rätt vikt.
 
@@ -4564,6 +4564,24 @@ och 13.1 måste vara klar före 13.6.
 
       **Klart när:** vikten kommer ur `index.css` och en `h1` utan klasser renderar i
       briefens vikt — mätt i DOM:en, inte antaget.
+
+      > ### ✅ Utfall 2026-08-29. Städningen blev en egen commit, och det var inte bara formalia
+      >
+      > **Uppgiften bad om ett ställningstagande till om klasserna städas i samma svep.**
+      > Svaret blev **två commits** (`a91692c` regeln, `fb9efd9` städningen) — och delningen
+      > visade sig bära ett bevis: **före städningen kunde appens egna rubriker inte bevisa
+      > något**, eftersom de bar sin vikt själva. Sabotaget (viktregeln borttagen) hade då
+      > bara fällt det injicerade fallet. Efter städningen faller alla fyra.
+      >
+      > **Röda fasen mätte 400, inte webbläsarens fetstil.** Tailwinds preflight nollställer
+      > rubrikvikten, så en klasslös `h1` ärvde normal vikt — felet var alltså större än
+      > "fel nyans av fet".
+      >
+      > `e2e/rubrikvikt.spec.ts` mäter en injicerad klasslös `h1` plus sidrubrikerna på `/`,
+      > `/historik` och `/installningar`, och fäller också om en viktklass kommer tillbaka.
+      > `/ovning/:id` mäts inte: rutten kräver ett id ur databasen och bär samma `h1`.
+      >
+      > Grindar: 329 tester, typecheck rent, lint 0 fel, **e2e 120**, bygget 727,64 KiB.
 
 - [x] **12.52 Kontrastvaktens undantag räknar upp element där det borde beskriva en roll. Ny 2026-08-29. KLAR samma dag.**
       Kommer ur steg 4.3 del C, där ett sabotage avslöjade att en `<fieldset>` med
