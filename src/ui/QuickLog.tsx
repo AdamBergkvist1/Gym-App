@@ -203,7 +203,7 @@ export function QuickLog({
           spellCheck={false}
           enterKeyHint="done"
           aria-label="Logga ett set med fritext"
-          className="min-w-0 flex-1 rounded-lg border border-[var(--color-line)]
+          className="min-w-0 flex-1 rounded-lg border border-[var(--color-line-strong)]
                      bg-[var(--color-surface)] px-3 text-lg"
         />
         <button
@@ -241,7 +241,7 @@ export function QuickLog({
                   .then(() => setProblem(null))
                   .finally(() => setBusy(false));
               }}
-              className="mt-2 w-full rounded-lg border border-[var(--color-line)]
+              className="mt-2 w-full rounded-lg border border-[var(--color-line-strong)]
                          bg-[var(--color-surface)] px-3 text-sm disabled:opacity-50"
             >
               Skapa övningen &bdquo;{problem.attemptedName}&rdquo;
@@ -284,7 +284,7 @@ export function QuickLog({
               value={draft.weight}
               onChange={(e) => setDraft({ ...draft, weight: e.target.value })}
               aria-label="Vikt i kg"
-              className="w-20 rounded-md border border-[var(--color-line)] bg-[var(--color-bg)] px-2 text-center text-lg"
+              className="w-20 rounded-md border border-[var(--color-line-strong)] bg-[var(--color-bg)] px-2 text-center text-lg"
             />
             <span className="self-center text-[var(--color-dim)]">×</span>
             <input
@@ -292,7 +292,7 @@ export function QuickLog({
               value={draft.reps}
               onChange={(e) => setDraft({ ...draft, reps: e.target.value })}
               aria-label="Antal reps"
-              className="w-20 rounded-md border border-[var(--color-line)] bg-[var(--color-bg)] px-2 text-center text-lg"
+              className="w-20 rounded-md border border-[var(--color-line-strong)] bg-[var(--color-bg)] px-2 text-center text-lg"
             />
             <button
               type="button"
@@ -305,7 +305,7 @@ export function QuickLog({
             <button
               type="button"
               onClick={() => void dismissDraft()}
-              className="rounded-md border border-[var(--color-line)] px-3 text-[var(--color-dim)]"
+              className="rounded-md border border-[var(--color-line-strong)] px-3 text-[var(--color-dim)]"
             >
               Avbryt
             </button>

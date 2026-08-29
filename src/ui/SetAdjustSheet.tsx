@@ -55,9 +55,12 @@ interface Props {
   onClose: () => void;
 }
 
+// Kanten är knappens enda avgränsning, alltså --color-line-strong och inte den
+// dekorativa tokenen. Uppmätt till 1,18:1 av kontrastvakten 2026-08-29, första
+// gången den nådde in i arket (12.41).
 const NUDGE =
   'flex h-10 flex-1 items-center justify-center rounded-md border ' +
-  'border-[var(--color-line)] text-lg active:opacity-60';
+  'border-[var(--color-line-strong)] text-lg active:opacity-60';
 
 export function SetAdjustSheet({
   exerciseName,
@@ -223,7 +226,7 @@ export function SetAdjustSheet({
               'flex w-full items-center gap-3 rounded-lg border px-3 text-body',
               isWarmup
                 ? 'border-[var(--color-line-strong)] bg-[var(--color-bg)] text-[var(--color-fg)]'
-                : 'border-[var(--color-line)] text-[var(--color-dim)]',
+                : 'border-[var(--color-line-strong)] text-[var(--color-dim)]',
             ].join(' ')}
           >
             <span
@@ -254,7 +257,7 @@ export function SetAdjustSheet({
               <button
                 type="button"
                 onClick={() => setBekräftaBort(false)}
-                className="rounded-lg border border-[var(--color-line)] px-4 text-[var(--color-dim)]"
+                className="rounded-lg border border-[var(--color-line-strong)] px-4 text-[var(--color-dim)]"
               >
                 Nej
               </button>
@@ -264,7 +267,7 @@ export function SetAdjustSheet({
               <button
                 type="button"
                 onClick={() => setBekräftaBort(true)}
-                className="rounded-lg border border-[var(--color-line)] px-4 text-[var(--color-dim)]"
+                className="rounded-lg border border-[var(--color-line-strong)] px-4 text-[var(--color-dim)]"
               >
                 Ta bort
               </button>

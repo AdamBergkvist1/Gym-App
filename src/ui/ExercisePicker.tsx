@@ -97,12 +97,12 @@ export function ExercisePicker({ excludeIds = [], title = 'Lägg till övning', 
           placeholder="Sök övning…"
           autoCapitalize="off"
           autoCorrect="off"
-          className="min-w-0 flex-1 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] px-3"
+          className="min-w-0 flex-1 rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3"
         />
         <button
           type="button"
           onClick={onClose}
-          className="shrink-0 rounded-lg border border-[var(--color-line)] px-4 text-[var(--color-dim)]"
+          className="shrink-0 rounded-lg border border-[var(--color-line-strong)] px-4 text-[var(--color-dim)]"
         >
           Avbryt
         </button>
