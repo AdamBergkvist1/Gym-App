@@ -323,6 +323,36 @@ som helst och låter webbläsaren tolka `oklab()`, `color-mix()` och alfa åt os
 ⏰ **Villkor för att ta upp igen:** axe hittar helt andra saker vi inte mäter alls — etiketter,
 roller, fokusordning. Det är en egen uppgift och ett eget beslut, inte en del av 12.36.
 
+### Segmentkontroll — sökningen inför steg 4.3 del C
+
+**Status: inget infört. Noll nya poster i `package.json`.** Sökningen gjordes 2026-08-29 innan
+första raden av `src/ui/SegmentedControl.tsx` skrevs.
+
+| Kandidat | Licens | Version | Senast | Storlek (uppackat) | Beroenden |
+|---|---|---|---|---|---|
+| [`@radix-ui/react-radio-group`](https://github.com/radix-ui/primitives) | **MIT** | 1.4.7 | 2026-07-31 | 117 kB | **9** |
+| [`@headlessui/react`](https://github.com/tailwindlabs/headlessui) | **MIT** | 2.2.10 | 2026-04-13 | 1,0 MB | 5 |
+| [`@base-ui-components/react`](https://github.com/mui/base-ui) | **MIT** | **1.0.0-rc.0** | 2026-07-15 | 4,3 MB | 7 |
+| [`react-aria-components`](https://github.com/adobe/react-spectrum) | **Apache-2.0** | 1.20.0 | 2026-08-14 | 6,4 MB | 7 |
+
+🔴 **Det avgörande fyndet: alla fyra bygger kontrollen på samma primitiv som vi nu använder.**
+En segmentkontroll med enkelval **är** en radiogrupp. React Arias egna underhållare svarar
+detsamma på frågan — deras `ToggleButtonGroup` var ännu inte släppt när frågan ställdes, och
+rekommendationen är att en `RadioGroup` räcker när valet är enkelt.
+
+Då är §7.1 entydig: *"En plattformsprimitiv slår alltid ett bibliotek som gör samma sak."*
+`<input type="radio">` med delad `name` ger piltangenter, `Home`/`End`, skärmläsarens
+"1 av 2" och formulärsemantik **utan en rad JavaScript** — vår komponent innehåller ingen
+tangentbordskod alls, och `e2e/historiksegment.spec.ts` mäter att det stämmer.
+
+💡 **Det värdefulla ur sökningen var en fälla, precis som med långtrycket:** rutorna måste
+gömmas med `sr-only` och inte med `hidden`/`display:none`. Det senare tar bort dem ur
+tabbordningen och gör kontrollen enbart muspekbar — allt det primitiven köpte försvinner, utan
+att något ser trasigt ut. Skälet står utskrivet i komponentens docblock.
+
+⏰ **Villkor för att ta upp igen:** ett bibliotek blir intressant först när vi behöver något
+primitiven inte ger — utrullade menyer, dra-och-släpp, virtualiserade listor. Inte för det här.
+
 ### Hjälpare för e2e-sviten — sökningen §7.1 kräver, gjord i efterhand (uppgift 12.32)
 
 **Status: inget infört. Noll nya poster i `package.json`.** Sökningen gjordes 2026-08-13,

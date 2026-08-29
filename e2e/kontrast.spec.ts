@@ -128,7 +128,16 @@ const UNDANTAG: Undantag[] = [
     // 1,01:1 mot papperet — alltså osynliga tryckytor. En kontroll vars enda
     // gräns är den dekorativa tokenen ska fällas, inte ursäktas. Därför räknas
     // knappar, fält och länkar bort ur undantaget.
-    selektor: ':not(button, input, select, textarea, a, [role="button"], [role="link"])',
+    //
+    // 🔴 **GRUPPERNA LADES TILL 2026-08-29, EFTER ATT ETT SABOTAGE AVSLÖJADE
+    // HÅLET.** Steg 4.3 del C byggde segmentkontrollen som en `<fieldset>` med
+    // radioknappar — och en `--color-line`-kant på den gick **grön**, eftersom
+    // en `fieldset` inte stod i listan ovan och därmed lästes som dekoration.
+    // Kontrollens kant är det enda som skiljer den från papperet (1,09:1), så
+    // vakten hade tystat exakt den felklass den byggdes för. **Rutorna inuti är
+    // `sr-only`, så det är gruppen som ÄR kontrollen visuellt.**
+    selektor:
+      ':not(button, input, select, textarea, a, fieldset, [role="button"], [role="link"], [role="group"], [role="radiogroup"])',
     sort: 'kant',
     variabel: '--color-line',
     skäl:
@@ -544,6 +553,25 @@ const LÄGEN = [
       // Mätningen får inte köra mot ett tomt skal. Utan den här väntan är
       // urvalet en kapplöpning mot useLiveQuery.
       await expect(page.getByText('Inga pass ännu.')).toHaveCount(0);
+    },
+  },
+  {
+    // ⚠️ **FEMTE LÄGET, tillagt i steg 4.3 del C.** Segmentkontrollen ligger
+    // DIREKT PÅ PAPPERET med en kant som identifierar en kontroll, och det är
+    // Historiks första riktiga kant — kommentaren längre ner om att skärmens
+    // kanträknare är legitimt noll gäller alltså inte det här läget.
+    //
+    // ⚠️ **Kanten är NEUTRAL (`--color-line-strong`), inte semantisk.** Den är
+    // därför inte `12.40`:s andra fall: den uppgiften frågar om semantiska
+    // ytor — ok/varning — utanför ett kort. Se noteringen i 12.40.
+    //
+    // Den tomma statistikvyn mäts på köpet. Den försvinner i 4.4, men tills
+    // dess är den en sida användaren kan stå på.
+    namn: 'Historik → Statistik',
+    förbered: async (page: Page) => {
+      await page.goto('/historik?vy=statistik');
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText(/Statistik byggs härnäst/)).toBeVisible();
     },
   },
   {

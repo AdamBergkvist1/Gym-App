@@ -17,6 +17,10 @@ import { test, expect } from '@playwright/test';
 const ROUTES = [
   { path: '/', name: 'Idag' },
   { path: '/historik', name: 'Historik' },
+  // Statistiksegmentet är en egen vy på samma rutt, och den nås bara via
+  // frågeparametern. Utan raden hade den aldrig mätts — vilket är exakt varför
+  // valet ligger i URL:en (steg 4.3 del C).
+  { path: '/historik?vy=statistik', name: 'Historik → Statistik' },
   { path: '/installningar', name: 'Inställningar' },
 ] as const;
 

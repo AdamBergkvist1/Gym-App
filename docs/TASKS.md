@@ -3885,6 +3885,26 @@ och 13.1 måste vara klar före 13.6.
       timerchipet? **Ta det i 4.3, inte tidigare**, så beslutet fattas mot ett verkligt andra
       fall och inte mot ett hypotetiskt.
 
+      ⏰ **4.3 GAV INGET ANDRA FALL. Kontrollerat 2026-08-29, och frågan står kvar öppen.**
+      Uppgiften ovan förutsåg att *"Historik med all sannolikhet lägger semantiska element
+      utanför kort"*. Det blev inte så, och skälet är strukturellt snarare än en slump:
+
+      | Element på Historik | Ligger på | Semantiskt? |
+      |---|---|---|
+      | `Pågår` (`--color-ok-text`) | **vitt kort** — det är en rad i passkortet | ja, men på kort = väg C:s normalfall |
+      | Segmentkontrollen (`--color-line-strong`) | papperet | **nej** — neutral kant som identifierar en kontroll |
+      | Passkorten, övningslistan | papperet | nej — skugga, ingen semantik |
+
+      **Att fatta beslutet nu hade alltså varit att fatta det mot ett enda fall igen**, vilket
+      är precis vad den här uppgiften ber oss låta bli. **Nästa verkliga tillfälle är 4.4:**
+      statistiksegmentet har staplar, kurvor och avvikelser, och där uppstår frågan på riktigt.
+
+      💡 **Sidovinsten var större än frågan:** när segmentets kant skulle mätas visade ett
+      sabotage att `e2e/kontrast.spec.ts` **ursäktade** den. Undantagets kontrollista räknade
+      `button, input, select, textarea, a` — men inte `fieldset` eller `role="group"`, och
+      radioknapparna inuti är `sr-only`. En `--color-line`-kant på kontrollen gick alltså grön,
+      1,09:1 mot papperet. Lagat i samma commit som del C, och sabotaget som var grönt är rött nu.
+
 - [ ] **12.41 Kontrastvakten ser fyra lägen, inte hela appen. Ny 2026-08-27.**
       Utbruten ur 12.36 så att luckan inte blir kvar i en löptext. **Inte ett fel i vakten** —
       12.36:s **Klart när** namnger Pass, Historik och Inställningar, och alla tre mäts. Men
