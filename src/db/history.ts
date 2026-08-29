@@ -9,7 +9,7 @@
 
 import { epley1RM, volumeKg } from '../lib/oneRepMax';
 import { weightStepFor } from '../lib/steps';
-import { skapaArbetssetRäknare } from '../lib/worksets';
+import { räknasSomArbete, skapaArbetssetRäknare } from '../lib/worksets';
 import { db, type GymDatabase } from './db';
 import type { LocalSet, LocalWorkout } from './types';
 
@@ -137,12 +137,15 @@ export async function listWorkoutSummaries(
   return workouts.map((workout) => {
     const rows = (perWorkout.get(workout.id) ?? []).sort(byPerformedAt);
 
-    // Uppvärmningsset räknas INTE i volymen — samma regel som `summarizeWorkout`
-    // i repo.ts och som `getExerciseHistory`/`getPersonalRecords` längre ner i den
-    // här filen. De är förberedelse, inte arbete, och att blanda in dem gör siffran
-    // obrukbar för jämförelser mellan pass. Saknades här fram till 12.16, vilket gav
-    // historiken och startskärmen olika volym för samma pass.
-    const arbetsset = rows.filter((s) => !s.isWarmup);
+    // Uppvärmning är förberedelse, inte arbete, och att blanda in den gör siffran
+    // obrukbar för jämförelser mellan pass. Saknades här fram till 12.16, vilket
+    // gav historiken och startskärmen olika volym för samma pass.
+    //
+    // ✏️ **Här räknade koden upp var regeln OCKSÅ fanns** — `summarizeWorkout` i
+    // repo.ts, `getExerciseHistory`, `getPersonalRecords`. Den listan var en
+    // kommentar som måste underhållas, och den var redan ofullständig. Nu är det
+    // en funktion, och `räknasSomArbete` säger själv vilka som anropar den (12.51).
+    const arbetsset = rows.filter(räknasSomArbete);
     const totalVolumeKg = arbetsset.reduce((sum, s) => sum + volumeKg(s.weightKg, s.reps), 0);
 
     // ⛔ **ETT FILTER, TRE TAL.** Antal set, volym och antal övningar härleds ur
@@ -208,7 +211,7 @@ export async function summarizeHistory(database: GymDatabase = db): Promise<Hist
 
   return {
     workoutCount: workouts.length,
-    workSetCount: sets.filter((s) => !s.isDeleted && !s.isWarmup && ids.has(s.workoutId)).length,
+    workSetCount: sets.filter((s) => räknasSomArbete(s) && ids.has(s.workoutId)).length,
   };
 }
 
@@ -231,7 +234,7 @@ export async function getExerciseHistory(
     .toArray();
 
   return rows
-    .filter((s) => !s.isDeleted && !s.isWarmup)
+    .filter(räknasSomArbete)
     .sort(byPerformedAt)
     .map((s) => ({
       setId: s.id,
@@ -252,7 +255,7 @@ export async function getPersonalRecords(
       .where('[exerciseId+performedAt]')
       .between([exerciseId, ''], [exerciseId, '￿'])
       .toArray()
-  ).filter((s) => !s.isDeleted && !s.isWarmup);
+  ).filter(räknasSomArbete);
 
   let heaviest: LocalSet | null = null;
   let bestE1rm: { set: LocalSet; e1rm: number } | null = null;
@@ -392,7 +395,7 @@ export async function getSetAverages(
     .reverse()
     .until((s) => underlag.size >= ANTAL_PASS_I_SNITTET && !underlag.has(s.workoutId))
     .each((s) => {
-      if (s.isDeleted || s.isWarmup || s.source === 'import') return;
+      if (!räknasSomArbete(s) || s.source === 'import') return;
       if (s.workoutId === options.excludeWorkoutId) return;
       underlag.add(s.workoutId);
       rows.push(s);
@@ -491,7 +494,10 @@ export async function listTrainedExercises(
   const map = new Map<string, { lastPerformedAt: string; setCount: number }>();
   for (const s of rows) {
     const current = map.get(s.exerciseId);
-    const räknas = s.isWarmup ? 0 : 1;
+    // Samma regel som resten av filen, men den kan inte filtrera i förväg: raden
+    // ovan behöver ALLA set för `lastPerformedAt`. Därför en term i stället för
+    // ett filter — regeln är densamma.
+    const räknas = räknasSomArbete(s) ? 1 : 0;
     if (!current) map.set(s.exerciseId, { lastPerformedAt: s.performedAt, setCount: räknas });
     else {
       current.setCount += räknas;

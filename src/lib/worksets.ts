@@ -77,6 +77,43 @@ interface PlanradSomKanRäknas {
 }
 
 /**
+ * En **loggad** rad, sedd från den som frågar om den är gjort arbete.
+ *
+ * Strukturell typ och ingen import från `src/db` — `src/lib` känner inte till
+ * databasen, precis som `PlanradSomKanRäknas` ovan inte känner till planen.
+ */
+interface LoggadRadSomKanRäknas {
+  isWarmup: boolean;
+  isDeleted: boolean;
+}
+
+/**
+ * Räknas den här loggade raden som arbete?
+ *
+ * ⛔ **REGELN HADE FEM STAVNINGAR I `history.ts` OCH INGEN HEMVIST. Uppgift 12.51.**
+ * `!s.isDeleted && !s.isWarmup` stod ordagrant på tre ställen, som delmängd på ett
+ * fjärde och komponerad med importfiltret på ett femte. `/code-review` pekade på
+ * det när en sjätte kopia hann skrivas i steg 4.3 — och namngav orsaken:
+ * `loggadeArbetsset` nedan går inte att anropa från frågelagret.
+ *
+ * ⚠️ **DE TVÅ FUNKTIONERNA ÄR INTE SAMMA REGEL, OCH SKA INTE SLÅS IHOP.** De
+ * svarar på samma fråga för två olika former, och formerna bär olika bevis för
+ * att arbetet blev gjort:
+ *
+ * | Form | Bevis för "gjort" | Bevis för "finns" |
+ * |---|---|---|
+ * | Planrad (skärmen) | `loggedSetId !== null` — raden är avbockad | — raden finns i planen |
+ * | Loggad rad (databasen) | — den ÄR loggad, annars fanns den inte | `!isDeleted` |
+ *
+ * En planrad kan finnas utan att vara gjord; en loggad rad kan vara gjord men
+ * borttagen. **Att tvinga ihop dem hade krävt en typ som ljuger om ena hållet.**
+ * Det är därför de ligger bredvid varandra med varsitt namn i stället.
+ */
+export function räknasSomArbete(rad: LoggadRadSomKanRäknas): boolean {
+  return !rad.isDeleted && !rad.isWarmup;
+}
+
+/**
  * Planens rader som faktiskt är **gjort arbete**: avbockade, och inte uppvärmning.
  *
  * ⛔ **DEN HÄR FUNKTIONEN FINNS FÖR ATT REGELN GLÖMDES TRE GÅNGER.** Uppgift
