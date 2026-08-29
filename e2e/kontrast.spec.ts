@@ -2,9 +2,11 @@ import { test, expect, type Page } from '@playwright/test';
 import {
   avslutaPass,
   hämtaÖvning,
+  justeringsarket,
   loggaSetGenomAppen,
   läggTillÖvning,
   startaPass,
+  talknapp,
 } from './hjalpare';
 
 /**
@@ -240,6 +242,20 @@ interface Mätresultat {
    * verktyg som finns för att hitta den.
    */
   mätta: { text: number; kant: number };
+  /**
+   * Element inuti en överlagring vars underlag kommer **utifrån** överlagringen.
+   * Tom lista när `överlagring` inte skickats med.
+   *
+   * ⚠️ **12.41:s egentliga fråga.** `bakgrundslager()` går uppåt genom
+   * FÖRFÄDERSKEDJAN, inte genom det som råkar ligga bakom på skärmen. Ett ark
+   * ligger ovanpå passet: så länge arket har en egen ogenomskinlig bakgrund
+   * stannar vandringen där och modellen beskriver vad ögat ser. Gör den inte
+   * det, går vandringen förbi dimmern (som är genomskinlig) hela vägen upp till
+   * `body` och rapporterar **papperet** som underlag — trots att det som syns är
+   * en nedtonad passvy. Det är ett tal vakten inte kan stå för, och då är rätt
+   * svar att säga *omätbart* i stället för att gissa.
+   */
+  underlagUtanför: string[];
 }
 
 /**
@@ -247,9 +263,16 @@ interface Mätresultat {
  *
  * Allt inuti `evaluate` körs i webbläsaren, inte i Node — det är enda sättet att
  * komma åt datorstilar och en riktig canvas.
+ *
+ * `överlagring` är en selektor för ett ark eller en dialog. Skickas den med
+ * kontrolleras varje mätt element inuti den mot `underlagUtanför` ovan.
  */
-async function mätSidan(page: Page, undantag: Undantag[]): Promise<Mätresultat> {
-  return page.evaluate((undantag) => {
+async function mätSidan(
+  page: Page,
+  undantag: Undantag[],
+  överlagring?: string
+): Promise<Mätresultat> {
+  return page.evaluate(([undantag, överlagring]) => {
     const canvas = document.createElement('canvas');
     canvas.width = 1;
     canvas.height = 1;
@@ -407,6 +430,27 @@ async function mätSidan(page: Page, undantag: Undantag[]): Promise<Mätresultat
       return svar;
     };
 
+    /**
+     * Elementet självt eller närmaste förfader med ogenomskinlig bakgrund —
+     * alltså där `bakgrundslager()` slutar vandra. Returnerar `null` när ingen
+     * finns, vilket inte kan hända i den här appen men inte får antas.
+     */
+    const stoppelement = (start: Element): Element | null => {
+      for (let el: Element | null = start; el; el = el.parentElement) {
+        const bg = getComputedStyle(el).backgroundColor;
+        if (tolkbar(bg) && ogenomskinlig(bg)) return el;
+      }
+      return null;
+    };
+
+    const överlagringsrot = överlagring === null ? null : document.querySelector(överlagring);
+    const underlagUtanför: string[] = [];
+    // En selektor som inte träffar något är en tyst grön mätning av ingenting,
+    // och den ska säga ifrån i samma lista som riktiga fynd.
+    if (överlagring !== null && överlagringsrot === null) {
+      underlagUtanför.push(`ingen överlagring matchade selektorn "${överlagring}"`);
+    }
+
     /** Sant om elementet har egen text, inte bara ärvd från sina barn. */
     const harEgenText = (el: Element): boolean => {
       for (const nod of el.childNodes) {
@@ -481,6 +525,20 @@ async function mätSidan(page: Page, undantag: Undantag[]): Promise<Mätresultat
       // `endastEnKantsida` i undantagslistan.
       const kantsidor = sidor.filter(synligKant).length;
 
+      // ------------------------------------------- överlagringens underlag
+      // Prövas bara på element som FAKTISKT MÄTS. Dimmern bakom ett ark har
+      // varken text eller kant och hämtar sitt underlag ur sidan bakom — vilket
+      // är helt riktigt för just den, och hade blivit ett falskt larm om varje
+      // element inuti roten prövades.
+      if (överlagringsrot !== null && överlagringsrot.contains(el) && (harEgenText(el) || kantsidor > 0)) {
+        const stopp = stoppelement(el);
+        if (stopp === null || !överlagringsrot.contains(stopp)) {
+          underlagUtanför.push(
+            `${beskriv(el)} — underlaget kommer från ${stopp === null ? 'ingenstans' : beskriv(stopp)}`
+          );
+        }
+      }
+
       for (const sida of sidor) {
         const färg = s.getPropertyValue(`border-${sida}-color`);
         if (!synligKant(sida)) continue;
@@ -535,8 +593,8 @@ async function mätSidan(page: Page, undantag: Undantag[]): Promise<Mätresultat
       }
     }
 
-    return { fynd, undantagsträffar, mätta };
-  }, undantag);
+    return { fynd, undantagsträffar, mätta, underlagUtanför };
+  }, [undantag, överlagring ?? null] as [Undantag[], string | null]);
 }
 
 /** Gör fyndlistan läsbar i terminalen. */
@@ -560,7 +618,18 @@ function rapport(fynd: Fynd[]): string {
  * där steg 4.1:s och 4.2:s fel satt. Andra läget nedan är därför det som bär
  * vakten; de tre rutterna är billiga tillägg.
  */
-const LÄGEN = [
+interface Läge {
+  namn: string;
+  förbered: (page: Page) => Promise<void>;
+  /**
+   * Selektor för en överlagring som ligger öppen när mätningen körs. Sätts den
+   * kontrolleras också att arkets innehåll får sitt underlag ur arket — se
+   * `underlagUtanför` i `Mätresultat`.
+   */
+  överlagring?: string;
+}
+
+const LÄGEN: Läge[] = [
   {
     namn: 'Idag utan pågående pass',
     förbered: async (page: Page) => {
@@ -630,7 +699,65 @@ const LÄGEN = [
       await page.waitForLoadState('networkidle');
     },
   },
-] as const;
+
+  /* ------------------------------------------------------------------ *
+   * 12.41: rutten och de tre överlagringarna                            *
+   * ------------------------------------------------------------------ */
+
+  {
+    // ⚠️ **Den allvarligaste av 12.41:s fyra luckor, och den enda som inte är en
+    // överlagring.** `/ovning/:id` är en vanlig sida vem som helst når från
+    // historiken — den stod bara inte i den här listan.
+    namn: 'Övningssidan',
+    förbered: async (page: Page) => {
+      await page.goto('/');
+      const övning = await hämtaÖvning(page);
+      await page.goto(`/ovning/${övning.id}`);
+      // Sidan mäts utan seedad historik: korten för tyngsta set och bästa e1RM
+      // visar då sina tomlägen, vilket är det tillstånd en ny användare möter.
+      await expect(page.getByRole('heading', { name: övning.name, level: 1 })).toBeVisible();
+    },
+  },
+  {
+    namn: 'Justeringsarket öppet',
+    förbered: async (page: Page) => {
+      await page.goto('/');
+      const övning = await hämtaÖvning(page);
+      await startaPass(page);
+      await läggTillÖvning(page, övning.name);
+      await talknapp(page, övning.name, 'vikt').click();
+      await expect(justeringsarket(page, övning.name)).toBeVisible();
+    },
+    överlagring: '[role="dialog"]',
+  },
+  {
+    namn: 'Övningsväljaren öppen',
+    förbered: async (page: Page) => {
+      await page.goto('/');
+      await startaPass(page);
+      await page.getByRole('button', { name: '+ Lägg till övning' }).click();
+      const väljaren = page.getByRole('dialog', { name: 'Lägg till övning' });
+      await expect(väljaren).toBeVisible();
+      // Listan mäts med innehåll. Samma skäl som Historik-läget ovan: en tom
+      // dialog hade mätt sitt eget skal och gått grön av fel anledning.
+      await expect(väljaren.getByRole('button').nth(1)).toBeVisible();
+    },
+    överlagring: '[role="dialog"]',
+  },
+  {
+    // ⚠️ **`ManualEntry.tsx` mäts INTE, och det är inte en lucka i vakten.**
+    // 12.41 namnger den som en del av fritextinmatningen, men komponenten
+    // importeras ingenstans i `src/` — den renderas alltså aldrig och kan inte
+    // mätas. Se **12.53**. Fritexten på skärmen är `QuickLog`.
+    namn: 'Fritexten utfälld',
+    förbered: async (page: Page) => {
+      await page.goto('/');
+      await startaPass(page);
+      await page.getByRole('button', { name: /Skriv i stället/ }).click();
+      await expect(page.getByRole('textbox', { name: 'Logga ett set med fritext' })).toBeVisible();
+    },
+  },
+];
 
 /* ------------------------------------------------------------------ *
  * Vakterna                                                            *
@@ -639,7 +766,16 @@ const LÄGEN = [
 for (const läge of LÄGEN) {
   test(`${läge.namn} håller kontrastkraven`, async ({ page }) => {
     await läge.förbered(page);
-    const resultat = await mätSidan(page, UNDANTAG);
+    const resultat = await mätSidan(page, UNDANTAG, läge.överlagring);
+
+    // 12.41: lagermodellen ska ha kontrollerats, inte antagits, för de lägen som
+    // är överlagringar. Faller den här är svaret INTE en justerad färg — det är
+    // att elementen ska rapporteras som omätbara.
+    expect(
+      resultat.underlagUtanför,
+      `${läge.namn}: lagermodellen beskriver inte det ögat ser.\n` +
+        resultat.underlagUtanför.map((rad) => `  ${rad}`).join('\n')
+    ).toEqual([]);
 
     // Utan den här raden vore ett tomt urval en grön vakt. Se HANDOFF.md: två av
     // steg 4.2:s tre fynd var vakter som såg ut att mäta och inte gjorde det.

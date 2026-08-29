@@ -3997,7 +3997,7 @@ och 13.1 måste vara klar före 13.6.
       radioknapparna inuti är `sr-only`. En `--color-line`-kant på kontrollen gick alltså grön,
       1,09:1 mot papperet. Lagat i samma commit som del C, och sabotaget som var grönt är rött nu.
 
-- [ ] **12.41 Kontrastvakten ser fyra lägen, inte hela appen. Ny 2026-08-27.**
+- [x] **12.41 Kontrastvakten ser fyra lägen, inte hela appen. Ny 2026-08-27. KLAR 2026-08-29.**
       Utbruten ur 12.36 så att luckan inte blir kvar i en löptext. **Inte ett fel i vakten** —
       12.36:s **Klart när** namnger Pass, Historik och Inställningar, och alla tre mäts. Men
       fyra lägen är fyra lägen.
@@ -4025,6 +4025,39 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** `/ovning/:id` mäts som eget läge, de tre överlagringarna mäts i öppnat
       tillstånd, och överlagringarnas underlag är kontrollerat — antingen som korrekt mätt eller
       som uttryckligen omätbart.
+
+      > ### ✅ Utfall 2026-08-29. Uppgiftens gissning stämde: elva kontroller, samma felklass
+      >
+      > **Tre av fyra nya lägen föll direkt.** Alla fynd var samma sak — en kontroll vars enda
+      > avgränsning är den dekorativa `--color-line`, uppmätt till **1,01–1,18:1**:
+      >
+      > | Läge | Fynd |
+      > |---|---|
+      > | Justeringsarket | **8** — sex nudge-knappar, uppvärmningsväxlingen, `Ta bort` |
+      > | Övningsväljaren | **2** — sökfältet och `Avbryt` |
+      > | Fritexten | **1** — inmatningsfältet |
+      > | Övningssidan | **0** — grön på första körningen |
+      >
+      > **Det är exakt de elva steg 4.1 lagade i passvyn, en gång till på skärmar vakten inte
+      > nådde.** Lagade i `34baa68`; avdelarna (arkets `border-t`, väljarens listrader och
+      > header) bär kvar `--color-line`, som är vad tokenen är till för.
+      >
+      > 🔴 **Lagermodellen var värd att kontrollera, och sabotaget visade varför.**
+      > `SetAdjustSheet` renderas `fixed inset-0` men är **DOM-barn till övningskortet**. Tas
+      > arkets `bg-[var(--color-surface)]` bort går `bakgrundslager()` uppåt genom
+      > förfäderskedjan och landar på **kortets vita yta** — medan det ögat ser är en dimmer på
+      > svart 60 % över hela skärmen. Vakten hade rapporterat tal den inte kan stå för.
+      > `underlagUtanför` i `Mätresultat` fäller det nu, och sabotaget gav sju rader.
+      > **Med panelen intakt är underlaget korrekt mätt** — påståendet är alltså prövat, inte
+      > antaget, vilket var uppgiftens tredje krav.
+      >
+      > ⚠️ **Två ärliga luckor kvar, båda utskrivna i koden:**
+      > **(a)** `ManualEntry.tsx` mäts inte för att den **inte renderas** — se **12.53**.
+      > **(b)** `QuickLog`s utkastvy kräver ett AI-tolkat förslag och nås inte av vakten. Dess
+      > fyra kontroller ändrades på **regeln**, inte på ett fynd, och det står i commiten.
+      >
+      > Grindar: 329 tester, typecheck rent, lint 0 fel, **e2e 132** (120 → fyra lägen × tre
+      > viewporter), bygget 727,72 KiB. **Två sabotage, två röda på rätt rad.**
 
 > ### 🔍 12.42–12.47 kommer ur `/code-review` 2026-08-27, basen `cc54451`
 >
