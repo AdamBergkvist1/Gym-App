@@ -25,7 +25,7 @@ offline, historik och importen av Adams gamla anteckningar är byggda och i prod
 | **Var i fas 11** | Designomgångens **runda 1 är KLAR**: Steg 4.1 ✅ (rutan obockad, se nedan), 4.2 ✅, 4.3 ✅ |
 | **Nästa jobb** | **Runda 2 börjar med en grillning, inte med kod.** 4.4 Statistik är ny funktionalitet — `DESIGN.md` säger uttryckligen att rundan kräver en egen grillning, troligen `/wayfinder`. Därefter uppgiften, därefter kod (regel 1). ⏰ **Grillningen är uppskjuten en gång** — Adam orkade inte 2026-08-29 sent och valde backloggen i stället. Den står kvar som nästa jobb |
 | **Blockerar** | Adams telefon och ett riktigt gympass. Se nedan |
-| **Opushat** | ⏰ **Sex commits ligger lokalt** (`365a2ad..26166a8`), fyra backloggpunkter. Adam har inte bett om push |
+| **Opushat** | ⏰ **Allt sedan `07b96ec` ligger lokalt** — fyra backloggpunkter plus överlämningen. Adam har inte bett om push. `git log origin/main..HEAD --oneline` |
 
 > ⚠️ **Statistiksegmentet står tomt i produktion tills 4.4 är byggd.** Det är avsiktligt och
 > Adams beslut 2026-08-28 — han valde layouten framför att vänta. Vyn säger vad som kommer.
@@ -66,13 +66,20 @@ för att bli en påminnelse han får varje gång. Nämn dem när de faktiskt blo
 
 ## 🆕 2026-08-29 (sen kväll) — FYRA BACKLOGGPUNKTER, och två av dem var vakter som inte vaktade
 
-**Sex commits, `07b96ec..26166a8`.** Adam bad om småsaker i stället för grillningen inför 4.4:
-*"Vet inte om jag orkar just grillningen nu men kanske kan fixa små saker så länge om det går."*
-**Ingenting är pushat** — se rutan högst upp.
+**Sju commits för uppgifterna, `365a2ad..26166a8`**, plus den här sektionen och rättelsen av
+dess egen räkning.
+
+> ✏️ **Här stod "Sex commits".** Fel, rättat på plats — `git log 07b96ec..HEAD` gav åtta rader
+> inklusive sektionen. **Det är sjätte gången i rad ett skrivet antal blir fel i det här
+> projektet**, den här gången i själva sektionen som varnar för det. Räkna själv:
 
 ```bash
-git log 07b96ec..HEAD --oneline
+git log 07b96ec..HEAD --oneline | wc -l
 ```
+
+Adam bad om småsaker i stället för grillningen inför 4.4:
+*"Vet inte om jag orkar just grillningen nu men kanske kan fixa små saker så länge om det går."*
+**Ingenting är pushat** — se rutan högst upp.
 
 | Uppgift | Vad | Commit |
 |---|---|---|
