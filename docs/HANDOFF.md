@@ -25,7 +25,7 @@ offline, historik och importen av Adams gamla anteckningar är byggda och i prod
 | **Var i fas 11** | Designomgångens **runda 1 är KLAR**: Steg 4.1 ✅ (rutan obockad, se nedan), 4.2 ✅, 4.3 ✅ |
 | **Nästa jobb** | **Runda 2 börjar med en grillning, inte med kod.** 4.4 Statistik är ny funktionalitet — `DESIGN.md` säger uttryckligen att rundan kräver en egen grillning, troligen `/wayfinder`. Därefter uppgiften, därefter kod (regel 1). ⏰ **Grillningen är uppskjuten en gång** — Adam orkade inte 2026-08-29 sent och valde backloggen i stället. Den står kvar som nästa jobb |
 | **Blockerar** | Adams telefon och ett riktigt gympass. Se nedan |
-| **Opushat** | ⏰ **Allt sedan `07b96ec` ligger lokalt** — fyra backloggpunkter plus överlämningen. Adam har inte bett om push. `git log origin/main..HEAD --oneline` |
+| **Pushat** | ✅ **`origin/main` är `ac393b3`, och deployen är verifierad** — se sektionen nedan. Bara den här radens egen commit ligger efter |
 
 > ⚠️ **Statistiksegmentet står tomt i produktion tills 4.4 är byggd.** Det är avsiktligt och
 > Adams beslut 2026-08-28 — han valde layouten framför att vänta. Vyn säger vad som kommer.
@@ -79,7 +79,20 @@ git log 07b96ec..HEAD --oneline | wc -l
 
 Adam bad om småsaker i stället för grillningen inför 4.4:
 *"Vet inte om jag orkar just grillningen nu men kanske kan fixa små saker så länge om det går."*
-**Ingenting är pushat** — se rutan högst upp.
+### ✅ PUSHAT OCH DEPLOYVERIFIERAT
+
+`origin/main` är **`ac393b3`**, och produktionen serverar **samma asset-hashar som det lokala
+bygget** — `index-BG-9zHeR.js` och `index-C8YwnWHd.css`, HTTP 200.
+
+**Kontrollen gick ett steg längre än hashen den här gången, och det är värt att härma:** den
+serverade CSS-filen hämtades och lästes, och `h1`-regeln i produktionen innehåller
+`font-weight:600`. **Hashen bevisar att ett nytt bygge ligger ute; innehållet bevisar att det
+är vårt.** De två är inte samma påstående.
+
+```bash
+curl -s https://adam-gym-app.vercel.app/ | grep -oE 'index-[A-Za-z0-9_-]+\.(js|css)' | sort -u
+curl -s https://adam-gym-app.vercel.app/assets/index-C8YwnWHd.css | grep -oE "h1\{[^}]*\}"
+```
 
 | Uppgift | Vad | Commit |
 |---|---|---|
