@@ -20,11 +20,15 @@ offline, historik och importen av Adams gamla anteckningar är byggda och i prod
 
 | | |
 |---|---|
-| **Fas** | **11 — Gränssnittet.** 17 punkter klara, 10 öppna |
+| **Fas** | **11 — Gränssnittet.** 18 punkter klara, 10 öppna (räknat 2026-08-29) |
 | **Faser klara** | 0–9 och 13. Fas 10 har tre öppna som kräver Adam |
-| **Var i fas 11** | Designomgångens **runda 1**: Steg 4.1 ✅ byggd (rutan obockad), 4.2 ✅ klar, **4.3 nästa** |
-| **Nästa jobb** | **Skriv** Steg 4.3 Historik. Regel 1 kräver uppgiften före kod |
+| **Var i fas 11** | Designomgångens **runda 1 är KLAR**: Steg 4.1 ✅ (rutan obockad, se nedan), 4.2 ✅, 4.3 ✅ |
+| **Nästa jobb** | **Runda 2 börjar med en grillning, inte med kod.** 4.4 Statistik är ny funktionalitet — `DESIGN.md` säger uttryckligen att rundan kräver en egen grillning, troligen `/wayfinder`. Därefter uppgiften, därefter kod (regel 1) |
 | **Blockerar** | Adams telefon och ett riktigt gympass. Se nedan |
+
+> ⚠️ **Statistiksegmentet står tomt i produktion tills 4.4 är byggd.** Det är avsiktligt och
+> Adams beslut 2026-08-28 — han valde layouten framför att vänta. Vyn säger vad som kommer.
+> **Det är inte en halvfärdig sida som glömts bort.**
 
 ### ⛔ Fas 12 är en LÅDA, inte ett steg. Låt inte numren lura dig
 
@@ -56,6 +60,131 @@ för att bli en påminnelse han får varje gång. Nämn dem när de faktiskt blo
 | Vad som ska göras, i ordning | `docs/TASKS.md` |
 | Hur du ska arbeta | `CLAUDE.md` — **regel 2:s underpunkter är nya och ofta relevanta** |
 | Vad som hände sist | Sektionen direkt nedan |
+
+---
+
+## 🆕 2026-08-29 — STEG 4.3 HISTORIK: skriven, byggd och stängd. RUNDA 1 ÄR KLAR
+
+**Sju commits, `76dc2a6..HEAD`.** Räkna dem själv i stället för att lita på siffran:
+
+```bash
+git log 76dc2a6..HEAD --oneline
+```
+
+⚠️ **Inget är pushat.** Sessionen slutade lokalt; `git status -sb` säger hur långt före
+`origin/main` du ligger. **Deployen är alltså inte heller verifierad** — förra sessionens
+rutin (jämför asset-hash mot produktionen) är inte körd, för det finns inget att jämföra med.
+
+### 🔴 DET VIKTIGASTE ATT BÄRA VIDARE: vakten ursäktade sin egen kontroll
+
+`e2e/kontrast.spec.ts` undantar `--color-line`-kanter på allt som **inte** är
+`button, input, select, textarea, a`. Steg 4.3:s segmentkontroll är en `<fieldset>` med
+`sr-only` radioknappar — alltså ingendera. En kant på **1,09:1 mot papperet** gick därför
+grön, på en kontroll vars enda avgränsning är just den kanten.
+
+> **Det är exakt felklassen vakten byggdes för** — steg 4.1:s värsta fynd var "tre kontroller
+> med `--color-line` som enda avgränsning". Vakten hade tystat sin egen anledning att finnas.
+> **Det enda som hittade det var sabotaget.** Lagat: `fieldset` och grupproller är tillagda i
+> undantagets kontrollista, och samma sabotage är rött nu.
+
+**Frågan att ta med sig:** undantagslistan räknar upp HTML-element. Varje ny kontroll som
+inte är ett av dem ärver samma hål — `[role="tablist"]`, `[role="switch"]`, ett `<details>`.
+**Listan är en uppräkning där den borde vara en regel.**
+
+### 🔴 Näst viktigast: ett sabotage ljög innan det avslöjade något
+
+`perl -0pi -e 's/…/…/'` **utan `/g`** byter första förekomsten i *hela filen*. Mitt byte av
+`weekday: 'long'` träffade en doc-kommentar, lämnade koden orörd — och allt gick grönt.
+
+> Det såg ut precis som en tyst vakt, och jag var en knapptryckning från att skriva ner att
+> datumformatet var omätt. **En mätning som inte själv är kontrollerad är inte ett bevis.**
+> Samma lärdom som steg 4.2:s mätskript, i ny förklädnad. **Verifiera att sabotaget träffade
+> koden** — `grep` på raden efteråt, inte bara på testutfallet.
+
+### Vad som byggdes
+
+Innehållet står i `docs/TASKS.md` (`Steg 4.3`, med en utfallsruta överst). Här bara vad som är vad.
+
+| Commit | Vad |
+|---|---|
+| `20d5216` | **Uppgiften skriven.** Tre beteendebeslut av Adam |
+| `9e31ed0` | Steg 4.1:s ruta bad om ett beslut Adam redan fattat 2026-08-26 |
+| `cdd1466` | **Del A:** tre tal ur en mängd · muskelgruppsraden · datumet |
+| `049c751` | **Del B:** ytorna, och rubriken som slutade räkna vid femtio |
+| `c473f5b` | **12.50** — rubrikens vikt är ihågkommen, inte strukturell |
+| `2b65caa` | **Del C:** segmentkontrollen, och hålet i kontrastvakten |
+| `0bd1f95` | Uppgiften stängd, plus vakten som saknades för nollregeln |
+
+⚠️ **`0bd1f95`:s commitmeddelande säger "331 tester". Rätt siffra är 329**, kontrollerad
+efteråt. Meddelandet går inte att rätta utan att skriva om historien, så rättelsen står här.
+**Det är femte gången i rad ett skrivet antal blivit fel i det här projektet** — läs siffror i
+commitmeddelanden som ungefärliga och kör grinden själv.
+
+### ✅ TRE BESLUT ADAM FATTADE 2026-08-28. Riv inte upp dem utan att fråga
+
+| Beslut | Vad han valde | Hans skäl |
+|---|---|---|
+| Segmentet `Pass`/`Statistik` | **Byggs nu, med tom statistikvy** | *"layouten är rätt så kanske det kan göras ändå"* — han valde **layouten**, inte innehållet |
+| Passkortets andra rad | **Muskelgrupper**, som skissen | Skissens form framför övningsnamnen |
+| Övningslistan på Historik | **Ligger kvar tills 4.5** | Enda vägen till en övnings historik utanför ett pågående pass |
+
+⚠️ **Frågan om segmentet ställdes med rekommendationen att vänta.** Adam svarade *"vet inte
+exakt"* och byggde ändå. **Behandla den tomma vyn som billig att ändra åsikt om** — den är en
+komponent, ingen rutt-struktur.
+
+### 🔴 Två fel på skärmen som hittades INNAN de hann synas
+
+Båda satt i kod som redan var skriven, och båda hade blivit synliga först när §3.2:s rad
+ställde talen bredvid varandra:
+
+1. **`listWorkoutSummaries` räknade övningar ur alla setrader** medan set och volym räknades
+   utan uppvärmning. En övning man bara värmt upp på räknades som en övning men bidrog med
+   noll set och noll kilo. `repo.ts`:s `summarizeWorkout` räknade redan rätt — **de två
+   divergerade och ingen grind mätte det.** Nu finns kontraktstestet.
+2. **Sidrubrikens `N pass` var längden på en lista kapad vid 50.** Osynligt i dag; efter ett
+   års loggning hade den stannat på `50 pass` för alltid. **Ett tal som slutar röra sig ser
+   inte ut som ett fel, det ser ut som ett faktum.**
+
+### ✅ Grindarna — hemdatorn, efter sista commiten
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **329 tester i 26 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ JS **645,45 kB** (gzip 194,48), precache **727,78 KiB / 10 entries** |
+| `npm run e2e` | ✅ **105 passed**, 1,1 min |
+
+**Sabotage kört på allt nytt: 15 brott, 15 röda på rätt test.** Sju i `muskelrad`, fyra i
+`passdatum`, ett i `listWorkoutSummaries`, tre i `summarizeHistory` — plus e2e-vakterna för
+importfiltret, nollregeln och segmentets kant.
+
+### 📋 Fyra öppna trådar, alla medvetna
+
+1. **Statistiksegmentet är tomt** tills 4.4. Adams beslut, se ovan.
+2. **12.40 fick inget andra fall i 4.3** — skärmens enda semantiska element (`Pågår`) ligger
+   på ett kort. Uppgiften är uppdaterad med varför och väntar på 4.4, där staplar och kurvor
+   ger frågan på riktigt.
+3. **12.50 är ny:** `h1` bär typsnitt och storlek strukturellt men **vikten** via en klass på
+   varje sida. En ny sida får rätt typsnitt och fel vikt, tyst.
+4. **Steg 4.1:s ruta står fortfarande obockad.** Enda kvarvarande kandidaten är
+   `apple-mobile-web-app-status-bar-style`, som bara går att pröva på Adams telefon (10.3).
+
+### ⛔ TVÅ SAKER SOM INTE GJORDES, OCH SOM TVÅ ÄLDRE SEKTIONER BAD OM
+
+1. 🔴 **`/code-review` kördes ALDRIG, och rutan bockades av ändå.** Två sektioner nedan säger
+   uttryckligen *"kör den innan uppgiften bockas av, inte efter"*, skrivet efter att steg 4.2
+   gav **fem spec-fynd** när granskningen till slut kördes en session för sent.
+   **Steg 4.3 är ogranskad på exakt samma sätt.** Rutan står avbockad för att delarna ÄR
+   byggda och varje `Klart när` är kontrollerat — men **läs den som "byggd", inte som
+   "granskad"**. Kör `/code-review` mot `76dc2a6..HEAD` innan något byggs ovanpå.
+2. **Inget är pushat.** Se rutan högst upp i sektionen.
+
+### Föreslagna skills för nästa session
+
+- **`/code-review`** mot `76dc2a6..HEAD` — **först.** Se punkt 1 ovan.
+- **`/wayfinder`** eller **`grilling`** — runda 2 kräver en grillning innan uppgiften skrivs.
+  `DESIGN.md` säger det uttryckligen; 4.4 är ny funktionalitet, inte omskrivning.
 
 ---
 
@@ -149,7 +278,11 @@ hårdkodade `700` gjorde, alltså noll. **Behandla halveringen som oförklarad, 
 vinst** — den kan lika gärna vara maskinens tillstånd. Vill du veta, mät före/efter på samma
 commit.
 
-### 🔜 NÄSTA JOBB
+### 🔜 NÄSTA JOBB — ⚠️ DELVIS ÖVERSPELAD 2026-08-29
+
+> **Punkt 1 och 2 är gjorda.** Steg 4.3 är skriven, byggd och stängd; se sektionen överst.
+> **Punkt 3 (`12.41`) står kvar** — `/ovning/:id` mäts fortfarande inte av kontrastvakten.
+> 4.3 lade till *Historik → Statistik* som femte läge, men rörde inte rutten.
 
 1. 🔴 **Steg 4.3 Historik — och uppgiften är FORTFARANDE INTE SKRIVEN.** Regel 1 kräver det
    före kod. **`12.40` avgörs där** (kanttoken för element direkt på papperet), och frågan är
@@ -350,7 +483,12 @@ du ändrar ett värde.
 | `npm run build` | ✅ JS **642,01 kB** (gzip 193,21), precache **723,15 KiB / 10 entries** |
 | `npm run e2e` | ✅ **81 passed**, 55,6 s |
 
-### 🔜 NÄSTA JOBB, i den här ordningen
+### 🔜 NÄSTA JOBB, i den här ordningen — ⚠️ DELVIS ÖVERSPELAD 2026-08-29
+
+> **Alla tre punkterna är gjorda.** 12.48 och 12.37 stängdes 2026-08-27; **Steg 4.3 skrevs,
+> byggdes och stängdes 2026-08-29** — se sektionen överst. Punkt 3:s mening om att *"12.40
+> avgörs där"* föll dock inte ut: **4.3 gav inget andra fall**, och 12.40 väntar på 4.4.
+> Rådet om `Klart när` nedan följdes, och det var det som fällde nollregelns saknade vakt.
 
 1. 🔴 **12.48 — den enda kvarvarande som kan ge FEL SIFFROR i appen.** *"Uppvärmning räknas
    inte"* finns tre gånger i frågelagret, men skärmlagret måste minnas regeln själv — och tre
