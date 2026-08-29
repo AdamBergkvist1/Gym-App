@@ -3365,7 +3365,7 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** minst ett test bevisar att produktionsbygget startar och registrerar sin
       servicearbetare. **Låg prioritet, men inte noll** — hålet är osynligt tills det smäller.
 
-- [ ] **12.24 `jsdom` ligger oanvänt i `package.json`. Ny 2026-08-12 (kväll).**
+- [x] **12.24 `jsdom` ligger oanvänt i `package.json`. Ny 2026-08-12 (kväll). STÄNGD 2026-08-29 — PREMISSEN ÄR INTE LÄNGRE SANN.**
       Utbruten ur 12.20:s rättelse 1. `jsdom@^28.0.0` är installerat och används av
       **ingenting**: `vite.config.ts:63` sätter `environment: 'node'` och ingen fil åsidosätter
       det. Kontrollerat mot `src/`, `e2e/`, `scripts/` och `playwright.config.ts`.
@@ -3378,6 +3378,20 @@ och 13.1 måste vara klar före 13.6.
       test` grönt efter borttagningen är svaret nej.
       **Klart när:** posten är borta ur `package.json` och alla fem grindarna är gröna.
       **Litet jobb.**
+
+      ✅ **Utfall 2026-08-29: uppgiften är ÖVERSPELAD, och posten står kvar.** `jsdom` används
+      sedan `a95b1fc` — `src/ui/ScrollPicker.test.tsx:1` bär `// @vitest-environment jsdom`
+      och åsidosätter `vite.config.ts` för sin fil. **Premissen "ingen fil åsidosätter det"
+      var sann när uppgiften skrevs och blev osann utan att någon rörde uppgiften.**
+
+      **Belagt med sabotage, inte med `grep`:** direktivraden byttes mot en kommentar, och
+      båda testerna föll i `react.development.js` — samt `environment 591ms → 0ms`. Beroendet
+      är verkligt. **Hade uppgiften körts som skriven hade `npm run test` blivit rött**, och
+      det var det utfallet den lovade skulle bevisa motsatsen.
+
+      🔴 **Lärdomen är inte om jsdom.** En backloggpost bär en mätning av en värld som rör sig
+      vidare utan den. **Kontrollera premissen innan åtgärden, inte efter** — här hade det
+      räckt med att köra `grep` en gång till.
 
 - [x] **12.25 `test.fail()` i såddprövningen täcker sin egen uppsättning. Ny 2026-08-13. KLAR samma dag.**
       Funnen av `/code-review` (Spec-axeln) på commit `05c21b7`. **Det allvarligaste fyndet i
