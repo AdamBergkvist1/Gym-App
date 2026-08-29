@@ -1984,7 +1984,37 @@ gäller, och uppgiften skrivs om.
          den är latent i dag men blir skarp när fas 7:s synk-pull skriver `exercises`.
       4. **Steg 4.1:s ruta står obockad.** Se noten i den uppgiften.
 
-- [ ] **Steg 4.3 Historik mot §3.2. Ny 2026-08-28.**
+- [x] **Steg 4.3 Historik mot §3.2. Ny 2026-08-28. KLAR 2026-08-29 i tre commits.**
+
+      > ### ✅ UTFALLET — läs den här rutan före brödtexten
+      >
+      > **A, B och C är byggda som skrivna, och tre saker blev annorlunda än texten sa.**
+      > Alla tre står utskrivna nedan, för det är dem nästa läsare snubblar på.
+      >
+      > | Vad texten sa | Vad som gäller |
+      > |---|---|
+      > | `font-semibold` på `h1` är en rest och ska bort | **Fel.** `DESIGN.md` §2 ger `--text-title` vikt 600. Klassen står kvar; texten i del B är rättad, och att vikten är *ihågkommen* i stället för strukturell blev **12.50** |
+      > | 12.40 avgörs här om fallet uppstår | **Det uppstod inte.** Skärmens enda semantiska element (`Pågår`) ligger på ett kort. 12.40 är uppdaterad med varför, och väntar på 4.4 |
+      > | Del B: *"inget element ritar en yta med `border-[var(--color-line)]`"* | **Kriteriet är för bokstavligt.** Inget KORT gör det; avdelarna inuti övningslistan gör, och ska. Samma sjuka som 4.2:s `grep 🏋` — se rutan där |
+      >
+      > 🔴 **Fyndet som var större än uppgiften: kontrastvakten ursäktade sin egen kontroll.**
+      > `e2e/kontrast.spec.ts` undantar `--color-line`-kanter på allt som inte är
+      > `button, input, select, textarea, a`. Segmentkontrollen är en `<fieldset>` med
+      > `sr-only` radioknappar — alltså **ingendera**, och en osynlig kontrollkant (1,09:1 mot
+      > papperet) gick grön. Det är exakt felklassen vakten byggdes för, och den hittades bara
+      > för att sabotaget kördes. Lagat i del C:s commit; `fieldset` och grupproller är
+      > tillagda, och samma sabotage är rött nu.
+      >
+      > ⚠️ **Ett sabotage ljög innan det avslöjade något.** `perl -0pi -e 's///'` utan `/g`
+      > byter **första förekomsten i hela filen** — vilket var en doc-kommentar. Bytet av
+      > `weekday: 'long'` lämnade koden orörd och allt grönt, och såg ut som en tyst vakt.
+      > **En mätning som inte själv är kontrollerad är inte ett bevis** — samma lärdom som
+      > 4.2:s mätskript, i ny förklädnad. Kontrollera att sabotaget träffade koden.
+      >
+      > **Grindar i slutläget:** 329 tester i 26 filer · typecheck rent · lint 0 fel (3 kända
+      > `react-refresh`-varningar) · **e2e 102 passed** · bygge **727,78 KiB** precache,
+      > JS 645,45 kB (gzip 194,48). Visuellt kontrollerat på 375 px i alla tre tillstånden.
+
       Runda 1:s sista delsteg. **Ingen ny form uppfinns här** — B4 valdes 2026-08-12, väg C
       2026-08-14, och skissen står i `DESIGN.md` §3.2. Tre beteendefrågor var öppna; Adam
       avgjorde dem 2026-08-28. Resten är att flytta besluten in i koden.

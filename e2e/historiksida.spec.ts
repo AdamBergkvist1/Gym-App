@@ -1,13 +1,16 @@
 import { test, expect } from '@playwright/test';
 import {
   avslutaPass,
+  bockknapp,
   fångaKonsolfel,
   hämtaÖvning,
+  justeringsarket,
   loggaSetGenomAppen,
   läggTillÖvning,
   seedaPassRått,
   seedaRått,
   startaPass,
+  talknapp,
 } from './hjalpare';
 
 /**
@@ -94,6 +97,59 @@ test('4. passlistan visar det loggade passet men inte det importerade', async ({
   // välja i framtiden.
   await expect(passlistan.getByRole('listitem')).toHaveCount(1);
   await expect(passlistan).not.toContainText('240 kg');
+
+  expect(konsolfel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
+});
+
+/**
+ * VAKT över nollregeln på passraden. Uppgift steg 4.3 del A.
+ *
+ * Påståendet: **ett pass utan arbetsset visar en fras, inte tre nollor.**
+ * `DESIGN.md` §3.3 — *"aldrig en nolla: en nolla ser ut som ett resultat"*.
+ *
+ * ⛔ **TILLSTÅNDET ÄR VERKLIGT OCH BLIR VANLIGARE, INTE OVANLIGARE.** Starta
+ * pass, värm upp, gå hem. Uppgift **10.4** — det första riktiga gympasset — är
+ * precis det tillfälle då det händer på riktigt.
+ *
+ * 💡 **Filen är sviten andra vakt som växlar en rad till uppvärmning.** Den
+ * första kom i 12.49, och skälet den skrevs var att `isWarmup` fram till dess
+ * bara fanns som `false` i fixturen — hela uppvärmningsvägen var omätt
+ * end-to-end, och en synlig bugg överlevde tre granskningar på det.
+ */
+test('ett pass utan arbetsset visar en fras i stället för nollor', async ({ page }) => {
+  const konsolfel = fångaKonsolfel(page);
+
+  await page.goto('/');
+  const övning = await hämtaÖvning(page);
+
+  await startaPass(page);
+  await läggTillÖvning(page, övning.name);
+
+  // Raden görs om till uppvärmning INNAN den bockas av. Bocken måste sitta:
+  // ett pass med en obockad rad har inga loggade set alls, och då hade raden
+  // sagt sitt utan att uppvärmningen bevisat något.
+  await talknapp(page, övning.name, 'vikt', 1).click();
+  await justeringsarket(page, övning.name, 1).getByRole('button', { name: 'Uppvärmningsset' }).click();
+  await justeringsarket(page, övning.name, 'uppvärmning')
+    .getByRole('button', { name: 'Klar' })
+    .click();
+  await bockknapp(page, övning.name, 'uppvärmning').click();
+  await avslutaPass(page);
+
+  await page.goto('/historik');
+  const raden = page.getByRole('list', { name: 'Pass' }).getByRole('listitem');
+
+  // Ankringen först: passet ska finnas kvar i listan. Ett pass som försvunnit
+  // hade också "inte visat nollor", och negationen nedan vore grön av fel skäl.
+  await expect(raden).toHaveCount(1);
+  await expect(raden).toContainText('Inga arbetsset');
+
+  // ⚠️ **`0 set` OCH INTE `0`.** Talet noll dyker upp i tider (`0 min`) och är
+  // legitimt där — det är hur länge passet höll på, ett mätvärde och inte ett
+  // resultat. Det är de tre RESULTATtalen regeln handlar om.
+  await expect(raden).not.toContainText('0 set');
+  await expect(raden).not.toContainText('0 kg');
+  await expect(raden).not.toContainText('0 övn');
 
   expect(konsolfel, 'konsolen ska vara tyst under hela flödet').toEqual([]);
 });
