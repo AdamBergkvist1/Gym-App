@@ -51,3 +51,38 @@ test('en h1 utan klasser bär briefens vikt', async ({ page }) => {
   // Grön både före och efter 12.50 — den vaktar framtiden, inte ändringen.
   expect(vikter.appens.filter((rad) => !rad.endsWith(': 600'))).toEqual([]);
 });
+
+/**
+ * Städningen av `font-semibold`-klasserna gick i egen commit efter regeln ovan,
+ * och det här är dess vakt: sidorna bär inte längre någon vikt av sig själva, så
+ * de mäter nu om elementregeln verkligen når fram — inte bara om någon kom ihåg
+ * klassen.
+ *
+ * `/ovning/:id` saknas med flit: rutten kräver ett id ur databasen, och rubriken
+ * där är samma `h1` som de andra. Kostnaden att så ett pass för att mäta en regel
+ * som redan är mätt på tre rutter bär inte sitt eget underhåll.
+ */
+for (const rutt of ['/', '/historik', '/installningar']) {
+  test(`sidrubriken på ${rutt} bär vikt 600 utan egen klass`, async ({ page }) => {
+    await page.goto(rutt);
+    await page.waitForLoadState('networkidle');
+
+    const rubriker = await page.evaluate(() =>
+      [...document.querySelectorAll('h1')].map((el) => ({
+        text: (el.textContent ?? '').trim().slice(0, 20),
+        vikt: getComputedStyle(el).fontWeight,
+        klasser: el.className,
+      }))
+    );
+
+    // Utan den här raden vore en sida utan h1 en grön mätning av ingenting.
+    expect(rubriker.length, `${rutt} renderade ingen h1 att mäta`).toBeGreaterThan(0);
+    expect(rubriker.filter((r) => r.vikt !== '600')).toEqual([]);
+    expect(
+      rubriker.filter((r) => /font-(thin|light|normal|medium|semibold|bold|black)/.test(r.klasser)),
+      'En viktklass har kommit tillbaka på en sidrubrik. Vikten bor i `index.css` ' +
+        'sedan 12.50, och två sanningar om samma egenskap är hur den första gången ' +
+        'gled isär.'
+    ).toEqual([]);
+  });
+}

@@ -189,7 +189,7 @@ export function HistoryPage() {
           varit nollor där det inte finns något att sammanfatta, och §3.3 säger
           att en nolla ser ut som ett resultat. */}
       <header className="flex items-baseline justify-between gap-3">
-        <h1 className="font-semibold">Historik</h1>
+        <h1>Historik</h1>
         {totaler !== null && totaler.workoutCount > 0 && (
           <span className="text-meta text-[var(--color-dim)] tabular-nums">
             {totaler.workoutCount} pass · {totaler.workSetCount} set

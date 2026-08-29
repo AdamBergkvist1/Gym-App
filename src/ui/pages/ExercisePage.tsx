@@ -64,7 +64,7 @@ export function ExercisePage() {
           <IkonPilVänster className="size-4" />
           Historik
         </Link>
-        <h1 className="mt-1 font-semibold">{exercise.name}</h1>
+        <h1 className="mt-1">{exercise.name}</h1>
         <p className="text-sm text-[var(--color-dim)]">
           {pb?.totalSets ?? 0} set · {exercise.primaryMuscle}
         </p>

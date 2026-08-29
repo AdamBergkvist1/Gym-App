@@ -139,7 +139,7 @@ export function TodayPage() {
   if (workout === null) {
     return (
       <section className="space-y-3">
-        <h1 className="font-semibold">Pass</h1>
+        <h1>Pass</h1>
 
         <button
           type="button"
@@ -219,7 +219,7 @@ export function TodayPage() {
   return (
     <section className="space-y-3">
       <header className="flex items-baseline justify-between">
-        <h1 className="font-semibold">Pass</h1>
+        <h1>Pass</h1>
         <span className="text-meta text-[var(--color-dim)] tabular-nums">
           {elapsed(workout.startedAt)}
         </span>
