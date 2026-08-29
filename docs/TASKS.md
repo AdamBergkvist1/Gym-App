@@ -4565,6 +4565,38 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** vikten kommer ur `index.css` och en `h1` utan klasser renderar i
       briefens vikt — mätt i DOM:en, inte antaget.
 
+- [ ] **12.52 Kontrastvaktens undantag räknar upp element där det borde beskriva en roll. Ny 2026-08-29.**
+      Kommer ur steg 4.3 del C, där ett sabotage avslöjade att en `<fieldset>` med
+      1,09:1-kant gick grön. `fieldset`, `[role="group"]` och `[role="radiogroup"]` lades
+      till i undantagets kontrollista då — **men listan är fortfarande en uppräkning.**
+
+      `e2e/kontrast.spec.ts` undantar `--color-line`-kanter på allt som inte matchar
+      `button, input, select, textarea, a, fieldset, [role="button"], [role="link"],
+      [role="group"], [role="radiogroup"]`. **Varje kontroll som inte råkar stå i den
+      listan ärver exakt samma hål** — `[role="tablist"]`, `[role="switch"]`, `[role="tab"]`,
+      ett `<details>`. Rättningen 2026-08-29 lagade ett fall; den lagade inte klassen.
+
+      🔴 **Det som gör det värt en uppgift och inte en rad till i listan:** hålet upptäcktes
+      inte av vakten utan av ett sabotage, och nästa kontrolltyp får ingen sådan tur. Vakten
+      är byggd för just felklassen *"kontroll vars enda avgränsning är den dekorativa
+      tokenen"* — och den avgör i dag tillhörigheten på taggnamn, inte på om elementet är en
+      kontroll.
+
+      **Riktningen att pröva:** ett element med ett `role`-attribut har fått en roll av en
+      författare och är per definition inte dekoration. `[role]` täcker då varje
+      författardeklarerad roll — även de som inte finns än — och `presentation`/`none` är de
+      två som uttryckligen betyder motsatsen och ska stanna kvar i undantaget. Kvar blir en
+      kort lista över native-interaktiva element som inte behöver något `role`.
+
+      ⚠️ **`computedRole` finns inte här.** Sviten kör `devices['Desktop Safari']` (WebKit);
+      `Element.computedRole` är Chromium-only. Regeln måste bäras av DOM-egenskaper som finns
+      i WebKit, och nästlad `:not()` ska verifieras i körning — en ogiltig selektor kastar i
+      `el.matches` och fäller mätningen, vilket är rätt sätt att få veta.
+
+      **Klart när:** en `--color-line`-kant på ett element med en författardeklarerad roll som
+      *inte* står uppräknad i dagens lista fälls av vakten, bevisat med ett test som var rött
+      före ändringen. Staleness-testet ska fortsätta se posten som levande.
+
       **`e2e/uppvarmning.spec.ts` är sviten första vakt som växlar en rad till uppvärmning.**
       Den var röd mot den gamla räkningen, kontrollerat genom att buggen återinfördes.
 
