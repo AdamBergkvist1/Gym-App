@@ -138,4 +138,3 @@ export interface MetaRow {
 }
 
 export const META_ACTIVE_WORKOUT = 'activeWorkoutId';
-export const META_CATALOG_VERSION = 'catalogChecksum';

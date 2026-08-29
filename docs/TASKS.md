@@ -2797,7 +2797,7 @@ och 13.1 måste vara klar före 13.6.
       **Sidofynd som genomgången hittade:** volymen räknas på två sätt (12.16). Den hade inte
       upptäckts utan kartläggningen.
 
-- [ ] **12.14 `META_CATALOG_VERSION` är död kod.** Konstanten `catalogChecksum` deklareras i
+- [x] **12.14 `META_CATALOG_VERSION` är död kod. KLAR 2026-08-29.** Konstanten `catalogChecksum` deklareras i
       `src/db/types.ts` men används ingenstans — `grep -rn "META_CATALOG_VERSION\|catalogChecksum" src/`
       ger bara deklarationen. Hittad 2026-08-09 under arbetet med 13.0, när rensningen behövde
       veta hur katalogen laddas om.
@@ -2814,6 +2814,12 @@ och 13.1 måste vara klar före 13.6.
       trettiotal rader — ska konstanten bara bort. Är det det, är det en egen uppgift.
       **Klart när:** antingen är konstanten borta, eller så finns en uppgift som beskriver
       vad den skulle användas till.
+
+      ✅ **Utfall 2026-08-29: konstanten borta.** Frågan var redan besvarad i koden —
+      `ensureCatalog` (`repo.ts:61`) motiverar sitt `bulkPut` med *"idempotent, och en ändrad
+      katalog i ett nytt bygge slår igenom utan migrationssteg"*. Ovillkorligheten är alltså
+      **designen**, och konstanten antydde en grind som medvetet valts bort. Ingen ny vakt:
+      `tsc` fångar varje användning av en konstant som inte finns.
 
 - [ ] **12.15 Migrationskedjan går inte att köra på en ren databas.** `0001` seedar den globala
       katalogen med `insert into public.exercises (owner_id, name, aliases, …)` — **utan id:n**,
