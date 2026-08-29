@@ -4673,6 +4673,29 @@ och 13.1 måste vara klar före 13.6.
       > lint 0 fel, **e2e 108** (105 + det nya testet på tre viewporter), bygget 727,74 KiB
       > precache.
 
+- [ ] **12.53 `ManualEntry.tsx` renderas inte längre av något. Ny 2026-08-29.**
+      Hittad i 12.41, när uppgiften bad om att fritextinmatningen skulle mätas och namngav
+      `QuickLog.tsx` **och** `ManualEntry.tsx`. Bara den första finns på skärmen:
+      `grep -rn "ManualEntry" src/` ger **bara komponentens egen deklaration**.
+
+      135 rader från `acb7db6` ("Phase 5: local data layer and the logging path", uppgift
+      5.6), aldrig ändrade sedan. Den byggdes för spökdata som platshållartext — och det
+      mönstret lever, men i `SetRow`, som skriver ut samma skäl i sin egen docblock.
+
+      **Varför det är värt en rad och inte bara en radering:** komponenten kostar ingenting i
+      bundlen (den importeras aldrig, så den tree-shakas bort), men den kostar i läsning.
+      **12.41:s egen uppgiftstext pekade ut den som en skärm att mäta** — den var alltså redan
+      en falsk ledtråd en gång. Nästa gång blir det inte en mätning som går fel utan en
+      ändring i en komponent ingen ser.
+
+      **Frågan att avgöra först:** bär den något `SPEC.md` fortfarande kräver och som
+      setraden **inte** gör? Är svaret nej ska filen bort. Är svaret ja är det inte död kod
+      utan en obyggd väg, och då ska den uppgiften skrivas.
+
+      **Klart när:** antingen är filen borttagen, eller så finns en uppgift som säger vad den
+      ska kopplas in i. **Litet jobb, men beslutet är Adams del** — det handlar om vad appen
+      ska göra, inte om hur den är byggd.
+
       **`e2e/uppvarmning.spec.ts` är sviten första vakt som växlar en rad till uppvärmning.**
       Den var röd mot den gamla räkningen, kontrollerat genom att buggen återinfördes.
 
