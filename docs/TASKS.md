@@ -4458,7 +4458,34 @@ och 13.1 måste vara klar före 13.6.
       `radnamn: string` — **typen var själva buggen**: ett tal kan inte uttrycka
       *"uppvärmningen"*, så anroparen tvingades hitta på ett.
 
-- [ ] **12.51 Fyra fynd ur `/code-review` av steg 4.3. Ny 2026-08-29.**
+- [x] **12.51 Fyra fynd ur `/code-review` av steg 4.3. Ny 2026-08-29. KLAR 2026-08-29.**
+
+      > ### ✅ UTFALLET
+      >
+      > | Punkt | Utfall |
+      > |---|---|
+      > | 1 | ✅ **Två commits, inte en.** `synligaPass` för det filter granskningen fann — och sedan orsaken uppgiften själv namngav |
+      > | 2 | ✅ Ingen åtgärd, som skrivet. Lärdomen står kvar |
+      > | 3 | ✅ `ETT_DYGN_MS` |
+      > | 4 | ✅ `foga()` är total |
+      >
+      > 🔴 **Punkt 1 var större än granskningen såg.** Fyndet var ETT upprepat filter; orsaken
+      > var att arbetssetregeln hade **fem stavningar** i `history.ts` och ingen hemvist för
+      > databasrader. Fyra av dem var äldre än steg 4.3 — granskningen såg bara den sjätte, för
+      > den låg i diffen. `räknasSomArbete` i `src/lib/worksets.ts` är regeln nu.
+      >
+      > ⛔ **De två funktionerna slogs medvetet INTE ihop**, och skälet står i filen: en planrad
+      > och en loggad rad bär olika bevis för att arbetet blev gjort — `loggedSetId` mot
+      > `isDeleted`. En planrad kan finnas utan att vara gjord; en loggad rad kan vara gjord men
+      > borttagen. **Att tvinga ihop dem hade krävt en typ som ljuger om ena hållet.**
+      >
+      > **Sabotaget är det som gör delningen mer än kosmetisk:** uppvärmningsledet borttaget ur
+      > `räknasSomArbete` ger **åtta röda tester i fem olika konsumenter** — passhistorik,
+      > övningshistorik, personbästa, tränade övningar och sidrubrikens totaler. Borttaget
+      > importfilter i `synligaPass` fäller **båda** sidor av det ursprungliga fyndet.
+      >
+      > **Grindar:** 329 tester · typecheck rent · lint 0 fel · **e2e 105 passed**.
+
       Granskningen kördes **efter** att rutan bockats av, vilket två handoff-sektioner
       uttryckligen bad om att slippa. De två fynd som gick att stänga direkt är stängda i
       uppgiften; de fyra nedan är kod och får inte blandas in i en annan ändring.
