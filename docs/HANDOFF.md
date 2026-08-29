@@ -1,6 +1,6 @@
 # Överlämning (Senaste status)
 
-**Datum:** 2026-08-27 (natt). Läs sektionen direkt nedan — den är nyast.
+**Datum:** 2026-08-29 (sen kväll). Läs sektionen direkt nedan — den är nyast.
 Sektionerna därefter är äldre och har varningsrutor som säger vad i dem som inte längre gäller.
 
 ---
@@ -23,8 +23,9 @@ offline, historik och importen av Adams gamla anteckningar är byggda och i prod
 | **Fas** | **11 — Gränssnittet.** 18 punkter klara, 10 öppna (räknat 2026-08-29) |
 | **Faser klara** | 0–9 och 13. Fas 10 har tre öppna som kräver Adam |
 | **Var i fas 11** | Designomgångens **runda 1 är KLAR**: Steg 4.1 ✅ (rutan obockad, se nedan), 4.2 ✅, 4.3 ✅ |
-| **Nästa jobb** | **Runda 2 börjar med en grillning, inte med kod.** 4.4 Statistik är ny funktionalitet — `DESIGN.md` säger uttryckligen att rundan kräver en egen grillning, troligen `/wayfinder`. Därefter uppgiften, därefter kod (regel 1) |
+| **Nästa jobb** | **Runda 2 börjar med en grillning, inte med kod.** 4.4 Statistik är ny funktionalitet — `DESIGN.md` säger uttryckligen att rundan kräver en egen grillning, troligen `/wayfinder`. Därefter uppgiften, därefter kod (regel 1). ⏰ **Grillningen är uppskjuten en gång** — Adam orkade inte 2026-08-29 sent och valde backloggen i stället. Den står kvar som nästa jobb |
 | **Blockerar** | Adams telefon och ett riktigt gympass. Se nedan |
+| **Opushat** | ⏰ **Sex commits ligger lokalt** (`365a2ad..26166a8`), fyra backloggpunkter. Adam har inte bett om push |
 
 > ⚠️ **Statistiksegmentet står tomt i produktion tills 4.4 är byggd.** Det är avsiktligt och
 > Adams beslut 2026-08-28 — han valde layouten framför att vänta. Vyn säger vad som kommer.
@@ -63,7 +64,99 @@ för att bli en påminnelse han får varje gång. Nämn dem när de faktiskt blo
 
 ---
 
-## 🆕 2026-08-29 — STEG 4.3 HISTORIK: skriven, byggd, granskad och stängd. RUNDA 1 ÄR KLAR
+## 🆕 2026-08-29 (sen kväll) — FYRA BACKLOGGPUNKTER, och två av dem var vakter som inte vaktade
+
+**Sex commits, `07b96ec..26166a8`.** Adam bad om småsaker i stället för grillningen inför 4.4:
+*"Vet inte om jag orkar just grillningen nu men kanske kan fixa små saker så länge om det går."*
+**Ingenting är pushat** — se rutan högst upp.
+
+```bash
+git log 07b96ec..HEAD --oneline
+```
+
+| Uppgift | Vad | Commit |
+|---|---|---|
+| **12.14** | `META_CATALOG_VERSION` borttagen ur `src/db/types.ts` | `365a2ad` |
+| **12.24** | Stängd utan åtgärd — premissen är inte längre sann | `fd84081` |
+| **12.52** | Ny uppgift, skriven ur förra sektionens öppna fråga | `5b93db3` |
+| **12.52** | Kontrastvaktens undantag avgör på roll i stället för taggnamn | `b430a33` |
+| **12.50** | Rubrikvikten flyttad till `index.css` | `a91692c` |
+| **12.50** | `font-semibold` städad från fem `h1` | `fb9efd9` |
+| **12.50** | Utfallsrutan i `TASKS.md` | `26166a8` |
+
+### 🔴 DET VIKTIGASTE ATT BÄRA VIDARE: en backloggpost bär en mätning som åldras
+
+**12.24 sa att `jsdom` är oanvänt och bad om att posten tas bort ur `package.json`.** Det var
+sant när uppgiften skrevs 2026-08-12. Sedan `a95b1fc` bär `src/ui/ScrollPicker.test.tsx` ett
+`// @vitest-environment jsdom` och åsidosätter `vite.config.ts` för sin fil.
+
+> **Hade uppgiften körts som skriven hade `npm run test` blivit rött** — och grön svit var
+> precis det utfall uppgiften angav som beviset för att borttagningen är ofarlig. Belagt med
+> sabotage: direktivraden byttes mot en kommentar, båda testerna föll, `environment 591ms → 0ms`.
+>
+> **Kontrollera premissen innan åtgärden, inte efter.** Här hade det räckt med att köra
+> uppgiftens egen `grep` en gång till.
+
+### 🔴 Näst viktigast: två vakter var gröna för att de inte mätte något
+
+Båda hittades genom att sabotera **selektorn**, inte koden den vaktar:
+
+1. **`fieldset` i kontrastvaktens kontrollista var ovaktad.** Raden lades till 2026-08-29
+   efter förra sessionens sabotage — men togs den bort igen förblev alla lägen gröna.
+   Segmentkontrollen bär `--color-line-strong` sedan lagningen, medan undantagsposten bara
+   gäller `--color-line`. **Lagningen från i går kunde alltså raderas utan att något sa ifrån.**
+   Testet injicerar nu en syntetisk `<fieldset>`, och samma sabotage är rött.
+2. **Appens egna `h1` kunde inte bevisa 12.50.** De bar sin vikt själva via `font-semibold`,
+   så ett sabotage av `index.css` hade inte fällt dem. Det är skälet att städningen blev en
+   egen commit — **efter** städningen fäller samma sabotage fyra tester.
+
+> **Mönstret i båda:** ett element som redan uppfyller kravet av egen kraft är oanvändbart
+> som bevis för regeln som ska garantera kravet.
+
+### ⚠️ `[role]` rakt av var för brett, och appen sa det direkt
+
+12.52:s första utkast lät varje `role`-attribut betyda "kontroll". Då föll **vilotimerns kort**
+(`RestTimer.tsx`, `role="timer"`, `border-top` 1,01:1 utåt) — ett falskt fynd: kortet är en yta
+med knappar inuti, och knapparna identifieras av sina egna etiketter.
+
+`ICKE_KONTROLLROLLER` i `e2e/kontrast.spec.ts` kom alltså **ur en mätning, inte ur en
+förhandsgissning**. Listan är negativ med flit: en roll ingen tänkt på faller åt det håll som
+ger ett rött fynd i stället för en tyst grön mätning.
+
+**Verifierat på köpet:** nästlad `:not()` fungerar i WebKit. En ogiltig selektor kastar i
+`el.matches` och fäller mätningen, så den gröna körningen är beviset — sviten kör
+`devices['Desktop Safari']`, och `Element.computedRole` finns alltså inte att luta sig mot.
+
+### ✅ Grindarna — hemdatorn, efter sista kodcommiten (`fb9efd9`)
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **329 tester i 26 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ precache **727,64 KiB / 10 entries** |
+| `npm run e2e` | ✅ **120 passed**, 1,1 min (105 → 108 → 120: fyra nya tester × 3 viewporter) |
+
+**Fyra sabotage, fyra röda på rätt rad:** `role="tablist"` (röda fasen), `'status'` ur
+`ICKE_KONTROLLROLLER`, `fieldset` ur `KONTROLL`, `font-weight: 600` ur `index.css`.
+
+### 📋 Öppet efter den här sessionen
+
+1. **Ingenting är pushat.** Sex commits ligger lokalt.
+2. **Grillningen för 4.4 är kvar** och är fortfarande nästa jobb.
+3. **`12.34` övervägdes och valdes bort:** de tre emojierna sitter i en mallsträng, och att
+   flytta dem kräver att `summarise()` returnerar läge + text i stället för en färdig mening
+   — plus ett ikonval, vilket är Adams. Det är inte "en liten sak".
+4. **`12.41` är orörd.** `/ovning/:id` mäts fortfarande inte av kontrastvakten.
+
+### Föreslagna skills för nästa session
+
+- **`/wayfinder`** eller **`grilling`** för 4.4 Statistik — `DESIGN.md` kräver det innan kod.
+- **`/code-review`** om något av det här ska granskas kallt innan push.
+
+---
+
+## 2026-08-29 — STEG 4.3 HISTORIK: skriven, byggd, granskad och stängd. RUNDA 1 ÄR KLAR
 
 **Femton commits, `76dc2a6..3105563`** — sju för steg 4.3, sedan `/code-review`, `12.51` och
 den här sektionen. Räkna dem själv i stället för att lita på siffran:
@@ -98,6 +191,13 @@ grön, på en kontroll vars enda avgränsning är just den kanten.
 **Frågan att ta med sig:** undantagslistan räknar upp HTML-element. Varje ny kontroll som
 inte är ett av dem ärver samma hål — `[role="tablist"]`, `[role="switch"]`, ett `<details>`.
 **Listan är en uppräkning där den borde vara en regel.**
+
+> ✏️ **DELVIS ÖVERSPELAT 2026-08-29 (sen kväll).** Frågan är besvarad: uppräkningen av
+> enskilda roller är ersatt av `[role]` med `ICKE_KONTROLLROLLER` som enda ursäkt — se
+> **12.52** i sektionen överst. **Det som står ovan om `grupproller … tillagda i undantagets
+> kontrollista` gäller alltså inte längre ordagrant**; `[role="group"]` och
+> `[role="radiogroup"]` täcks nu av regeln i stället för av egna poster. Och lagningen ovan
+> visade sig själv vara **ovaktad** — `fieldset` kunde tas bort igen utan att något test föll.
 
 ### 🔴 Näst viktigast: ett sabotage ljög innan det avslöjade något
 
