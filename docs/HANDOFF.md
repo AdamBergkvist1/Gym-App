@@ -25,7 +25,7 @@ offline, historik och importen av Adams gamla anteckningar är byggda och i prod
 | **Var i fas 11** | Designomgångens **runda 1 är KLAR**: Steg 4.1 ✅ (rutan obockad, se nedan), 4.2 ✅, 4.3 ✅ |
 | **Nästa jobb** | **Runda 2 börjar med en grillning, inte med kod.** 4.4 Statistik är ny funktionalitet — `DESIGN.md` säger uttryckligen att rundan kräver en egen grillning, troligen `/wayfinder`. Därefter uppgiften, därefter kod (regel 1). ⏰ **Grillningen är uppskjuten en gång** — Adam orkade inte 2026-08-29 sent och valde backloggen i stället. Den står kvar som nästa jobb |
 | **Blockerar** | Adams telefon och ett riktigt gympass. Se nedan |
-| **Pushat** | ✅ **`origin/main` är `ac393b3`, och deployen är verifierad** — se sektionen nedan. Bara den här radens egen commit ligger efter |
+| **Pushat** | ⏰ **`origin/main` är `899557f` och den deployen ÄR verifierad — men 12.41:s fyra commits ligger opushade ovanpå.** De ändrar **elva kanter synligt i appen**; Adam har inte sett dem och har inte bett om push. `git log origin/main..HEAD --oneline` |
 
 > ⚠️ **Statistiksegmentet står tomt i produktion tills 4.4 är byggd.** Det är avsiktligt och
 > Adams beslut 2026-08-28 — han valde layouten framför att vänta. Vyn säger vad som kommer.
@@ -64,7 +64,69 @@ för att bli en påminnelse han får varje gång. Nämn dem när de faktiskt blo
 
 ---
 
-## 🆕 2026-08-29 (sen kväll) — FYRA BACKLOGGPUNKTER, och två av dem var vakter som inte vaktade
+## 🆕 2026-08-29 (natt) — 12.41: vakten nådde in i överlagringarna, och där låg elva till
+
+**Fyra commits, `34baa68..3700f5f`.** Adam bad om 12.41 efter att de fyra föregående punkterna
+var pushade. **Opushat** — och den här omgången **syns i appen**, till skillnad från de förra.
+
+| Commit | Vad |
+|---|---|
+| `34baa68` | **Elva kontroller** i arket, väljaren och fritexten får `--color-line-strong` |
+| `f2c580e` | **12.41:** fyra nya lägen + `underlagUtanför` i mätningen |
+| `3700f5f` | **12.53 (ny):** `ManualEntry.tsx` renderas inte längre av något |
+
+### 🔴 DET VIKTIGASTE: uppgiftens gissning stämde, och det säger något om täckning
+
+12.41 skrevs 2026-08-27 med förutsägelsen att de omätta skärmarna *"alla fyra innehåller
+kontroller med samma `--color-line`-kant som just lagades på elva andra ställen"*. **Utfallet
+blev åtta i justeringsarket, två i övningsväljaren, ett i fritexten. Elva.**
+
+> **Samma felklass, samma antal, på skärmarna vakten inte såg.** Steg 4.1 lagade elva i
+> passvyn och historiken och räknades som färdigt. Det som avgjorde var inte hur noga någon
+> letade — det var vilka fyra lägen som råkade stå i `LÄGEN`.
+>
+> `/ovning/:id` gick däremot **grön på första körningen**, vilket är värt att notera: rutten
+> var uppgiftens allvarligaste lucka men bar inget fel.
+
+### 🔴 Näst viktigast: arket är DOM-barn till kortet det ligger ovanpå
+
+Uppgiften bad om att lagermodellen skulle **kontrolleras, inte antas**. Den kontrollen finns
+nu som `underlagUtanför` i `Mätresultat`, och sabotaget visade varför den behövdes:
+
+> `SetAdjustSheet` renderas `fixed inset-0` — men i DOM:en är den ett barn till
+> **övningskortet**. Tas arkets `bg-[var(--color-surface)]` bort vandrar `bakgrundslager()`
+> uppåt genom förfäderskedjan och landar på **kortets vita yta**, medan det ögat ser är en
+> dimmer på svart 60 % över hela skärmen. Sju element rapporterades då som mätta mot fel
+> underlag. **Med panelen intakt är underlaget korrekt mätt** — påståendet är prövat.
+
+**Kontrollen prövar bara element som FAKTISKT mäts.** Dimmern har varken text eller kant och
+hämtar sitt underlag ur sidan bakom — vilket är riktigt för just den, och hade blivit ett
+falskt larm om varje element inuti överlagringen prövats.
+
+### ⚠️ Två luckor som är utskrivna i stället för tystade
+
+1. **`ManualEntry.tsx` renderas ingenstans** — `grep` ger bara dess egen deklaration. 12.41
+   namngav den som en skärm att mäta, alltså var den redan en falsk ledtråd en gång. **12.53**
+   är skriven; **beslutet är Adams**, för frågan är om den bär något `SPEC.md` kräver.
+2. **`QuickLog`s utkastvy nås inte av vakten** — den kräver ett AI-tolkat förslag. Dess fyra
+   kontroller ändrades på **regeln**, inte på ett fynd, och det står i commitmeddelandet.
+
+### ✅ Grindarna — efter `f2c580e`
+
+| Grind | Utfall |
+|---|---|
+| `npm run test` | ✅ **329 tester i 26 filer** |
+| `npm run typecheck` | ✅ rent |
+| `npm run lint` | ✅ **0 fel**, 3 kända `react-refresh`-varningar |
+| `npm run build` | ✅ precache **727,72 KiB / 10 entries** |
+| `npm run e2e` | ✅ **132 passed**, 1,4 min (120 → fyra nya lägen × tre viewporter) |
+
+**Två sabotage, två röda på rätt rad:** `--color-line` återinförd på nudge-knapparna (sex
+fynd), arkets bakgrund borttagen (sju rader i `underlagUtanför`).
+
+---
+
+## 2026-08-29 (sen kväll) — FYRA BACKLOGGPUNKTER, och två av dem var vakter som inte vaktade
 
 **Sju commits för uppgifterna, `365a2ad..26166a8`**, plus den här sektionen och rättelsen av
 dess egen räkning.
