@@ -83,18 +83,43 @@ function byPerformedAt(a: LocalSet, b: LocalSet): number {
   return a.performedAt < b.performedAt ? -1 : a.performedAt > b.performedAt ? 1 : 0;
 }
 
+/**
+ * Passen historiken VISAR: inte raderade, inte importerade, nyast först.
+ *
+ * ⛔ **REGELN BOR HÄR FÖR ATT DEN HANN SKRIVAS TVÅ GÅNGER PÅ EN DAG. Uppgift 12.51.**
+ * `summarizeHistory` upprepade `!w.isDeleted && !w.isImported` ord för ord, och
+ * motiverade det med en doc-kommentar: *"samma mängd som passlistan, med flit"*.
+ * Det är precis vad **12.42** avgjorde att man inte får göra — *"en delad
+ * härledning som båda sidor anropar … Kopplingen ska vara kod, inte prosa i en
+ * doc-kommentar"*. `/code-review` hittade det, båda axlarna oberoende.
+ *
+ * **Varför det spelar roll att just de två håller ihop:** listan visar passen,
+ * rubriken ovanför räknar dem. Divergerar filtren beskriver rubriken en annan
+ * historik än den man ser under den — och det är den tystaste sortens fel.
+ *
+ * Importerade pass (13.3) är rader ur Adams gamla anteckningar med uppskattade
+ * datum, inte pass han genomfört i appen.
+ *
+ * ⚠️ **SORTERINGEN HÖR TILL REGELN, inte till anroparen.** `listWorkoutSummaries`
+ * kapar med `slice` efteråt, och vilka pass som är "de senaste 50" är bara
+ * meningsfullt om ordningen är given här. Att filtret ligger före kapningen är nu
+ * strukturellt: den här funktionen kan inte returnera något som ska bort.
+ */
+async function synligaPass(database: GymDatabase): Promise<LocalWorkout[]> {
+  return (await database.workouts.orderBy('startedAt').reverse().toArray()).filter(
+    (w) => !w.isDeleted && !w.isImported
+  );
+}
+
 /** Avslutade och pågående pass, nyast först. */
 export async function listWorkoutSummaries(
   limit = 50,
   database: GymDatabase = db
 ): Promise<WorkoutSummary[]> {
-  // Importerade pass (13.3) hör inte hemma i passlistan: de är rader ur Adams
-  // gamla anteckningar, inte pass han genomfört i appen, och deras datum är
-  // uppskattade. Filtret ligger FÖRE slice — annars hade 17 importerade pass
-  // kunnat äta upp hela limiten och lämna listan tom.
-  const workouts = (await database.workouts.orderBy('startedAt').reverse().toArray())
-    .filter((w) => !w.isDeleted && !w.isImported)
-    .slice(0, limit);
+  // Kapningen sker EFTER filtret — annars hade 17 importerade pass kunnat äta
+  // upp hela limiten och lämna listan tom. Ordningen är garanterad av
+  // `synligaPass`, så `slice` betyder verkligen "de senaste".
+  const workouts = (await synligaPass(database)).slice(0, limit);
   if (workouts.length === 0) return [];
 
   const ids = new Set(workouts.map((w) => w.id));
@@ -171,14 +196,13 @@ export interface HistoryTotals {
  * hade rubriken stannat på `50 pass` och aldrig ändrat sig igen. Ett tal som
  * slutar röra sig ser inte ut som ett fel, det ser ut som ett faktum.
  *
- * ⚠️ **Samma mängd som passlistan, med flit:** inte raderade, inte importerade.
- * Rubriken sammanfattar det man ser under den. Divergerar filtren beskriver
- * rubriken en annan historik än listan — och då är den fel igen, fast tystare.
+ * ⚠️ **Samma mängd som passlistan, och nu genom samma kod:** `synligaPass`.
+ * Här stod tidigare en egen kopia av filtret med en kommentar om att den var
+ * avsiktligt likadan — vilket `/code-review` fällde (uppgift **12.51**). Ett
+ * påstående om att två filter är lika är inte samma sak som att de är det.
  */
 export async function summarizeHistory(database: GymDatabase = db): Promise<HistoryTotals> {
-  const workouts = (await database.workouts.toArray()).filter(
-    (w) => !w.isDeleted && !w.isImported
-  );
+  const workouts = await synligaPass(database);
   const ids = new Set(workouts.map((w) => w.id));
   const sets = await database.loggedSets.toArray();
 
