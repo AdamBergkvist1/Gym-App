@@ -23,13 +23,32 @@ offline, historik och importen av Adams gamla anteckningar är byggda och i prod
 | **Fas** | **11 — Gränssnittet.** 18 punkter klara, 10 öppna (räknat 2026-08-29) |
 | **Faser klara** | 0–9 och 13. Fas 10 har tre öppna som kräver Adam |
 | **Var i fas 11** | Designomgångens **runda 1 är KLAR**: Steg 4.1 ✅ (rutan obockad, se nedan), 4.2 ✅, 4.3 ✅ |
+| **Backloggen** | **25 öppna `12.xx`** (2026-08-30). Fem stängdes natten 29→30: `12.14`, `12.24`, `12.41`, `12.50`, `12.52`. Nyast öppen: **`12.53`**, som väntar på Adam |
 | **Nästa jobb** | **Runda 2 börjar med en grillning, inte med kod.** 4.4 Statistik är ny funktionalitet — `DESIGN.md` säger uttryckligen att rundan kräver en egen grillning, troligen `/wayfinder`. Därefter uppgiften, därefter kod (regel 1). ⏰ **Grillningen är uppskjuten en gång** — Adam orkade inte 2026-08-29 sent och valde backloggen i stället. Den står kvar som nästa jobb |
 | **Blockerar** | Adams telefon och ett riktigt gympass. Se nedan |
-| **Pushat** | ⏰ **`origin/main` är `899557f` och den deployen ÄR verifierad — men 12.41:s fyra commits ligger opushade ovanpå.** De ändrar **elva kanter synligt i appen**; Adam har inte sett dem och har inte bett om push. `git log origin/main..HEAD --oneline` |
+| **Pushat** | ✅ **`origin/main` är `f6f9479`, deployen verifierad på innehåll.** Inget ligger opushat |
 
 > ⚠️ **Statistiksegmentet står tomt i produktion tills 4.4 är byggd.** Det är avsiktligt och
 > Adams beslut 2026-08-28 — han valde layouten framför att vänta. Vyn säger vad som kommer.
 > **Det är inte en halvfärdig sida som glömts bort.**
+
+### 🚦 BÖRJA HÄR. Tre steg, i ordning
+
+1. **Fråga inte vad du ska göra — läs `Nästa jobb` i tabellen ovan.** Det är 4.4 Statistik,
+   och det första steget är en **grillning**, inte kod. Adam sköt upp den 2026-08-29 för att
+   orken tröt; den är alltså inte struken, bara framflyttad. **Öppna med att erbjuda den.**
+2. **Orkar Adam inte den heller: ta en backloggpunkt.** Det var precis vad han bad om natten
+   29→30 (*"kanske kan fixa små saker"*), och fem stängdes. ⚠️ **Kontrollera premissen i
+   uppgiften innan du åtgärdar den** — `12.24` bad om en ändring som hade gjort sviten röd,
+   för världen hade rört sig sedan uppgiften skrevs. Det är sektionen direkt nedan.
+3. **`12.53` är den enda öppna punkten som väntar på ETT SVAR FRÅN ADAM**, och den är billig
+   att fråga om: `ManualEntry.tsx` renderas ingenstans — ska den bort, eller bär den något
+   `SPEC.md` fortfarande kräver?
+
+> ⛔ **Kod utan uppgift är förbjuden (regel 1), och det gäller även små fynd.** Hittar du
+> något på vägen: skriv en `12.xx` först. **Varje kodcommit natten 29→30 hade en uppgift i
+> `TASKS.md` före sig** — `12.52` skrevs i en egen commit innan den byggdes, de andra fanns
+> redan i backloggen.
 
 ### ⛔ Fas 12 är en LÅDA, inte ett steg. Låt inte numren lura dig
 
@@ -66,8 +85,26 @@ för att bli en påminnelse han får varje gång. Nämn dem när de faktiskt blo
 
 ## 🆕 2026-08-29 (natt) — 12.41: vakten nådde in i överlagringarna, och där låg elva till
 
-**Fyra commits, `34baa68..3700f5f`.** Adam bad om 12.41 efter att de fyra föregående punkterna
-var pushade. **Opushat** — och den här omgången **syns i appen**, till skillnad från de förra.
+**Tre commits, `34baa68..3700f5f`**, plus den här sektionen — fyra sedan `899557f`, räknat
+med `git log 899557f..HEAD --oneline | wc -l` och inte i huvudet. Adam bad om 12.41 efter att de
+fyra föregående punkterna var pushade. **Den här omgången syns i appen**, till skillnad från
+de förra: elva kanter är mörkare i arket, väljaren och fritexten.
+
+### ✅ PUSHAT OCH DEPLOYVERIFIERAT PÅ INNEHÅLL
+
+`origin/main` är **`f6f9479`**. Produktionen serverar **`index-RUZgmVWE.js`**, samma hash som
+det lokala bygget — och den här gången kunde ändringen läsas ur bygget, inte bara antas:
+
+```bash
+curl -s https://adam-gym-app.vercel.app/assets/index-RUZgmVWE.js \
+  | grep -c "rounded-md border border-\[var(--color-line-strong)\] text-lg"   # 1
+curl -s https://adam-gym-app.vercel.app/assets/index-RUZgmVWE.js \
+  | grep -c "rounded-md border border-\[var(--color-line)\] text-lg"          # 0
+```
+
+**Båda riktningarna, inte bara den ena.** Att den nya klassträngen finns bevisar att bygget
+bär lagningen; att den gamla ger noll bevisar att den inte ligger kvar någon annanstans.
+En ensam träff hade varit förenlig med att båda varianterna fanns kvar.
 
 | Commit | Vad |
 |---|---|
@@ -123,6 +160,22 @@ falskt larm om varje element inuti överlagringen prövats.
 
 **Två sabotage, två röda på rätt rad:** `--color-line` återinförd på nudge-knapparna (sex
 fynd), arkets bakgrund borttagen (sju rader i `underlagUtanför`).
+
+### 📋 Vad som är öppet efter natten 29→30
+
+| Vad | Läge |
+|---|---|
+| **Grillningen för 4.4** | Uppskjuten en gång, står kvar som nästa jobb. Se `BÖRJA HÄR` överst |
+| **`12.53`** | Väntar på **Adams svar**, inte på kod. `ManualEntry.tsx` renderas ingenstans |
+| **`12.34`** | Övervägdes och valdes bort: emojierna sitter i en mallsträng, och att flytta dem kräver att `summarise()` returnerar läge + text **plus ett ikonval, som är Adams**. Inte "en liten sak" |
+| **`QuickLog`s utkastvy** | Nås inte av kontrastvakten. Ingen egen uppgift — noterat i `12.41`:s utfallsruta |
+| **Steg 4.1:s ruta** | Fortfarande obockad. Enda kandidaten kräver Adams telefon (`10.3`) |
+
+### Föreslagna skills för nästa session
+
+- **`grilling`** eller **`/wayfinder`** för 4.4 Statistik — `DESIGN.md` kräver det innan kod.
+- **`/code-review`** om nattens sex commits ska granskas kallt. **De är inte granskade** —
+  förra omgången kördes granskningen på steg 4.3, inte på det här.
 
 ---
 
