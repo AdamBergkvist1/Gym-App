@@ -4951,6 +4951,28 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** katalogen bär sekundärmuskler, aggregeringen i `src/db/statistik.ts`
       räknar dem med den valda vikten, och `Steg 4.4`:s begränsningsmening kan tas bort.
 
+- [ ] **12.56 `12.49`:s utfallstext står under fel uppgift — och gömmer ett beslut som är
+      Adams. Ny 2026-08-30.** Hittad när `12.53` lästes för att skriva `Steg 4.4`.
+
+      Sista stycket under **`12.53`** handlar inte om `ManualEntry.tsx`. Det talar om
+      `e2e/uppvarmning.spec.ts`, om `radnamn`, och avslutas med *"Verifierat 2026-08-27"* —
+      allt tillhör **`12.49`** (*"Arket och raden numrerade samma rad olika"*, ny 2026-08-27),
+      som slutar ~180 rader tidigare. `12.53` är från 2026-08-29 och handlar om något annat.
+
+      **Varför det är värt en uppgift och inte en tyst flytt:** texten bär en öppen fråga
+      ställd till Adam som ingen kan hitta där den ligger nu:
+
+      > ⏰ *"KVAR, och det är Adams att avgöra om det ska bli en uppgift: `radnamn` kallar varje
+      > uppvärmningsrad `uppvärmningen`. Har man två på samma övning heter de likadant, i både
+      > raden och arket."*
+
+      Frågan är alltså **två gånger osynlig** — den är oavgjord, och den står under fel rubrik.
+      Det är samma familj av fel som `12.53` själv beskriver: något som ligger kvar där ingen
+      ser det kostar inget i bundlen men kostar i läsning, och nästa gång går en ändring fel.
+
+      **Klart när:** stycket står under `12.49`, och frågan om dubbla uppvärmningsrader är
+      antingen avgjord av Adam eller skriven som en egen uppgift.
+
 ---
 
 ## Fas 11A — efterjustering 2026-08-01 (layoutbugg + rullhjul)
