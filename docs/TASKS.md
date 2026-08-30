@@ -2230,6 +2230,200 @@ gäller, och uppgiften skrivs om.
       (375 × 812) i **tre tillstånd**: tomt, ett vanligt pass, och ett pass där en övning har
       uppvärmning som enda set. Det tredje är inte formalia — det är tillståndet del A finns för.
 
+- [ ] **Steg 4.4 Statistiksegmentet. Ny 2026-08-30, skriven ur en grillning samma dag.**
+
+      Runda 2:s första delsteg, och **det första i hela fas 11 som är ny funktionalitet i
+      stället för omskrivning av något som finns.** `DESIGN.md` krävde en egen grillning innan
+      en rad skrivs (rutan *"Steg 4 delas i två rundor"*); den är gjord 2026-08-30 och varje
+      beslut nedan är dess utfall, med Adams svar bevarade som skäl.
+
+      Skärmen ritas i `DESIGN.md` §3.2, innehållet står i `SPEC.md` §2b. Vyn finns redan som
+      `StatistikKommer` i `src/ui/pages/HistoryPage.tsx` och säger i dag bara vad som kommer.
+      **Den ska rivas — det var precis vad 4.3 byggde den för.**
+
+      > ### 🔴 LÄS DEN HÄR RUTAN FÖRST: skärmen får inte ärva passlistans importfilter
+      >
+      > `listWorkoutSummaries` och `summarizeHistory` går båda via `synligaPass`, som gör
+      > `!w.isDeleted && !w.isImported`. **De ser inte fem år bakåt — de ser bara appens egna
+      > pass.** `getExerciseHistory` gör tvärtom och räknar importen, vilket är skälet att den
+      > långa bänkkurvan redan fungerar på `/ovning/:id`.
+      >
+      > **Adam avgjorde 2026-08-30 att Statistik räknar importerade pass.** Det är ingen detalj:
+      > `DESIGN.md` kallar den långa horisonten skärmens **bärande krav**, och utan importen
+      > finns inte den horisonten. Byggs aggregeringen ovanpå passlistan ärver den filtret tyst,
+      > och `1Å`/`Allt` blir nästan tomma **medan skärmen ser ut att svara**.
+      >
+      > ⛔ **`CLAUDE.md` regel 2 gör sabotage obligatoriskt här** — fall (b), *"en konsument
+      > bytte datakälla, eftersom den då ärver källans alla filter"*. Det är det här fallet,
+      > ordagrant. Ett grönt test som aldrig sett ett importerat pass bevisar ingenting.
+
+      ---
+
+      ### Del A — Frågelagret. Byggs först, och i en EGEN fil
+
+      **`src/db/statistik.ts`, inte i `history.ts`.** Skälet är inte filstorlek: `history.ts`
+      äger `synligaPass`, alltså exakt den hjälpare del A inte får använda. En ny konsument i
+      samma fil hittar den och tar den — det har hänt fem gånger i det här projektet med
+      arbetssetsfiltret (se `worksets.ts` egen docblock). Grannskapet är faran.
+
+      ⛔ **Skriv inte arbetssetsfiltret eller volymformeln själv.** De bor i
+      `src/lib/worksets.ts` (`räknasSomArbete`, `loggadeArbetsset`, `volymAv`). Uppvärmningen är
+      redan borträknad där (12.16) och halvkilot bevarat (12.18).
+
+      Aggregeringarna returnerar **båda måtten samtidigt** — `{ set, volymKg }` per rad. Måttet
+      är ett renderingsval, inte ett frågeval: växlaren i del C ska inte kunna orsaka en ny
+      läsning ur Dexie, för då blir ett knapptryck ett latensproblem.
+
+      Tidsfönstret är en egen typ, `Fönster = '1v' | '1m' | '3m' | '6m' | '1å' | 'allt'`, och
+      **perioden härleds ur det med en ren funktion i `src/lib/`** — inte i frågelagret, så att
+      den kan prövas utan en Dexie-instans (samma skäl som `muskelrad` i `muskelgrupper.ts`
+      anger för sig själv):
+
+      | Fönster | En period är | Antal staplar |
+      |---|---|---|
+      | `1v` `1m` `3m` | **vecka** | 1–13 |
+      | `6m` `1å` | **månad** | 6–12 |
+      | `allt` | **kvartal** | ~20 vid fem års historik |
+
+      **Varför perioden inte är fast:** `allt` med veckor ger ~250 staplar på 375 px, alltså
+      1,5 px per stapel. En stapel som inte går att se visar ingenting om ojämnhet, vilket är
+      hela frågan läget i del C finns för.
+
+      **Klart när:** `set per muskelgrupp` och `per period för en grupp` går att hämta för varje
+      fönster; **importerade pass ingår**; enhetstesterna innehåller minst ett importerat pass
+      och faller om filtret smyger in igen.
+
+      ### Del B — Tidsväljaren
+
+      Segmentkontroll överst: `1V · 1M · 3M · 6M · 1Å · Allt`, **förval `6M`**. Styr hela
+      skärmen — ett val, inte ett per kort.
+
+      **Varför `6M` och inte `Allt`:** `DESIGN.md` kräver att förvalet ligger långt ut, och det
+      är skälet skärmen finns — under en platå säger den korta horisonten *"ingenting händer"*
+      vid varje enskilt tillfälle, vilket är sant per pass och falskt per år. Men på `Allt`
+      blandas fem års importerade anteckningar in i muskelproportionerna, och skärmen beskriver
+      då någon Adam var 2021.
+
+      ♻️ **`SegmentedControl` finns sedan 4.3** och är byggd som en `<fieldset>` med `sr-only`
+      radioknappar. Återanvänd den. **Sex steg mot dagens två** är det enda som behöver prövas:
+      det är ~62 px per steg på 375 px, alltså under 48 px-regelns bredd men långt över i area —
+      samma undantag som `TASKS.md` redan skriver ut för fullbreddsraden i ångra-ytan.
+      ⛔ **Adam nämnde `2V` i förbifarten 2026-08-30. Det läggs medvetet INTE till** — sju steg
+      trängs på en telefon och `2V` konkurrerar mest med `1M`. En rad att ändra om han vill.
+
+      **Klart när:** valet är **adresserbart** som segmentvalet i 4.3 — Playwright ska nå varje
+      fönster utan att klicka sig dit, och en omladdning ska landa på samma fönster.
+
+      ### Del C — Muskelgruppskortet. Två lägen, två mått
+
+      Kortet heter **`Set per muskelgrupp`**, inte *"Volym per muskelgrupp"* som skissen säger.
+      ✏️ **Skissen är rättad i den här uppgiften och inte i tysthet:** dess rubrik sa *volym*
+      medan staplarna var märkta `8 set`, och `SPEC.md` §2b säger att måttet är antal arbetsset.
+      Det är samma krock som fällde 12.44 (*"3 set · 0 volym kg"*) — rubrik och tal ur olika
+      mängder bredvid varandra.
+
+      | Läge | Innehåll | Adams ord 2026-08-30 |
+      |---|---|---|
+      | **Fördelning** (förval) | Alla tio grupperna, summan för fönstret, liggande staplar | *"helheten … så man ser allmänt hur mycket man tränar olika delar"* |
+      | **Över tid** | **En** grupp, en stapel per period (del A) | *"period för period … hur mycket volymen varierar om man är inkonsistent"* |
+
+      Man kommer till `Över tid` genom att **trycka på en grupps stapel** i `Fördelning`.
+      Måttväxlaren `Set | Volym` gäller båda lägena.
+
+      **Ordningen är fallande, som skissen** — störst först. Och **grupper med noll set listas
+      ändå, sist, med en tom stapel och `0`.** Det där är hela balansen i kortet: Adam sa
+      *"den kan visa men inte döma"*, och att lyfta det man gör minst till toppen **är** att
+      peka. Att låta en missad grupp försvinna vore däremot att dölja, och `SPEC.md` §2b kräver
+      uttryckligen *"undertränade grupper synliga"*. Fallande ordning med nollorna kvar är det
+      enda som uppfyller båda.
+
+      **Alla tio grupperna, som katalogen har dem** — `rygg`, `framsida lår`, `bröst`, `axlar`,
+      `biceps`, `mage`, `triceps`, `baksida lår`, `vader`, `säte`. ⛔ Rulla **inte** ihop benen
+      till en post: `vader` och `säte` har en övning var, och just de posterna är det man vill
+      se är tomma.
+
+      🔴 **Kortet MÅSTE skriva ut att bara primärmuskeln räknas.** `secondary_muscles` finns som
+      kolumn sedan migration `0001` men är **tom överallt** — seed-raden sätter fyra kolumner,
+      `catalog.ts` har inget fält, `repo.ts` skriver `[]`. Bänkpress räknas alltså till 100 %
+      bröst och noll triceps, vilket gör att triceps och axlar ser systematiskt undertränade ut.
+      Det är exakt det Hevy får sin mest citerade kritik för (`docs/research/`, muskelkartan som
+      bara markerar övre rygg vid sittande rodd). **Skillnaden mot Hevy ska vara att vår vy
+      säger det själv.** Åtgärden är **12.55**.
+
+      **Klart när:** båda lägena fungerar, växlaren byter mått utan ny läsning, nollgrupperna
+      syns sist, och begränsningen om primärmuskeln står i vyn.
+
+      ### Del D — e1RM-korten
+
+      Ett kort per övning som tränats **inom fönstret**, nyast först, med ett tak och *"visa
+      fler"* under. Kortet visar bästa e1RM och förändringen över fönstret, som skissen ritar
+      det, och är **klickbart in till `/ovning/:id`** — Statistik är en översikt, inte en andra
+      detaljvy. Taket sätts till en skärmhöjd; talet motiveras i filen när det skrivs.
+
+      ♻️ **`Sparkline.tsx` finns sedan 9.5** och ritar SVG för hand. `PLAN.md` §2.2 förbjuder
+      ett grafbibliotek för en enda vy, och bundlen är 614 kB (7.13 är fortfarande öppen).
+
+      🔴 **Behåll `importedNotice`-meningen, och inför inget nytt visuellt språk.**
+      `src/lib/importNotice.ts` säger i sin egen kommentar att klartextmeningen valdes framför
+      ihåliga prickar *"innan designbriefen i 11B är klar"* — och **vi är nu i 11B**, alltså är
+      det här ögonblicket uppskjutningen pekade på. Beslutet 2026-08-30: meningen står kvar.
+      Skälet är nytt och gäller just Statistik: vid `1Å` och `Allt` ligger fem års import under
+      hela vänstra halvan av kurvan, så en markering per punkt blir inte en markering utan en
+      andra linjestil över halva grafen. Meningen säger samma sak en gång i stället för hundra.
+
+      ### Del E — Volymkurvan över tid. Sist på skärmen
+
+      `SPEC.md` §2b del 2. En punkt per period (del A), hela fönstret, uppvärmning borträknad
+      via `volymAv`.
+
+      **Placeringen är ett beslut och inte en slump:** under en platå är totalvolymen platt den
+      också, så kurvan bär **inte** det krav `DESIGN.md` kallar bärande — det gör e1RM-kurvan i
+      del D. Den svarar på en annan och mindre viktig fråga och ska ligga därefter.
+
+      ---
+
+      ### Vad som medvetet ligger UTANFÖR 4.4
+
+      | Vad | Var det bor | Varför inte här |
+      |---|---|---|
+      | **Kroppsviktskortet** i §3.2:s skiss | **12.8** | Ingen tabell, ingen RLS, ingen synk, ingen vy. Det är en funktion med egen grillning, inte ett kort |
+      | **Muskelfiguren** | **12.54** (ny) | Kräver en fritt licensierad anatomisk SVG (§7). Adam vill ha den, senare |
+      | **`secondary_muscles`** | **12.55** (ny) | Kräver en övningsdatabas med fri licens + ett viktningsbeslut |
+      | **Osäkerhetsbandet** kring e1RM | **12.7** | `DESIGN.md` kallar det själv ett förslag: bandets bredd måste ha en grund innan det ritas |
+
+      ---
+
+      ### Gemensamt slutvillkor för hela steg 4.4
+
+      🔴 **Statistikvyn är ett läge kontrastvakten inte mäter.** `Steg 4.3` skrev ut det redan:
+      *"Statistiksegmentets vy är ett femte läge som inte mäts alls om ingen lägger till det."*
+      Lägena i `e2e/kontrast.spec.ts` ska utökas med Statistik i **båda** kortlägena och med
+      minst två fönster — `12.41` visade att utfallet avgörs av vilka lägen som råkar stå i
+      `LÄGEN`, inte av hur noga någon letar.
+
+      🔴 **Två sabotage krävs, och de mäter olika saker:**
+      1. **Importfiltret** (rutan överst) — lägg tillbaka `!w.isImported` i del A:s datakälla.
+         Testerna ska bli röda. Blir de gröna finns inget importerat pass i fixturen, och då
+         vaktar de ingenting.
+      2. **En stapelkant eller etikett** — `12.41`:s felklass. Elva kontroller bar fel token på
+         skärmarna vakten inte såg.
+
+      🔍 **§7.1 gäller: sök innan du bygger, och redovisa vad sökningen gav** — även om svaret
+      blir *"inget som passar"*. Stapeldiagrammet är delstegets enda nya grafiska primitiv.
+      **Plattformsprimitiven prövas först:** liggande staplar är CSS grid med en bredd i procent
+      och behöver varken SVG eller bibliotek. `Sparkline.tsx` visar redan att handritad SVG
+      räcker för linjen.
+
+      **Alla fem grindar gröna**, och skärmen visuellt kontrollerad i `preset: mobile`
+      (375 × 812) i **fyra tillstånd**: tomt fönster, ett vanligt fönster, `Allt` med importerad
+      historik, och en muskelgrupp med noll set. De två sista är inte formalia — det är de
+      tillstånd rutan överst och del C:s ordningsbeslut finns för.
+
+      **Tom-tillståndet:** korten står kvar med sina rubriker och en rad under —
+      *"Inga pass under den här perioden."* Att dölja korten får skärmen att se trasig ut, och
+      nollstaplar utan förklaring läses som ett omdöme (*"du tränade noll bröst"*), vilket är
+      precis vad del C:s balans finns för att undvika.
+
 - [ ] **11B.1 Typografisk skala.** I dag används Tailwinds förval rakt av. Setraden ska vara
       största elementet på skärmen; allt annat underordnar sig den.
       **Klart när:** skalan är definierad i `index.css` och ingen komponent sätter egen storlek.
@@ -4712,6 +4906,50 @@ och 13.1 måste vara klar före 13.6.
 
       **Verifierat 2026-08-27:** **310 tester** i 24 filer, typecheck rent, lint 0 fel, bygget
       **642,04 kB** (gzip 193,33), **84 e2e-tester gröna**.
+
+- [ ] **12.54 Muskelfiguren — en vridbar kropp i stället för staplar. Ny 2026-08-30.**
+      Efterfrågad av Adam i grillningen inför `Steg 4.4`: *"Vill ha en snygg figur senare, som
+      vi bygger som man eventuellt kan snurra runt och kolla på."*
+
+      **Avgränsad ur 4.4 med ett skäl som inte är "senare".** Figuren bygger på exakt samma
+      siffror som staplarna — den är vackrare, inte klokare — och **den ärver 12.55:s
+      dataproblem osynligt.** En stapel som saknar triceps ser tom ut. En kroppsfigur blir bara
+      ljusare på ett ställe, och det läses som ett mätvärde. Figuren bör alltså byggas **efter**
+      12.55, inte före.
+
+      🔍 **§7 gäller, och det här är den säkraste sortens hämtning: ren data, ingen körbar kod.**
+      Det som behövs är en anatomisk SVG med känd licens och namngivna muskelgrupper. ⛔ Licensen
+      avgörs **först** — anatomiska illustrationer är ofta `NOASSERTION` eller CC-BY-NC, och
+      ingen av dem duger. Rad i `docs/EXTERNT.md` i samma commit som filen.
+
+      **Klart när:** licensen är redovisad och godkänd av Adam, figuren färgas ur samma
+      aggregering som del C, och den säger samma sak som staplarna om primärmuskeln.
+
+- [ ] **12.55 `secondary_muscles` är tom överallt — bänkpress tränar inte triceps. Ny 2026-08-30.**
+      Hittad när `Steg 4.4` grillades. Kolumnen **finns** sedan migration `0001`
+      (`secondary_muscles text[] not null default '{}'`), vilket får det att se byggt ut. Det är
+      det inte: seed-raden i `0001` sätter bara `(owner_id, name, aliases, primary_muscle,
+      equipment)`, `CatalogExercise` i `src/db/catalog.ts` har inget fält för den, och
+      `repo.ts:119` skriver `[]` för egna övningar.
+
+      **Följden syns direkt i statistiken:** varje set räknas till 100 % av primärmuskeln, så
+      triceps och axlar ser systematiskt undertränade ut medan bröst och rygg ser överdrivna ut.
+      `Steg 4.4` del C skriver ut begränsningen i vyn i stället för att låta staplarna påstå mer
+      än de vet — **den här uppgiften är åtgärden bakom den meningen.**
+
+      ⚠️ **Det är samma fel Hevy får sin mest citerade kritik för.** `docs/research/` refererar
+      klagomålen: muskelkartan markerar sittande rodd som enbart övre rygg, utan lats, och
+      användaren kan inte rätta den. Skillnaden vi kan göra är att veta om det innan vi ritar.
+
+      **Två frågor måste avgöras, och den andra är Adams:**
+      1. **Varifrån data kommer.** §7: en övningsdatabas med fri licens, ren data. Licens före
+         allt annat, rad i `docs/EXTERNT.md` i samma commit.
+      2. **Hur tungt ett sekundärt set väger.** Halva setet? En tredjedel? Det är ett påstående
+         om träning, inte en implementationsdetalj — alltså ett gränsvärde Adam sätter, med
+         skälet förklarat utan siffror först.
+
+      **Klart när:** katalogen bär sekundärmuskler, aggregeringen i `src/db/statistik.ts`
+      räknar dem med den valda vikten, och `Steg 4.4`:s begränsningsmening kan tas bort.
 
 ---
 
