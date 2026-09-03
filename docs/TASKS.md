@@ -4973,6 +4973,249 @@ och 13.1 måste vara klar före 13.6.
       **Klart när:** stycket står under `12.49`, och frågan om dubbla uppvärmningsrader är
       antingen avgjord av Adam eller skriven som en egen uppgift.
 
+### 🏋️ 12.57–12.65 — GYMPASSET. Uppgift 10.4:s utfall, 2026-09-03
+
+Adam förde anteckningar vid två gympass, det senaste på den version som ligger live. Det är
+**första gången någon kört ett riktigt pass på passvyn** — den har polerats i två sessioner
+utan det, vilket är exakt varför `10.4` stått som projektets viktigaste blockering.
+
+**Sju punkter kom ur anteckningarna. Två till kom ur skärmbilden han skickade efteråt**
+(`12.64`, `12.65`) — ingen av dem nämnd i texten, båda synliga i bilden, och den ena är den
+allvarligaste på hela listan. 📸 **Be om skärmbilder.** En bild bär det användaren slutat se.
+
+> 📍 **Läs det här före enskilda punkter: sju av nio ligger i inmatningsslingan.** De rör inte
+> databasen, synken, parsern, offline-läget eller importen. De trettio sekunderna mellan två
+> set är hela ytan han faktiskt rör i gymmet, och det är den ytan som är ritad på papper.
+> **Undantaget är `12.64`**, som är en risk för datan och inte en fråga om gränssnitt.
+>
+> Adams egna ord om helheten: *"Gillar inte riktigt hur det bara är vanlig text på många
+> ställen, känns lite svårt att hitta"*, och *"tror faktiskt det är bäst att börja om helt
+> nästan"* — med skälet att det efter en månads arbete inte blivit lika bra som det som redan
+> finns. **Den frågan är större än punkterna och avgörs separat**, men punkterna gäller oavsett
+> utfall: åtta av nio överlever en ombyggnad av gränssnittet oförändrade, eftersom de handlar
+> om beteende och data, inte om utseende. Bara `12.62` ritas om från grunden.
+>
+> ✅ **Och Adams egen invändning 2026-09-03 håller:** *"om vi skulle börja om och göra nästan
+> exakt som de etablerade apparna så kan man väl fortfarande bygga något som inkluderar datan
+> på de gamla anteckningarna."* **Ja.** De gamla anteckningarna bor i `loggedSets` i Postgres
+> och i Dexie — inte i en enda React-komponent. Ett nytt gränssnitt läser samma tabeller.
+> Det som en ombyggnad kostar är `src/ui/`, inte datan.
+
+- [ ] **12.57 Vilotimern startar vid avbockningen, inte när setet tar slut. Ny 2026-09-03.**
+      Adam: *"Om man faktiskt vill ha en konkret vilotimer vill man ju att den ska börja när man
+      är färdig rent fysiskt med setet och inte när man tryckt på ok på setets info."*
+
+      Timern startas på två ställen, båda i `TodayPage.tsx`: `handleParsedLog` (fritextvägen)
+      och `onConfirmSet`, den senare med kommentaren *"Avbockning startar vilan — samma ögonblick
+      som i fritextvägen."* Konsekvensen är att vilan mäter tiden från **loggningen**, inte från
+      setet. Skriver man in vikt och reps i lugn och ro har vilan redan ätit upp en halv minut.
+
+      **Adams lösning är bättre än en justering av starttidpunkten:** en egen knapp som startar
+      vilan när man kliver av maskinen, varefter siffrorna fylls i medan den tickar.
+
+      💡 **Den löser dessutom halva `12.58`.** Fyller man i setet medan vilan går ligger appen i
+      förgrunden — vilket är det enda läge där larmet bevisligen når fram i dag (`PLAN.md`
+      §2.6.1). Ordningen "starta vilan, fyll i sen" är alltså inte bara bekvämare, den är
+      **den ordning appens larm faktiskt fungerar i.**
+
+      **Klart när:** vilan kan startas utan att ett set bockas av, avbockningen inte längre
+      startar den av sig själv, och båda vägarna är täckta av e2e.
+
+- [ ] **12.58 Notiser i bakgrunden: premissen som strök Web Push håller inte. Ny 2026-09-03.**
+      Adam, tredje gången: *"Sen fungerar inte notiserna när jag går ut från appen liksom
+      fortfarande. Utan jag måste vara inne på appen för att få notisen."*
+
+      **Observationen är korrekt och redan mätt.** `PLAN.md` §2.6.1: iOS *skapar* notisen i
+      bakgrunden men *presenterar* den inte förrän appen kommer i förgrunden. Timern går rätt.
+
+      **Det nya är premissen.** §2.6.1 avfärdar Web Push med meningen *"den kräver nät i det
+      ögonblick larmet ska gå, vilket är precis vad ett gym saknar"*. **Det antagandet prövades
+      aldrig — och Adam svarade 2026-09-03 att han har fungerande mobilnät inne i lokalen.**
+      Skälet som stängde dörren gäller alltså inte hans gym.
+
+      ⚠️ **Det gör inte Web Push till en lösning, det gör den till en fråga som får ställas
+      igen.** Innan något byggs måste tre saker vara belagda, inte antagna:
+      1. **Att kanalen finns för oss.** Web Push på iOS kräver en PWA som lagts till på
+         hemskärmen. `10.3` är fortfarande obockad; att Adam får notiser alls tyder på att den
+         ändå är installerad, men det ska kontrolleras och inte härledas.
+      2. **Att schemaläggningen har någonstans att bo.** Notisen måste skickas av en server vid
+         `endsAt`, alltså en Edge Function med en tidsutlösare — ny infrastruktur, inte en
+         kodrad. §7-sökning gäller.
+      3. **Att den faktiskt kommer fram i tid, mätt på Adams telefon i gymmet.** Samma
+         mätfälla som §2.6.1 dokumenterar: mät när iOS **visar** notisen, inte när vi skickar
+         den. En mätning som inte skiljer på det svarade förra gången fel.
+
+      ⛔ **Den lokala notisen får inte tas bort när Web Push byggs.** Den fungerar utan nät och
+      skadar ingenting; Web Push är ett tillägg för bakgrundsläget, inte en ersättare.
+
+      **Klart när:** de tre punkterna är besvarade med mätdata, `PLAN.md` §2.6.1 är rättad så
+      att den inte längre bär en premiss som inte stämmer, och Adam har fattat beslutet om
+      bygget ska göras.
+
+- [ ] **12.59 En ny övning får tre set. Ska få ett. Ny 2026-09-03. BESLUTAT AV ADAM.**
+      Adam: *"när man lägger till övningar man gör så läggs det automatiskt in 3 set nu. Kanske
+      att man gör så det bara är 1 i början, så trycker man på lägg till set själv."*
+
+      `DEFAULT_SET_COUNT = 3` i `src/db/plan.ts`. **Men konstanten är bara halva beteendet:** den
+      gäller övningar utan historik. Har övningen körts förr kopieras förra passets **antal** set,
+      så "alltid 1" är ett annat beslut än att sänka en siffra.
+
+      **Adams val 2026-09-03, ställt som en fråga om beteende:** *alltid ett set, med förra
+      passets siffror i det.* Spökdatan blir alltså kvar — den flyttar från "tre förifyllda
+      rader" till "en förifylld rad", och resten läggs till för hand.
+
+      **Klart när:** en tillagd övning får exakt en rad oavsett historik, raden bär förra passets
+      vikt och reps som spökdata när sådan finns, och `DEFAULT_SET_COUNT` antingen är borta eller
+      betyder vad den heter.
+
+- [ ] **12.60 Katalogen har 46 övningar. Villkoret för `free-exercise-db` är uppfyllt.
+      Ny 2026-09-03.** Adam saknade i gymmet: **kabelsidolyft en arm i taget** (mid delts),
+      **overhead tricepsextension med kabel**, och **pecdeck / bröstflyes i maskin**. Hans
+      slutsats: *"Tror verkligen övnings systemet måste förbättras med hur man söker och dom
+      finns. Säkert femdubbla mängden."*
+
+      `docs/EXTERNT.md` har `free-exercise-db` (**873 övningar, Unlicense — public domain, inga
+      villkor alls**) registrerad som **uppskjuten**, med villkoret ordagrant: *"⏰ Villkor för
+      att ta upp igen: när Adam faktiskt saknar en övning han vill logga."* **Det inträffade
+      2026-09-03.** Uppgiften finns för att villkoret ska lösas ut av verkligheten och inte
+      glömmas bort i registret.
+
+      **De två hindren står redan i registret och är oförändrade:**
+      1. **Katalogens id:n är hårdkodade och checksummade mot Supabase** (`CATALOG_ID_CHECKSUM`,
+         `CATALOG_ALIAS_CHECKSUM`). Att utöka katalogen är en **datamigration**, inte ett
+         designbeslut.
+      2. **Datan är engelsk utan svenska alias**, och aliasen är det värdefulla — de är vad
+         fritextparsern slår på. Varje importerad övning kräver ett översättningsbeslut.
+
+      💡 **Sökningen är en egen halva av Adams mening och får inte falla bort.** Fem gånger fler
+      övningar gör en sökning som inte hittar mycket värre, inte bättre. `ExercisePicker` filtrerar
+      i dag på namn och alias; med 800 rader behövs åtminstone tålighet mot stavfel och
+      ordföljd. **Delas i två uppgifter när den tas** — data först, sedan sökning, aldrig ihop.
+
+      **Klart när:** de tre saknade kabel- och maskinövningarna går att logga, katalogen är
+      utökad genom en migration med uppdaterade checksummor, och `docs/EXTERNT.md` flyttat posten
+      från "Övervägt och uppskjutet" till "Kopierat" i samma commit.
+
+- [ ] **12.61 Justeringsarket går inte att dra ner för att stänga. Ny 2026-09-03.**
+      Adam: *"Vill även kunna dra ner på skärmen och få ner rutan där man fyller i detta så man
+      kommer tillbaka till passet."*
+
+      `SetAdjustSheet` har ett draghandtag ritat överst — `h-1 w-10 rounded-full`, `aria-hidden` —
+      **men det går inte att dra i.** Arket stängs bara genom tryck utanför eller "Klar"-knappen
+      längst ner. Handtaget är alltså ett löfte gränssnittet inte håller, vilket är sämre än
+      inget handtag: det lär ut en gest som inte finns.
+
+      🔍 **§7 gäller, och plattformsprimitiven ska prövas först.** `<dialog>` plus
+      `scroll-snap` kan bära en svepbar panel utan bibliotek, på samma sätt som `ScrollPicker`
+      löste hjulet. Ett gestbibliotek i bundlen kräver ett skäl som mätts.
+
+      **Klart när:** ett nedåtdrag i arket stänger det, handtaget är den yta som greppas, och
+      gesten är täckt av ett test som kan bli rött.
+
+- [ ] **12.62 Inmatningen ser inte ut som inmatning. Ny 2026-09-03.**
+      Adam: *"Tyckte det var lite svårt att se hur man skulle trycka när man väl skulle lägga
+      till set, välja vikt och reps och så"*, plus *"konstig layout på hur vikt och reps skiljer
+      sig när man ska fylla i"* och *"bättre skroll behövs den är typ svår att träffa"*.
+
+      **Tre olika fel med samma familjelikhet — kontrollerna bär inte att de är kontroller:**
+      1. **`+ Lägg till set`** är `text-sm text-[var(--color-dim)]` under en tunn kant längst ner
+         i kortet. Den läser som en bildtext, inte som appens näst vanligaste handling.
+      2. **Setraden öppnar arket på tap** men har ingen knapputsida som säger det.
+      3. **Vikt och reps ser ut som två olika sorters kontroll:** vikten är fyra sifferhjul,
+         repsen ett hjul plus ±-knappar. Skillnaden har ett skäl — värdemängderna är olika stora —
+         **men skälet syns inte, och det är skillnaden Adam läser som "konstigt".**
+      4. **Hjulen är svåra att träffa.** `ITEM_H = 44` px i `VISIBLE = 3` rader. Fyra hjul i
+         bredd på 375 px ger smala kolumner, och trefönstret gör att fel siffra ligger nära.
+
+      ⚠️ **Den här punkten är den enda av de sju som en ombyggnad av gränssnittet skulle göra om
+      från grunden i stället för att laga.** Tas beslutet att rita om passvyn ska `12.62` läsas
+      som **krav på den nya**, inte som en separat fix. De andra sex överlever oförändrade.
+
+      **Klart när:** de tre handlingarna — lägg till set, ändra vikt, ändra reps — går att hitta
+      utan att prövas fram, och Adam bekräftar det i ett riktigt pass. Inte tidigare.
+
+- [ ] **12.63 "Uppe till vänster" är det sammansatta värdet — det ska gå att skriva i.
+      Ny 2026-09-03. BILDEN SEDD.** Adam skickade skärmbilden 2026-09-03. Den har **två röda
+      ringar**, och meningen har **två satser** i samma ordning:
+
+      | Ring | Vad den omsluter | Satsen den hör till |
+      |---|---|---|
+      | 1 | **`0 kg × 8`** — arkets header, uppe till vänster | *"Vill kunna trycka här uppe till vänster"* |
+      | 2 | **De fyra sifferhjulen** | *"konstig layout på hur vikt och reps skiljer sig"* |
+
+      **Läsningen: han vill trycka på värdet och skriva siffran, i stället för att ställa fyra
+      hjul.** Det är den snabbaste vägen till 62,5 som finns, och den finns inte i appen —
+      headern är ett `<p>` utan tryckyta. Hjulen är byggda för att slippa sjutton tryck på en
+      stepper; en tangentbordsinmatning slår båda när man redan vet vikten.
+
+      ⚠️ **En andra läsning som inte kan uteslutas:** ringen är dragen runt `0 kg` med ett
+      understreck under nollan, så den kan också peka på att **vikten är 0** — vilket är
+      `12.65` och ett riktigt fel. **Det spelar mindre roll än det ser ut:** båda läsningarna
+      är egna uppgifter, ingen av dem faller bort, och `12.65` byggs oavsett. Bekräftas
+      läsningen av Adam är den här punkten inmatningsfältet.
+
+      🔍 **§7 gäller.** `inputmode="decimal"` är plattformsprimitiven och ger rätt tangentbord
+      på iOS utan en rad JavaScript. Ett maskerat sifferfält från npm är fel svar på den här
+      frågan.
+
+      **Klart när:** `0 kg × 8` går att trycka på, öppnar en direktinmatning med rätt
+      tangentbord, och hjulen finns kvar för den som hellre drar.
+
+- [ ] **12.64 🔴 ELVA SET LIGGER BARA PÅ TELEFONEN. Ny 2026-09-03. HITTAD I SKÄRMBILDEN.**
+      Överst i bilden, i grått, står: **`11 osynkade · logga in`**. Adam bad inte om den här
+      punkten — han fotograferade den utan att nämna den.
+
+      `SyncStatus` renderar den strängen i **exakt ett** läge: `signed_out` med `pending > 0`
+      (`TEXT.signed_out`). **Telefonen han tränar på är alltså inte inloggad**, och elva
+      loggade set står i utkorgen utan att ha nått Supabase. De finns bara i Dexie, på en
+      enhet, utan kopia. Rensad webbläsardata eller en ominstallation tar dem.
+
+      🔴 **Och det förklarar `12.65`.** Utan inloggning har enheten aldrig hämtat historiken —
+      alltså inte heller de gamla anteckningarna från fas 13. `getLastPerformance('Bänkpress')`
+      hittar ingenting, och därför föll passet ner i grenen som ger `0 kg × 8`. **Spökdatan,
+      som är appens kärnvärde, kan inte fungera utloggad.** Bilden visar båda felen samtidigt,
+      och det ena orsakar det andra.
+
+      **Åtgärden är inte i första hand kod:** Adam loggar in på telefonen, och kön töms. Men
+      **uppgiften är kod**, för det som gjorde skadan är att appen lät det pågå i elva set:
+      raden är 12 px grå text i skärmens övre högra hörn, i samma vikt som allt annat, och
+      säger inte att något står på spel.
+
+      ⚖️ **Avvägningen är verklig och får inte lösas med en modal.** `SyncStatus`
+      docblock är uttrycklig: *"Att en post ligger kvar för att nätet är borta är inte ett fel
+      — det är precis vad appen är byggd för."* Offline-kö är normaldrift. **`signed_out` är
+      det inte** — den töms inte av sig själv hur länge man än väntar, och det är den skillnaden
+      läget ska bära.
+
+      **Klart när:** `signed_out` med poster i kön syns som något som kräver handling och inte
+      som statustext, skillnaden mot `offline` går att läsa utan att kunna koden, och Adams elva
+      set är i Supabase.
+
+- [ ] **12.65 Set 2 står kvar på 0 kg efter att set 1 loggats. Ny 2026-09-03. SYNLIG I BILDEN.**
+      Skärmbilden visar `Bänkpress · set 2` med **`0 kg × 8`** — medan passets egen rad ovanför
+      säger **`1 SET · 490 VOLYM KG`**. Set 1 loggades alltså med en riktig vikt, och set 2 vet
+      inte om det.
+
+      **Två separata orsaker, och båda måste åtgärdas:**
+      1. **Utan historik skapas raderna som `ghostSet(0, 8, false)`** (`plan.ts`, else-grenen).
+         Kommentaren försvarar det: *"Att gissa 20 kg vore att hitta på data."* **Argumentet är
+         riktigt och räcker ändå inte** — `0 kg` är också ett påhitt, och till skillnad från
+         20 kg är det ett som går att bocka av. Ett tomt fält som inte kan bekräftas är ärligare
+         än en nolla som kan.
+      2. **`confirmPlannedSet` rör bara raden som bockas av.** Övriga ologgade rader i samma
+         övning behåller sina värden. Men efter set 1 finns det bästa förslag som existerar för
+         set 2 i passet självt: **vad du precis lyfte.** Historiken från förra veckan är en
+         sämre gissning än setet för nittio sekunder sedan.
+
+      💡 **`12.59` ensam hade dolt det här utan att laga det.** Med bara ett set vid tillägg
+      hade nollan setts en gång i stället för tre — och sedan kommit tillbaka på varje
+      tillagt set, eftersom `addSetToPlan` ärver från föregående rad och den raden är noll.
+      **Punkterna byggs ihop.**
+
+      **Klart när:** ett ologgat set utan underlag går inte att bekräfta som `0 kg`, ett nytt
+      set ärver det senast loggade setet i samma övning, och båda har ett test som blir rött om
+      härledningen tas bort.
+
 ---
 
 ## Fas 11A — efterjustering 2026-08-01 (layoutbugg + rullhjul)
