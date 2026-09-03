@@ -19,9 +19,6 @@ import { db, type GymDatabase } from './db';
 import { getLastPerformance, logSet, deleteSet } from './repo';
 import { getWorkoutSets } from './history';
 
-/** Utan historik: så många set en övning får när den läggs till. */
-export const DEFAULT_SET_COUNT = 3;
-
 export interface PlannedSet {
   id: string;
   weightKg: number;
@@ -71,11 +68,20 @@ function ghostSet(weightKg: number, reps: number, fromGhost: boolean): PlannedSe
 }
 
 /**
- * Lägger till en övning med set förifyllda från förra gången.
+ * Lägger till en övning med ETT set, förifyllt från förra gången.
  *
- * Antalet set kommer också från historiken: gjorde man fyra set bänkpress
- * förra passet är det fyra rader som dyker upp, inte tre. Det är skillnaden
- * mellan att slippa tänka och att behöva rätta appen varje gång.
+ * ✏️ **ANTALET HÄRLEDS INTE LÄNGRE. Ändrat 2026-09-03, uppgift 12.59.**
+ * Fram till dess gav funktionen lika många rader som förra passet — fyra set
+ * bänkpress gav fyra rader — och tre rader när historik saknades. Adam vände
+ * det efter sitt första riktiga pass i gymmet: *"Kanske att man gör så det
+ * bara är 1 i början, så trycker man på lägg till set själv för varje set man
+ * gör."*
+ *
+ * **Spökdatan är avgränsad, inte struken.** Vikten och repsen kommer
+ * fortfarande från senaste utförandet; det är bara ANTALET som slutat vara en
+ * gissning. Skillnaden är att en gissad siffra i en rad går att rätta, medan
+ * gissade RADER måste räknas och plockas bort — och tre `0 kg`-rader utan
+ * historik var det Adam faktiskt möttes av (12.65).
  */
 export async function addExerciseToPlan(
   workoutId: string,
@@ -87,18 +93,11 @@ export async function addExerciseToPlan(
 
   const senaste = await getLastPerformance(exerciseId, { excludeWorkoutId: workoutId }, database);
 
-  let sets: PlannedSet[];
-  if (senaste) {
-    const tidigare = (await database.loggedSets.toArray()).filter(
-      (s) => s.exerciseId === exerciseId && s.workoutId === senaste.workoutId && !s.isDeleted && !s.isWarmup
-    );
-    const antal = Math.max(1, Math.min(tidigare.length, 10));
-    sets = Array.from({ length: antal }, () => ghostSet(senaste.weightKg, senaste.reps, true));
-  } else {
-    // Ingen historik: tomma rader som måste fyllas i. Att gissa 20 kg vore
-    // att hitta på data.
-    sets = Array.from({ length: DEFAULT_SET_COUNT }, () => ghostSet(0, 8, false));
-  }
+  // Utan historik: en tom rad som måste fyllas i. Att gissa 20 kg vore att
+  // hitta på data.
+  const sets = [
+    senaste ? ghostSet(senaste.weightKg, senaste.reps, true) : ghostSet(0, 8, false),
+  ];
 
   return save({ ...plan, exercises: [...plan.exercises, { exerciseId, sets }] }, database);
 }
@@ -135,7 +134,20 @@ export async function addSetToPlan(
       ...plan,
       exercises: plan.exercises.map((e) => {
         if (e.exerciseId !== exerciseId) return e;
-        const sist = e.sets[e.sets.length - 1];
+        /**
+         * ✏️ **HÄR STOD `e.sets[e.sets.length - 1]`. Uppgift 12.65.**
+         *
+         * Sista RADEN och det senast GJORDA setet är inte samma sak. Ligger
+         * det en orörd spökrad sist ärvde det nya setet förra veckans siffror,
+         * trots att man just lyft något annat i det här passet. Ett bekräftat
+         * set är det bästa underlag som finns — det är nittio sekunder gammalt
+         * och du gjorde det själv.
+         *
+         * Faller tillbaka på sista raden när inget är loggat ännu, vilket är
+         * det normala för set 2 innan set 1 bockats av.
+         */
+        const loggat = [...e.sets].reverse().find((s) => s.loggedSetId !== null);
+        const sist = loggat ?? e.sets[e.sets.length - 1];
         return {
           ...e,
           sets: [...e.sets, ghostSet(sist?.weightKg ?? 0, sist?.reps ?? 8, false)],

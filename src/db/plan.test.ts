@@ -14,7 +14,6 @@ import {
   removeSetFromPlan,
   unconfirmPlannedSet,
   updatePlannedSet,
-  DEFAULT_SET_COUNT,
 } from './plan';
 
 const BENK = '38433903-c5f6-41e4-b2e8-4f0587b6d0cf';
@@ -55,9 +54,16 @@ describe('11A.2 planen fylls med spökdata från förra passet', () => {
     expect(sets[0]!.loggedSetId).toBeNull();
   });
 
-  it('ger lika många set som förra gången — inte ett fast antal', async () => {
-    // Gjorde man fyra set förra passet ska fyra rader dyka upp, annars måste
-    // man rätta appen varje gång.
+  it('ger ETT set även när förra passet hade fyra — 12.59', async () => {
+    // ✏️ HÄR STOD `toHaveLength(4)`, och det var rätt fram till 2026-09-03.
+    // Den gamla regeln — "lika många rader som förra gången" — vändes av Adam
+    // efter hans första riktiga pass i gymmet: han vill lägga till varje set
+    // själv allteftersom han gör dem.
+    //
+    // **Spökdatan är inte struken, den är avgränsad.** Antalet är inte längre
+    // härlett; vikten och repsen är det fortfarande, och det prövas i testet
+    // ovanför. Se `12.59` för Adams ord och för varför konstanten som hette
+    // DEFAULT_SET_COUNT inte finns kvar: den beskrev bara halva beteendet.
     await tidigarePass([
       [BENK, 90, 5],
       [BENK, 90, 5],
@@ -66,15 +72,20 @@ describe('11A.2 planen fylls med spökdata från förra passet', () => {
     ]);
     const w = await startWorkout(db);
     const plan = await addExerciseToPlan(w.id, BENK, db);
-    expect(plan.exercises[0]!.sets).toHaveLength(4);
+    expect(plan.exercises[0]!.sets).toHaveLength(1);
+    // Ett set, men fortfarande förra passets siffror i det.
+    expect(plan.exercises[0]!.sets[0]!.weightKg).toBe(85);
+    expect(plan.exercises[0]!.sets[0]!.fromGhost).toBe(true);
   });
 
-  it('utan historik: tomma rader, inga påhittade vikter', async () => {
+  it('utan historik: EN tom rad, inga påhittade vikter', async () => {
     const w = await startWorkout(db);
     const plan = await addExerciseToPlan(w.id, KNABOJ, db);
     const sets = plan.exercises[0]!.sets;
 
-    expect(sets).toHaveLength(DEFAULT_SET_COUNT);
+    // 12.59: ett set oavsett historik. Utan spöke såg Adam `0 kg × 8` tre
+    // gånger i stället för en — se skärmbilden i 12.65.
+    expect(sets).toHaveLength(1);
     expect(sets[0]!.weightKg).toBe(0);
     // Inte spökdata — det finns inget spöke. Att gissa 20 kg vore att hitta på.
     expect(sets[0]!.fromGhost).toBe(false);
@@ -116,6 +127,29 @@ describe('11A.3 justering', () => {
     const plan = await addSetToPlan(w.id, BENK, db);
     const sets = plan.exercises[0]!.sets;
     expect(sets[sets.length - 1]!.weightKg).toBe(90);
+  });
+
+  it('12.65: nytt set ärver det senast LOGGADE setet, inte en orörd spökrad', async () => {
+    // Fallet ur Adams skärmbild, i sin allmänna form: raden man ärver från är
+    // inte alltid den man senast gjorde något med. Kör man tyngre än spöket
+    // och sedan lägger till ett set ska det nya bära det man FAKTISKT lyfte.
+    //
+    // Konstruktionen skiljer de två härledningarna åt: sista RADEN är en orörd
+    // spökrad på 90, sista LOGGADE setet är 70. En implementation som kopierar
+    // `sets[sets.length - 1]` ger 90 och är röd här.
+    await tidigarePass([[BENK, 90, 5]]);
+    const w = await startWorkout(db);
+    await addExerciseToPlan(w.id, BENK, db);
+    const spöke = await addSetToPlan(w.id, BENK, db); // rad 2, orörd, 90 kg
+    const rad1 = spöke.exercises[0]!.sets[0]!.id;
+
+    await updatePlannedSet(w.id, BENK, rad1, { weightKg: 70, reps: 7 }, db);
+    await confirmPlannedSet(w.id, BENK, rad1, db);
+
+    const plan = await addSetToPlan(w.id, BENK, db);
+    const sista = plan.exercises[0]!.sets.at(-1)!;
+    expect(sista.weightKg).toBe(70);
+    expect(sista.reps).toBe(7);
   });
 });
 
