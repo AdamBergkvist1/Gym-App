@@ -10,6 +10,7 @@ import {
   markFired,
   remainingMs,
   startRestTimer,
+  startRestTimerIfIdle,
 } from './restTimer';
 import { recordTimerEvent, getTimerEvents, summarise, type TimerEvent } from './diagnostics';
 
@@ -64,6 +65,31 @@ describe('6.1 timern lagras som sluttidpunkt', () => {
     const första = (await getRestTimer(db))!.firedAt;
     await markFired(db);
     expect((await getRestTimer(db))!.firedAt).toBe(första);
+  });
+
+  it('12.57: en pågående vila startas inte om av att ett set bockas av', async () => {
+    // Hela poängen med Adams knapp: vilan börjar när man kliver av maskinen,
+    // och siffrorna fylls i medan den tickar. Startade avbockningen om timern
+    // vore knappen meningslös — man hade fått tre nya minuter i det ögonblick
+    // man skrev in setet man just gjort.
+    const startad = await startRestTimer(180, null, db);
+    const igen = await startRestTimerIfIdle(180, 'set-1', db);
+
+    expect(igen).toBeNull();
+    expect((await getRestTimer(db))!.endsAt).toBe(startad.endsAt);
+  });
+
+  it('12.57: en utgången vila står inte i vägen för nästa', async () => {
+    // Motsatsen är lika viktig: har vilan tagit slut ska nästa set starta en
+    // ny. Ett "starta inte om"-villkor som glömmer det låser timern efter
+    // första setet.
+    await startRestTimer(180, null, db);
+    // Flyttar sluttiden bakåt i tiden i stället för att vänta 180 sekunder.
+    await adjustRestTimer(-200, db);
+
+    const ny = await startRestTimerIfIdle(180, 'set-2', db);
+    expect(ny).not.toBeNull();
+    expect(ny!.setId).toBe('set-2');
   });
 
   it('går att avbryta', async () => {

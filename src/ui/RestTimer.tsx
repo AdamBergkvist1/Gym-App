@@ -1,4 +1,4 @@
-import { adjustRestTimer, formatRemaining } from '../timer/restTimer';
+import { adjustRestTimer, formatRemaining, startRestTimer } from '../timer/restTimer';
 import { useRestTimer } from '../timer/useRestTimer';
 
 /**
@@ -44,7 +44,32 @@ import { useRestTimer } from '../timer/useRestTimer';
 export function RestTimer() {
   const { state, remaining, expired, cancel } = useRestTimer();
 
-  if (!state) return null;
+  /**
+   * 🆕 **Utan vila är platsen inte tom längre — den bär knappen. Uppgift 12.57.**
+   *
+   * Adam: *"kanske kan man ha en knapp, om man nu vill ha exakt vilotid mellan
+   * set, där vilotimern startar. Och så kan man fylla i vad man tog på setet
+   * medans den tickar ner."*
+   *
+   * Knappen ligger i timerns egen plats i flödet och inte på setraden, av två
+   * skäl: vilan hör till passet och inte till ett enskilt set, och platsen kan
+   * bara visa **en** av de två sakerna åt gången — går vilan finns det inget
+   * att starta. Att knappen och nedräkningen delar plats är därför inte en
+   * layoutgenväg utan lägena i samma tillstånd.
+   */
+  if (!state) {
+    return (
+      <button
+        type="button"
+        onClick={() => void startRestTimer()}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border
+                   border-[var(--color-line-strong)] bg-[var(--color-surface)] py-3
+                   text-body font-medium active:opacity-80"
+      >
+        Starta vila
+      </button>
+    );
+  }
 
   return (
     <div

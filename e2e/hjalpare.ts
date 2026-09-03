@@ -265,6 +265,22 @@ export function setlista(page: Page, övningsnamn: string) {
 }
 
 /**
+ * Lägger till en rad i en övning. Ny 2026-09-03 med uppgift `12.59`.
+ *
+ * **Varför den behövdes just nu:** fram till 12.59 fick en övning utan historik
+ * tre rader vid tillägg, och tester som behövde två rader fick dem gratis. Nu
+ * ges en rad, och den andra måste begäras. Att skriva det i testet i stället
+ * för att sänka påståendet är skillnaden mellan att laga ett test och att
+ * försvaga det.
+ */
+export async function läggTillSet(page: Page, övningsnamn: string): Promise<void> {
+  const rader = setlista(page, övningsnamn).getByRole('listitem');
+  const före = await rader.count();
+  await page.getByRole('button', { name: `Lägg till set för ${övningsnamn}` }).click();
+  await expect(rader).toHaveCount(före + 1);
+}
+
+/**
  * Vilken rad. `SetRow.tsx:92` bygger samma fras — uppvärmningen har inget
  * nummer, den har ett namn.
  */

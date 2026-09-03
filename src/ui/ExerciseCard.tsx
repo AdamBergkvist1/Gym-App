@@ -273,9 +273,14 @@ export function ExerciseCard({
         })}
       </ul>
 
+      {/* Namnet bär övningen av samma skäl som listan ovanför gör det: med två
+          kort på skärmen träffar "+ Lägg till set" annars båda. Etiketten är
+          alltså inte bara för skärmläsare — den är det som gör knappen möjlig
+          att adressera entydigt, i e2e och i verkligheten. */}
       <button
         type="button"
         onClick={onAddSet}
+        aria-label={`Lägg till set för ${exercise?.name ?? 'okänd övning'}`}
         className="w-full border-t border-[var(--color-line)] py-2 text-sm text-[var(--color-dim)] active:bg-[var(--color-bg)]"
       >
         + Lägg till set

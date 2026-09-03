@@ -55,6 +55,35 @@ export async function startRestTimer(
   return state;
 }
 
+/**
+ * Startar vilan bara om ingen redan pågår. Uppgift 12.57.
+ *
+ * **Varför avbockningen inte längre startar vilan rakt av.** Adam efter sitt
+ * första riktiga pass: *"Om man faktiskt vill ha en konkret vilotimer vill man
+ * ju att den ska börja när man är färdig rent fysiskt med setet och inte när
+ * man tryckt på ok på setets info."* Vilan startas därför av en egen knapp när
+ * man kliver av maskinen, och siffrorna fylls i medan den tickar.
+ *
+ * Avbockningen är kvar som **reserv, inte som huvudväg**: glömmer man knappen
+ * får man ändå en vila. Men den får inte skriva över en som redan går — då
+ * hade det man skrev in efter setet gett tre nya minuter, vilket är precis det
+ * fel knappen finns för att ta bort.
+ *
+ * En **utgången** vila står däremot inte i vägen. Ett villkor som bara frågar
+ * "finns det en timer?" låser vilan efter första setet.
+ *
+ * @returns den nya timern, eller `null` när en vila redan pågick.
+ */
+export async function startRestTimerIfIdle(
+  seconds: number = DEFAULT_REST_SECONDS,
+  setId: string | null = null,
+  database: GymDatabase = db
+): Promise<RestTimerState | null> {
+  const current = await getRestTimer(database);
+  if (current && !hasExpired(current)) return null;
+  return startRestTimer(seconds, setId, database);
+}
+
 /** Justerar sluttiden. Behåller `durationSeconds` som ursprunglig avsikt. */
 export async function adjustRestTimer(
   deltaSeconds: number,

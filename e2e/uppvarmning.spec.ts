@@ -3,6 +3,7 @@ import {
   fångaKonsolfel,
   hämtaÖvning,
   justeringsarket,
+  läggTillSet,
   läggTillÖvning,
   startaPass,
   talknapp,
@@ -37,6 +38,12 @@ test('arket säger samma sak som raden man öppnade det från', async ({ page })
 
   await startaPass(page);
   await läggTillÖvning(page, övning.name);
+
+  // ✏️ RADEN NEDAN ÄR NY MED 12.59, och den är en förutsättning och inte en
+  // omständlighet. Testet handlar om en uppvärmningsrad OCH ett arbetsset —
+  // två rader. Fram till 12.59 gav ett tillägg tre rader utan historik, så den
+  // andra fanns redan; nu ges en, och den måste begäras.
+  await läggTillSet(page, övning.name);
 
   // Utan historik får övningen tomma rader, och den första är arbetsset 1.
   await talknapp(page, övning.name, 'vikt', 1).click();

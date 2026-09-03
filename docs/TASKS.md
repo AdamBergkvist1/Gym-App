@@ -5212,9 +5212,39 @@ allvarligaste på hela listan. 📸 **Be om skärmbilder.** En bild bär det anv
       tillagt set, eftersom `addSetToPlan` ärver från föregående rad och den raden är noll.
       **Punkterna byggs ihop.**
 
-      **Klart när:** ett ologgat set utan underlag går inte att bekräfta som `0 kg`, ett nytt
-      set ärver det senast loggade setet i samma övning, och båda har ett test som blir rött om
-      härledningen tas bort.
+      ✅ **Del 2 är byggd 2026-09-03** (commit `4699e44`): `addSetToPlan` ärver sista **loggade**
+      setet med sista raden som reserv. Rött först på `90 ≠ 70`, alltså på ett värde och inte
+      på en saknad funktion.
+
+      ### 🔬 Del 1 ändrade form när den mättes. Läs det här innan den byggs
+
+      **Uppgiften påstod att `0 kg` visas som en nolla. Det gör den bara på ETT av två ställen.**
+      Uppmätt i webbläsaren 2026-09-03, samma tillstånd som i Adams bild:
+
+      | Yta | Vad den visar för `weightKg: 0` |
+      |---|---|
+      | **Setraden** | `–`, med etiketten **`"Vikt inte angiven för set 1, tryck för att ange"`** |
+      | **Justeringsarket** | **`0 kg × 8`** |
+
+      **Begreppet finns alltså redan, och det är arket som motsäger det.** `SetRow` skiljer på
+      *"noll kilo"* och *"ingen vikt angiven"*; arkets header gör det inte. Det är en mindre och
+      bättre avgränsad ändring än den uppgiften först beskrev — och den är också vad Adam
+      faktiskt ringade in.
+
+      ⛔ **Och den ursprungliga formuleringen var fel.** Här stod *"ett ologgat set utan underlag
+      går inte att bekräfta som `0 kg`"`*. **Den regeln hade brutit kroppsviktsövningarna:**
+      `Dips`, `Chins`, `Plankan` och `Hängande benlyft` bär `equipment: 'kroppsvikt'` i katalogen
+      och loggas legitimt som noll kilo. Ett förbud mot att bekräfta noll hade gjort dem
+      omöjliga att logga — och `12.12` i den här backloggen handlar om precis den nollan.
+
+      🔴 **Kvar att avgöra, och det är Adams:** ska ett set med **vikt inte angiven** gå att
+      bocka av? I bilden blev det ett loggat set på `0 kg` som räknas in i passets volym. Att
+      spärra det är rätt för skivstång och fel för dips, så frågan är inte *om* utan *hur
+      appen vet skillnaden* — och det är ett påstående om träning, inte en implementationsdetalj.
+
+      **Klart när:** arket säger samma sak som raden om en vikt som inte är angiven, Adam har
+      avgjort avbockningsfrågan ovan, och båda har ett test som blir rött om härledningen tas
+      bort.
 
 ---
 

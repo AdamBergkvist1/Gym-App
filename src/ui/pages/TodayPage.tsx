@@ -33,7 +33,7 @@ import { QuickLog } from '../QuickLog';
 import { ExerciseCard } from '../ExerciseCard';
 import { ExercisePicker } from '../ExercisePicker';
 import { RestTimer } from '../RestTimer';
-import { DEFAULT_REST_SECONDS, startRestTimer } from '../../timer/restTimer';
+import { DEFAULT_REST_SECONDS, startRestTimerIfIdle } from '../../timer/restTimer';
 
 /**
  * Passvyn. Uppgift 11A.1, 11A.2, 11A.7.
@@ -129,7 +129,8 @@ export function TodayPage() {
       weightKg: parsed.weightKg,
       reps: parsed.reps,
     });
-    void startRestTimer(DEFAULT_REST_SECONDS, row.id);
+    // 12.57: reserv, inte huvudväg. Skriver aldrig över en vila som redan går.
+    void startRestTimerIfIdle(DEFAULT_REST_SECONDS, row.id);
     return row;
   }
 
@@ -297,8 +298,11 @@ export function TodayPage() {
           onConfirmSet={(setId) =>
             void (async () => {
               const { loggedSetId } = await confirmPlannedSet(workout.id, pe.exerciseId, setId);
-              // Avbockning startar vilan — samma ögonblick som i fritextvägen.
-              void startRestTimer(DEFAULT_REST_SECONDS, loggedSetId);
+              // ✏️ HÄR STOD "Avbockning startar vilan", och det var felet i
+              // 12.57: vilan mätte tiden från loggningen i stället för från
+              // setet. Knappen i `RestTimer` är huvudvägen nu; det här är
+              // reserven för den som glömmer den.
+              void startRestTimerIfIdle(DEFAULT_REST_SECONDS, loggedSetId);
             })()
           }
           onUnconfirmSet={(setId) => void unconfirmPlannedSet(workout.id, pe.exerciseId, setId)}
